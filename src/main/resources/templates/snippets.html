@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>인기 스니펫 게시판</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .header {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .search-form {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 150px;
+        }
+
+        .form-group label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .form-group input, .form-group select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .search-btn, .reset-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .search-btn {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .reset-btn {
+            background-color: #6c757d;
+            color: white;
+            margin-left: 10px;
+        }
+
+        .search-btn:hover, .reset-btn:hover {
+            opacity: 0.9;
+        }
+
+        .snippet-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer; /* 커서를 포인터로 변경 */
+        }
+
+        .snippet-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .snippet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .snippet-badges {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .snippet-type {
+            background-color: #007bff;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .snippet-type.text {
+            background-color: #28a745;
+        }
+
+        .snippet-type.code {
+            background-color: #6f42c1;
+        }
+
+        .snippet-type.img {
+            background-color: #fd7e14;
+        }
+
+        .like-section {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .like-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .like-btn.liked {
+            color: #ff6b6b;
+            transform: scale(1.1);
+        }
+
+        .like-btn:not(.liked) {
+            color: #999;
+        }
+
+        .like-count {
+            font-weight: bold;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .snippet-memo {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .snippet-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .snippet-owner {
+            font-style: italic;
+        }
+
+        .snippet-date {
+            color: #888;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .sort-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .sort-tab {
+            padding: 10px 20px;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .sort-tab.active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .results-info {
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        /* 페이징 스타일 */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+            margin-bottom: 20px;
+        }
+
+        .pagination {
+            display: flex;
+            gap: 5px;
+        }
+
+        .page-item {
+            display: inline-block;
+            padding: 8px 14px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+            background-color: #fff;
+            transition: all 0.2s;
+        }
+
+        .page-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .page-item.active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+            cursor: default;
+        }
+
+        .page-item.prev, .page-item.next {
+            padding: 8px 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>🔥 인기 스니펫 게시판</h1>
+    <p class="subtitle">현재 사용자: <strong>user_id = <span th:text="${currentUserId}"></span></strong></p>
+
+    <div class="sort-tabs">
+        <a href="/snippets?sort=popular"
+           class="sort-tab"
+           th:classappend="${currentSort == 'popular'} ? 'active' : ''">
+            🏆 인기순 (좋아요 많은 순)
+        </a>
+        <a href="/snippets?sort=recent"
+           class="sort-tab"
+           th:classappend="${currentSort == 'recent'} ? 'active' : ''">
+            🕒 최신순
+        </a>
+    </div>
+</div>
+
+<!-- 스니펫 목록 -->
+<div th:if="${#lists.isEmpty(snippets)}">
+    <p>등록된 스니펫이 없습니다.</p>
+</div>
+
+<!-- 스니펫 카드에 링크 추가 -->
+<div th:each="snippet : ${snippets}" class="snippet-card"
+     th:onclick="'window.location.href=\'/snippet/' + ${snippet.snippetId} + '\''">
+    <div class="snippet-header">
+        <span class="snippet-type" th:class="'snippet-type ' + ${snippet.type}" th:text="${snippet.type}"></span>
+        <div class="like-section">
+            <button class="like-btn"
+                    th:classappend="${likeStatusMap.get(snippet.snippetId)} ? 'liked' : ''"
+                    th:data-snippet-id="${snippet.snippetId}"
+                    th:data-is-liked="${likeStatusMap.get(snippet.snippetId)}"
+                    onclick="event.stopPropagation();">❤️</button>
+            <span class="like-count" th:text="${snippet.likeCount}">0</span>
+            <span>좋아요</span>
+        </div>
+    </div>
+
+    <div class="snippet-memo" th:text="${snippet.memo}">스니펫 메모</div>
+
+    <div class="snippet-owner">
+        소유자: user_id = <span th:text="${snippet.userId}"></span>
+        <span th:if="${snippet.userId == currentUserId}"> (내 스니펫)</span>
+    </div>
+
+    <div class="snippet-date">
+        생성일: <span th:text="${#temporals.format(snippet.createdAt, 'yyyy-MM-dd HH:mm')}"></span>
+    </div>
+</div>
+
+<!-- 페이지 네비게이션 -->
+<!-- 스니펫 목록 아래에 페이지 네비게이션 추가 -->
+<div class="pagination-container" th:if="${totalPages > 1}">
+    <div class="pagination">
+        <!-- 이전 페이지 버튼 -->
+        <a th:if="${currentPage > 1}"
+           th:href="@{/snippets(sort=${currentSort},page=${currentPage - 1})}"
+           class="page-item prev">&laquo; 이전</a>
+
+        <!-- 페이지 번호 -->
+        <th:block th:each="pageNum : ${#numbers.sequence(1, totalPages)}">
+            <a th:if="${pageNum == currentPage}"
+               class="page-item active" th:text="${pageNum}"></a>
+            <a th:unless="${pageNum == currentPage}"
+               th:href="@{/snippets(sort=${currentSort},page=${pageNum})}"
+               class="page-item" th:text="${pageNum}"></a>
+        </th:block>
+
+        <!-- 다음 페이지 버튼 -->
+        <a th:if="${currentPage < totalPages}"
+           th:href="@{/snippets(sort=${currentSort},page=${currentPage + 1})}"
+           class="page-item next">다음 &raquo;</a>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    $(document).ready(function() {
+        console.log("=== 스니펫 목록 페이지 로드 ===");
+
+        // 좋아요 버튼 클릭 이벤트
+        $('.like-btn').on('click', function(event) {
+            // 클릭 이벤트가 상위로 전파되지 않도록 중단 (스니펫 카드 클릭 이벤트 방지)
+            event.stopPropagation();
+
+            const button = $(this);
+            const snippetId = button.data('snippet-id');
+            const isLiked = button.data('is-liked');
+            const likeCountSpan = button.siblings('.like-count');
+
+            console.log("좋아요 버튼 클릭 - snippetId:", snippetId, "isLiked:", isLiked);
+
+            button.prop('disabled', true);
+
+            if (isLiked) {
+                // 좋아요 취소
+                $.ajax({
+                    url: '/api/likes/remove',
+                    type: 'POST',
+                    data: { snippetId: snippetId },
+                    success: function(response) {
+                        if (response.success) {
+                            button.removeClass('liked');
+                            button.data('is-liked', false);
+                            likeCountSpan.text(response.likeCount);
+                            console.log('좋아요 취소 성공');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('좋아요 취소 실패:', error);
+                    },
+                    complete: function() {
+                        button.prop('disabled', false);
+                    }
+                });
+            } else {
+                // 좋아요 추가
+                $.ajax({
+                    url: '/api/likes/add',
+                    type: 'POST',
+                    data: { snippetId: snippetId },
+                    success: function(response) {
+                        if (response.success) {
+                            button.addClass('liked');
+                            button.data('is-liked', true);
+                            likeCountSpan.text(response.likeCount);
+                            console.log('좋아요 추가 성공');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('좋아요 추가 실패:', error);
+                    },
+                    complete: function() {
+                        button.prop('disabled', false);
+                    }
+                });
+            }
+        });
+    });
+</script>
+</body>
+</html>

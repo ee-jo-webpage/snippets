@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.kosa.snippets.mapper.TagMapper">
+
+    <!-- 모든 태그 조회 -->
+    <select id="getAllTags" resultType="kr.or.kosa.snippets.model.Tag">
+        SELECT tag_id as tagId, name
+        FROM tags
+        ORDER BY name
+    </select>
+
+    <!-- 특정 스니펫의 태그 조회 -->
+    <select id="getTagsBySnippetId" resultType="kr.or.kosa.snippets.model.Tag">
+        SELECT t.tag_id as tagId, t.name
+        FROM tags t
+                 JOIN snippet_tags st ON t.tag_id = st.tag_id
+        WHERE st.snippet_id = #{snippetId}
+        ORDER BY t.name
+    </select>
+
+</mapper>

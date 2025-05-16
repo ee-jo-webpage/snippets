@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.mapper.SnippetMapper">
+
+    <!-- 태그별 스니펫 조회 (조인 포함) -->
+    <select id="findSnippetsByTagId" resultType="Snippet">
+        SELECT
+            s.id,
+            s.user_id,
+            s.folder_id,
+            s.color_id,
+            s.source_url,
+            s.type,
+            s.memo,
+            s.created_at,
+            s.updated_at,
+            s.like_count,
+            s.visibility,
+            CASE
+                WHEN s.type = 'code' THEN sc.content
+                WHEN s.type = 'text' THEN st.content
+                ELSE NULL
+            END as content,
+            CASE
+                WHEN s.type = 'code' THEN sc.language
+                ELSE NULL
+            END as language,
+            s.memo as title
+        FROM snippets s
+        INNER JOIN snippet_tags snt ON s.id = snt.snippet_id
+        LEFT JOIN snippet_codes sc ON s.id = sc.snippet_id AND s.type = 'code'
+        LEFT JOIN snippet_texts st ON s.id = st.snippet_id AND s.type = 'text'
+        WHERE snt.tag_id = #{tagId}
+        ORDER BY s.created_at DESC
+    </select>
+
+    <!-- 스니펫 ID로 조회 -->
+    <select id="findById" resultType="Snippet">
+        SELECT
+            s.id,
+            s.user_id,
+            s.folder_id,
+            s.color_id,
+            s.source_url,
+            s.type,
+            s.memo,
+            s.created_at,
+            s.updated_at,
+            s.like_count,
+            s.visibility,
+            CASE
+                WHEN s.type = 'code' THEN sc.content
+                WHEN s.type = 'text' THEN st.content
+                ELSE NULL
+            END as content,
+            CASE
+                WHEN s.type = 'code' THEN sc.language
+                ELSE NULL
+            END as language,
+            s.memo as title
+        FROM snippets s
+        LEFT JOIN snippet_codes sc ON s.id = sc.snippet_id AND s.type = 'code'
+        LEFT JOIN snippet_texts st ON s.id = st.snippet_id AND s.type = 'text'
+        WHERE s.id = #{id}
+    </select>
+
+    <!-- 모든 스니펫 조회 -->
+    <select id="findAll" resultType="Snippet">
+        SELECT
+            s.id,
+            s.user_id,
+            s.folder_id,
+            s.color_id,
+            s.source_url,
+            s.type,
+            s.memo,
+            s.created_at,
+            s.updated_at,
+            s.like_count,
+            s.visibility,
+            CASE
+                WHEN s.type = 'code' THEN sc.content
+                WHEN s.type = 'text' THEN st.content
+                ELSE NULL
+            END as content,
+            CASE
+                WHEN s.type = 'code' THEN sc.language
+                ELSE NULL
+            END as language,
+            s.memo as title
+        FROM snippets s
+        LEFT JOIN snippet_codes sc ON s.id = sc.snippet_id AND s.type = 'code'
+        LEFT JOIN snippet_texts st ON s.id = st.snippet_id AND s.type = 'text'
+        ORDER BY s.created_at DESC
+    </select>
+
+    <!-- 스니펫 생성 -->
+    <insert id="insertSnippet" parameterType="Snippet" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO snippets (
+            user_id, folder_id, color_id, source_url, type, memo, created_at, like_count, visibility
+        ) VALUES (
+            #{userId}, #{folderId}, #{colorId}, #{sourceUrl}, #{type}, #{memo}, NOW(), 0, #{visibility}
+        )
+    </insert>
+
+    <!-- 스니펫 수정 -->
+    <update id="updateSnippet" parameterType="Snippet">
+        UPDATE snippets SET
+            user_id = #{userId},
+            folder_id = #{folderId},
+            color_id = #{colorId},
+            source_url = #{sourceUrl},
+            type = #{type},
+            memo = #{memo},
+            updated_at = NOW(),
+            visibility = #{visibility}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 스니펫 삭제 -->
+    <delete id="deleteSnippet">
+        DELETE FROM snippets WHERE id = #{id}
+    </delete>
+
+</mapper>

@@ -230,17 +230,17 @@ async function applyHighlight(colorId = 1) {
     };
 
     // 서버 저장 요청 시도
-    // try {
-    //     const serverId = await sendSnippetToServer(highlightMeta);
-    //     if (serverId) {
-    //         console.log("서버 응답 serverId:", serverId);
-    //         highlight.serverId = serverId;
-    //     } else {
-    //         console.warn("서버 저장 실패 → 서버 ID 없음");
-    //     }
-    // } catch (err) {
-    //     console.error("서버 저장 오류", err);
-    // }
+    try {
+        const serverId = await sendSnippetToServer(highlightMeta);
+        if (serverId) {
+            console.log("서버 응답 serverId:", serverId);
+            highlight.serverId = serverId;
+        } else {
+            console.warn("서버 저장 실패 → 서버 ID 없음");
+        }
+    } catch (err) {
+        console.error("서버 저장 오류", err);
+    }
 
     // 로컬 스토리지에 저장
     saveHighlight(highlight);
@@ -820,22 +820,22 @@ async function saveCodeSnippet(
         const updated = [...highlights, snippet];
         await chrome.storage.local.set({ highlights: updated });
 
-        // try {
-        //     // 서버에 스니펫 전송 (POST)
-        //     const serverId = await sendSnippetToServer(snippet);
-        //     if (serverId) {
-        //         snippet.serverId = serverId;
-        //
-        //         // 받은 serverId를 다시 반영하여 로컬 저장소 갱신
-        //         await chrome.storage.local.set({
-        //             highlights: updated.map((s) =>
-        //                 s.snippetId === snippetId ? { ...s, serverId } : s
-        //             ),
-        //         });
-        //     }
-        // } catch (err) {
-        //     console.warn("⚠️ 서버 저장 실패:", err.message);
-        // }
+        try {
+            // 서버에 스니펫 전송 (POST)
+            const serverId = await sendSnippetToServer(snippet);
+            if (serverId) {
+                snippet.serverId = serverId;
+
+                // 받은 serverId를 다시 반영하여 로컬 저장소 갱신
+                await chrome.storage.local.set({
+                    highlights: updated.map((s) =>
+                        s.snippetId === snippetId ? { ...s, serverId } : s
+                    ),
+                });
+            }
+        } catch (err) {
+            console.warn("⚠️ 서버 저장 실패:", err.message);
+        }
     }
 
     // 버튼 텍스트를 edit으로 변경
@@ -845,6 +845,45 @@ async function saveCodeSnippet(
     detectCodeBlocks();
 
     console.log("CODE 스니펫 저장/수정 완료");
+}
+
+// 스니펫 데이터 서버 전송 함수
+async function sendSnippetToServer(snippet) {
+    // 서버에 보낼 요청 본문 구성
+    const payload = {
+        colorId: snippet.colorId || 1,               // 색상 ID (기본값 1)
+        sourceUrl: snippet.sourceUrl,                // 스니펫 발생한 페이지 URL
+        type: snippet.type || "TEXT",                // 스니펫 타입 (TEXT or CODE)
+        content: snippet.content || "",              // 스니펫 본문
+        language: snippet.language || "",            // 코드 언어 정보 (선택)
+    };
+
+    try {
+        // POST 요청 전송
+        const res = await fetch("http://localhost:8090/api/snippets", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        });
+
+        // 응답 상태가 실패일 경우 경고 로그 출력 후 null 반환
+        if (!res.ok) {
+            const error = await res.text();
+            console.warn("❌ 서버 오류:", error);
+            return null;
+        }
+
+        // 정상 응답인 경우 서버에서 받은 snippetId 반환
+        const result = await res.json();
+        return result.snippetId;
+    } catch (err) {
+        // 네트워크 또는 서버 연결 문제
+        console.warn("❌ 네트워크 오류:", err);
+        console.warn(
+            "⚠️ 현재 서버와 연결되어 있지 않습니다. 저장은 로컬에만 반영됩니다."
+        );
+        return null;
+    }
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {

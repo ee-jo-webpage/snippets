@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.or.kosa.snippets.snippetExt.mapper.SnippetExtMapper">
+
+    <!-- SnippetResultMap  -->
+    <!--    <resultMap id="SnippetResultMap" type="com.example.model.SnippetExt">-->
+    <!--        <id property="snippetId" column="snippet_id"/>-->
+    <!--        <result property="sourceUrl" column="source_url"/>-->
+    <!--        <result property="type" column="type"/>-->
+    <!--        <result property="colorId" column="color_id"/>-->
+    <!--    </resultMap>-->
+
+    <!-- SnippetTextResultMap -->
+    <!--    <resultMap id="SnippetTextResultMap" type="com.example.model.SnippetExt">-->
+    <!--        <id property="snippetId" column="snippet_id"/>-->
+    <!--        <result property="sourceUrl" column="source_url"/>-->
+    <!--        <result property="type" column="type"/>-->
+    <!--        <result property="colorId" column="color_id"/>-->
+    <!--        <result property="content" column="content"/>-->
+    <!--    </resultMap>-->
+
+    <insert id="insertSnippet" useGeneratedKeys="true" keyProperty="snippetId">
+        INSERT INTO SNIPPETS (SOURCE_URL, TYPE, COLOR_ID, MEMO)
+        VALUES (#{sourceUrl}, #{type}, #{colorId}, #{memo})
+    </insert>
+
+    <insert id="insertSnippetText">
+        INSERT INTO SNIPPET_TEXTS (SNIPPET_ID, CONTENT)
+        VALUES (#{snippetId}, #{content})
+    </insert>
+
+    <insert id="insertSnippetCode">
+        INSERT INTO SNIPPET_CODES (SNIPPET_ID, CONTENT, LANGUAGE)
+        VALUES (#{snippetId}, #{content}, #{language})
+    </insert>
+
+    <update id="updateSnippet">
+        UPDATE SNIPPETS
+        SET COLOR_ID = #{colorId},
+            MEMO     = #{memo}
+        WHERE SNIPPET_ID = ${snippetId}
+    </update>
+
+
+</mapper>

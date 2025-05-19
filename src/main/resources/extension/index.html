@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+</head>
+<body>
+    <h1>No CSS Club</h1>
+
+    <p>
+        The modern web is
+        <strong
+        >literally Satan and will probably eat your first-born child if we don't
+            do anything about it, and quick!</strong
+        >
+        (had to increase the hyperbolism from <a href="https://1mb.club/">the</a>
+        <a href="https://512kb.club/">other</a>
+        <a href="https://250kb.club/">websites</a>; interestingly,
+        <a href="https://no-js.club/">the NoJS Club</a>, which until now has
+        arguably been the most radical of *.clubs, does not have much hyperbole,
+        which really is a shame).
+    </p>
+
+    <p>
+        To do what the Web was initally intended for (that is, make information
+        accessible via the Internet), all you need is to serve HTML documents. If
+        you need <em>"style"</em> that just means you're trying to cover up your
+        lack of interesting information.
+    </p>
+
+    <p>
+        Have *.club websites gone too far? Yes. If the author's own personal
+        website doesn't qualify for the list, that's a good sign of having gone
+        too far. That being said, please submit websites, your own or just
+        interesting ones you like, if they qualify for the rules below.
+    </p>
+
+    <h2>The Rules:</h2>
+
+    <ol>
+        <li>No CSS (linked or in a <code>style</code> tag).</li>
+        <li>No <code>style</code> attributes.</li>
+        <li>No JavaScript.</li>
+    </ol>
+
+    <h2>Submitting:</h2>
+
+    <p>
+        <a href="mailto:m@m-chrzan.xyz">Email me</a> with "[NoCSS]
+        <em>submitted URL</em>" in the subject line. If submitting multiple
+        websites, you can list them in the body instead. Feel free to include a
+        short description, personal anecdote, or joke in the email body as well.
+        Make sure your email is sent as <code>text/plain</code>, otherwise I will
+        personally judge you.
+    </p>
+
+    <h2>The List:</h2>
+    <pre><code class="language-cpp">
+      bool changed = false;
+      for (int i = 1; i &lt;= N + 1; i++) {
+          changed = false;
+          for (int j = 1; j &lt;= N - i; j++) {
+              if (A[j] &gt; A[j + 1]) {
+                  changed = true;
+                  swap(A[j], A[j + 1]);
+              }
+          }
+          if (!changed) {
+              cout &lt;&lt; i &lt;&lt; '\n';
+              break;
+          }
+      }
+      </code></pre>
+
+    <pre><code class="language-java">
+      @SpringBootApplication
+      @ComponentScan(basePackages = { "net.tekknow.medaverter.*" })
+      @EntityScan(basePackages = "net.tekknow.medaverter.*")
+      public class MedaverterApplication {
+      
+          public static void main(String[] args) {
+              SpringApplication.run(MedaverterApplication.class, args);
+          }
+      
+          @Bean
+          public WebMvcConfigurer corsConfigurer() {
+              return new WebMvcConfigurer() {
+                  @Override
+                  public void addCorsMappings(CorsRegistry registry) {
+                      registry.addMapping("/**")
+                              .allowedOrigins("http://localhost:3000")
+                              .allowedMethods("GET", "POST", "PUT", "DELETE")
+                              .allowedHeaders("*")
+                              .allowCredentials(true);
+                  }
+              };
+          }
+      }
+      </code></pre>
+
+    <pre><code class="language-java">
+      class Singleton implements Serializable {
+      
+          // 생성자를 private로 선언 (외부에서 new 사용 X)
+          private Singleton() {}
+      
+          private static class SettingsHolder {
+              private static final Singleton INSTANCE = new Singleton();
+          }
+      
+          public static Singleton getInstance() {
+              return SettingsHolder.INSTANCE;
+          }
+      }
+      </code></pre>
+</body>
+</html>

@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 public class AuthService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final MailService mailService;
     @Transactional
     public void register(UserDTO dto) {
         if (userMapper.existsByEmailAndDisabledAndDeleted(dto.getEmail())) {
@@ -42,10 +43,35 @@ public class AuthService {
                 .build();
 
         userMapper.insertUser(user);
-//
-//        String code = CodeGenerator.generateCode();
-//        mailService.saveVerificationCode(user.getEmail(), code, 10);
-//        mailService.sendVerificationCode(user.getEmail(), code);
+
+        String code = CodeGenerator.generateCode();
+        mailService.saveVerificationCode(user.getEmail(), code, 10);
+        mailService.sendVerificationCode(user.getEmail(), code);
     }
 
+    @Transactional
+    public void resendVerificationCode(String email) {
+        Users user = userMapper.findByEmail(email);
+        if (user == null) throw new IllegalArgumentException("사용자 없음");
+        if (user.isEnabled()) throw new IllegalStateException("이미 인증된 사용자입니다.");
+
+        String code = CodeGenerator.generateCode();
+        mailService.saveVerificationCode(email, code, 10);
+        mailService.sendVerificationCode(email, code);
+    }
+
+
+    @Transactional
+    public void verifyEmailCode(String email, String inputCode) {
+        if (!mailService.verifyCode(email, inputCode)) {
+            throw new IllegalArgumentException("인증 코드가 일치하지 않거나 만료되었습니다.");
+        }
+
+        Users user = userMapper.findByEmail(email);
+        if (user == null) throw new IllegalArgumentException("사용자 없음");
+
+        user.setEnabled(true);
+        userMapper.updateUser(user);
+        mailService.deleteCode(email);
+    }
 }

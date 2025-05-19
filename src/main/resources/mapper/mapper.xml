@@ -48,12 +48,23 @@
         VALUES (#{email}, #{nickname}, #{password}, #{enabled}, #{createdAt}, #{updatedAt}, #{deletedAt}, #{reason}, #{role})
     </insert>
 
-
-
-
-
     <select id="existsByEmailAndEnabledFalseBefore" parameterType="java.time.LocalDateTime" resultMap="userResultMap">
         SELECT * FROM users WHERE enabled = false AND created_at &lt; #{cutoff}
     </select>
+
+    <update id="updateUser" parameterType="kr.or.kosa.snippets.user.model.Users">
+        UPDATE users
+        SET email = #{email},
+            nickname = #{nickname},
+            password = #{password},
+            enabled = #{enabled},
+            created_at = #{createdAt},
+            updated_at = #{updatedAt},
+            deleted_at = #{deletedAt},
+            reason = #{reason},
+            role = #{role}
+        WHERE user_id = #{userId}
+    </update>
+
 
 </mapper>

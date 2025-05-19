@@ -21,5 +21,10 @@ public class AuthController {
         model.addAttribute("user", new Users());
         return "/user/auth/register";
     }
+    @GetMapping("/verify")
+    public String verifyPage(Principal principal) {
+        if (principal != null) return "redirect:/";
+        return "/user/auth/verify";
+    }
 
 }

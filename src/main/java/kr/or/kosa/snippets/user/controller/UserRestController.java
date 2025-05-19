@@ -37,18 +37,26 @@ public class UserRestController {
         } catch (IllegalArgumentException e) {
             String message = e.getMessage();
 
-//            String targetField = "email";
-//            if (message.contains("인증을 완료하지 않은")) {
-//                targetField = "email";
-//            } else if (message.contains("탈퇴 처리된")) {
-//                targetField = "email";
-//            } else if (message.contains("비밀번호")) {
-//                targetField = "confirmPassword";
-//            }
+            String targetField = "email";
+            if (message.contains("인증을 완료하지 않은")) {
+                targetField = "email";
+            } else if (message.contains("탈퇴 처리된")) {
+                targetField = "email";
+            } else if (message.contains("비밀번호")) {
+                targetField = "confirmPassword";
+            }
             return ResponseEntity.badRequest().body(
-                    Map.of("errors","")
+                    Map.of("errors", Map.of(targetField, message))
             );
         }
     }
-
+    @PostMapping("/verify-code")
+    public ResponseEntity<?> verifyCode(@RequestBody Map<String, String> payload) {
+        try {
+            authService.verifyEmailCode(payload.get("email"), payload.get("code"));
+            return ResponseEntity.ok("인증 성공");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 }

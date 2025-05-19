@@ -13,4 +13,8 @@ public interface UserMapper {
 
 
     void insertUser(Users user);
+
+    Users findByEmail(String email);
+
+    void updateUser(Users user);
 }

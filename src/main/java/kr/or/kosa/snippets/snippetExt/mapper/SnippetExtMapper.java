@@ -14,4 +14,6 @@ public interface SnippetExtMapper {
     void updateSnippet(SnippetExtUpdate snippetUpdate);
 
     void insertSnippetCode(SnippetExtCreate snippet);
+
+    void deleteSnippet(Long id);
 }

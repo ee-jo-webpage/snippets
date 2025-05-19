@@ -31,4 +31,8 @@ public class SnippetService {
     public void updateSnippet(SnippetExtUpdate snippetUpdate) {
         snippetExtMapper.updateSnippet(snippetUpdate);
     }
+
+    public void deleteSnippet(Long id) {
+        snippetExtMapper.deleteSnippet(id);
+    }
 }

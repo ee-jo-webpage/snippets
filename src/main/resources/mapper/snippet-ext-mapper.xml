@@ -44,5 +44,11 @@
         WHERE SNIPPET_ID = ${snippetId}
     </update>
 
+    <delete id="deleteSnippet">
+        DELETE
+        FROM SNIPPETS
+        WHERE SNIPPET_ID = #{id}
+    </delete>
+
 
 </mapper>

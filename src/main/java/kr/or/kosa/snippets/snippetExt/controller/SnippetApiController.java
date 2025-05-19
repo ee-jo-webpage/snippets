@@ -32,5 +32,13 @@ public class SnippetApiController {
         return ResponseEntity.ok().build();
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteSnippet(@PathVariable Long id) {
+        log.warn(String.valueOf(id));
+        snippetService.deleteSnippet(id);
+        return ResponseEntity.ok().build();
+    }
+
+
 
 }

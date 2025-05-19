@@ -1,5 +1,6 @@
 package kr.or.kosa.snippets.like.controller;
 
+import kr.or.kosa.snippets.like.model.Snippet;
 import kr.or.kosa.snippets.like.service.SnippetService;
 import kr.or.kosa.snippets.like.service.LikeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -127,22 +129,30 @@ public class PerformanceController {
      * 뷰 방식 시뮬레이션 (실제 뷰가 없는 경우)
      */
     private Object simulateViewQuery(int limit) {
-        // 실제 뷰가 구현되어 있다면:
-        // return snippetService.getPopularSnippetsFromView(limit);
+        try {
+            // 실제 뷰가 구현되어 있다면 뷰 사용
+            List<Snippet> viewSnippets = snippetService.getPopularSnippetsFromView(limit);
+            if (viewSnippets != null && !viewSnippets.isEmpty()) {
+                return viewSnippets;
+            }
+        } catch (Exception e) {
+            System.out.println("뷰 방식 실행 실패, 시뮬레이션으로 대체: " + e.getMessage());
+        }
 
-        // 시뮬레이션: 더 복잡한 처리
-        var snippets = snippetService.getAllPublicSnippets();
+        // 뷰가 없거나 실패시 시뮬레이션: 상위 100개만 처리
+        var allSnippets = snippetService.getAllPublicSnippets();
 
-        // 각 스니펫의 실제 좋아요 수 계산 (뷰 방식 시뮬레이션)
-        snippets.forEach(snippet -> {
+        // 각 스니펫의 실제 좋아요 수 계산
+        allSnippets.forEach(snippet -> {
             long actualLikes = likeService.getLikesCount(snippet.getSnippetId());
             snippet.setLikeCount((int) actualLikes);
         });
 
-        // 정렬 후 제한
-        return snippets.stream()
+        // 정렬 후 상위 100개만 선택, 그 중에서 limit만큼 반환
+        return allSnippets.stream()
                 .sorted((s1, s2) -> Integer.compare(s2.getLikeCount(), s1.getLikeCount()))
-                .limit(limit)
+                .limit(100)  // 뷰처럼 상위 100개만
+                .limit(limit)  // 요청된 개수만큼만
                 .collect(java.util.stream.Collectors.toList());
     }
 

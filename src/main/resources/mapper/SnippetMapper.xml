@@ -53,7 +53,7 @@
         SELECT snippet_id, user_id, folder_id, color_id, source_url, type, memo,
         created_at, updated_at, like_count, visibility
         FROM popular_snippets_view
-        <if test="limit != null and limit > 0">
+        <if test="limit != null and limit > 0 and limit &lt;= 100">
             LIMIT #{limit}
         </if>
     </select>
@@ -136,6 +136,7 @@
         SELECT snippet_id, user_id, folder_id, color_id, source_url, type, memo,
                created_at, updated_at, like_count, visibility
         FROM popular_snippets_view
+        ORDER BY like_count DESC, snippet_id ASC
         LIMIT #{offset,jdbcType=INTEGER}, #{limit,jdbcType=INTEGER}
     </select>
 

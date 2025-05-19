@@ -126,9 +126,9 @@
                s.created_at, s.updated_at, s.like_count, s.visibility,
                (SELECT COUNT(*) FROM likes l WHERE l.snippet_id = s.snippet_id) as actual_likes
         FROM snippets s
-        WHERE s.visibility = 1
+        WHERE s.visibility = 1 /*공개된 스니펫만 조회하겠다는 의미*/
         ORDER BY actual_likes DESC, s.snippet_id ASC
-        LIMIT #{offset}, #{limit}
+        LIMIT #{offset}, #{limit} /*페이징 구현 : #{offset}: 건너뛸 행의 개수 (시작 위치), #{limit}: 가져올 행의 개수 (페이지 크기)*/
     </select>
 
     <!-- 뷰를 이용한 페이징 처리된 인기 스니펫 조회 (새로 추가) -->

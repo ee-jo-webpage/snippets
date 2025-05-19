@@ -15,7 +15,9 @@ public class LikeController {
 
     @GetMapping("/likePage")
     public String showLikePage(@RequestParam(value = "snippetId", defaultValue = "1") Integer snippetId,
+
                                Model model) {
+                               // Model 객체 - 웹 페이지에 데이터를 전달하는 용도
 
         System.out.println("좋아요 페이지 접근 - snippetId: " + snippetId);
 
@@ -25,6 +27,7 @@ public class LikeController {
 
         System.out.println("스니펫 " + snippetId + " - 좋아요 수: " + likeCount + ", 좋아요 상태: " + isLiked);
 
+        // 모델에 데이터 추가
         model.addAttribute("snippetId", snippetId);
         model.addAttribute("likeCount", likeCount);
         model.addAttribute("isLiked", isLiked);

@@ -35,17 +35,35 @@
         ORDER BY created_at DESC
     </select>
 
-    <!-- 인기 스니펫 조회 (좋아요 수 기준 정렬) -->
+    <!-- 인기 스니펫 조회 (기존 방식) -->
     <select id="getPopularSnippets" resultMap="SnippetResultMap">
         SELECT s.snippet_id, s.user_id, s.folder_id, s.color_id, s.source_url, s.type, s.memo,
         s.created_at, s.updated_at, s.like_count, s.visibility,
         (SELECT COUNT(*) FROM likes l WHERE l.snippet_id = s.snippet_id) as actual_likes
         FROM snippets s
         WHERE s.visibility = 1
-        ORDER BY actual_likes DESC, s.snippet_id ASC  <!-- 변경된 부분: created_at 대신 snippet_id로 정렬 -->
+        ORDER BY actual_likes DESC, s.snippet_id ASC
         <if test="limit != null and limit > 0">
             LIMIT #{limit}
         </if>
+    </select>
+
+    <!-- 뷰를 이용한 인기 스니펫 조회 (새로 추가) -->
+    <select id="getPopularSnippetsFromView" resultMap="SnippetResultMap">
+        SELECT snippet_id, user_id, folder_id, color_id, source_url, type, memo,
+        created_at, updated_at, like_count, visibility
+        FROM popular_snippets_view
+        <if test="limit != null and limit > 0">
+            LIMIT #{limit}
+        </if>
+    </select>
+
+    <!-- 뷰를 이용한 상위 100개 인기 스니펫 조회 (새로 추가) -->
+    <select id="getTop100PopularSnippets" resultMap="SnippetResultMap">
+        SELECT snippet_id, user_id, folder_id, color_id, source_url, type, memo,
+               created_at, updated_at, like_count, visibility, rank_num
+        FROM top_100_popular_snippets
+        ORDER BY rank_num ASC
     </select>
 
     <!-- 검색 조건에 따른 스니펫 조회 -->
@@ -102,7 +120,7 @@
         SELECT COUNT(*) FROM snippets WHERE visibility = 1
     </select>
 
-    <!-- 페이징 처리된 인기 스니펫 조회 -->
+    <!-- 페이징 처리된 인기 스니펫 조회 (기존) -->
     <select id="getPopularSnippetsPaged" resultMap="SnippetResultMap">
         SELECT s.snippet_id, s.user_id, s.folder_id, s.color_id, s.source_url, s.type, s.memo,
                s.created_at, s.updated_at, s.like_count, s.visibility,
@@ -110,6 +128,14 @@
         FROM snippets s
         WHERE s.visibility = 1
         ORDER BY actual_likes DESC, s.snippet_id ASC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 뷰를 이용한 페이징 처리된 인기 스니펫 조회 (새로 추가) -->
+    <select id="getPopularSnippetsPagedFromView" resultMap="SnippetResultMap">
+        SELECT snippet_id, user_id, folder_id, color_id, source_url, type, memo,
+               created_at, updated_at, like_count, visibility
+        FROM popular_snippets_view
         LIMIT #{offset}, #{limit}
     </select>
 
@@ -121,6 +147,22 @@
         WHERE visibility = 1
         ORDER BY created_at DESC
         LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 뷰에서 전체 인기 스니펫 수 조회 (새로 추가) -->
+    <select id="countPopularSnippetsFromView" resultType="int">
+        SELECT COUNT(*) FROM popular_snippets_view
+    </select>
+
+    <!-- 뷰를 이용한 최신순 조회 (비교용 - 실제로는 의미없지만 테스트용) -->
+    <select id="getRecentSnippetsFromView" resultMap="SnippetResultMap">
+        SELECT snippet_id, user_id, folder_id, color_id, source_url, type, memo,
+        created_at, updated_at, like_count, visibility
+        FROM popular_snippets_view
+        ORDER BY created_at DESC
+        <if test="limit != null and limit > 0">
+            LIMIT #{limit}
+        </if>
     </select>
 
 </mapper>

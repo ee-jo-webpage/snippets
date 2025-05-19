@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>현재 시스템 성능 테스트</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        .header {
+            text-align: center;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .test-section {
+            background-color: white;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .test-header {
+            background-color: #007bff;
+            color: white;
+            padding: 15px 20px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .test-content {
+            padding: 20px;
+        }
+
+        .test-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .control-group label {
+            font-weight: bold;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .control-group input {
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 80px;
+        }
+
+        .test-btn {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .test-btn:hover {
+            background-color: #218838;
+        }
+
+        .test-btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .result-card {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #007bff;
+        }
+
+        .result-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #495057;
+        }
+
+        .result-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .result-unit {
+            font-size: 14px;
+            color: #666;
+            margin-left: 5px;
+        }
+
+        .chart-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+
+        .system-info {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+
+        .system-info h4 {
+            margin-top: 0;
+            color: #0056b3;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .info-item {
+            background-color: white;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .comparison-note {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+
+        .comparison-note h4 {
+            margin-top: 0;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>🚀 현재 시스템 성능 테스트</h1>
+    <p>기존 방식(뷰 미사용)의 성능을 측정합니다</p>
+    <p><strong>참고:</strong> 인덱스 추가 전후의 성능을 비교해보세요</p>
+</div>
+
+<!-- 기본 조회 성능 테스트 -->
+<div class="test-section">
+    <div class="test-header">📊 기본 조회 성능 테스트</div>
+    <div class="test-content">
+        <div class="test-controls">
+            <div class="control-group">
+                <label>반복 횟수</label>
+                <input type="number" id="basicIterations" value="10" min="1" max="50">
+            </div>
+            <div class="control-group">
+                <label>조회 개수</label>
+                <input type="number" id="basicLimit" value="20" min="1" max="100">
+            </div>
+            <button id="runBasicTest" class="test-btn">테스트 실행</button>
+        </div>
+
+        <div id="basicLoading" class="loading">
+            <div class="spinner"></div>
+            <p>기본 조회 성능 테스트 중...</p>
+        </div>
+
+        <div id="basicResults" class="results">
+            <div id="basicResultsGrid" class="results-grid"></div>
+            <div class="chart-container">
+                <canvas id="basicChart" width="400" height="200"></canvas>
+            </div>
+            <div id="basicSystemInfo" class="system-info"></div>
+        </div>
+    </div>
+</div>
+
+<!-- 좋아요 기능 성능 테스트 -->
+<div class="test-section">
+    <div class="test-header">❤️ 좋아요 기능 성능 테스트</div>
+    <div class="test-content">
+        <div class="test-controls">
+            <div class="control-group">
+                <label>반복 횟수</label>
+                <input type="number" id="likeIterations" value="5" min="1" max="20">
+            </div>
+            <button id="runLikeTest" class="test-btn">테스트 실행</button>
+        </div>
+
+        <div id="likeLoading" class="loading">
+            <div class="spinner"></div>
+            <p>좋아요 기능 성능 테스트 중...</p>
+        </div>
+
+        <div id="likeResults" class="results">
+            <div id="likeResultsGrid" class="results-grid"></div>
+        </div>
+    </div>
+</div>
+
+<!-- 대량 데이터 처리 성능 테스트 -->
+<div class="test-section">
+    <div class="test-header">🗃️ 대량 데이터 처리 성능 테스트</div>
+    <div class="test-content">
+        <button id="runBulkTest" class="test-btn">테스트 실행</button>
+
+        <div id="bulkLoading" class="loading">
+            <div class="spinner"></div>
+            <p>대량 데이터 처리 성능 테스트 중...</p>
+        </div>
+
+        <div id="bulkResults" class="results">
+            <div id="bulkResultsGrid" class="results-grid"></div>
+        </div>
+    </div>
+</div>
+
+<!-- 성능 개선 가이드 -->
+<div class="comparison-note">
+    <h4>📈 성능 개선 가이드</h4>
+    <p><strong>인덱스 추가 전후 비교를 위해:</strong></p>
+    <ol>
+        <li>현재 상태에서 성능 측정 (인덱스 없음)</li>
+        <li>인덱스 추가 SQL 실행</li>
+        <li>다시 성능 측정 (인덱스 있음)</li>
+        <li>결과 비교 분석</li>
+    </ol>
+    <p><strong>예상 개선 효과:</strong></p>
+    <ul>
+        <li>최신순 조회: 5-10배 향상</li>
+        <li>인기순 조회: 3-5배 향상</li>
+        <li>좋아요 상태 확인: 10-20배 향상</li>
+    </ul>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // 기본 조회 성능 테스트
+        $('#runBasicTest').click(function() {
+            const iterations = $('#basicIterations').val();
+            const limit = $('#basicLimit').val();
+            runBasicPerformanceTest(iterations, limit);
+        });
+
+        // 좋아요 기능 성능 테스트
+        $('#runLikeTest').click(function() {
+            const iterations = $('#likeIterations').val();
+            runLikePerformanceTest(iterations);
+        });
+
+        // 대량 데이터 처리 성능 테스트
+        $('#runBulkTest').click(function() {
+            runBulkPerformanceTest();
+        });
+    });
+
+    function runBasicPerformanceTest(iterations, limit) {
+        $('#runBasicTest').prop('disabled', true);
+        $('#basicLoading').show();
+        $('#basicResults').hide();
+
+        $.ajax({
+            url: '/api/performance/current-system',
+            type: 'GET',
+            data: { iterations: iterations, limit: limit },
+            success: function(data) {
+                displayBasicResults(data);
+                $('#basicResults').show();
+            },
+            error: function(xhr, status, error) {
+                alert('기본 테스트 실행 중 오류: ' + error);
+            },
+            complete: function() {
+                $('#runBasicTest').prop('disabled', false);
+                $('#basicLoading').hide();
+            }
+        });
+    }
+
+    function runLikePerformanceTest(iterations) {
+        $('#runLikeTest').prop('disabled', true);
+        $('#likeLoading').show();
+        $('#likeResults').hide();
+
+        $.ajax({
+            url: '/api/performance/like-operations',
+            type: 'POST',
+            data: { iterations: iterations },
+            success: function(data) {
+                displayLikeResults(data);
+                $('#likeResults').show();
+            },
+            error: function(xhr, status, error) {
+                alert('좋아요 테스트 실행 중 오류: ' + error);
+            },
+            complete: function() {
+                $('#runLikeTest').prop('disabled', false);
+                $('#likeLoading').hide();
+            }
+        });
+    }
+
+    function runBulkPerformanceTest() {
+        $('#runBulkTest').prop('disabled', true);
+        $('#bulkLoading').show();
+        $('#bulkResults').hide();
+
+        $.ajax({
+            url: '/api/performance/bulk-operations',
+            type: 'GET',
+            success: function(data) {
+                displayBulkResults(data);
+                $('#bulkResults').show();
+            },
+            error: function(xhr, status, error) {
+                alert('대량 데이터 테스트 실행 중 오류: ' + error);
+            },
+            complete: function() {
+                $('#runBulkTest').prop('disabled', false);
+                $('#bulkLoading').hide();
+            }
+        });
+    }
+
+    function displayBasicResults(data) {
+        const resultsGrid = $('#basicResultsGrid');
+        resultsGrid.empty();
+
+        const tests = data.testResults;
+        const chartLabels = [];
+        const chartData = [];
+
+        Object.keys(tests).forEach(function(testName) {
+            const time = tests[testName];
+            chartLabels.push(testName.replace(/_/g, ' '));
+            chartData.push(time);
+
+            const resultCard = $(`
+                    <div class="result-card">
+                        <div class="result-title">${testName.replace(/_/g, ' ')}</div>
+                        <div class="result-value">${time}<span class="result-unit">ms</span></div>
+                    </div>
+                `);
+            resultsGrid.append(resultCard);
+        });
+
+        // 차트 생성
+        createChart('basicChart', chartLabels, chartData, '기본 조회 성능 (ms)');
+
+        // 시스템 정보 표시
+        displaySystemInfo(data.systemInfo, '#basicSystemInfo');
+    }
+
+    function displayLikeResults(data) {
+        const resultsGrid = $('#likeResultsGrid');
+        resultsGrid.empty();
+
+        const results = [
+            { name: '좋아요 추가', time: data.좋아요_추가_시간 },
+            { name: '좋아요 삭제', time: data.좋아요_삭제_시간 }
+        ];
+
+        results.forEach(function(result) {
+            const resultCard = $(`
+                    <div class="result-card">
+                        <div class="result-title">${result.name}</div>
+                        <div class="result-value">${result.time}<span class="result-unit">ms</span></div>
+                    </div>
+                `);
+            resultsGrid.append(resultCard);
+        });
+    }
+
+    function displayBulkResults(data) {
+        const resultsGrid = $('#bulkResultsGrid');
+        resultsGrid.empty();
+
+        Object.keys(data).forEach(function(key) {
+            const time = data[key];
+            const resultCard = $(`
+                    <div class="result-card">
+                        <div class="result-title">${key.replace(/_/g, ' ')}</div>
+                        <div class="result-value">${time}<span class="result-unit">ms</span></div>
+                    </div>
+                `);
+            resultsGrid.append(resultCard);
+        });
+    }
+
+    function createChart(canvasId, labels, data, label) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+
+        // 기존 차트 제거
+        if (window[canvasId + 'Chart']) {
+            window[canvasId + 'Chart'].destroy();
+        }
+
+        window[canvasId + 'Chart'] = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: label,
+                    data: data,
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: label
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: '실행 시간 (밀리초)'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function displaySystemInfo(systemInfo, containerId) {
+        const container = $(containerId);
+        container.html(`
+                <h4>🖥️ 시스템 정보</h4>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">사용 가능한 메모리</div>
+                        <div>${systemInfo.사용가능_메모리_MB} MB</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">사용 중인 메모리</div>
+                        <div>${systemInfo.사용중_메모리_MB} MB</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">프로세서 수</div>
+                        <div>${systemInfo.프로세서_수}개</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Java 버전</div>
+                        <div>${systemInfo.Java_버전}</div>
+                    </div>
+                </div>
+            `);
+    }
+</script>
+</body>
+</html>

@@ -13,12 +13,24 @@ const colorMap = {
     6: "#B0E0E6", // Sky Blue
     7: "#FFDAB9", // Peach Puff
 };
+const colorMapName = {
+    0: "Pastel Yellow",
+    1: "Lemon Chiffon",
+    2: "Powder Blue",
+    3: "Cotton Candy",
+    4: "Mint Cream",
+    5: "Lavender Mist",
+    6: "Sky Blue",
+    7: "Peach Puff",
+};
 
+// 초기화 함수
 function init() {
     console.log("init()함수 호출!")
     document.addEventListener("mouseup", handleMouseUp);
 }
 
+// 드래그 이벤트처리 함수
 function handleMouseUp(e) {
     // 팝업 내부를 클릭한 경우에는 하이라이트 처리를 하지 않고 무시
     // 사용자가 팝업 안에 있는 버튼을 클릭한 경우
@@ -36,7 +48,7 @@ function handleMouseUp(e) {
         console.log("selection이 비어 있음 (isCollapsed: true)");
 
         // 이전에 떠있던 팝업이 있다면 제거
-        // removePopup();
+        removePopup();
         return;
     }
 
@@ -47,12 +59,10 @@ function handleMouseUp(e) {
     const rect = selectedRange.getBoundingClientRect();
 
     // 해당 위치에 하이라이팅 색상 선택 팝업 표시
-    // showPopup(rect);
-
-    // temp
-    applyHighlight(1);
+    showPopup(rect);
 }
 
+// 노드의 고유 XPath 경로 생성
 function getXPathForNode(node) {
     if (node.nodeType === Node.TEXT_NODE) {
         // 텍스트 노드의 경우 부모 요소 기준으로 XPath 생성
@@ -226,8 +236,149 @@ async function applyHighlight(colorId = 1) {
     // saveHighlight(highlight);
 
     // 팝업 UI 제거 및 선택 영역 해제
-    // removePopup();
+    removePopup();
     window.getSelection().removeAllRanges();
+}
+
+// 팝업 제거 함수
+function removePopup() {
+    console.log("removePopup 호출됨");
+
+    if (popup && popup.parentNode) {
+        popup.parentNode.removeChild(popup);
+        popup = null;
+    }
+}
+
+// 선택 영역 위에 색상 선택 팝업 띄우기
+function showPopup(rect) {
+    removePopup(); // 기존 팝업 제거
+
+    popup = document.createElement("div");
+    popup.id = "highlight-popup";
+
+    // 기본 스타일 지정
+    popup.style.position = "absolute";
+    popup.style.background = "white";
+    popup.style.padding = "8px";
+    popup.style.borderRadius = "8px";
+    popup.style.boxShadow = "0 2px 6px rgba(0, 0, 0, 0.15)";
+    popup.style.display = "flex";
+    popup.style.alignItems = "center";
+    popup.style.zIndex = "999999";
+    popup.style.gap = "6px";
+
+    // 팝업 위치 계산 (선택 영역 아래)
+    const margin = 6;
+    const scrollTop = window.scrollY;
+    const scrollLeft = window.scrollX;
+
+    const popupTop = rect.bottom + scrollTop + margin;
+    let popupLeft = rect.left + scrollLeft;
+
+    // 팝업을 먼저 DOM에 추가해야 offsetWidth를 정확히 계산할 수 있음
+    document.body.appendChild(popup);
+
+    const popupWidth = popup.offsetWidth;
+    const viewportWidth = document.documentElement.clientWidth;
+
+    // 오른쪽 화면을 넘는 경우 위치 보정 (왼쪽으로 붙이기)
+    if (popupLeft + popupWidth > viewportWidth - 10) {
+        popupLeft = Math.max(viewportWidth - popupWidth - 10, 10);
+    }
+
+    // 왼쪽 화면도 넘는 경우 보정 (최소 여백 유지)
+    if (popupLeft < 10) {
+        popupLeft = 10;
+    }
+
+    popup.style.top = `${popupTop}px`;
+    popup.style.left = `${popupLeft}px`;
+
+    // 색상 버튼 그룹 생성 (처음엔 0~3번만 보임)
+    const container = document.createElement("div");
+    container.style.display = "flex";
+    container.style.gap = "6px";
+
+    for (let colorId = 0; colorId <= 3; colorId++) {
+        container.appendChild(createColorBtn(colorId));
+    }
+
+    // ▶ 토글 버튼 생성 (4~7번 확장용)
+    const toggleBtn = document.createElement("div");
+    toggleBtn.textContent = "\u25B6"; // ▶
+    toggleBtn.style.cssText = `
+    width: 24px;
+    height: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #6bcb5a;
+    border-radius: 50%;
+    font-size: 14px;
+    cursor: pointer;
+    color: white;
+  `;
+
+    let expanded = false;
+    toggleBtn.addEventListener("click", () => {
+        expanded = !expanded;
+        if (expanded) {
+            for (let i = 4; i <= 7; i++) {
+                container.appendChild(createColorBtn(i));
+            }
+            toggleBtn.textContent = "\u25C0"; // ◀
+        } else {
+            container.querySelectorAll(".color-btn").forEach((btn) => {
+                const id = parseInt(btn.dataset.colorId, 10);
+                if (id >= 4) btn.remove();
+            });
+            toggleBtn.textContent = "\u25B6"; // ▶
+        }
+
+        // 팝업이 다시 넓어졌을 경우에도 우측 끝 넘지 않도록 보정
+        const newPopupWidth = popup.offsetWidth;
+        if (popupLeft + newPopupWidth > viewportWidth - 10) {
+            popup.style.left = `${Math.max(viewportWidth - newPopupWidth - 10, 10)}px`;
+        }
+    });
+
+    popup.appendChild(container);
+    popup.appendChild(toggleBtn);
+}
+
+// 색상 선택용 원형 버튼을 생성하는 함수
+function createColorBtn(colorId) {
+    // 색상 버튼을 위한 div 요소 생성
+    const btn = document.createElement("div");
+
+    // 공통 클래스 추가 (스타일 및 토글 시 구분용)
+    btn.className = "color-btn";
+
+    // 어떤 색상인지 구분할 수 있도록 colorId를 dataset에 저장
+    btn.dataset.colorId = colorId;
+
+    // 툴팁(마우스 오버 시 설명)을 색상 이름으로 설정
+    btn.title = colorMapName[colorId];
+
+    // 버튼의 시각적 스타일 지정 (원형, 배경색, 커서 등)
+    btn.style.cssText = `
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: ${colorMap[colorId]};
+    cursor: pointer;                        
+    border: 1px solid #ccc;
+    `;
+
+    // 클릭 이벤트 핸들러 등록
+    btn.addEventListener("click", (e) => {
+        e.stopPropagation();        // 부모 요소로 클릭 이벤트 전파 방지
+        applyHighlight(colorId);   // 해당 색상으로 하이라이팅 적용
+    });
+
+    // 완성된 버튼 반환
+    return btn;
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {

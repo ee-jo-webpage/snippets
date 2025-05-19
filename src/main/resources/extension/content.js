@@ -37,6 +37,8 @@ const CODE_BLOCK_SELECTORS = `
 function init() {
     console.log("init()함수 호출!")
     document.addEventListener("mouseup", handleMouseUp);
+    document.addEventListener("click", handleSnippetClick);
+    restoreHighlights();
     detectCodeBlocks(); // 코드 블록
 }
 
@@ -801,7 +803,7 @@ async function saveCodeSnippet(
         await chrome.storage.local.set({ highlights: updated });
 
         // 서버에도 metadata 수정 요청 (비동기 PATCH)
-        // updateCodeSnippetMetadata(content, colorId, memo);
+        updateCodeSnippetMetadata(content, colorId, memo);
     } else {
         // 신규 저장: UUID 생성 후 스니펫 객체 구성
         const snippetId = crypto.randomUUID();
@@ -884,6 +886,330 @@ async function sendSnippetToServer(snippet) {
         );
         return null;
     }
+}
+
+// 코드 스니펫 수정 서버 전송 함수
+function updateCodeSnippetMetadata(content, newColorId, memo) {
+    // 로컬 스토리지에서 highlights 배열 불러오기
+    chrome.storage.local.get(["highlights"], (result) => {
+        const highlights = result.highlights || [];
+
+        // 대상 코드(content)와 일치하는 항목만 수정
+        const updated = highlights.map((item) => {
+            if (item.type === "CODE" && item.content.trim() === content.trim()) {
+                // 서버에 저장된 경우 → 서버에도 PATCH 요청
+                if ("serverId" in item) {
+                    fetch(`http://localhost:8090/api/snippets/${item.serverId}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ colorId: newColorId, memo }),
+                    })
+                        .then((res) => {
+                            if (!res.ok) {
+                                return res.text().then((msg) => {
+                                    console.warn("⚠️ 서버 코드 메모 수정 실패:", msg);
+                                });
+                            }
+                            console.log("🛰️ 서버 코드 메모 수정 완료:", item.serverId);
+                        })
+                        .catch((err) => {
+                            console.warn("⚠️ 서버 요청 실패:", err.message);
+                        });
+                }
+
+                // 로컬에서도 해당 항목 업데이트
+                return { ...item, colorId: newColorId, memo };
+            }
+
+            return item;
+        });
+
+        // 업데이트된 highlights를 다시 저장
+        chrome.storage.local.set({ highlights: updated }, () => {
+            console.log("코드 스니펫 색상/메모 업데이트 완료:", content);
+
+            // 코드 블록 UI 갱신 (색상 바, 버튼 등)
+            detectCodeBlocks();
+        });
+    });
+}
+
+// 텍스트 스니펫 수정 서버 전송 함수
+function updateSnippetMetadata(snippetId, newColorId, memo) {
+    // 현재 문서 내에서 해당 snippetId를 가진 모든 하이라이트 영역 찾기
+    const targets = document.querySelectorAll(
+        `snippet[data-snippet-id="${snippetId}"]`
+    );
+
+    // 각 요소의 색상 속성/스타일 변경
+    targets.forEach((el) => {
+        el.setAttribute("data-color", newColorId);
+        el.style.backgroundColor = colorMap[newColorId];
+    });
+
+    // 로컬 하이라이트 목록 불러오기
+    chrome.storage.local.get(["highlights"], (result) => {
+        const highlights = result.highlights || [];
+
+        // 해당 snippetId에 해당하는 항목 업데이트
+        const updated = highlights.map((item) => {
+            if (item.snippetId === snippetId) {
+                // 서버에 저장된 경우 → 서버에 PATCH 요청
+                if ("serverId" in item) {
+                    fetch(`http://localhost:8090/api/snippets/${item.serverId}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ colorId: newColorId, memo }),
+                    })
+                        .then((res) => {
+                            if (!res.ok) {
+                                return res.text().then((msg) => {
+                                    console.warn("⚠️ 서버 색상/메모 변경 실패:", msg);
+                                });
+                            }
+                            console.log("🛰️ 서버 색상/메모 변경 완료:", item.serverId);
+                        })
+                        .catch((err) => {
+                            console.warn("⚠️ 서버 요청 실패:", err.message);
+                        });
+                }
+
+                // 로컬 항목도 업데이트
+                return { ...item, colorId: newColorId, memo };
+            }
+
+            return item;
+        });
+
+        // 로컬 하이라이트 반영 저장
+        chrome.storage.local.set({ highlights: updated }, () => {
+            console.log("✅ 색상/메모 업데이트 완료:", snippetId);
+        });
+    });
+}
+
+// 스니펫 클릭시 실행되는 핸들러
+function handleSnippetClick(e) {
+    // 클릭된 요소 또는 상위 요소 중 snippet 태그를 찾음
+    const snippet = e.target.closest("snippet");
+    if (!snippet) return;
+
+    // 해당 snippet의 ID 및 색상 정보 추출
+    const snippetId = snippet.getAttribute("data-snippet-id");
+    const colorId = parseInt(snippet.getAttribute("data-color"), 10);
+
+    // 필수 속성 없으면 무시
+    if (!snippetId || isNaN(colorId)) return;
+
+    // 색상/메모 변경 팝업 띄우기
+    showUpdatePopup(snippet, snippetId, colorId);
+}
+
+// 하이라이트 된 스니펫 수정 팝업
+function showUpdatePopup(
+    snippetEl,
+    snippetId,
+    currentColorId,
+    currentMemo = ""
+) {
+    removePopup(); // 기존 팝업 제거
+
+    const rect = snippetEl.getBoundingClientRect(); // 위치 정보 계산
+    let selectedColorId = currentColorId;
+
+    // 팝업 생성 및 기본 스타일 설정
+    popup = document.createElement("div");
+    popup.id = "color-picker-popup";
+    popup.style = `
+    position: absolute;
+    top: ${window.scrollY + rect.bottom + 6}px;
+    left: ${window.scrollX + rect.left}px;
+    background: white;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 2147483647;
+    min-width: 220px;
+    max-width: 300px;
+    box-sizing: border-box;
+  `;
+
+    // 색상 버튼 행 구성
+    const colorRow = document.createElement("div");
+    colorRow.style.display = "flex";
+    colorRow.style.gap = "6px";
+
+    for (let colorId = 0; colorId <= 7; colorId++) {
+        const btn = document.createElement("div");
+        btn.className = "color-btn";
+        btn.dataset.colorId = colorId;
+        btn.title = colorMapName[colorId];
+        btn.style.cssText = `
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background-color: ${colorMap[colorId]};
+      cursor: pointer;
+      border: 1px solid #ccc;
+      opacity: 1;
+      position: relative;
+    `;
+
+        if (colorId === currentColorId) {
+            // 현재 선택된 색상은 비활성화 스타일로 표시
+            btn.classList.add("current-color");
+            btn.style.opacity = "0.3";
+            btn.style.border = "1px solid #aaa";
+            btn.style.cursor = "not-allowed";
+        } else {
+            // 클릭 시 선택된 색상 갱신 및 스타일 적용
+            btn.addEventListener("click", () => {
+                selectedColorId = colorId;
+
+                // 버튼 스타일 초기화
+                popup.querySelectorAll(".color-btn").forEach((b) => {
+                    const bColorId = parseInt(b.dataset.colorId);
+                    if (b.classList.contains("current-color")) {
+                        b.style.opacity = "0.3";
+                        b.style.border = "1px solid #aaa";
+                        b.style.cursor = "not-allowed";
+                    } else {
+                        b.style.opacity = "1";
+                        b.style.border = "1px solid #ccc";
+                        b.style.cursor = "pointer";
+                    }
+                });
+
+                // 현재 선택된 버튼에 강조 스타일 적용
+                btn.style.opacity = "0.8";
+                btn.style.border = "2px solid green";
+                btn.style.cursor = "not-allowed";
+            });
+        }
+
+        colorRow.appendChild(btn);
+    }
+
+    // 메모 입력창 구성
+    const memoInput = document.createElement("textarea");
+    memoInput.placeholder = "write memo!";
+    memoInput.value = currentMemo;
+    memoInput.rows = 2;
+    memoInput.className = "memo-input";
+    memoInput.style.cssText = `
+    width: 100%;
+    font-size: 13px;
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    resize: none;
+    font-family: inherit;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+    box-sizing: border-box;
+  `;
+
+    // 저장 버튼 생성
+    const saveBtn = document.createElement("button");
+    saveBtn.textContent = "update";
+    saveBtn.style.cssText = `
+    align-self: flex-end;
+    background-color: #6bcb5a;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 13px;
+    cursor: pointer;
+  `;
+
+    // 저장 클릭 → 색상/메모 로컬 및 서버 반영
+    saveBtn.addEventListener("click", () => {
+        const memo = memoInput.value.trim();
+        updateSnippetMetadata(snippetId, selectedColorId, memo);
+        removePopup();
+    });
+
+    // 팝업 최종 구성
+    popup.appendChild(colorRow);
+    popup.appendChild(memoInput);
+    popup.appendChild(saveBtn);
+    document.body.appendChild(popup);
+}
+
+// 로컬 스토리지에 저장된 highlights 목록을 기반으로 하이라이팅 하는 함수
+function restoreHighlights() {
+    // 1. 로컬 저장소에서 highlights 배열 불러오기
+    chrome.storage.local.get("highlights", (result) => {
+        const highlights = result.highlights || [];
+
+        // 2. 하이라이트 항목 하나씩 순회
+        highlights.forEach((item) => {
+            // TEXT 타입 하이라이트는 fragments 배열을 가짐
+            (item.fragments || []).forEach((frag) => {
+                try {
+                    // 3. XPath로 실제 노드 찾기
+                    const node = getNodeByXPath(frag.xpath);
+
+                    // 유효하지 않은 노드라면 스킵
+                    if (!node || node.nodeType !== Node.TEXT_NODE) {
+                        console.warn("❌ 복원 실패: 노드 없음", frag.xpath);
+                        return;
+                    }
+
+                    const text = node.textContent;
+
+                    // 4. 시작/끝 오프셋 계산 (최대 길이 초과 방지)
+                    const start = Math.min(frag.startOffset, text.length);
+                    const end = Math.min(frag.endOffset, text.length);
+                    if (start >= end) return;
+
+                    // 5. 원래 텍스트 분리: before + target + after
+                    const before = text.slice(0, start);
+                    const target = text.slice(start, end);
+                    const after = text.slice(end);
+
+                    // 6. 새 fragment 노드 구성 (before + <snippet>target</snippet> + after)
+                    const fragNode = document.createDocumentFragment();
+                    if (before) fragNode.appendChild(document.createTextNode(before));
+
+                    const mark = document.createElement("snippet");
+                    mark.textContent = target;
+                    mark.setAttribute("data-color", String(item.colorId));
+                    mark.setAttribute("data-snippet-id", String(item.snippetId)); // snippet 식별자 부여
+                    mark.style.backgroundColor = colorMap[item.colorId] || "#FFFF88";
+                    mark.style.borderRadius = "2px";
+                    mark.style.padding = "0 2px";
+
+                    fragNode.appendChild(mark);
+
+                    if (after) fragNode.appendChild(document.createTextNode(after));
+
+                    // 7. 기존 텍스트 노드를 fragment로 교체
+                    node.parentNode.replaceChild(fragNode, node);
+                } catch (e) {
+                    console.error("❌ 복원 중 오류:", e, frag);
+                }
+            });
+        });
+    });
+}
+
+// xPath 문자열 기반으로 DOM 에서 노드 찾는 함수
+function getNodeByXPath(xpath) {
+    // XPath를 평가하여 DOM에서 해당 노드를 탐색
+    const result = document.evaluate(
+        xpath,                         // XPath 문자열
+        document,                      // 기준 컨텍스트 (전체 문서)
+        null,                          // 네임스페이스 리졸버 (null이면 기본)
+        XPathResult.FIRST_ORDERED_NODE_TYPE, // 첫 번째 노드 하나만 반환
+        null                           // 기존 결과 객체 재사용 안 함
+    );
+
+    // 일치하는 노드를 반환 (없으면 null)
+    return result.singleNodeValue;
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {

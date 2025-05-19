@@ -29,7 +29,7 @@ public class SnippetApiController {
     public ResponseEntity<?> updateSnippet(@PathVariable Long id, @RequestBody SnippetExtUpdate snippetUpdate) {
         snippetUpdate.setSnippetId(id);
         snippetService.updateSnippet(snippetUpdate);
-        return null;
+        return ResponseEntity.ok().build();
     }
 
 

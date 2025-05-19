@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+	<meta charset="UTF-8">
+	<title>회원가입</title>
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	<link rel="stylesheet" href="/user/css/common/form-common.css">
+</head>
+<body>
+
+<form id="registerForm">
+	<h1>회원가입</h1>
+	<label>이메일:
+		<input type="email" name="email" required><br>
+		<span class="error-msg" id="emailError"></span>
+	</label>
+
+	<label>닉네임:
+		<input type="text" name="nickname" required><br>
+		<span class="error-msg" id="nicknameError"></span>
+	</label>
+
+	<label>비밀번호:
+		<input type="password" name="password" required><br>
+		<span class="error-msg" id="passwordError"></span>
+	</label>
+
+	<label>비밀번호 확인:
+		<input type="password" name="confirmPassword" required><br>
+		<span class="error-msg" id="confirmPasswordError"></span>
+	</label>
+
+	<button type="submit">가입하기</button>
+</form>
+
+
+<div id="message"></div>
+<script src="/user/js/auth/register.js"></script>
+</body>
+</html>

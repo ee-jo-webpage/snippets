@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.or.kosa.snippets.user.mapper.UserMapper">
+
+    <resultMap id="userResultMap" type="kr.or.kosa.snippets.user.model.Users">
+        <id property="userId" column="user_id"/>
+        <result property="email" column="email"/>
+        <result property="nickname" column="nickname"/>
+        <result property="password" column="password"/>
+        <result property="enabled" column="enabled"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="deletedAt" column="deleted_at"/>
+        <result property="reason" column="reason"/>
+        <result property="role" column="role"/>
+    </resultMap>
+
+
+    <select id="existsByEmailAndEnabledFalse" resultType="boolean" parameterType="string">
+        SELECT COUNT(*) > 0
+        FROM users
+        WHERE email = #{email}
+          AND enabled = false
+    </select>
+    <select id="existsByEmailAndDisabledAndDeleted" resultType="boolean" parameterType="string">
+        SELECT COUNT(*) > 0
+        FROM users
+        WHERE email = #{email}
+          AND enabled = false
+          AND deleted_at IS NOT NULL
+    </select>
+
+    <select id="findByEmail" parameterType="string" resultMap="userResultMap">
+        SELECT * FROM users WHERE email = #{email}
+    </select>
+
+    <select id="existsByEmail" parameterType="string" resultType="boolean">
+        SELECT COUNT(*) > 0 FROM users WHERE email = #{email}
+    </select>
+
+
+
+    <insert id="insertUser" parameterType="kr.or.kosa.snippets.user.model.Users" useGeneratedKeys="true" keyProperty="userId">
+        INSERT INTO users (email, nickname, password, enabled, created_at, updated_at, deleted_at, reason, role)
+        VALUES (#{email}, #{nickname}, #{password}, #{enabled}, #{createdAt}, #{updatedAt}, #{deletedAt}, #{reason}, #{role})
+    </insert>
+
+
+
+
+
+    <select id="existsByEmailAndEnabledFalseBefore" parameterType="java.time.LocalDateTime" resultMap="userResultMap">
+        SELECT * FROM users WHERE enabled = false AND created_at &lt; #{cutoff}
+    </select>
+
+</mapper>

@@ -85,14 +85,15 @@ public class SnippetController {
         } else {
             // 검색 필터가 없는 경우 - 기존 로직
             // 정렬 방식에 따라 다른 메소드 호출
+            // 검색 필터가 없는 경우 - 뷰 기반 로직으로 변경
             if ("popular".equals(sort)) {
-                // 인기순 정렬
-                snippets = snippetMapper.getPopularSnippetsPaged(offset, pageSize);
-                // 좋아요 수가 많은 순서대로 정렬된 스니펫들을 페이징 처리해서 가져옴
+                // 인기순 정렬 - 뷰를 이용한 페이징 (상위 100개 내에서만)
+                snippets = snippetMapper.getPopularSnippetsPagedFromView(offset, pageSize);
+                totalSnippets = snippetMapper.countPopularSnippetsFromView(); // 최대 100개
             } else {
                 // 최신순 정렬
                 snippets = snippetMapper.getAllPublicSnippetsPaged(offset, pageSize);
-                // 생성일이 최신인 순서대로 정렬된 스니펫들을 페이징 처리해서 가져옴
+                totalSnippets = snippetMapper.countAllPublicSnippets();
             }
             totalSnippets = snippetMapper.countAllPublicSnippets();
         }
@@ -179,8 +180,8 @@ public class SnippetController {
     public String showPopularSnippets(Model model) {
         Integer currentUserId = AppConfig.getFixedUserId();
 
-        // 인기 스니펫 목록 조회 (좋아요 수 기준)
-        List<Snippet> snippets = snippetService.getPopularSnippetsJavaSorted(20);
+        // 변경: 뷰를 통해 상위 100개만 조회
+        List<Snippet> snippets = snippetService.getPopularSnippetsFromView(100);
 
         // 각 스니펫의 좋아요 상태 확인
         Map<Integer, Boolean> likeStatusMap = new HashMap<>();

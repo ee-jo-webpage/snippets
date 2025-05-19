@@ -47,12 +47,6 @@ public class SnippetService {
         return snippetMapper.getSnippetDetailById(snippetId);
     }
 
-    // 기존 Java 정렬 방식
-    public List<Snippet> getPopularSnippetsJavaSorted(Integer limit) {
-        List<Snippet> snippets = snippetMapper.getAllPublicSnippets();
-        snippets.sort((s1, s2) -> Integer.compare(s2.getLikeCount(), s1.getLikeCount()));
-        return snippets.stream().limit(limit).collect(Collectors.toList());
-    }
 
     // ===== 성능 테스트용 추가 메서드들 =====
 

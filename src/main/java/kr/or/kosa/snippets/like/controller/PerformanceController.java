@@ -47,7 +47,7 @@ public class PerformanceController {
 
         // 1. 기존 방식 (저장된 like_count 사용)
         long originalTime = measureAverageTime(iterations, () ->
-                snippetService.getPopularSnippetsJavaSorted(limit));
+                snippetService.getPopularSnippets(limit));
 
         // 2. 뷰 방식 (실시간 계산) - 없으면 시뮬레이션
         long viewTime = measureAverageTime(iterations, () ->
@@ -85,7 +85,7 @@ public class PerformanceController {
 
         // 즉시 1회 측정
         long originalTime = measureTime(() ->
-                snippetService.getPopularSnippetsJavaSorted(10));
+                snippetService.getPopularSnippets(10));
 
         long viewTime = measureTime(() ->
                 simulateViewQuery(10));

@@ -23,11 +23,21 @@ const colorMapName = {
     6: "Sky Blue",
     7: "Peach Puff",
 };
+const CODE_BLOCK_SELECTORS = `
+  .se-code-source, .se-section, se-component-content,
+  .w3-code,
+  pre code,
+  code.hljs,
+  .code-block code,
+  .highlight code,
+  .notion-code-block code
+`;
 
 // 초기화 함수
 function init() {
     console.log("init()함수 호출!")
     document.addEventListener("mouseup", handleMouseUp);
+    detectCodeBlocks(); // 코드 블록
 }
 
 // 드래그 이벤트처리 함수
@@ -213,11 +223,11 @@ async function applyHighlight(colorId = 1) {
     });
 
     // 서버로 보낼 요약 데이터
-    // const highlightMeta = {
-    //     sourceUrl: location.href,
-    //     colorId,
-    //     content: highlightText,
-    // };
+    const highlightMeta = {
+        sourceUrl: location.href,
+        colorId,
+        content: highlightText,
+    };
 
     // 서버 저장 요청 시도
     // try {
@@ -233,7 +243,7 @@ async function applyHighlight(colorId = 1) {
     // }
 
     // 로컬 스토리지에 저장
-    // saveHighlight(highlight);
+    saveHighlight(highlight);
 
     // 팝업 UI 제거 및 선택 영역 해제
     removePopup();
@@ -379,6 +389,462 @@ function createColorBtn(colorId) {
 
     // 완성된 버튼 반환
     return btn;
+}
+
+// 스토리지 저장 함수
+function saveHighlight(data) {
+    chrome.storage.local.get(["highlights"], (result) => {
+        const highlights = result.highlights || [];
+        highlights.push(data);
+        chrome.storage.local.set({ highlights }, () => {
+            console.log("highlight 저장됨 (chrome.storage):", data);
+        });
+    });
+}
+
+// 주어진 코드 content 가 이미 저장된 CODE 타입 스니펫인지 확인하는 함수
+function isSnippetAlreadySaved(content, highlights) {
+    return highlights.some(
+        (item) => item.type === "CODE" && item.content.trim() === content.trim()
+    );
+}
+
+// 페이지 내 코드 블록을 감지, UI 추가 함수
+async function detectCodeBlocks() {
+    // 로컬 스토리지에서 저장된 하이라이트 목록 가져오기
+    const highlights =
+        (await chrome.storage.local.get("highlights")).highlights || [];
+
+    // 코드 블록 전체 선택 (예: pre > code, div.code 등)
+    const blocks = document.querySelectorAll(CODE_BLOCK_SELECTORS);
+
+    blocks.forEach((block) => {
+        // 코드 블록을 감싸는 wrapper 요소 확보 (pre 또는 div)
+        const wrapper = block.closest("pre, div") || block.parentElement;
+        if (!wrapper) return;
+
+        // wrapper에 position 설정 (버튼과 바 위치 지정용)
+        wrapper.style.position = "relative";
+
+        // 코드 텍스트 추출 및 저장 여부 확인
+        const codeText = block.innerText.trim();
+        const alreadySaved = isSnippetAlreadySaved(codeText, highlights);
+
+        // 언어 정보 추출 (예: class="language-js" → js)
+        const classList = Array.from(block.classList);
+        const langClass = classList.find((cls) => cls.startsWith("language-"));
+        const language = langClass ? langClass.replace("language-", "") : null;
+
+        // 기존 저장 버튼/색상 바 제거 (중복 방지)
+        const existingBtn = wrapper.querySelector(".snippet-code-btn");
+        if (existingBtn) existingBtn.remove();
+
+        const existingBar = wrapper.querySelector(".code-highlight-bar");
+        if (existingBar) existingBar.remove();
+
+        // 이미 저장된 경우 색상 바 표시 (좌측 6px 너비)
+        if (alreadySaved) {
+            const matched = highlights.find(
+                (s) => s.type === "CODE" && s.content.trim() === codeText.trim()
+            );
+            if (matched?.colorId != null) {
+                const bar = document.createElement("div");
+                bar.className = "code-highlight-bar";
+                bar.style.cssText = `
+                                      position: absolute;
+                                      top: 0;
+                                      left: 0;
+                                      width: 6px;
+                                      height: 100%;
+                                      background-color: ${colorMap[matched.colorId]};
+                                      border-top-left-radius: 6px;
+                                      border-bottom-left-radius: 6px;
+                                    `;
+                wrapper.appendChild(bar);
+            }
+        }
+
+        // 저장/수정 버튼 생성
+        const saveBtn = document.createElement("button");
+        saveBtn.className = "snippet-code-btn";
+        saveBtn.textContent = alreadySaved ? "edit" : "save";
+        saveBtn.style.cssText = `
+                                  position: absolute;
+                                  top: 6px;
+                                  left: 6px;
+                                  background-color: #6bcb5a;
+                                  color: white;
+                                  border: none;
+                                  border-radius: 6px;
+                                  padding: 6px 10px;
+                                  font-size: 13px;
+                                  cursor: pointer;
+                                  z-index: 9999;
+                                  display: none;
+                                `;
+
+        // 마우스 오버 시 버튼 보이기
+        wrapper.addEventListener("mouseenter", () => {
+            saveBtn.style.display = "block";
+        });
+        wrapper.addEventListener("mouseleave", () => {
+            saveBtn.style.display = "none";
+        });
+
+        // 버튼 클릭 시 팝업 띄우기 (저장 or 수정)
+        saveBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+
+            // 버튼 위치 기준 팝업 위치 계산
+            const rect = saveBtn.getBoundingClientRect();
+
+            if (alreadySaved) {
+                const existing = highlights.find(
+                    (s) => s.type === "CODE" && s.content.trim() === codeText.trim()
+                );
+                const currentMemo = existing?.memo || "";
+                const currentColorId = existing?.colorId || 1;
+
+                // 수정 팝업 호출
+                showCodeEditPopup(
+                    codeText,
+                    rect,
+                    currentColorId,
+                    currentMemo,
+                    saveBtn,
+                    language
+                );
+            } else {
+                // 신규 저장 팝업 호출
+                showCodeColorPopup(codeText, rect, false, saveBtn, language);
+            }
+        });
+
+        // 버튼을 wrapper에 삽입
+        wrapper.appendChild(saveBtn);
+    });
+}
+
+// 코드스니펫 색상 선택 팝업
+function showCodeColorPopup(
+    codeText,
+    rect,
+    isEdit = false,
+    saveBtn = null,
+    language = null
+) {
+    removePopup(); // 기존 팝업 제거
+
+    // 팝업 요소 생성 및 스타일 지정
+    popup = document.createElement("div");
+    popup.id = "code-color-popup";
+    popup.style = `
+    position: absolute;
+    top: ${window.scrollY + rect.bottom + 6}px;
+    left: ${window.scrollX + rect.left}px;
+    background: white;
+    padding: 8px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    z-index: 2147483647;
+  `;
+
+    // 색상 버튼 담는 컨테이너
+    const container = document.createElement("div");
+    container.style.display = "flex";
+    container.style.gap = "6px";
+
+    // 기본 색상 버튼(0~3)만 생성
+    for (let colorId = 0; colorId <= 3; colorId++) {
+        container.appendChild(
+            createColorBtnForCode(codeText, colorId, isEdit, saveBtn, language)
+        );
+    }
+
+    // ▶ 토글 버튼 생성 (색상 확장)
+    const toggleBtn = document.createElement("div");
+    toggleBtn.textContent = "\u25B6"; // ▶
+    toggleBtn.style.cssText = `
+    width: 24px;
+    height: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #6bcb5a;
+    border-radius: 50%;
+    font-size: 14px;
+    cursor: pointer;
+    color: white;
+  `;
+
+    let expanded = false;
+    toggleBtn.addEventListener("click", () => {
+        expanded = !expanded;
+
+        if (expanded) {
+            // 확장: 색상 버튼 4~7 추가
+            for (let i = 4; i <= 7; i++) {
+                container.appendChild(
+                    createColorBtnForCode(codeText, i, isEdit, saveBtn, language)
+                );
+            }
+            toggleBtn.textContent = "\u25C0"; // ◀
+        } else {
+            // 축소: 4~7 제거
+            container.querySelectorAll(".color-btn").forEach((btn) => {
+                const id = parseInt(btn.dataset.colorId, 10);
+                if (id >= 4) btn.remove();
+            });
+            toggleBtn.textContent = "\u25B6"; // ▶
+        }
+    });
+
+    popup.appendChild(container);
+    popup.appendChild(toggleBtn);
+    document.body.appendChild(popup);
+}
+
+// 코드 스니펫 편집 팝업
+function showCodeEditPopup(
+    codeText,
+    rect,
+    currentColorId,
+    currentMemo,
+    saveBtn,
+    language
+) {
+    removePopup(); // 기존 팝업 제거
+
+    // 팝업 요소 생성 및 스타일 지정
+    popup = document.createElement("div");
+    popup.id = "code-edit-popup";
+    popup.style = `
+    position: absolute;
+    top: ${window.scrollY + rect.bottom + 6}px;
+    left: ${window.scrollX + rect.left}px;
+    background: white;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 2147483647;
+    min-width: 220px;
+    max-width: 300px;
+    box-sizing: border-box;
+  `;
+
+    // 색상 버튼 행
+    const colorRow = document.createElement("div");
+    colorRow.style.display = "flex";
+    colorRow.style.flexWrap = "wrap";
+    colorRow.style.gap = "6px";
+
+    let selectedColorId = currentColorId;
+
+    for (let colorId = 0; colorId <= 7; colorId++) {
+        const btn = document.createElement("div");
+        btn.className = "color-btn";
+        btn.dataset.colorId = colorId;
+        btn.title = colorMapName[colorId];
+        btn.style.cssText = `
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background-color: ${colorMap[colorId]};
+      border: 1px solid #ccc;
+      cursor: pointer;
+    `;
+
+        if (colorId === currentColorId) {
+            // 현재 선택된 색상은 비활성 표시
+            btn.classList.add("current-color");
+            btn.style.opacity = "0.3";
+            btn.style.border = "1px solid #aaa";
+            btn.style.cursor = "not-allowed";
+        } else {
+            // 클릭 시 선택 표시 변경
+            btn.addEventListener("click", () => {
+                selectedColorId = colorId;
+                colorRow.querySelectorAll(".color-btn").forEach((b) => {
+                    b.style.outline = "none";
+                });
+                btn.style.outline = "2px solid green";
+            });
+        }
+
+        colorRow.appendChild(btn);
+    }
+
+    // 메모 입력창
+    const memoInput = document.createElement("textarea");
+    memoInput.placeholder = "메모 입력...";
+    memoInput.value = currentMemo;
+    memoInput.rows = 2;
+    memoInput.className = "memo-input";
+    memoInput.style.cssText = `
+    width: 100%;
+    font-size: 13px;
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    resize: none;
+    font-family: inherit;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+    box-sizing: border-box;
+  `;
+
+    // 수정 버튼
+    const updateBtn = document.createElement("button");
+    updateBtn.textContent = "update";
+    updateBtn.style.cssText = `
+    align-self: flex-end;
+    background-color: #6bcb5a;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 13px;
+    cursor: pointer;
+  `;
+
+    updateBtn.addEventListener("click", async () => {
+        const memo = memoInput.value.trim();
+        await saveCodeSnippet(
+            codeText,
+            selectedColorId,
+            true, // isEdit = true
+            saveBtn,
+            language,
+            memo
+        );
+        removePopup();
+    });
+
+    // 팝업 구성 요소 삽입
+    popup.appendChild(colorRow);
+    popup.appendChild(memoInput);
+    popup.appendChild(updateBtn);
+    document.body.appendChild(popup);
+}
+
+// 코드 블록 하이라이트용 색상 버튼 생성 함수
+function createColorBtnForCode(
+    codeText,
+    colorId,
+    isEdit,
+    saveBtn,
+    language,
+    currentColorId = null
+) {
+    // 색상 버튼(div) 생성
+    const btn = document.createElement("div");
+    btn.className = "color-btn";
+    btn.dataset.colorId = colorId;
+    btn.title = colorMapName[colorId]; // 마우스 오버 시 색상 이름 표시
+
+    // 버튼 스타일 지정 (색상 원형)
+    btn.style.cssText = `
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: ${colorMap[colorId]};
+    border: 1px solid #ccc;
+    cursor: pointer;
+  `;
+
+    // 이미 선택된 색상이라면 비활성화 처리
+    if (colorId === currentColorId) {
+        btn.classList.add("current-color");
+        btn.style.opacity = "0.3";
+        btn.style.border = "1px solid #aaa";
+        btn.style.cursor = "not-allowed";
+    } else {
+        // 클릭 시 스니펫 저장 및 팝업 닫기
+        btn.addEventListener("click", async () => {
+            await saveCodeSnippet(codeText, colorId, isEdit, saveBtn, language, null);
+            removePopup();
+
+            // 버튼 텍스트를 'edit'으로 전환 (신규 저장 후 표시 변경)
+            if (saveBtn) saveBtn.textContent = "edit";
+        });
+    }
+
+    return btn;
+}
+
+// 코드 스니펫 저장 및 수정 함수
+async function saveCodeSnippet(
+    content,
+    colorId,
+    isEdit = false,
+    saveBtn = null,
+    language = null,
+    memo = null
+) {
+    // 기존 하이라이트 스니펫 불러오기
+    const { highlights = [] } = await chrome.storage.local.get("highlights");
+
+    if (isEdit) {
+        // 편집 모드: 기존 스니펫을 찾아 colorId, memo, language 업데이트
+        const updated = highlights.map((s) =>
+            s.type === "CODE" && s.content.trim() === content.trim()
+                ? { ...s, colorId, memo, language }
+                : s
+        );
+
+        // 로컬 업데이트 반영
+        await chrome.storage.local.set({ highlights: updated });
+
+        // 서버에도 metadata 수정 요청 (비동기 PATCH)
+        // updateCodeSnippetMetadata(content, colorId, memo);
+    } else {
+        // 신규 저장: UUID 생성 후 스니펫 객체 구성
+        const snippetId = crypto.randomUUID();
+        const snippet = {
+            snippetId,
+            type: "CODE",
+            content,
+            sourceUrl: location.href,
+            createdAt: new Date().toISOString(),
+            colorId,
+            language,
+            memo,
+        };
+
+        // 기존 목록에 새 항목 추가
+        const updated = [...highlights, snippet];
+        await chrome.storage.local.set({ highlights: updated });
+
+        // try {
+        //     // 서버에 스니펫 전송 (POST)
+        //     const serverId = await sendSnippetToServer(snippet);
+        //     if (serverId) {
+        //         snippet.serverId = serverId;
+        //
+        //         // 받은 serverId를 다시 반영하여 로컬 저장소 갱신
+        //         await chrome.storage.local.set({
+        //             highlights: updated.map((s) =>
+        //                 s.snippetId === snippetId ? { ...s, serverId } : s
+        //             ),
+        //         });
+        //     }
+        // } catch (err) {
+        //     console.warn("⚠️ 서버 저장 실패:", err.message);
+        // }
+    }
+
+    // 버튼 텍스트를 edit으로 변경
+    if (saveBtn) saveBtn.textContent = "edit";
+
+    // 코드 블록 다시 탐색하여 UI 갱신 (색상 바 등)
+    detectCodeBlocks();
+
+    console.log("CODE 스니펫 저장/수정 완료");
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {

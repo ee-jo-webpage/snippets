@@ -60,8 +60,19 @@ function renderHighlights(highlights) {
         domainLink.textContent = getDomain(h.sourceUrl); // 도메인 추출
         leftGroup.appendChild(domainLink);
 
-        // 푸터 그룹 합치기
+        // 오른쪽 그룹: 삭제 버튼
+        const rightGroup = document.createElement("div");
+        rightGroup.className = "footer-right";
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "delete-btn";
+        deleteBtn.textContent = "delete";
+        deleteBtn.dataset.snippetId = h.snippetId;
+        rightGroup.appendChild(deleteBtn);
+
+        // 왼쪽/오른쪽 푸터 그룹 합치기
         footer.appendChild(leftGroup);
+        footer.appendChild(rightGroup);
 
         // 카드에 내용 및 푸터 삽입
         card.appendChild(contentDiv);
@@ -88,6 +99,79 @@ function getDomain(url) {
         return "(출처 없음)";
     }
 }
+
+// 지정된 id 로 로컬, 서버 모두 삭제하는 함수
+async function deleteSnippet(snippetId) {
+    try {
+        // 1. 로컬 highlights 불러오기
+        const { highlights = [] } = await chrome.storage.local.get("highlights");
+
+        // 2. 삭제 대상 스니펫 찾기
+        const target = highlights.find((h) => h.snippetId === snippetId);
+
+        // 3. 해당 항목 제외한 새 리스트 저장
+        const updated = highlights.filter((h) => h.snippetId !== snippetId);
+        await chrome.storage.local.set({ highlights: updated });
+        console.log("로컬에서 삭제됨:", snippetId);
+
+        // 4. content.js에 코드 버튼 재적용 요청
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            if (tabs[0]?.id) {
+                chrome.tabs.sendMessage(tabs[0].id, {
+                    action: "refreshCodeButtons",
+                });
+            }
+        });
+
+        // 5. 서버에도 DELETE 요청 (serverId가 있을 경우)
+        if (target?.serverId) {
+            try {
+                const res = await fetch(
+                    `http://localhost:8090/api/snippets/${target.serverId}`,
+                    { method: "DELETE" }
+                );
+                if (!res.ok) {
+                    const msg = await res.text();
+                    console.warn("⚠️ 서버 삭제 실패:", msg);
+                } else {
+                    console.log("🛰️ 서버에서도 삭제 완료:", target.serverId);
+                }
+            } catch (err) {
+                console.warn("⚠️ 서버 요청 실패 (무시 가능):", err.message);
+            }
+        }
+
+        // 6. content.js에 하이라이트 제거 요청
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            chrome.tabs.sendMessage(tabs[0].id, {
+                action: "removeHighlight",
+                snippetId,
+            });
+        });
+
+        // 7. 사이드바 UI에서 카드 제거
+        const card = document.querySelector(
+            `.snippet-card[data-snippet-id="${snippetId}"]`
+        );
+        if (card) card.remove();
+        // UI 갱신: 남은 하이라이트 기반으로 다시 렌더링
+        renderHighlights(updated);
+    } catch (err) {
+        console.error("삭제 처리 중 오류:", err);
+    }
+}
+
+// 사이드바 삭제 버튼 클릭 핸들러
+document.addEventListener("click", async (e) => {
+    // 클릭된 요소가 .delete-btn 클래스인지 확인
+    if (e.target.classList.contains("delete-btn")) {
+        const snippetId = e.target.dataset.snippetId;
+        if (!snippetId) return;
+
+        // 실제 삭제 함수 호출
+        await deleteSnippet(snippetId);
+    }
+});
 
 chrome.storage.local.get("highlights", (result) => {
     console.log("highlights 호출!")

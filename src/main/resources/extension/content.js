@@ -1212,17 +1212,55 @@ function getNodeByXPath(xpath) {
     return result.singleNodeValue;
 }
 
+// 사이드바 iframe 에 필요한 스타일 동적 삽입 함수
+function injectSidebarStyle() {
+    // 이미 스타일이 삽입된 경우 중복 방지
+    if (document.getElementById("sidebar-iframe-style")) return;
+
+    // <style> 요소 생성
+    const style = document.createElement("style");
+    style.id = "sidebar-iframe-style";
+
+    // 슬라이딩 사이드바 스타일 정의
+    style.textContent = `
+    .sidebar-iframe {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 450px;
+      height: 100vh;
+      border: none;
+      background-color: white;
+      box-shadow: -8px 0 24px rgba(0, 0, 0, 0.15);
+      z-index: 999999;
+      transform: translateX(100%);
+      transition: transform 0.3s ease-in-out;
+    }
+
+    .sidebar-iframe.open {
+      transform: translateX(0%);
+    }
+  `;
+
+    // <head>에 style 삽입
+    document.head.appendChild(style);
+}
+
+// 확장 프로그램과 content.js 간 메시지 통신 핸들러
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    // === 사이드바 열기/닫기 ===
     if (message.action === "toggleSidebar") {
+        injectSidebarStyle(); // 슬라이딩 스타일 삽입
 
         const existing = document.getElementById("snippet-sidebar-wrapper");
         if (existing) {
-            // 슬라이드 아웃 애니메이션
+            // 슬라이드 아웃 (닫기)
             existing.classList.remove("open");
-            setTimeout(() => existing.remove(), 300); // 애니메이션 후 제거
+            setTimeout(() => existing.remove(), 300); // 애니메이션 완료 후 제거
             return;
         }
 
+        // iframe 사이드바 생성
         const iframe = document.createElement("iframe");
         iframe.id = "snippet-sidebar-wrapper";
         iframe.src = chrome.runtime.getURL("sidebar/sidebar.html");
@@ -1230,19 +1268,44 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         document.body.appendChild(iframe);
 
-
+        // 슬라이드 인 (열기)
         setTimeout(() => {
             iframe.classList.add("open");
-        }, 10);
+        }, 10); // 다음 tick에서 실행
 
+        // iframe 로딩 완료 후 스니펫 전달
         iframe.onload = () => {
             chrome.storage.local.get("highlights", (result) => {
                 iframe.contentWindow.postMessage(
-                    { type: "INIT_HIGHLIGHTS", highlights: result.highlights || [] },
+                    {
+                        type: "INIT_HIGHLIGHTS",
+                        highlights: result.highlights || [],
+                    },
                     "*"
                 );
             });
         };
+    }
+
+    // === 하이라이팅 제거 ===
+    if (message.action === "removeHighlight" && message.snippetId) {
+        const id = String(message.snippetId);
+
+        // snippetId로 표시된 모든 요소 제거하고 원래 텍스트 복구
+        const targets = document.querySelectorAll(
+            `snippet[data-snippet-id="${id}"]`
+        );
+        targets.forEach((el) => {
+            const textNode = document.createTextNode(el.textContent);
+            el.replaceWith(textNode);
+        });
+
+        console.log(`하이라이팅 제거 완료: snippetId = ${id}`);
+    }
+
+    // === 코드 블록 버튼 UI 재적용 ===
+    if (message.action === "refreshCodeButtons") {
+        detectCodeBlocks(); // CODE 타입 버튼 및 표시 재렌더링
     }
 });
 

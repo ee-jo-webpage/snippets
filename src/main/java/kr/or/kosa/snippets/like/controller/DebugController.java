@@ -1,8 +1,8 @@
-package kr.or.kosa.snippets.controller;
+package kr.or.kosa.snippets.like.controller;
 
-import kr.or.kosa.snippets.mapper.LikeMapper;
-import kr.or.kosa.snippets.mapper.SnippetMapper;
-import kr.or.kosa.snippets.model.Snippet;
+import kr.or.kosa.snippets.like.mapper.LikeMapper;
+import kr.or.kosa.snippets.like.mapper.SnippetMapper;
+import kr.or.kosa.snippets.like.model.Snippet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;

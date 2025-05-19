@@ -1,7 +1,7 @@
-package kr.or.kosa.snippets.mapper;
+package kr.or.kosa.snippets.like.mapper;
 
 
-import kr.or.kosa.snippets.model.Like;
+import kr.or.kosa.snippets.like.model.Like;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

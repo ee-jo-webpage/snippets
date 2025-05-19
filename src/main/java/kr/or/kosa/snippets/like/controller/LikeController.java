@@ -1,6 +1,6 @@
-package kr.or.kosa.snippets.controller;
+package kr.or.kosa.snippets.like.controller;
 
-import kr.or.kosa.snippets.service.LikeService;
+import kr.or.kosa.snippets.like.service.LikeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -32,6 +32,6 @@ public class LikeController {
         model.addAttribute("likeCount", likeCount);
         model.addAttribute("isLiked", isLiked);
 
-        return "like";  // like.jsp 파일을 반환
+        return "like/like";  // like.jsp 파일을 반환
     }
 }

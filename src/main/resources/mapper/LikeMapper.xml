@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="kr.or.kosa.snippets.mapper.LikeMapper">
+<mapper namespace="kr.or.kosa.snippets.like.mapper.LikeMapper">
 
     <!-- 좋아요 추가 (중복 방지) -->
     <insert id="addLike">
@@ -19,7 +19,7 @@
     </select>
 
     <!-- 특정 사용자가 누른 좋아요 목록 -->
-    <select id="getUserLikes" resultType="kr.or.kosa.snippets.model.Like">
+    <select id="getUserLikes" resultType="kr.or.kosa.snippets.like.model.Like">
         SELECT * FROM likes WHERE user_id = #{userId}
     </select>
 

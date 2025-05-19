@@ -1,11 +1,11 @@
-package kr.or.kosa.snippets.controller;
+package kr.or.kosa.snippets.like.controller;
 
 import kr.or.kosa.snippets.config.AppConfig;
-import kr.or.kosa.snippets.mapper.SnippetMapper;
-import kr.or.kosa.snippets.model.Snippet;
-import kr.or.kosa.snippets.model.Tag;
-import kr.or.kosa.snippets.service.LikeService;
-import kr.or.kosa.snippets.service.SnippetService;
+import kr.or.kosa.snippets.like.mapper.SnippetMapper;
+import kr.or.kosa.snippets.like.model.Snippet;
+import kr.or.kosa.snippets.like.model.Tag;
+import kr.or.kosa.snippets.like.service.LikeService;
+import kr.or.kosa.snippets.like.service.SnippetService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -92,7 +92,7 @@ public class SnippetController {
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", totalPages);
 
-        return "snippets";
+        return "like/snippets";
     }
 
 
@@ -122,7 +122,7 @@ public class SnippetController {
         model.addAttribute("isLiked", isLiked);
         model.addAttribute("currentUserId", currentUserId);
 
-        return "snippet-detail"; // snippet-detail.html 템플릿 사용
+        return "like/snippet-detail"; // snippet-detail.html 템플릿 사용
     }
 
     // 인기 스니펫 목록 페이지
@@ -145,6 +145,6 @@ public class SnippetController {
         model.addAttribute("currentUserId", currentUserId);
         model.addAttribute("currentSort", "popular");
 
-        return "snippets";
+        return "like/snippets";
     }
 }

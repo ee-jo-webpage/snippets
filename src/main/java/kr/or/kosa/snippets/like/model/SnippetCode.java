@@ -1,4 +1,4 @@
-package kr.or.kosa.snippets.model;
+package kr.or.kosa.snippets.like.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class SnippetImage {
+public class SnippetCode {
     private int snippetId;
-    private String imageUrl;
-    private String altText;
+    private String content;
+    private String language;
 }

@@ -1,6 +1,7 @@
-package kr.or.kosa.snippets.controller;
+package kr.or.kosa.snippets.like.controller;
 
-import kr.or.kosa.snippets.service.LikeService;
+import kr.or.kosa.snippets.like.model.Like;
+import kr.or.kosa.snippets.like.service.LikeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -97,7 +98,7 @@ public class LikeRestController {
 
     // 사용자가 좋아요한 스니펫 목록
     @GetMapping("/user")
-    public List<kr.or.kosa.snippets.model.Like> getUserLikes() {
+    public List<Like> getUserLikes() {
         // 반환 타입이 List<Like> → JSON 배열로 변환됨
 
         return likeService.getUserLikes();

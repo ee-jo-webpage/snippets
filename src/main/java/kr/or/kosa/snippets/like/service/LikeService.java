@@ -1,10 +1,10 @@
-package kr.or.kosa.snippets.service;
+package kr.or.kosa.snippets.like.service;
 
 import kr.or.kosa.snippets.config.AppConfig;
-import kr.or.kosa.snippets.mapper.LikeMapper;
-import kr.or.kosa.snippets.mapper.SnippetMapper;
-import kr.or.kosa.snippets.model.Like;
-import kr.or.kosa.snippets.model.Snippet;
+import kr.or.kosa.snippets.like.mapper.LikeMapper;
+import kr.or.kosa.snippets.like.mapper.SnippetMapper;
+import kr.or.kosa.snippets.like.model.Like;
+import kr.or.kosa.snippets.like.model.Snippet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

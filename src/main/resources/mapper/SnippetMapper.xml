@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="kr.or.kosa.snippets.mapper.SnippetMapper">
+<mapper namespace="kr.or.kosa.snippets.like.mapper.SnippetMapper">
 
     <!-- ResultMap 정의 (컬럼명과 필드명 매핑) -->
-    <resultMap id="SnippetResultMap" type="kr.or.kosa.snippets.model.Snippet">
+    <resultMap id="SnippetResultMap" type="kr.or.kosa.snippets.like.model.Snippet">
         <id property="snippetId" column="snippet_id"/>
         <result property="userId" column="user_id"/>
         <result property="folderId" column="folder_id"/>

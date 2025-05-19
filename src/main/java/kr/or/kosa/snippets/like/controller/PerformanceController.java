@@ -1,7 +1,7 @@
-package kr.or.kosa.snippets.controller;
+package kr.or.kosa.snippets.like.controller;
 
-import kr.or.kosa.snippets.service.SnippetService;
-import kr.or.kosa.snippets.service.LikeService;
+import kr.or.kosa.snippets.like.service.SnippetService;
+import kr.or.kosa.snippets.like.service.LikeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -29,7 +29,7 @@ public class PerformanceController {
      */
     @GetMapping("/comparison")
     public String showComparisonPage() {
-        return "performance-comparison";  // performance-comparison.html
+        return "like/performance-comparison";  // performance-comparison.html
     }
 
     /**

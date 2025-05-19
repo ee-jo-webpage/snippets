@@ -1,4 +1,4 @@
-package kr.or.kosa.snippets.model;
+package kr.or.kosa.snippets.like.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

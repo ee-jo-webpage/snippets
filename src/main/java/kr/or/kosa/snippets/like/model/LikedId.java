@@ -1,4 +1,4 @@
-package kr.or.kosa.snippets.model;
+package kr.or.kosa.snippets.like.model;
 
 import java.io.Serializable;
 // 직렬화 가능한 인터페이스

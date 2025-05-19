@@ -1,4 +1,4 @@
-package kr.or.kosa.snippets.model;
+package kr.or.kosa.snippets.like.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

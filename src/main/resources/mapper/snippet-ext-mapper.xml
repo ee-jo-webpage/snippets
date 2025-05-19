@@ -50,5 +50,4 @@
         WHERE SNIPPET_ID = #{id}
     </delete>
 
-
 </mapper>

@@ -161,6 +161,58 @@ async function deleteSnippet(snippetId) {
     }
 }
 
+// 정렬 팝업 토글 버튼 이벤트 핸들러
+document.getElementById("sortToggleBtn").addEventListener("click", () => {
+    const popup = document.getElementById("sortPopup");
+
+    // 현재 표시 여부에 따라 토글 처리
+    popup.style.display = popup.style.display === "none" ? "block" : "none";
+});
+
+// 초기 정렬 세팅 함수
+(async function initSort() {
+    const { sortType } = await chrome.storage.local.get("sortType");
+
+    // 저장된 정렬 타입이 있다면 UI에 반영
+    if (sortType) {
+        setSelectedSort(sortType);
+    }
+})();
+
+// 정렬 항목 클릭 이벤트 핸들러
+document.querySelectorAll("#sortPopup div").forEach((item) => {
+    item.addEventListener("click", async (e) => {
+        const sortType = e.target.dataset.sort; // "recent" | "oldest" | "color"
+
+        const { highlights = [] } = await chrome.storage.local.get("highlights");
+        let sorted = [...highlights]; // 원본 복사 후 정렬
+
+        // 정렬 조건별로 처리
+        if (sortType === "recent") {
+            sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        } else if (sortType === "oldest") {
+            sorted.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        } else if (sortType === "color") {
+            sorted.sort((a, b) => (a.colorId || 0) - (b.colorId || 0));
+        }
+
+        // 정렬 상태를 로컬에 저장
+        await chrome.storage.local.set({ highlights: sorted, sortType });
+
+        // UI에 반영
+        setSelectedSort(sortType); // 선택된 항목 강조
+        renderHighlights(sorted);  // 정렬된 카드 렌더링
+        document.getElementById("sortPopup").style.display = "none"; // 팝업 닫기
+    });
+});
+
+// 선택된 정렬 기준 표시 함수
+function setSelectedSort(type) {
+    document.querySelectorAll("#sortPopup div").forEach((el) => {
+        el.classList.toggle("selected", el.dataset.sort === type);
+    });
+}
+
 // 사이드바 삭제 버튼 클릭 핸들러
 document.addEventListener("click", async (e) => {
     // 클릭된 요소가 .delete-btn 클래스인지 확인

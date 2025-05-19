@@ -20,8 +20,20 @@
             border-radius: 8px;
             margin-bottom: 20px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
         }
 
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        /* 검색 폼 스타일 추가 */
         .search-form {
             background-color: white;
             padding: 20px;
@@ -118,7 +130,7 @@
             border-bottom: none;
         }
 
-        .no-results {
+        .no-results-dropdown {
             padding: 10px 15px;
             color: #666;
             font-style: italic;
@@ -165,6 +177,7 @@
             transform: translateY(-1px);
         }
 
+        /* 검색 결과 정보 스타일 추가 */
         .search-results-info {
             background-color: #e8f4fd;
             border: 1px solid #b8daff;
@@ -188,6 +201,16 @@
             font-size: 12px;
             margin-right: 8px;
             margin-top: 4px;
+        }
+
+        .info-box {
+            background-color: #e8f4fd;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #b8daff;
+            color: #004085;
         }
 
         .snippet-card {
@@ -287,45 +310,6 @@
             color: #888;
         }
 
-        h1 {
-            color: #333;
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 20px;
-        }
-
-        .sort-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .sort-tab {
-            padding: 10px 20px;
-            background-color: #f8f9fa;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            text-decoration: none;
-            color: #333;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-
-        .sort-tab:hover {
-            background-color: #e9ecef;
-        }
-
-        .sort-tab.active {
-            background-color: #007bff;
-            color: white;
-            border-color: #007bff;
-        }
-
         /* 페이징 스타일 */
         .pagination-container {
             display: flex;
@@ -403,28 +387,15 @@
 <div class="header">
     <h1>🔥 인기 스니펫 게시판</h1>
     <p class="subtitle">현재 사용자: <strong>user_id = <span th:text="${currentUserId}"></span></strong></p>
-
-    <div class="sort-tabs">
-        <a th:href="@{/snippets(sort='popular', type=${searchType}, keyword=${searchKeyword}, minLikes=${searchMinLikes}, tagName=${searchTagName})}"
-           class="sort-tab"
-           th:classappend="${currentSort == 'popular'} ? 'active' : ''">
-            🏆 인기순 (좋아요 많은 순)
-        </a>
-        <a th:href="@{/snippets(sort='recent', type=${searchType}, keyword=${searchKeyword}, minLikes=${searchMinLikes}, tagName=${searchTagName})}"
-           class="sort-tab"
-           th:classappend="${currentSort == 'recent'} ? 'active' : ''">
-            🕒 최신순
-        </a>
-    </div>
 </div>
 
-<!-- 검색 필터 폼 -->
+<!-- 검색 필터 폼 추가 -->
 <div class="search-form">
     <div class="search-title">
-        🔍 검색 및 필터
+        🔍 인기 스니펫 검색 및 필터 (TOP 100 내에서)
     </div>
-    <form action="/snippets" method="get" id="searchForm">
-        <input type="hidden" name="sort" th:value="${currentSort}">
+    <form action="/popular-snippets" method="get" id="searchForm">
+        <input type="hidden" name="page" value="1">
         <div class="form-row">
             <div class="form-group">
                 <label for="type">스니펫 유형</label>
@@ -458,7 +429,7 @@
                 <button type="submit" class="search-btn">
                     🔍 검색
                 </button>
-                <a href="/snippets" class="reset-btn">
+                <a href="/popular-snippets" class="reset-btn">
                     🔄 초기화
                 </a>
             </div>
@@ -466,10 +437,10 @@
     </form>
 </div>
 
-<!-- 검색 결과 정보 -->
+<!-- 검색 결과 정보 추가 -->
 <div th:if="${hasSearchFilter}" class="search-results-info">
     <strong>🎯 검색 결과: </strong>
-    <span th:text="${totalSnippets}">0</span>개의 스니펫이 검색되었습니다.
+    인기 스니펫 TOP 100 중 <span th:text="${totalSnippets}">0</span>개가 검색되었습니다.
     <div class="filters">
         <strong>적용된 필터:</strong>
         <span th:if="${searchType != null and searchType != ''}" class="filter-tag">
@@ -487,7 +458,14 @@
     </div>
 </div>
 
-<!-- 스니펫 목록 -->
+<!-- 인기 스니펫 정보 (검색이 없을 때만 표시) -->
+<div th:unless="${hasSearchFilter}" class="info-box">
+    <strong>📊 인기 스니펫 TOP 100</strong> -
+    현재 <span th:text="${#lists.size(snippets)}">0</span>개 표시 중
+    (총 <span th:text="${totalSnippets}">0</span>개 중 <span th:text="${currentPage}">1</span>페이지)
+</div>
+
+<!-- 스니펫 목록이 비어있는 경우 -->
 <div th:if="${#lists.isEmpty(snippets)}" class="no-results">
     <h3>😕 검색 결과가 없습니다</h3>
     <p>다른 검색 조건을 시도해보세요.</p>
@@ -526,7 +504,7 @@
     <div class="pagination">
         <!-- 이전 페이지 버튼 -->
         <a th:if="${currentPage > 1}"
-           th:href="@{/snippets(sort=${currentSort}, page=${currentPage - 1}, type=${searchType}, keyword=${searchKeyword}, minLikes=${searchMinLikes}, tagName=${searchTagName})}"
+           th:href="@{/popular-snippets(page=${currentPage - 1}, type=${searchType}, keyword=${searchKeyword}, minLikes=${searchMinLikes}, tagName=${searchTagName})}"
            class="page-item prev">&laquo; 이전</a>
 
         <!-- 페이지 번호 -->
@@ -534,20 +512,20 @@
             <a th:if="${pageNum == currentPage}"
                class="page-item active" th:text="${pageNum}"></a>
             <a th:unless="${pageNum == currentPage}"
-               th:href="@{/snippets(sort=${currentSort}, page=${pageNum}, type=${searchType}, keyword=${searchKeyword}, minLikes=${searchMinLikes}, tagName=${searchTagName})}"
+               th:href="@{/popular-snippets(page=${pageNum}, type=${searchType}, keyword=${searchKeyword}, minLikes=${searchMinLikes}, tagName=${searchTagName})}"
                class="page-item" th:text="${pageNum}"></a>
         </th:block>
 
         <!-- 다음 페이지 버튼 -->
         <a th:if="${currentPage < totalPages}"
-           th:href="@{/snippets(sort=${currentSort}, page=${currentPage + 1}, type=${searchType}, keyword=${searchKeyword}, minLikes=${searchMinLikes}, tagName=${searchTagName})}"
+           th:href="@{/popular-snippets(page=${currentPage + 1}, type=${searchType}, keyword=${searchKeyword}, minLikes=${searchMinLikes}, tagName=${searchTagName})}"
            class="page-item next">다음 &raquo;</a>
     </div>
 </div>
 
 <script th:inline="javascript">
     $(document).ready(function() {
-        console.log("=== 스니펫 목록 페이지 로드 ===");
+        console.log("=== 인기 스니펫 페이지 로드 ===");
 
         // 태그 자동완성 기능
         let selectedTagIndex = -1;
@@ -620,12 +598,10 @@
         // 태그 드롭다운 표시
         function showTagDropdown(tags, query) {
             const dropdown = $('#tagDropdown');
-            const container = dropdown.parent();
-
             dropdown.empty();
 
             if (tags.length === 0) {
-                dropdown.append('<div class="no-results">검색 결과가 없습니다</div>');
+                dropdown.append('<div class="no-results-dropdown">검색 결과가 없습니다</div>');
             } else {
                 tags.forEach(function(tag, index) {
                     const item = $('<div class="tag-dropdown-item"></div>')

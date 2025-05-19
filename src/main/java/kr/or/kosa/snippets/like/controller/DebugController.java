@@ -21,6 +21,7 @@ public class DebugController {
     @Autowired
     private LikeMapper likeMapper;
 
+
     @GetMapping("/debug/snippet-likes")
     public Map<String, Object> debugSnippetLikes() {
         Map<String, Object> result = new HashMap<>();

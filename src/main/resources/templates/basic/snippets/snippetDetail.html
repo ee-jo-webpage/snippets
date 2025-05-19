@@ -1,0 +1,49 @@
+<h1>Snippet 상세 정보</h1>
+
+<table border="1">
+    <!-- 기본 스니펫 정보 -->
+    <tr><th>Snippet ID</th><td th:text="${snippet.snippetid}"></td></tr>
+    <tr><th>User ID</th><td th:text="${snippet.userid}"></td></tr>
+    <tr><th>Folder ID</th><td th:text="${snippet.folderid}"></td></tr>
+    <tr><th>Color ID</th><td th:text="${snippet.colorid}"></td></tr>
+    <tr><th>Source URL</th><td th:text="${snippet.sourceurl}"></td></tr>
+    <tr><th>Type</th><td th:text="${snippet.type.name()}"></td></tr>
+    <tr><th>Memo</th><td th:text="${snippet.memo}"></td></tr>
+    <tr><th>Created At</th><td th:text="${snippet.createdat}"></td></tr>
+    <tr><th>Updated At</th><td th:text="${snippet.updatedat}"></td></tr>
+    <tr><th>Like Count</th><td th:text="${snippet.likecount}"></td></tr>
+    <tr><th>Visibility</th><td th:text="${snippet.visibility}"></td></tr>
+
+    <tr th:if="${snippet.type.name() == 'code'}">
+        <th>Language</th><td th:text="${snippet.language}"></td>
+    </tr>
+    <tr th:if="${snippet.type.name() == 'code'}">
+        <th>Code Content</th>
+        <td><pre><code th:text="${snippet.codecontent}"></code></pre></td>
+    </tr>
+
+    <tr th:if="${snippet.type.name() == 'text'}">
+        <th>Text Content</th>
+        <td th:text="${snippet.textcontent}"></td>
+    </tr>
+
+    <tr th:if="${snippet.type.name() == 'img'}">
+        <th>Image</th>
+        <td>
+            <img th:src="${snippet.imageurl}" alt="Snippet Image" th:if="${snippet.imageurl != null}" />
+            <p th:text="${snippet.alttext}" th:if="${snippet.alttext != null}"></p>
+        </td>
+    </tr>
+</table>
+
+<!-- 수정 페이지로 가는 버튼 -->
+<a th:href="@{/snippets/edit/{snippetid}(snippetid=${snippet.snippetid})}">
+    <button>수정</button>
+</a>
+
+<!--삭제 버튼-->
+<form th:action="@{/snippets/delete/{snippetid}(snippetid=${snippet.snippetid})}" method="post" onsubmit="return confirm('정말 삭제하시겠습니까?');">
+    <button type="submit">삭제</button>
+</form>
+
+<a href="/snippets">← 목록으로 돌아가기</a>

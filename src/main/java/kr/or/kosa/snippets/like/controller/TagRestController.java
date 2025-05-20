@@ -1,7 +1,7 @@
 package kr.or.kosa.snippets.like.controller;
 
 import kr.or.kosa.snippets.like.model.Tag;
-import kr.or.kosa.snippets.like.service.SnippetService;
+import kr.or.kosa.snippets.like.service.LikeSnippetService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 public class TagRestController {
 
     @Autowired
-    private SnippetService snippetService;
+    private LikeSnippetService likeSnippetService;
 
     /**
      * 태그 검색 API - 자동완성용
@@ -22,7 +22,7 @@ public class TagRestController {
      */
     @GetMapping("/search")
     public List<String> searchTags(@RequestParam(value = "query", defaultValue = "") String query) {
-        List<Tag> allTags = snippetService.getAllTags();
+        List<Tag> allTags = likeSnippetService.getAllTags();
 
         // 검색어가 비어있으면 모든 태그 반환 (중복 제거)
         if (query.trim().isEmpty()) {
@@ -45,7 +45,7 @@ public class TagRestController {
      */
     @GetMapping("/all")
     public List<String> getAllTags() {
-        return snippetService.getAllTags().stream()
+        return likeSnippetService.getAllTags().stream()
                 .map(Tag::getName)
                 .distinct()  // 중복 제거
                 .collect(Collectors.toList());

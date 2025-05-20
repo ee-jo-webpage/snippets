@@ -2,7 +2,7 @@ package kr.or.kosa.snippets.like.service;
 
 import kr.or.kosa.snippets.config.AppConfig;
 import kr.or.kosa.snippets.like.mapper.LikeMapper;
-import kr.or.kosa.snippets.like.mapper.SnippetMapper;
+import kr.or.kosa.snippets.like.mapper.LikeSnippetMapper;
 import kr.or.kosa.snippets.like.model.Like;
 import kr.or.kosa.snippets.like.model.Snippet;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,14 +17,14 @@ public class LikeService {
     private LikeMapper likeMapper;
 
     @Autowired
-    private SnippetMapper snippetMapper;
+    private LikeSnippetMapper likeSnippetMapper;
 
     // 좋아요 추가 (고정 사용자) - snippets 테이블 업데이트 없음
     public void addLike(Integer snippetId) {
         Integer userId = AppConfig.getFixedUserId(); // 고정 사용자 ID (2)
 
         // 스니펫이 존재하는지 확인
-                Snippet snippet = snippetMapper.getSnippetById(snippetId);
+                Snippet snippet = likeSnippetMapper.getSnippetById(snippetId);
         if (snippet == null) {
             throw new RuntimeException("스니펫을 찾을 수 없습니다: " + snippetId);
         }
@@ -37,7 +37,7 @@ public class LikeService {
 
         // snippets 테이블은 업데이트하지 않음 (기존 데이터 보존)
         long actualCount = likeMapper.countLikes(snippetId);
-        snippetMapper.updateLikeCount(snippetId, (int) actualCount);
+        likeSnippetMapper.updateLikeCount(snippetId, (int) actualCount);
 
         System.out.println("현재 실제 좋아요 수: " + actualCount);
     }
@@ -51,7 +51,7 @@ public class LikeService {
 
         // 실시간 좋아요 수 조회 후 snippets 테이블 업데이트
         long actualCount = likeMapper.countLikes(snippetId);
-        snippetMapper.updateLikeCount(snippetId, (int) actualCount);
+        likeSnippetMapper.updateLikeCount(snippetId, (int) actualCount);
 
         System.out.println("현재 실제 좋아요 수: " + actualCount);
     }

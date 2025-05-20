@@ -13,7 +13,7 @@ public class Snippets {
 	private int folderid;
 	private int colorid;
 	private String sourceurl;
-	private Snippettype type;
+	private SnippetTypeBasic type;
 	private String memo;
 	private Date createdat;
 	private Date updatedat;

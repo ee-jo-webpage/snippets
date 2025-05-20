@@ -2,7 +2,7 @@ package kr.or.kosa.snippets.snippetExt.controller;
 
 import kr.or.kosa.snippets.snippetExt.model.SnippetExtCreate;
 import kr.or.kosa.snippets.snippetExt.model.SnippetExtUpdate;
-import kr.or.kosa.snippets.snippetExt.service.SnippetService;
+import kr.or.kosa.snippets.snippetExt.service.SnippetExtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -16,11 +16,11 @@ import java.util.Map;
 @Slf4j
 public class SnippetApiController {
 
-    private final SnippetService snippetService;
+    private final SnippetExtService snippetExtService;
 
     @PostMapping
     public ResponseEntity<Map<String, Object>> save(@RequestBody SnippetExtCreate snippet) {
-        Long snippetId = snippetService.save(snippet);
+        Long snippetId = snippetExtService.save(snippet);
         Map<String, Object> response = Map.of("snippetId", snippetId);
         return ResponseEntity.ok(response);
     }
@@ -28,14 +28,14 @@ public class SnippetApiController {
     @PatchMapping("/{id}")
     public ResponseEntity<?> updateSnippet(@PathVariable Long id, @RequestBody SnippetExtUpdate snippetUpdate) {
         snippetUpdate.setSnippetId(id);
-        snippetService.updateSnippet(snippetUpdate);
+        snippetExtService.updateSnippet(snippetUpdate);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteSnippet(@PathVariable Long id) {
         log.warn(String.valueOf(id));
-        snippetService.deleteSnippet(id);
+        snippetExtService.deleteSnippet(id);
         return ResponseEntity.ok().build();
     }
 

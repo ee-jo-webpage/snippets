@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import kr.or.kosa.snippets.basic.model.Snippets;
-import kr.or.kosa.snippets.basic.model.Snippettype;
+import kr.or.kosa.snippets.basic.model.SnippetTypeBasic;
 import kr.or.kosa.snippets.basic.service.SnippetService;
 
 @Controller
@@ -37,10 +37,10 @@ public class SnippetController {
 
     @InitBinder
     public void initBinder(WebDataBinder binder) {
-        binder.registerCustomEditor(Snippettype.class, new PropertyEditorSupport() {
+        binder.registerCustomEditor(SnippetTypeBasic.class, new PropertyEditorSupport() {
             @Override
             public void setAsText(String text) {
-                setValue(Snippettype.valueOf(text));
+                setValue(SnippetTypeBasic.valueOf(text));
             }
         });
     }
@@ -61,7 +61,7 @@ public class SnippetController {
         if (basic == null) {
             return "error/404";
         }
-        Snippettype type = basic.getType();
+        SnippetTypeBasic type = basic.getType();
         Snippets snippet = snippetService.getSnippetsById(snippetid, type);
         model.addAttribute("snippet", snippet);
         return "basic/snippets/snippetDetail";
@@ -79,8 +79,8 @@ public class SnippetController {
         @RequestParam("type") String type,
         @RequestParam(value = "imageFile", required = false) MultipartFile imageFile
     ) throws IOException {
-        snippet.setType(Snippettype.valueOf(type));
-        if (snippet.getType() == Snippettype.img && imageFile != null && !imageFile.isEmpty()) {
+        snippet.setType(SnippetTypeBasic.valueOf(type));
+        if (snippet.getType() == SnippetTypeBasic.img && imageFile != null && !imageFile.isEmpty()) {
             String url = saveImageFile(imageFile);
             snippet.setImageurl(url);
         }
@@ -101,7 +101,7 @@ public class SnippetController {
         @PathVariable("snippetid") int snippetid,
         Model model
     ) {
-        Snippettype type = snippetService.getSnippetTypeById(snippetid);
+        SnippetTypeBasic type = snippetService.getSnippetTypeById(snippetid);
         Snippets snippet = snippetService.getSnippetsById(snippetid, type);
         model.addAttribute("snippet", snippet);
         return "basic/snippets/snippetEdit";
@@ -114,7 +114,7 @@ public class SnippetController {
         @RequestParam(value = "imageFile", required = false) MultipartFile imageFile
     ) throws IOException {
         snippet.setSnippetid(snippetid);
-        if (snippet.getType() == Snippettype.img && imageFile != null && !imageFile.isEmpty()) {
+        if (snippet.getType() == SnippetTypeBasic.img && imageFile != null && !imageFile.isEmpty()) {
             String url = saveImageFile(imageFile);
             snippet.setImageurl(url);
         }

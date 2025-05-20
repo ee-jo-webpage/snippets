@@ -1,50 +1,47 @@
 package kr.or.kosa.snippets.like.controller;
 
 import kr.or.kosa.snippets.config.AppConfig;
-import kr.or.kosa.snippets.like.mapper.SnippetMapper;
+import kr.or.kosa.snippets.like.mapper.LikeSnippetMapper;
 import kr.or.kosa.snippets.like.model.Snippet;
 import kr.or.kosa.snippets.like.model.Tag;
 import kr.or.kosa.snippets.like.service.LikeService;
-import kr.or.kosa.snippets.like.service.SnippetService;
+import kr.or.kosa.snippets.like.service.LikeSnippetService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
 @Controller
-public class SnippetController {
+public class LikeSnippetController {
 
     @Autowired
-    private SnippetMapper snippetMapper;
+    private LikeSnippetMapper likeSnippetMapper;
 
     @Autowired
     private LikeService likeService;
 
     @Autowired
-    private SnippetService snippetService;
+    private LikeSnippetService likeSnippetService;
 
     @GetMapping("/snippet/{id}")
     public String showSnippetDetail(@PathVariable("id") Integer snippetId, Model model) {
         Integer currentUserId = AppConfig.getFixedUserId();
 
         // 스니펫 상세 정보 조회
-        Snippet snippet = snippetMapper.getSnippetDetailById(snippetId);
+        Snippet snippet = likeSnippetMapper.getSnippetDetailById(snippetId);
 
         if (snippet == null) {
             return "redirect:/popular-snippets"; // 스니펫이 없으면 인기 스니펫 페이지로 리다이렉트
         }
 
         // 스니펫 태그 조회
-        List<Tag> tags = snippetService.getTagsBySnippetId(snippetId);
+        List<Tag> tags = likeSnippetService.getTagsBySnippetId(snippetId);
 
         // 좋아요 상태 확인
         boolean isLiked = likeService.isLiked(snippetId);
@@ -72,13 +69,13 @@ public class SnippetController {
         int offset = (page - 1) * pageSize;
 
         // 뷰를 통해 페이징 처리된 인기 스니펫 조회 (상위 100개 내에서만)
-        List<Snippet> snippets = snippetService.getPopularSnippetsPagedFromView(offset, pageSize);
-        int totalSnippets = snippetService.countPopularSnippetsFromView(); // 최대 100개
+        List<Snippet> snippets = likeSnippetService.getPopularSnippetsPagedFromView(offset, pageSize);
+        int totalSnippets = likeSnippetService.countPopularSnippetsFromView(); // 최대 100개
 
         // 뷰 실패 시 기존 방식으로 페이징 대체
         if (snippets == null || snippets.isEmpty()) {
             // 기존 방식으로 상위 100개 중에서 페이징
-            List<Snippet> allPopularSnippets = snippetService.getPopularSnippets(100);
+            List<Snippet> allPopularSnippets = likeSnippetService.getPopularSnippets(100);
             totalSnippets = Math.min(allPopularSnippets.size(), 100);
 
             int fromIndex = Math.min(offset, allPopularSnippets.size());

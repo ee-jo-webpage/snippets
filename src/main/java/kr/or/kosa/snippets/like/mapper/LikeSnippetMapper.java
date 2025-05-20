@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 
 @Mapper
-public interface SnippetMapper {
+public interface LikeSnippetMapper {
 
     // 특정 사용자의 스니펫 목록 조회
     List<Snippet> getSnippetsByUserId(@Param("userId") Integer userId);

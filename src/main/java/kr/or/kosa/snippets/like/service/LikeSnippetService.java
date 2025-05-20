@@ -1,6 +1,6 @@
 package kr.or.kosa.snippets.like.service;
 
-import kr.or.kosa.snippets.like.mapper.SnippetMapper;
+import kr.or.kosa.snippets.like.mapper.LikeSnippetMapper;
 import kr.or.kosa.snippets.like.mapper.TagMapper;
 import kr.or.kosa.snippets.like.model.Snippet;
 import kr.or.kosa.snippets.like.model.Tag;
@@ -12,10 +12,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class SnippetService {
+public class LikeSnippetService {
 
     @Autowired
-    private SnippetMapper snippetMapper;
+    private LikeSnippetMapper likeSnippetMapper;
 
     @Autowired
     private TagMapper tagMapper;
@@ -24,12 +24,12 @@ public class SnippetService {
 
     // 인기 스니펫 조회
     public List<Snippet> getPopularSnippets(Integer limit) {
-        return snippetMapper.getPopularSnippets(limit);
+        return likeSnippetMapper.getPopularSnippets(limit);
     }
 
     // 검색 기능
     public List<Snippet> searchSnippets(String type, String keyword, Integer minLikes, String tagName) {
-        return snippetMapper.searchSnippets(type, keyword, minLikes, tagName);
+        return likeSnippetMapper.searchSnippets(type, keyword, minLikes, tagName);
     }
 
     // 모든 태그 조회
@@ -44,7 +44,7 @@ public class SnippetService {
 
     // 스니펫 상세 조회
     public Snippet getSnippetDetailById(Integer snippetId) {
-        return snippetMapper.getSnippetDetailById(snippetId);
+        return likeSnippetMapper.getSnippetDetailById(snippetId);
     }
 
 
@@ -54,14 +54,14 @@ public class SnippetService {
      * 모든 공개 스니펫 조회 (성능 테스트용)
      */
     public List<Snippet> getAllPublicSnippets() {
-        return snippetMapper.getAllPublicSnippets();
+        return likeSnippetMapper.getAllPublicSnippets();
     }
 
     /**
      * 제한된 개수의 공개 스니펫 조회 (성능 테스트용)
      */
     public List<Snippet> getAllPublicSnippets(Integer limit) {
-        return snippetMapper.getAllPublicSnippets().stream()
+        return likeSnippetMapper.getAllPublicSnippets().stream()
                 .limit(limit)
                 .collect(Collectors.toList());
     }
@@ -70,14 +70,14 @@ public class SnippetService {
      * 특정 사용자의 스니펫 조회 (성능 테스트용)
      */
     public List<Snippet> getSnippetsByUserId(Integer userId) {
-        return snippetMapper.getSnippetsByUserId(userId);
+        return likeSnippetMapper.getSnippetsByUserId(userId);
     }
 
     /**
      * 페이징 처리된 공개 스니펫 조회 (성능 테스트용)
      */
     public List<Snippet> getAllPublicSnippetsPaged(Integer offset, Integer limit) {
-        return snippetMapper.getAllPublicSnippetsPaged(offset, limit);
+        return likeSnippetMapper.getAllPublicSnippetsPaged(offset, limit);
     }
 
 // ===== 뷰 방식 메서드들 (상위 100개로 제한) =====
@@ -90,7 +90,7 @@ public class SnippetService {
         if (limit == null || limit > 100) {
             limit = 100;
         }
-        return snippetMapper.getPopularSnippetsFromView(limit);
+        return likeSnippetMapper.getPopularSnippetsFromView(limit);
     }
 
     /**
@@ -101,7 +101,7 @@ public class SnippetService {
         if (limit == null || limit > 100) {
             limit = 100;
         }
-        return snippetMapper.getTop100PopularSnippets().stream()
+        return likeSnippetMapper.getTop100PopularSnippets().stream()
                 .limit(limit)
                 .collect(Collectors.toList());
     }
@@ -121,7 +121,7 @@ public class SnippetService {
             return new ArrayList<>();
         }
 
-        return snippetMapper.getPopularSnippetsPagedFromView(offset, maxLimit);
+        return likeSnippetMapper.getPopularSnippetsPagedFromView(offset, maxLimit);
     }
 
     /**
@@ -129,13 +129,13 @@ public class SnippetService {
      */
     public int countPopularSnippetsFromView() {
         // 뷰가 최대 100개로 제한되어 있음
-        return Math.min(snippetMapper.countPopularSnippetsFromView(), 100);
+        return Math.min(likeSnippetMapper.countPopularSnippetsFromView(), 100);
     }
 
     /**
      * 뷰를 이용한 최신순 조회 (비교용)
      */
     public List<Snippet> getRecentSnippetsFromView(Integer limit) {
-        return snippetMapper.getRecentSnippetsFromView(limit);
+        return likeSnippetMapper.getRecentSnippetsFromView(limit);
     }
 }

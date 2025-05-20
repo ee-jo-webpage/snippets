@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import kr.or.kosa.snippets.user.model.UserDTO;
 import kr.or.kosa.snippets.user.model.UserUpdateDTO;
 import kr.or.kosa.snippets.user.service.AuthService;
+import kr.or.kosa.snippets.user.service.UserRecoveryService;
 import kr.or.kosa.snippets.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 public class UserRestController {
     private final AuthService authService;
     private final UserService userService;
+    private final UserRecoveryService userRecoveryService;
 
 
     @PostMapping("/register")
@@ -77,6 +79,20 @@ public class UserRestController {
         return ResponseEntity.ok("회원 정보가 수정되었습니다.");
     }
 
+    @PostMapping("/delete")
+    public ResponseEntity<?> deleteAccount(@RequestBody Map<String, String> payload,
+                                           Principal principal,
+                                           HttpServletRequest request) {
+        try {
+            String email = principal.getName();
+            String reason = payload.get("reason");
+            userRecoveryService.deactivateUser(email, reason);
+            request.logout(); // 세션 초기화
+            return ResponseEntity.ok(Map.of("message", "계정이 비활성화되었습니다."));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "탈퇴 처리 중 오류 발생"));
+        }
+    }
 
 
 }

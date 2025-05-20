@@ -73,3 +73,67 @@ form.addEventListener("submit", async function (e) {
     }
 
 });
+
+document.getElementById("deleteBtn").addEventListener("click", async () => {
+    let reason = "";
+
+    // 1차: 드롭다운 선택
+    const { value: selected } = await Swal.fire({
+        title: "탈퇴 사유를 선택해주세요",
+        html: `
+    <select id="customReason" class="swal2-select-enhanced">
+      <option value="" disabled selected>사유를 선택해주세요</option>
+      <option value="이용이 불편함">이용이 불편함</option>
+      <option value="자주 사용하지 않음">자주 사용하지 않음</option>
+      <option value="개인정보 우려">개인정보 우려</option>
+      <option value="기타">기타 (직접 입력)</option>
+    </select>
+  `,
+        preConfirm: () => {
+            const selected = document.getElementById('customReason').value;
+            if (!selected) {
+                Swal.showValidationMessage("사유를 선택해주세요");
+            }
+            return selected;
+        },
+        showCancelButton: true,
+        confirmButtonText: "다음",
+        cancelButtonText: "취소"
+    });
+
+
+    if (!selected) return;
+
+    // 기타 선택 시 추가 입력
+    if (selected === "기타") {
+        const { value: etc } = await Swal.fire({
+            title: "기타 사유를 입력해주세요",
+            input: "text",
+            inputPlaceholder: "ex) 자주 끊기고 느려요...",
+            showCancelButton: true,
+            inputValidator: (value) => {
+                if (!value || value.trim() === "") return "기타 사유를 입력해주세요.";
+            }
+        });
+
+        if (!etc) return;
+        reason = etc.trim();
+    } else {
+        reason = selected;
+    }
+
+    // 서버에 탈퇴 요청 보내기
+    const res = await fetch("/api/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason })
+    });
+    const result = await res.json();
+
+    if (res.ok) {
+        await Swal.fire("탈퇴 완료", result.message || "탈퇴가 정상 처리되었습니다.", "success");
+        location.href = "/";
+    } else {
+        await Swal.fire("오류", "탈퇴 처리 중 문제가 발생했습니다.", "error");
+    }
+});

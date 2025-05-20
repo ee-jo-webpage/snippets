@@ -122,7 +122,7 @@
 	</delete>
 	
 	<!--스니펫 타입 찾기-->
-	<select id="getSnippetTypeById" parameterType="int" resultType="kr.or.kosa.snippets.basic.model.Snippettype">
+	<select id="getSnippetTypeById" parameterType="int" resultType="kr.or.kosa.snippets.basic.model.SnippetTypeBasic">
     	SELECT type FROM snippets WHERE snippet_id = #{snippetid}
 	</select>
 	

@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>인기 스니펫 게시판</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .header {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        /* 검색 폼 스타일 추가 */
+        .search-form {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .search-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+            align-items: end;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 150px;
+            flex: 1;
+            position: relative;
+        }
+
+        .form-group label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-group input, .form-group select {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,.1);
+        }
+
+        /* 태그 자동완성 드롭다운 스타일 */
+        .tag-autocomplete {
+            position: relative;
+        }
+
+        .tag-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .tag-dropdown-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .tag-dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .tag-dropdown-item.highlighted {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .tag-dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .no-results-dropdown {
+            padding: 10px 15px;
+            color: #666;
+            font-style: italic;
+            text-align: center;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .search-btn, .reset-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .search-btn:hover {
+            background-color: #0056b3;
+            transform: translateY(-1px);
+        }
+
+        .reset-btn {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .reset-btn:hover {
+            background-color: #545b62;
+            transform: translateY(-1px);
+        }
+
+        /* 검색 결과 정보 스타일 추가 */
+        .search-results-info {
+            background-color: #e8f4fd;
+            border: 1px solid #b8daff;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 20px;
+            color: #004085;
+        }
+
+        .search-results-info .filters {
+            margin-top: 8px;
+            font-size: 14px;
+        }
+
+        .filter-tag {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-right: 8px;
+            margin-top: 4px;
+        }
+
+        .info-box {
+            background-color: #e8f4fd;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #b8daff;
+            color: #004085;
+        }
+
+        .snippet-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        .snippet-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .snippet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .snippet-type {
+            background-color: #007bff;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .snippet-type.text {
+            background-color: #28a745;
+        }
+
+        .snippet-type.code {
+            background-color: #6f42c1;
+        }
+
+        .snippet-type.img {
+            background-color: #fd7e14;
+        }
+
+        .like-section {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .like-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .like-btn.liked {
+            color: #ff6b6b;
+            transform: scale(1.1);
+        }
+
+        .like-btn:not(.liked) {
+            color: #999;
+        }
+
+        .like-count {
+            font-weight: bold;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .snippet-memo {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .snippet-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .snippet-owner {
+            font-style: italic;
+        }
+
+        .snippet-date {
+            color: #888;
+        }
+
+        /* 페이징 스타일 */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+            margin-bottom: 20px;
+        }
+
+        .pagination {
+            display: flex;
+            gap: 5px;
+        }
+
+        .page-item {
+            display: inline-block;
+            padding: 8px 14px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+            background-color: #fff;
+            transition: all 0.2s;
+        }
+
+        .page-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .page-item.active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+            cursor: default;
+        }
+
+        .page-item.prev, .page-item.next {
+            padding: 8px 12px;
+            font-weight: bold;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .no-results h3 {
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+
+        .no-results p {
+            color: #999;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+            }
+
+            .form-group {
+                min-width: 100%;
+            }
+
+            .button-group {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>🔥 인기 스니펫 게시판</h1>
+    <p class="subtitle">현재 사용자: <strong>user_id = <span th:text="${currentUserId}"></span></strong></p>
+</div>
+
+<!-- 검색 필터 폼 추가 -->
+<div class="search-form">
+    <div class="search-title">
+        🔍 인기 스니펫 검색 및 필터 (TOP 100 내에서)
+    </div>
+    <form action="/popular-snippets" method="get" id="searchForm">
+        <input type="hidden" name="page" value="1">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="type">스니펫 유형</label>
+                <select id="type" name="type">
+                    <option value="">전체 유형</option>
+                    <option value="code" th:selected="${searchType == 'code'}">코드</option>
+                    <option value="text" th:selected="${searchType == 'text'}">텍스트</option>
+                    <option value="img" th:selected="${searchType == 'img'}">이미지</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="keyword">키워드</label>
+                <input type="text" id="keyword" name="keyword"
+                       placeholder="메모에서 검색..." th:value="${searchKeyword}">
+            </div>
+            <div class="form-group">
+                <label for="minLikes">최소 좋아요 수</label>
+                <input type="number" id="minLikes" name="minLikes"
+                       placeholder="예: 5" min="0" th:value="${searchMinLikes}">
+            </div>
+            <div class="form-group tag-autocomplete">
+                <label for="tagSearch">태그 검색</label>
+                <input type="text" id="tagSearch" name="tagSearch"
+                       placeholder="태그를 입력하세요..."
+                       th:value="${searchTagName}"
+                       autocomplete="off">
+                <input type="hidden" id="tagName" name="tagName" th:value="${searchTagName}">
+                <div class="tag-dropdown" id="tagDropdown"></div>
+            </div>
+            <div class="button-group">
+                <button type="submit" class="search-btn">
+                    🔍 검색
+                </button>
+                <a href="/popular-snippets" class="reset-btn">
+                    🔄 초기화
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- 검색 결과 정보 추가 -->
+<div th:if="${hasSearchFilter}" class="search-results-info">
+    <strong>🎯 검색 결과: </strong>
+    인기 스니펫 TOP 100 중 <span th:text="${totalSnippets}">0</span>개가 검색되었습니다.
+    <div class="filters">
+        <strong>적용된 필터:</strong>
+        <span th:if="${searchType != null and searchType != ''}" class="filter-tag">
+            유형: <span th:text="${searchType}"></span>
+        </span>
+        <span th:if="${searchKeyword != null and searchKeyword != ''}" class="filter-tag">
+            키워드: <span th:text="${searchKeyword}"></span>
+        </span>
+        <span th:if="${searchMinLikes != null and searchMinLikes > 0}" class="filter-tag">
+            최소 좋아요: <span th:text="${searchMinLikes}"></span>
+        </span>
+        <span th:if="${searchTagName != null and searchTagName != ''}" class="filter-tag">
+            태그: <span th:text="${searchTagName}"></span>
+        </span>
+    </div>
+</div>
+
+<!-- 인기 스니펫 정보 (검색이 없을 때만 표시) -->
+<div th:unless="${hasSearchFilter}" class="info-box">
+    <strong>📊 인기 스니펫 TOP 100</strong> -
+    현재 <span th:text="${#lists.size(snippets)}">0</span>개 표시 중
+    (총 <span th:text="${totalSnippets}">0</span>개 중 <span th:text="${currentPage}">1</span>페이지)
+</div>
+
+<!-- 스니펫 목록이 비어있는 경우 -->
+<div th:if="${#lists.isEmpty(snippets)}" class="no-results">
+    <h3>😕 검색 결과가 없습니다</h3>
+    <p>다른 검색 조건을 시도해보세요.</p>
+</div>
+
+<!-- 스니펫 카드 목록 -->
+<div th:each="snippet : ${snippets}" class="snippet-card"
+     th:onclick="'window.location.href=\'/snippet/' + ${snippet.snippetId} + '\''">
+    <div class="snippet-header">
+        <span class="snippet-type" th:class="'snippet-type ' + ${snippet.type}" th:text="${snippet.type}"></span>
+        <div class="like-section">
+            <button class="like-btn"
+                    th:classappend="${likeStatusMap.get(snippet.snippetId)} ? 'liked' : ''"
+                    th:data-snippet-id="${snippet.snippetId}"
+                    th:data-is-liked="${likeStatusMap.get(snippet.snippetId)}"
+                    onclick="event.stopPropagation();">❤️</button>
+            <span class="like-count" th:text="${snippet.likeCount}">0</span>
+            <span>좋아요</span>
+        </div>
+    </div>
+
+    <div class="snippet-memo" th:text="${snippet.memo}">스니펫 메모</div>
+
+    <div class="snippet-owner">
+        소유자: user_id = <span th:text="${snippet.userId}"></span>
+        <span th:if="${snippet.userId == currentUserId}"> (내 스니펫)</span>
+    </div>
+
+    <div class="snippet-date">
+        생성일: <span th:text="${#temporals.format(snippet.createdAt, 'yyyy-MM-dd HH:mm')}"></span>
+    </div>
+</div>
+
+<!-- 페이지 네비게이션 (검색 파라미터 포함) -->
+<div class="pagination-container" th:if="${totalPages > 1}">
+    <div class="pagination">
+        <!-- 이전 페이지 버튼 -->
+        <a th:if="${currentPage > 1}"
+           th:href="@{/popular-snippets(page=${currentPage - 1}, type=${searchType}, keyword=${searchKeyword}, minLikes=${searchMinLikes}, tagName=${searchTagName})}"
+           class="page-item prev">&laquo; 이전</a>
+
+        <!-- 페이지 번호 -->
+        <th:block th:each="pageNum : ${#numbers.sequence(1, totalPages)}">
+            <a th:if="${pageNum == currentPage}"
+               class="page-item active" th:text="${pageNum}"></a>
+            <a th:unless="${pageNum == currentPage}"
+               th:href="@{/popular-snippets(page=${pageNum}, type=${searchType}, keyword=${searchKeyword}, minLikes=${searchMinLikes}, tagName=${searchTagName})}"
+               class="page-item" th:text="${pageNum}"></a>
+        </th:block>
+
+        <!-- 다음 페이지 버튼 -->
+        <a th:if="${currentPage < totalPages}"
+           th:href="@{/popular-snippets(page=${currentPage + 1}, type=${searchType}, keyword=${searchKeyword}, minLikes=${searchMinLikes}, tagName=${searchTagName})}"
+           class="page-item next">다음 &raquo;</a>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    $(document).ready(function() {
+        console.log("=== 인기 스니펫 페이지 로드 ===");
+
+        // 태그 자동완성 기능
+        let selectedTagIndex = -1;
+        let currentTags = [];
+
+        // 태그 검색 입력 처리
+        $('#tagSearch').on('input', function() {
+            const query = $(this).val();
+            selectedTagIndex = -1;
+
+            if (query.length >= 1) {
+                searchTags(query);
+            } else {
+                hideTagDropdown();
+            }
+        });
+
+        // 키보드 네비게이션
+        $('#tagSearch').on('keydown', function(e) {
+            const dropdown = $('#tagDropdown');
+            const items = dropdown.find('.tag-dropdown-item');
+
+            switch(e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    selectedTagIndex = Math.min(selectedTagIndex + 1, items.length - 1);
+                    updateTagSelection(items);
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    selectedTagIndex = Math.max(selectedTagIndex - 1, -1);
+                    updateTagSelection(items);
+                    break;
+                case 'Enter':
+                    e.preventDefault();
+                    if (selectedTagIndex >= 0 && items.length > 0) {
+                        selectTag(items.eq(selectedTagIndex).text());
+                    }
+                    break;
+                case 'Escape':
+                    hideTagDropdown();
+                    break;
+            }
+        });
+
+        // 클릭으로 드롭다운 닫기
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.tag-autocomplete').length) {
+                hideTagDropdown();
+            }
+        });
+
+        // 태그 검색 함수
+        function searchTags(query) {
+            $.ajax({
+                url: '/api/tags/search',
+                type: 'GET',
+                data: { query: query },
+                success: function(tags) {
+                    currentTags = tags;
+                    showTagDropdown(tags, query);
+                },
+                error: function() {
+                    console.error('태그 검색 실패');
+                    hideTagDropdown();
+                }
+            });
+        }
+
+        // 태그 드롭다운 표시
+        function showTagDropdown(tags, query) {
+            const dropdown = $('#tagDropdown');
+            dropdown.empty();
+
+            if (tags.length === 0) {
+                dropdown.append('<div class="no-results-dropdown">검색 결과가 없습니다</div>');
+            } else {
+                tags.forEach(function(tag, index) {
+                    const item = $('<div class="tag-dropdown-item"></div>')
+                        .text(tag)
+                        .on('click', function() {
+                            selectTag(tag);
+                        });
+                    dropdown.append(item);
+                });
+            }
+
+            dropdown.show();
+        }
+
+        // 태그 드롭다운 숨기기
+        function hideTagDropdown() {
+            $('#tagDropdown').hide();
+            selectedTagIndex = -1;
+        }
+
+        // 태그 선택 업데이트
+        function updateTagSelection(items) {
+            items.removeClass('highlighted');
+            if (selectedTagIndex >= 0) {
+                items.eq(selectedTagIndex).addClass('highlighted');
+            }
+        }
+
+        // 태그 선택
+        function selectTag(tagName) {
+            $('#tagSearch').val(tagName);
+            $('#tagName').val(tagName);
+            hideTagDropdown();
+        }
+
+        // 폼 제출 시 태그 값 동기화
+        $('#searchForm').on('submit', function() {
+            const tagSearchValue = $('#tagSearch').val();
+            $('#tagName').val(tagSearchValue);
+        });
+
+        // 좋아요 버튼 클릭 이벤트
+        $('.like-btn').on('click', function(event) {
+            event.stopPropagation();
+
+            const button = $(this);
+            const snippetId = button.data('snippet-id');
+            const isLiked = button.data('is-liked');
+            const likeCountSpan = button.siblings('.like-count');
+
+            console.log("좋아요 버튼 클릭 - snippetId:", snippetId, "isLiked:", isLiked);
+
+            button.prop('disabled', true);
+
+            if (isLiked) {
+                // 좋아요 취소
+                $.ajax({
+                    url: '/api/likes/remove',
+                    type: 'POST',
+                    data: { snippetId: snippetId },
+                    success: function(response) {
+                        if (response.success) {
+                            button.removeClass('liked');
+                            button.data('is-liked', false);
+                            likeCountSpan.text(response.likeCount);
+                            console.log('좋아요 취소 성공');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('좋아요 취소 실패:', error);
+                    },
+                    complete: function() {
+                        button.prop('disabled', false);
+                    }
+                });
+            } else {
+                // 좋아요 추가
+                $.ajax({
+                    url: '/api/likes/add',
+                    type: 'POST',
+                    data: { snippetId: snippetId },
+                    success: function(response) {
+                        if (response.success) {
+                            button.addClass('liked');
+                            button.data('is-liked', true);
+                            likeCountSpan.text(response.likeCount);
+                            console.log('좋아요 추가 성공');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('좋아요 추가 실패:', error);
+                    },
+                    complete: function() {
+                        button.prop('disabled', false);
+                    }
+                });
+            }
+        });
+
+        // 검색 폼 향상된 UX
+        $('input[name="keyword"]').on('keypress', function(e) {
+            if (e.which === 13) { // Enter 키
+                $(this).closest('form').submit();
+            }
+        });
+
+        // 페이지 로드 시 태그 검색 필드 초기화
+        const currentTagName = /*[[${searchTagName}]]*/ '';
+        if (currentTagName) {
+            $('#tagSearch').val(currentTagName);
+        }
+    });
+</script>
+</body>
+</html>

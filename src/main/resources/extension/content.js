@@ -1259,288 +1259,450 @@ function injectSidebarStyle() {
     document.head.appendChild(style);
 }
 
-// 이미지태그 감지 함수
-function detectImageBlocks() {
+// 이미지 요소 위에 저장/수정 버튼을 띄우고 클릭 이벤트를 등록하는 함수
+async function detectImageBlocks() {
+    // 로컬 스토리지에서 저장된 하이라이트 정보 가져오기
+    const { highlights = [] } = await chrome.storage.local.get("highlights");
     const images = document.querySelectorAll("img");
 
     images.forEach((img) => {
-        // 중복 처리 방지
-        if (img.dataset.snippetBound) return;
-        img.dataset.snippetBound = "true";
-
-        // wrapper 필요 시 처리 (이미지에 absolute 버튼 삽입을 위해)
+        const imageUrl = img.src;
         const wrapper = img.parentElement;
         if (!wrapper) return;
 
+        // 버튼 위치를 상대적으로 지정하기 위해 부모 요소에 position 설정
         wrapper.style.position = "relative";
 
-        // 저장 버튼 생성
-        const saveBtn = document.createElement("button");
-        saveBtn.className = "snippet-img-btn";
-        saveBtn.textContent = "save";
-        saveBtn.style.cssText = `
-      position: absolute;
-      top: 6px;
-      left: 6px;
-      background-color: #6bcb5a;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 6px 10px;
-      font-size: 13px;
-      cursor: pointer;
-      z-index: 9999;
-      display: none;
-    `;
+        // ✅ 이전에 삽입된 저장/수정 버튼이 있다면 제거 (중복 방지)
+        const existingBtn = wrapper.querySelector(".snippet-edit-btn, .snippet-save-btn");
+        if (existingBtn) existingBtn.remove();
 
-        // 마우스 오버 시 버튼 표시
-        wrapper.addEventListener("mouseenter", () => {
-            saveBtn.style.display = "block";
-        });
-        wrapper.addEventListener("mouseleave", () => {
-            saveBtn.style.display = "none";
-        });
+        // 이미 저장된 이미지인지 확인
+        const matched = highlights.find((item) => item.type === "IMG" && item.imageUrl === imageUrl);
+        const alreadySaved = Boolean(matched);
 
-        // 클릭 이벤트
+        // 저장 또는 수정 버튼 생성
+        const saveBtn = createImageSaveBtn(alreadySaved);
+
+        // 버튼 클릭 시 이벤트 처리
         saveBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            showImageSavePopup(img.src, img.alt || "", saveBtn); // 팝업 연결
+            e.stopPropagation(); // 클릭 이벤트 버블링 방지
+
+            if (alreadySaved && matched) {
+                // 저장된 경우 → 수정 팝업
+                showImageEditPopup(matched, saveBtn);
+            } else {
+                // 저장되지 않은 경우 → 저장 팝업
+                showImageSavePopup(imageUrl, img.alt || "", saveBtn, false);
+            }
         });
+
+        // 마우스 호버 시 버튼 표시
+        wrapper.addEventListener("mouseenter", () => saveBtn.style.display = "block");
+        wrapper.addEventListener("mouseleave", () => saveBtn.style.display = "none");
 
         // 버튼 삽입
         wrapper.appendChild(saveBtn);
     });
 }
 
-// div 백그라운드 src 감지 함수
-function detectBackgroundImageBlocks() {
-    const elements = document.querySelectorAll("*"); // 모든 요소 대상으로 탐색
+// 배경 이미지가 설정된 요소에 저장/수정 버튼을 띄우고 클릭 이벤트를 등록하는 함수
+async function detectBackgroundImageBlocks() {
+    // 로컬 스토리지에서 저장된 하이라이트 정보 가져오기
+    const { highlights = [] } = await chrome.storage.local.get("highlights");
+
+    // 모든 요소를 대상으로 검사
+    const elements = document.querySelectorAll("*");
 
     elements.forEach((el) => {
+        // 해당 요소의 배경 이미지 스타일 가져오기
         const bgImage = getComputedStyle(el).backgroundImage;
-
         if (!bgImage || bgImage === "none") return;
 
+        // url("...") 또는 url('...') 또는 url(...) 형식에서 실제 이미지 URL 추출
         const urlMatch = bgImage.match(/url\(["']?(.*?)["']?\)/);
         if (!urlMatch || !urlMatch[1]) return;
 
         const imageUrl = urlMatch[1];
 
-        // 중복 처리 방지
-        if (el.dataset.bgSnippetBound) return;
-        el.dataset.bgSnippetBound = "true";
+        // 버튼 위치를 위한 position 설정
+        el.style.position = "relative";
 
-        el.style.position = "relative"; // 버튼 위치를 위해 필요
+        // ✅ 기존에 추가된 버튼이 있다면 제거 (중복 방지)
+        const existingBtn = el.querySelector(".snippet-edit-btn, .snippet-save-btn");
+        if (existingBtn) existingBtn.remove();
 
-        // 저장 버튼 생성
-        const saveBtn = document.createElement("button");
-        saveBtn.textContent = "save";
-        saveBtn.className = "snippet-bg-btn";
-        saveBtn.style.cssText = `
-      position: absolute;
-      top: 6px;
-      left: 6px;
-      background-color: #6bcb5a;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 6px 10px;
-      font-size: 13px;
-      cursor: pointer;
-      z-index: 9999;
-      display: none;
-    `;
+        // 저장된 이미지인지 확인
+        const matched = highlights.find((item) => item.type === "IMG" && item.imageUrl === imageUrl);
+        const alreadySaved = Boolean(matched);
 
-        el.addEventListener("mouseenter", () => {
-            saveBtn.style.display = "block";
-        });
-        el.addEventListener("mouseleave", () => {
-            saveBtn.style.display = "none";
-        });
+        // 저장 또는 수정 버튼 생성
+        const saveBtn = createImageSaveBtn(alreadySaved);
 
+        // 버튼 클릭 이벤트 등록
         saveBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            showImageSavePopup(imageUrl, "", saveBtn, true); // 팝업 연결
+            e.stopPropagation(); // 이벤트 전파 방지
+
+            if (alreadySaved && matched) {
+                // 저장된 경우 → 수정 팝업 호출
+                showImageEditPopup(matched, saveBtn);
+            } else {
+                // 저장되지 않은 경우 → 저장 팝업 호출
+                showImageSavePopup(imageUrl, "", saveBtn, true); // true는 background 이미지 플래그
+            }
         });
 
+        // 마우스 진입 시 버튼 표시
+        el.addEventListener("mouseenter", () => saveBtn.style.display = "block");
+        el.addEventListener("mouseleave", () => saveBtn.style.display = "none");
+
+        // 버튼 DOM에 추가
         el.appendChild(saveBtn);
     });
 }
 
-// 이미지 저장 팝업 생성 함수
+// 이미지 저장 또는 수정 버튼을 생성하는 함수
+function createImageSaveBtn(alreadySaved) {
+    // 버튼 요소 생성
+    const btn = document.createElement("button");
+
+    // 저장 상태에 따라 클래스와 텍스트 설정
+    btn.className = alreadySaved ? "snippet-edit-btn" : "snippet-save-btn";
+    btn.textContent = alreadySaved ? "edit" : "save";
+
+    // 버튼 스타일 지정
+    btn.style.cssText = `
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        background-color: #6bcb5a;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 13px;
+        cursor: pointer;
+        z-index: 9999;
+        display: none;
+    `;
+
+    return btn;
+}
+
+// 이미지 저장 팝업을 띄우고 색상 선택, 메모 입력, 저장 기능을 처리하는 함수
 function showImageSavePopup(imgUrl, altText, btnElement, isBackground = false) {
     removePopup(); // 기존 팝업 제거
 
-    const rect = btnElement.getBoundingClientRect(); // 기준 좌표 계산
-
-    // 팝업 컨테이너 생성 및 스타일 적용
+    // 버튼 위치 기준으로 팝업 위치 계산
+    const rect = btnElement.getBoundingClientRect();
     popup = document.createElement("div");
     popup.id = "image-popup";
     popup.style = `
-      position: absolute;
-      top: ${window.scrollY + rect.bottom + 6}px;
-      left: ${window.scrollX + rect.left}px;
-      background: white;
-      padding: 10px;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-      z-index: 2147483647;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      width: 280px;
+        position: absolute;
+        top: ${window.scrollY + rect.bottom + 6}px;
+        left: ${window.scrollX + rect.left}px;
+        background: white;
+        padding: 10px;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        z-index: 2147483647;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 280px;
     `;
 
-    // 썸네일 미리보기 (일반 <img> 또는 배경 <div>)
-    const preview = isBackground
-        ? document.createElement("div") // 배경 이미지용
-        : document.createElement("img"); // 일반 이미지용
-
+    // 미리보기 요소 생성 (일반 이미지 vs 배경 이미지)
+    const preview = isBackground ? document.createElement("div") : document.createElement("img");
     if (isBackground) {
         preview.style = `
-          width: 100%;
-          height: 160px;
-          background-image: url('${imgUrl}');
-          background-size: cover;
-          background-position: center;
-          border-radius: 6px;
+            width: 100%; height: 160px;
+            background-image: url('${imgUrl}');
+            background-size: cover; background-position: center;
+            border-radius: 6px;
         `;
     } else {
         preview.src = imgUrl;
         preview.alt = altText || "image";
         preview.style = `
-          width: 100%;
-          height: 160px;
-          object-fit: cover;
-          border-radius: 6px;
+            width: 100%; height: 160px;
+            object-fit: cover;
+            border-radius: 6px;
         `;
     }
 
-    // 메모 입력창
+    // 메모 입력 textarea 생성
     const memoInput = document.createElement("textarea");
     memoInput.placeholder = "write memo!";
     memoInput.rows = 2;
-    memoInput.className = "memo-input";
     memoInput.style = `
-      width: 100%;
-      font-size: 13px;
-      padding: 8px 10px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      resize: none;
-      font-family: inherit;
-      box-sizing: border-box;
+        width: 100%; font-size: 13px;
+        padding: 8px 10px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        resize: none;
+        font-family: inherit;
+        box-sizing: border-box;
     `;
 
-    // 색상 선택 버튼들 (0~7)
+    // 색상 선택 버튼들 표시
     const colorRow = document.createElement("div");
-    colorRow.style.display = "flex";
-    colorRow.style.flexWrap = "wrap";
-    colorRow.style.gap = "6px";
+    colorRow.style = "display: flex; flex-wrap: wrap; gap: 6px;";
+    let selectedColorId = 1; // 기본 색상 ID
 
-    let selectedColorId = 1;
-
-    // 색상 선택 버튼 생성
-    for (let colorId = 0; colorId <= 7; colorId++) {
+    for (let i = 0; i <= 7; i++) {
         const btn = document.createElement("div");
-        btn.className = "color-btn";
-        btn.dataset.colorId = colorId;
-        btn.title = colorMapName[colorId];
-        btn.style.cssText = `
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background-color: ${colorMap[colorId]};
-      border: 1px solid #ccc;
-      cursor: pointer;
-    `;
-
-        // 클릭 시: 선택된 색상 표시 (테두리) + 선택 상태 업데이트
+        btn.dataset.colorId = i;
+        btn.style = `
+            width: 24px; height: 24px;
+            border-radius: 50%;
+            background-color: ${colorMap[i]};
+            border: 1px solid #ccc;
+            cursor: pointer;
+        `;
+        // 색상 클릭 시 선택 표시 변경
         btn.addEventListener("click", () => {
-            selectedColorId = colorId;
-
-            // 모든 버튼에서 강조 효과 제거
-            popup.querySelectorAll(".color-btn").forEach((b) => {
+            selectedColorId = i;
+            popup.querySelectorAll("[data-color-id]").forEach((b) => {
                 b.style.outline = "none";
                 b.style.boxShadow = "none";
             });
-
-            // 현재 선택한 버튼에 강조 효과 적용
             btn.style.outline = "2px solid green";
-            btn.style.outlineOffset = "1px";
-            btn.style.boxShadow = "0 0 2px rgba(0,0,0,0.2)";
         });
-
         colorRow.appendChild(btn);
     }
 
-    // 저장 버튼
+    // 실제 저장 버튼 생성 및 클릭 처리
     const saveBtn = document.createElement("button");
     saveBtn.textContent = "save";
-    saveBtn.style.cssText = `
-      align-self: flex-end;
-      background-color: #6bcb5a;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 6px 10px;
-      font-size: 13px;
-      cursor: pointer;
+    saveBtn.style = `
+        align-self: flex-end;
+        background-color: #6bcb5a;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 13px;
+        cursor: pointer;
     `;
-
-    // 저장 버튼 클릭 시 → 저장 함수 호출
     saveBtn.addEventListener("click", async () => {
         const memo = memoInput.value.trim();
-        await saveImageSnippet(imgUrl, altText, selectedColorId, memo);
-        removePopup();
+        await saveImageSnippet(imgUrl, altText, selectedColorId, memo, btnElement);
+        removePopup(); // 저장 후 팝업 닫기
     });
 
-    // 팝업 구성 요소 삽입
+    // 팝업에 요소 추가 후 body에 삽입
     popup.append(preview, colorRow, memoInput, saveBtn);
     document.body.appendChild(popup);
 }
 
-// 이미지 또는 배경 이미지 스니펫 저장 함수
-async function saveImageSnippet(imgUrl, altText, colorId, memo) {
-    const snippetId = crypto.randomUUID();
-
-    // 스니펫 객체 구성 (imageUrl만 저장, content는 사용하지 않음)
-    const snippet = {
-        snippetId,
-        type: "IMG",                // 이미지 타입 명시
-        imageUrl: imgUrl,           // 이미지의 실제 URL
-        sourceUrl: location.href,   // 사용자가 저장한 웹페이지의 주소
-        createdAt: new Date().toISOString(),
-        colorId,
-        memo,
-        altText,
-    };
-
-    // 기존 highlights 불러오기
+// 이미지 스니펫을 저장하거나 수정하고 서버 및 로컬 스토리지에 반영하는 함수
+async function saveImageSnippet(imgUrl, altText, colorId, memo, btnElement) {
+    // 기존 저장된 스니펫 목록 불러오기
     const { highlights = [] } = await chrome.storage.local.get("highlights");
 
-    // 새 항목 추가
-    const updated = [...highlights, snippet];
-    await chrome.storage.local.set({ highlights: updated });
+    // 동일 이미지 URL로 저장된 스니펫 있는지 확인
+    let snippet = highlights.find((item) => item.type === "IMG" && item.imageUrl === imgUrl);
 
-    // 서버 저장 시도
-    try {
-        const serverId = await sendSnippetToServer(snippet);
+    let updated = [];
+
+    if (snippet) {
+        // 수정 모드: 기존 정보 유지, 색상/메모만 갱신
+        const serverId = snippet.serverId;
+        const snippetId = snippet.snippetId;
+
+        const newSnippet = {
+            ...snippet,
+            colorId,
+            memo,
+        };
+
+        // 수정한 스니펫으로 교체
+        updated = highlights.map((item) =>
+            item.snippetId === snippetId ? newSnippet : item
+        );
+
+        // 서버에도 PATCH 요청 전송
         if (serverId) {
-            snippet.serverId = serverId;
-
-            // 서버 ID 반영하여 다시 저장
-            await chrome.storage.local.set({
-                highlights: updated.map((s) =>
-                    s.snippetId === snippetId ? { ...s, serverId } : s
-                ),
-            });
+            try {
+                await fetch(`http://localhost:8090/api/snippets/${serverId}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ colorId, memo }),
+                });
+                console.log("🛰️ 서버 이미지 메타 수정 완료:", serverId);
+            } catch (err) {
+                console.warn("⚠️ 서버 이미지 수정 실패", err.message);
+            }
         }
-    } catch (err) {
-        console.warn("⚠️ 서버 저장 실패 (이미지)", err.message);
+
+    } else {
+        // 신규 저장 모드
+        snippet = {
+            snippetId: crypto.randomUUID(),
+            type: "IMG",
+            imageUrl: imgUrl,
+            sourceUrl: location.href,
+            createdAt: new Date().toISOString(),
+            colorId,
+            memo,
+            altText,
+        };
+
+        updated = [...highlights, snippet];
+
+        // 서버에 신규 등록
+        try {
+            const serverId = await sendSnippetToServer(snippet);
+            if (serverId) snippet.serverId = serverId;
+        } catch (e) {
+            console.warn("❌ 서버 저장 실패", e);
+        }
     }
 
-    console.log("이미지 스니펫 저장 완료:", snippet);
+    // 로컬 저장소에 갱신
+    await chrome.storage.local.set({ highlights: updated });
+
+    // 버튼 텍스트 'edit'으로 변경
+    if (btnElement) btnElement.textContent = "edit";
+    detectImageBlocks();
+    detectBackgroundImageBlocks();
+    console.log("이미지 스니펫 저장/수정 완료", snippet);
+}
+
+// 저장된 이미지 스니펫에 대한 수정 팝업을 띄우고 색상/메모를 수정하는 함수
+function showImageEditPopup(snippet, btnElement) {
+    removePopup(); // 기존 팝업 제거
+
+    const rect = btnElement.getBoundingClientRect();
+    let selectedColorId = snippet.colorId || 1;
+    const currentMemo = snippet.memo || "";
+
+    popup = document.createElement("div");
+    popup.id = "image-edit-popup";
+    popup.style = `
+        position: absolute;
+        top: ${window.scrollY + rect.bottom + 6}px;
+        left: ${window.scrollX + rect.left}px;
+        background: white;
+        padding: 10px;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        z-index: 2147483647;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 280px;
+    `;
+
+    // 이미지 미리보기 구성
+    const preview = document.createElement("img");
+    preview.src = snippet.imageUrl;
+    preview.alt = snippet.altText || "image";
+    preview.style = `
+        width: 100%; height: 160px;
+        object-fit: cover;
+        border-radius: 6px;
+    `;
+
+    // 메모 입력창 구성
+    const memoInput = document.createElement("textarea");
+    memoInput.placeholder = "write memo!";
+    memoInput.rows = 2;
+    memoInput.value = currentMemo;
+    memoInput.style = `
+        width: 100%;
+        font-size: 13px;
+        padding: 8px 10px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        resize: none;
+        font-family: inherit;
+        box-sizing: border-box;
+    `;
+
+    // 색상 선택 영역 구성
+    const colorRow = document.createElement("div");
+    colorRow.style = "display: flex; flex-wrap: wrap; gap: 6px;";
+
+    for (let i = 0; i <= 7; i++) {
+        const btn = document.createElement("div");
+        btn.dataset.colorId = i;
+        btn.style = `
+            width: 24px; height: 24px;
+            border-radius: 50%;
+            background-color: ${colorMap[i]};
+            border: 1px solid #ccc;
+            cursor: pointer;
+        `;
+
+        if (i === (snippet.colorId ?? -1)) {
+            // 현재 저장된 색상은 비활성화
+            btn.style.opacity = "0.3";
+            btn.style.border = "1px solid #aaa";
+            btn.style.cursor = "not-allowed";
+            btn.classList.add("current-color");
+        } else {
+            // 선택된 색상 강조
+            if (i === selectedColorId) {
+                btn.style.border = "2px solid green";
+                btn.style.opacity = "0.8";
+                btn.style.cursor = "not-allowed";
+            }
+
+            // 클릭 시 색상 선택 변경
+            btn.addEventListener("click", () => {
+                selectedColorId = i;
+
+                // 기존 스타일 초기화
+                popup.querySelectorAll("[data-color-id]").forEach((b) => {
+                    const bId = parseInt(b.dataset.colorId, 10);
+                    if (bId === snippet.colorId) {
+                        b.style.opacity = "0.3";
+                        b.style.border = "1px solid #aaa";
+                        b.style.cursor = "not-allowed";
+                    } else {
+                        b.style.opacity = "1";
+                        b.style.border = "1px solid #ccc";
+                        b.style.cursor = "pointer";
+                    }
+                });
+
+                // 새 선택 스타일 반영
+                btn.style.border = "2px solid green";
+                btn.style.opacity = "0.8";
+                btn.style.cursor = "not-allowed";
+            });
+        }
+
+        colorRow.appendChild(btn);
+    }
+
+    // 업데이트 버튼 구성
+    const updateBtn = document.createElement("button");
+    updateBtn.textContent = "update";
+    updateBtn.style = `
+        align-self: flex-end;
+        background-color: #6bcb5a;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 13px;
+        cursor: pointer;
+    `;
+
+    // 클릭 시 서버/스토리지에 반영하고 팝업 종료 및 UI 재검사
+    updateBtn.addEventListener("click", async () => {
+        const memo = memoInput.value.trim();
+        await saveImageSnippet(snippet.imageUrl, snippet.altText, selectedColorId, memo, btnElement);
+        removePopup();
+        detectImageBlocks();
+        detectBackgroundImageBlocks();
+    });
+
+    popup.append(preview, colorRow, memoInput, updateBtn);
+    document.body.appendChild(popup);
 }
 
 // 확장 프로그램과 content.js 간 메시지 통신 핸들러

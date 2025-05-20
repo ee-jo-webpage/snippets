@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.kosa.snippets.like.mapper.SnippetContentMapper">
+
+    <!-- 코드 스니펫 내용 조회 -->
+    <select id="getSnippetCodeById" resultType="kr.or.kosa.snippets.like.model.SnippetCode">
+        SELECT snippet_id as snippetId, content, language
+        FROM snippet_codes
+        WHERE snippet_id = #{snippetId}
+    </select>
+
+    <!-- 텍스트 스니펫 내용 조회 -->
+    <select id="getSnippetTextById" resultType="kr.or.kosa.snippets.like.model.SnippetText">
+        SELECT snippet_id as snippetId, content
+        FROM snippet_texts
+        WHERE snippet_id = #{snippetId}
+    </select>
+
+    <!-- 이미지 스니펫 내용 조회 -->
+    <select id="getSnippetImageById" resultType="kr.or.kosa.snippets.like.model.SnippetImage">
+        SELECT snippet_id as snippetId, image_url as imageUrl, alt_text as altText
+        FROM snippet_images
+        WHERE snippet_id = #{snippetId}
+    </select>
+
+</mapper>

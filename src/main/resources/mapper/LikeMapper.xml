@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.kosa.snippets.like.mapper.LikeMapper">
+
+    <!-- 좋아요 추가 (중복 방지) -->
+    <insert id="addLike">
+        INSERT IGNORE INTO likes (user_id, snippet_id, created_at)
+        VALUES (#{userId}, #{snippetId}, NOW())
+    </insert>
+
+    <!-- 좋아요 취소 -->
+    <delete id="removeLike">
+        DELETE FROM likes WHERE user_id = #{userId} AND snippet_id = #{snippetId}
+    </delete>
+
+    <!-- 특정 스니펫에 대한 좋아요 수 -->
+    <select id="countLikes" resultType="long">
+        SELECT COUNT(*) FROM likes WHERE snippet_id = #{snippetId}
+    </select>
+
+    <!-- 특정 사용자가 누른 좋아요 목록 -->
+    <select id="getUserLikes" resultType="kr.or.kosa.snippets.like.model.Like">
+        SELECT * FROM likes WHERE user_id = #{userId}
+    </select>
+
+    <!-- 사용자가 특정 스니펫에 좋아요를 눌렀는지 확인 -->
+    <select id="isLiked" resultType="boolean">
+        SELECT COUNT(*) > 0 FROM likes
+        WHERE user_id = #{userId} AND snippet_id = #{snippetId}
+    </select>
+
+</mapper>

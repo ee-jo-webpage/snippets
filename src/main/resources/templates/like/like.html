@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Like Feature</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .like-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .like-btn.liked {
+            color: #ff6b6b;
+            transform: scale(1.1);
+        }
+
+        .like-btn:not(.liked) {
+            color: #9e9e9e;
+        }
+
+        .like-section {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 10px 0;
+        }
+
+        .like-count {
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+<div id="likeSection" class="like-section">
+    <button id="likeButton" class="like-btn">❤️</button>
+    <span id="likeCount" class="like-count" th:text="${likeCount}">0</span>
+    <span>좋아요</span>
+</div>
+
+<script th:inline="javascript">
+    $(document).ready(function() {
+        console.log("=== JavaScript 시작 ===");
+        console.log("jQuery 로드됨:", typeof $ !== 'undefined');
+
+        let snippetId = [[${snippetId}]];  // Thymeleaf 문법
+        console.log("현재 snippetId:", snippetId);
+
+        let isLiked = false;
+        const likeButton = $('#likeButton');
+        const likeCount = $('#likeCount');
+
+        // 페이지 로드 시 좋아요 상태 확인
+        checkLikeStatus();
+
+        function checkLikeStatus() {
+            $.ajax({
+                url: '/api/likes/status',
+                type: 'GET',
+                data: { snippetId: snippetId },
+                success: function(response) {
+                    if (response.success) {
+                        isLiked = response.isLiked;
+                        likeCount.text(response.likeCount);
+                        updateLikeButton();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('좋아요 상태 확인 실패:', error);
+                }
+            });
+        }
+
+        function updateLikeButton() {
+            if (isLiked) {
+                likeButton.addClass('liked');
+            } else {
+                likeButton.removeClass('liked');
+            }
+        }
+
+        likeButton.on('click', function() {
+            console.log("버튼 클릭 - snippetId:", snippetId);
+            likeButton.prop('disabled', true);
+
+            if (isLiked) {
+                // 좋아요 취소
+                $.ajax({
+                    url: '/api/likes/remove',
+                    type: 'POST',
+                    data: { snippetId: snippetId },
+                    success: function(response) {
+                        if (response.success) {
+                            isLiked = false;
+                            likeCount.text(response.likeCount);
+                            updateLikeButton();
+                            console.log('좋아요 취소 성공:', response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('좋아요 취소 실패:', error);
+                    },
+                    complete: function() {
+                        likeButton.prop('disabled', false);
+                    }
+                });
+            } else {
+                // 좋아요 추가
+                $.ajax({
+                    url: '/api/likes/add',
+                    type: 'POST',
+                    data: { snippetId: snippetId },
+                    beforeSend: function() {
+                        console.log("좋아요 추가 요청 - snippetId:", snippetId);
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            isLiked = true;
+                            likeCount.text(response.likeCount);
+                            updateLikeButton();
+                            console.log('좋아요 추가 성공:', response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('좋아요 추가 실패:', error);
+                    },
+                    complete: function() {
+                        likeButton.prop('disabled', false);
+                    }
+                });
+            }
+        });
+    });
+</script>
+</body>
+</html>

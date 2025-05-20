@@ -686,7 +686,7 @@ function showCodeEditPopup(
 
     // 메모 입력창
     const memoInput = document.createElement("textarea");
-    memoInput.placeholder = "메모 입력...";
+    memoInput.placeholder = "write memo!";
     memoInput.value = currentMemo;
     memoInput.rows = 2;
     memoInput.className = "memo-input";
@@ -851,41 +851,52 @@ async function saveCodeSnippet(
     console.log("CODE 스니펫 저장/수정 완료");
 }
 
-// 스니펫 데이터 서버 전송 함수
+// 스니펫 데이터를 서버로 전송하는 함수 (TEXT, CODE, IMG 공통)
 async function sendSnippetToServer(snippet) {
-    // 서버에 보낼 요청 본문 구성
+    // 공통 필드
     const payload = {
-        colorId: snippet.colorId || 1,               // 색상 ID (기본값 1)
-        sourceUrl: snippet.sourceUrl,                // 스니펫 발생한 페이지 URL
-        type: snippet.type || "TEXT",                // 스니펫 타입 (TEXT or CODE)
-        content: snippet.content || "",              // 스니펫 본문
-        language: snippet.language || "",            // 코드 언어 정보 (선택)
+        type: snippet.type || "TEXT",        // 스니펫 타입: TEXT, CODE, IMG
+        colorId: snippet.colorId || 1,       // 선택한 색상 ID (기본값 1)
+        sourceUrl: snippet.sourceUrl,        // 사용자가 스니펫을 저장한 웹페이지의 출처
+        memo: snippet.memo || "",            // 메모 (선택)
     };
 
+    // 스니펫 타입별로 필드 추가
+    if (snippet.type === "TEXT" || snippet.type === "CODE") {
+        payload.content = snippet.content || ""; // 본문 내용
+    }
+
+    if (snippet.type === "CODE" && snippet.language) {
+        payload.language = snippet.language;     // 코드 언어 정보
+    }
+
+    if (snippet.type === "IMG") {
+        payload.imageUrl = snippet.imageUrl || ""; // 이미지 자체 주소
+        payload.altText = snippet.altText || "";   // alt 텍스트 (선택)
+    }
+
     try {
-        // POST 요청 전송
+        // POST 요청으로 서버에 전송
         const res = await fetch("http://localhost:8090/api/snippets", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
         });
 
-        // 응답 상태가 실패일 경우 경고 로그 출력 후 null 반환
+        // 실패 응답인 경우 경고 출력 후 null 반환
         if (!res.ok) {
             const error = await res.text();
             console.warn("❌ 서버 오류:", error);
             return null;
         }
 
-        // 정상 응답인 경우 서버에서 받은 snippetId 반환
+        // 정상 응답: 서버에서 받은 snippetId 반환
         const result = await res.json();
         return result.snippetId;
     } catch (err) {
-        // 네트워크 또는 서버 연결 문제
+        // 네트워크 또는 서버 연결 실패
         console.warn("❌ 네트워크 오류:", err);
-        console.warn(
-            "⚠️ 현재 서버와 연결되어 있지 않습니다. 저장은 로컬에만 반영됩니다."
-        );
+        console.warn("⚠️ 현재 서버와 연결되어 있지 않습니다. 저장은 로컬에만 반영됩니다.");
         return null;
     }
 }
@@ -1290,11 +1301,10 @@ function detectImageBlocks() {
             saveBtn.style.display = "none";
         });
 
-        // 클릭 이벤트 (추후 서버 저장 연결 가능)
+        // 클릭 이벤트
         saveBtn.addEventListener("click", (e) => {
             e.stopPropagation();
-            alert("🖼️ 이미지 저장 기능은 아직 연결되지 않았습니다.");
-            // 추후: showImageSavePopup(img.src, img.alt, saveBtn);
+            showImageSavePopup(img.src, img.alt || "", saveBtn); // 팝업 연결
         });
 
         // 버튼 삽입
@@ -1350,13 +1360,188 @@ function detectBackgroundImageBlocks() {
 
         saveBtn.addEventListener("click", (e) => {
             e.stopPropagation();
-            alert("🖼️ 배경 이미지 저장 기능은 준비 중입니다.\nURL: " + imageUrl);
+            showImageSavePopup(imageUrl, "", saveBtn, true); // 팝업 연결
         });
 
         el.appendChild(saveBtn);
     });
 }
 
+// 이미지 저장 팝업 생성 함수
+function showImageSavePopup(imgUrl, altText, btnElement, isBackground = false) {
+    removePopup(); // 기존 팝업 제거
+
+    const rect = btnElement.getBoundingClientRect(); // 기준 좌표 계산
+
+    // 팝업 컨테이너 생성 및 스타일 적용
+    popup = document.createElement("div");
+    popup.id = "image-popup";
+    popup.style = `
+      position: absolute;
+      top: ${window.scrollY + rect.bottom + 6}px;
+      left: ${window.scrollX + rect.left}px;
+      background: white;
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      z-index: 2147483647;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 280px;
+    `;
+
+    // 썸네일 미리보기 (일반 <img> 또는 배경 <div>)
+    const preview = isBackground
+        ? document.createElement("div") // 배경 이미지용
+        : document.createElement("img"); // 일반 이미지용
+
+    if (isBackground) {
+        preview.style = `
+          width: 100%;
+          height: 160px;
+          background-image: url('${imgUrl}');
+          background-size: cover;
+          background-position: center;
+          border-radius: 6px;
+        `;
+    } else {
+        preview.src = imgUrl;
+        preview.alt = altText || "image";
+        preview.style = `
+          width: 100%;
+          height: 160px;
+          object-fit: cover;
+          border-radius: 6px;
+        `;
+    }
+
+    // 메모 입력창
+    const memoInput = document.createElement("textarea");
+    memoInput.placeholder = "write memo!";
+    memoInput.rows = 2;
+    memoInput.className = "memo-input";
+    memoInput.style = `
+      width: 100%;
+      font-size: 13px;
+      padding: 8px 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      resize: none;
+      font-family: inherit;
+      box-sizing: border-box;
+    `;
+
+    // 색상 선택 버튼들 (0~7)
+    const colorRow = document.createElement("div");
+    colorRow.style.display = "flex";
+    colorRow.style.flexWrap = "wrap";
+    colorRow.style.gap = "6px";
+
+    let selectedColorId = 1;
+
+    // 색상 선택 버튼 생성
+    for (let colorId = 0; colorId <= 7; colorId++) {
+        const btn = document.createElement("div");
+        btn.className = "color-btn";
+        btn.dataset.colorId = colorId;
+        btn.title = colorMapName[colorId];
+        btn.style.cssText = `
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background-color: ${colorMap[colorId]};
+      border: 1px solid #ccc;
+      cursor: pointer;
+    `;
+
+        // 클릭 시: 선택된 색상 표시 (테두리) + 선택 상태 업데이트
+        btn.addEventListener("click", () => {
+            selectedColorId = colorId;
+
+            // 모든 버튼에서 강조 효과 제거
+            popup.querySelectorAll(".color-btn").forEach((b) => {
+                b.style.outline = "none";
+                b.style.boxShadow = "none";
+            });
+
+            // 현재 선택한 버튼에 강조 효과 적용
+            btn.style.outline = "2px solid green";
+            btn.style.outlineOffset = "1px";
+            btn.style.boxShadow = "0 0 2px rgba(0,0,0,0.2)";
+        });
+
+        colorRow.appendChild(btn);
+    }
+
+    // 저장 버튼
+    const saveBtn = document.createElement("button");
+    saveBtn.textContent = "save";
+    saveBtn.style.cssText = `
+      align-self: flex-end;
+      background-color: #6bcb5a;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 13px;
+      cursor: pointer;
+    `;
+
+    // 저장 버튼 클릭 시 → 저장 함수 호출
+    saveBtn.addEventListener("click", async () => {
+        const memo = memoInput.value.trim();
+        await saveImageSnippet(imgUrl, altText, selectedColorId, memo);
+        removePopup();
+    });
+
+    // 팝업 구성 요소 삽입
+    popup.append(preview, colorRow, memoInput, saveBtn);
+    document.body.appendChild(popup);
+}
+
+// 이미지 또는 배경 이미지 스니펫 저장 함수
+async function saveImageSnippet(imgUrl, altText, colorId, memo) {
+    const snippetId = crypto.randomUUID();
+
+    // 스니펫 객체 구성 (imageUrl만 저장, content는 사용하지 않음)
+    const snippet = {
+        snippetId,
+        type: "IMG",                // 이미지 타입 명시
+        imageUrl: imgUrl,           // 이미지의 실제 URL
+        sourceUrl: location.href,   // 사용자가 저장한 웹페이지의 주소
+        createdAt: new Date().toISOString(),
+        colorId,
+        memo,
+        altText,
+    };
+
+    // 기존 highlights 불러오기
+    const { highlights = [] } = await chrome.storage.local.get("highlights");
+
+    // 새 항목 추가
+    const updated = [...highlights, snippet];
+    await chrome.storage.local.set({ highlights: updated });
+
+    // 서버 저장 시도
+    try {
+        const serverId = await sendSnippetToServer(snippet);
+        if (serverId) {
+            snippet.serverId = serverId;
+
+            // 서버 ID 반영하여 다시 저장
+            await chrome.storage.local.set({
+                highlights: updated.map((s) =>
+                    s.snippetId === snippetId ? { ...s, serverId } : s
+                ),
+            });
+        }
+    } catch (err) {
+        console.warn("⚠️ 서버 저장 실패 (이미지)", err.message);
+    }
+
+    console.log("이미지 스니펫 저장 완료:", snippet);
+}
 
 // 확장 프로그램과 content.js 간 메시지 통신 핸들러
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {

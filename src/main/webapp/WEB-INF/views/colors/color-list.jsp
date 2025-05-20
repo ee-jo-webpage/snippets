@@ -1,0 +1,686 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>색상 관리</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 40px;
+            background-color: #f8f9fa;
+        }
+
+        .color-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* 세션 정보 패널 스타일 */
+        .session-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #e9ecef;
+        }
+
+        .session-info {
+            display: none;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+        }
+
+        .session-info-item {
+            margin-bottom: 10px;
+            padding: 5px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .session-key {
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .session-value {
+            color: #6c757d;
+            margin-left: 10px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #333;
+            margin: 0;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
+            margin-left: 8px;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        .btn-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background-color: #138496;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .btn-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .color-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: transform 0.2s;
+        }
+
+        .color-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .color-preview {
+            height: 120px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .color-info {
+            padding: 15px;
+        }
+
+        .color-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .color-hex {
+            font-size: 14px;
+            color: #666;
+            font-family: monospace;
+            margin-bottom: 10px;
+        }
+
+        .color-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .user-info {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        /* 네비게이션 버튼들 */
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            border: none;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.15);
+        }
+
+        .modal-header {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px 12px 0 0;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            margin: 0;
+            font-size: 20px;
+            color: #333;
+        }
+
+        .close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+
+        .color-picker-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        #colorPicker {
+            width: 60px;
+            height: 40px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .color-preview-box {
+            width: 100px;
+            height: 100px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            margin: 10px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .modal-footer {
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 0 0 12px 12px;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            color: #dee2e6;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="color-container">
+    <!-- 세션 정보 패널 -->
+    <div class="session-panel">
+        <div class="nav-buttons">
+            <button class="btn btn-info" onclick="toggleSessionInfo()">
+                🔍 세션 정보 확인
+            </button>
+
+            <!-- 내 색상으로 이동 버튼 (세션에 userId가 있을 때만 표시) -->
+            <c:if test="${sessionScope.userId != null}">
+                <a href="/color/user/${sessionScope.userId}" class="btn btn-success">
+                    👤 내 색상 보기 (User ${sessionScope.userId})
+                </a>
+            </c:if>
+
+            <!-- 세션이 없을 때 초기화 버튼 -->
+            <c:if test="${sessionScope.userId == null}">
+                <a href="/init-session" class="btn btn-warning">
+                    🔑 세션 초기화 (임시 로그인)
+                </a>
+            </c:if>
+        </div>
+
+        <div id="sessionInfo" class="session-info">
+            <div class="session-info-item">
+                <span class="session-key">현재 사용자 ID:</span>
+                <span class="session-value">${sessionScope.userId != null ? sessionScope.userId : '없음'}</span>
+            </div>
+            <div class="session-info-item">
+                <span class="session-key">세션 ID:</span>
+                <span class="session-value" id="sessionId">${sessionScope.sessionId != null ? sessionScope.sessionId : '없음'}</span>
+            </div>
+            <div class="session-info-item">
+                <span class="session-key">페이지 타입:</span>
+                <span class="session-value">전체 색상 페이지</span>
+            </div>
+            <div class="session-info-item">
+                <span class="session-key">서버 세션 데이터:</span>
+                <span class="session-value" id="serverSessionData">로딩 중...</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="header">
+        <h1>색상 관리하기</h1>
+        <button class="btn btn-primary" onclick="openAddModal()">
+            ✚ 새 색상 추가
+        </button>
+    </div>
+
+    <c:if test="${not empty colorList}">
+        <div class="color-grid">
+            <c:forEach var="color" items="${colorList}">
+                <div class="color-card">
+                    <div class="color-preview" style="background-color: ${color.hexCode};">
+                            ${color.hexCode}
+                    </div>
+                    <div class="color-info">
+                        <div class="color-name">${color.name}</div>
+                        <div class="color-hex">${color.hexCode}</div>
+                        <c:if test="${color.userId != null}">
+                            <div class="user-info">사용자 ${color.userId}의 색상</div>
+                        </c:if>
+                        <c:if test="${color.userId == null}">
+                            <div class="user-info">기본 색상</div>
+                        </c:if>
+
+                        <!-- 사용자 색상일 때만 수정/삭제 버튼 표시 -->
+                        <c:if test="${color.userId != null}">
+                            <div class="color-actions">
+                                <button class="btn btn-sm btn-warning"
+                                        onclick="openEditModal('${color.colorId}', '${color.name}', '${color.hexCode}')">
+                                    ✎ 수정
+                                </button>
+                                <button class="btn btn-delete" onclick="deleteColor('${color.colorId}', '${color.name}')">
+                                    🗑 삭제
+                                </button>
+                            </div>
+                        </c:if>
+                    </div>
+                </div>
+            </c:forEach>
+        </div>
+    </c:if>
+
+    <c:if test="${empty colorList}">
+        <div class="empty-state">
+            <i>🎨</i>
+            <h3>등록된 색상이 없습니다</h3>
+            <p>첫 번째 색상을 추가해보세요!</p>
+            <button class="btn btn-primary" onclick="openAddModal()">
+                색상 추가하기
+            </button>
+        </div>
+    </c:if>
+</div>
+
+<!-- 색상 추가 모달 -->
+<div id="addModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">새 색상 추가</h2>
+            <button class="close" onclick="closeModal('addModal')">&times;</button>
+        </div>
+        <form id="addColorForm" action="/color/add" method="POST">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="colorName" class="form-label">색상 이름</label>
+                    <input type="text" id="colorName" name="name" class="form-control"
+                           placeholder="예: 하늘색" required>
+                </div>
+                <div class="form-group">
+                    <label for="hexCode" class="form-label">색상 코드</label>
+                    <div class="color-picker-container">
+                        <input type="text" id="hexCode" name="hexCode" class="form-control"
+                               placeholder="#FF0000" pattern="^#[0-9A-Fa-f]{6}$" required>
+                        <input type="color" id="colorPicker" onchange="updateHexFromPicker()">
+                    </div>
+                    <small style="color: #666; font-size: 12px;">
+                        색상 선택기를 사용하거나 직접 입력하세요 (예: #FF0000)
+                    </small>
+                </div>
+                <div class="color-preview-box" id="colorPreview" style="background-color: #FFFFFF;">
+                    미리보기
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addModal')">
+                    취소
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    추가
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 색상 수정 모달 -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">색상 수정</h2>
+            <button class="close" onclick="closeModal('editModal')">&times;</button>
+        </div>
+        <form id="editColorForm" action="/color/update" method="POST">
+            <input type="hidden" id="editColorId" name="colorId">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="editColorName" class="form-label">색상 이름</label>
+                    <input type="text" id="editColorName" name="name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="editHexCode" class="form-label">색상 코드</label>
+                    <div class="color-picker-container">
+                        <input type="text" id="editHexCode" name="hexCode" class="form-control"
+                               pattern="^#[0-9A-Fa-f]{6}$" required>
+                        <input type="color" id="editColorPicker" onchange="updateEditHexFromPicker()">
+                    </div>
+                </div>
+                <div class="color-preview-box" id="editColorPreview" style="background-color: #FFFFFF;">
+                    미리보기
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('editModal')">
+                    취소
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    저장
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // 세션 정보 토글 함수
+    function toggleSessionInfo() {
+        const sessionInfo = document.getElementById('sessionInfo');
+        if (sessionInfo.style.display === 'none' || sessionInfo.style.display === '') {
+            sessionInfo.style.display = 'block';
+            loadSessionData();
+        } else {
+            sessionInfo.style.display = 'none';
+        }
+    }
+
+    // 세션 데이터 로드 함수
+    async function loadSessionData() {
+        try {
+            // 세션 ID 가져오기 (쿠키에서)
+            const cookies = document.cookie.split(';');
+            let sessionId = '쿠키에서 세션ID를 찾을 수 없음';
+
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'JSESSIONID' || name === 'connect.sid') {
+                    sessionId = value;
+                    break;
+                }
+            }
+            document.getElementById('sessionId').textContent = sessionId;
+
+            // 서버 세션 데이터 확인 API 호출
+            try {
+                // URL을 /session-info로 변경
+                const response = await fetch('/color/session-info');
+                if (response.ok) {
+                    const sessionData = await response.json();
+                    console.log('세션 데이터:', sessionData);  // 디버깅 로그 개선
+                    console.log('userId 값:', sessionData.userId);
+                    console.log('sessionId 값:', sessionData.sessionId);
+
+                    // hasUserId와 sessionExists 속성이 없으니 직접 계산
+                    const hasUserId = sessionData.userId != null;
+                    const sessionExists = sessionData.sessionId != null;
+
+                    document.getElementById('serverSessionData').innerHTML =
+                        `<strong>userId:</strong> ${sessionData.userId || '없음'}<br>` +
+                        `<strong>sessionId:</strong> ${sessionData.sessionId || '없음'}<br>` +
+                        `<strong>세션 존재:</strong> ${sessionExists ? '예' : '아니오'}<br>` +
+                        `<strong>userId 존재:</strong> ${hasUserId ? '예' : '아니오'}`;
+                } else {
+                    document.getElementById('serverSessionData').textContent =
+                        `HTTP ${response.status} - 세션 확인 엔드포인트가 없습니다`;
+                }
+            } catch (error) {
+                document.getElementById('serverSessionData').textContent =
+                    `네트워크 오류: ${error.message}`;
+                console.log('세션 확인 API 호출 실패:', error);
+            }
+        } catch (error) {
+            console.error('세션 정보 로드 중 오류:', error);
+            document.getElementById('serverSessionData').textContent = '오류 발생';
+        }
+    }
+
+    // 모달 열기/닫기 함수
+    function openAddModal() {
+        document.getElementById('addModal').style.display = 'block';
+        // 폼 초기화
+        document.getElementById('addColorForm').reset();
+        document.getElementById('colorPreview').style.backgroundColor = '#FFFFFF';
+        document.getElementById('colorPreview').textContent = '미리보기';
+    }
+
+    function openEditModal(colorId, name, hexCode) {
+        document.getElementById('editModal').style.display = 'block';
+        document.getElementById('editColorId').value = colorId;
+        document.getElementById('editColorName').value = name;
+        document.getElementById('editHexCode').value = hexCode;
+        document.getElementById('editColorPicker').value = hexCode;
+        document.getElementById('editColorPreview').style.backgroundColor = hexCode;
+        document.getElementById('editColorPreview').textContent = hexCode;
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    // 모달 외부 클릭 시 닫기
+    window.onclick = function(event) {
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    }
+
+    // 색상 선택기 이벤트
+    function updateHexFromPicker() {
+        const colorPicker = document.getElementById('colorPicker');
+        const hexInput = document.getElementById('hexCode');
+        const preview = document.getElementById('colorPreview');
+
+        hexInput.value = colorPicker.value;
+        preview.style.backgroundColor = colorPicker.value;
+        preview.textContent = colorPicker.value;
+    }
+
+    function updateEditHexFromPicker() {
+        const colorPicker = document.getElementById('editColorPicker');
+        const hexInput = document.getElementById('editHexCode');
+        const preview = document.getElementById('editColorPreview');
+
+        hexInput.value = colorPicker.value;
+        preview.style.backgroundColor = colorPicker.value;
+        preview.textContent = colorPicker.value;
+    }
+
+    // 헥스 코드 입력 시 미리보기 업데이트
+    document.getElementById('hexCode').addEventListener('input', function() {
+        const hexValue = this.value;
+        const preview = document.getElementById('colorPreview');
+        const colorPicker = document.getElementById('colorPicker');
+
+        if (/^#[0-9A-Fa-f]{6}$/.test(hexValue)) {
+            preview.style.backgroundColor = hexValue;
+            preview.textContent = hexValue;
+            colorPicker.value = hexValue;
+        }
+    });
+
+    document.getElementById('editHexCode').addEventListener('input', function() {
+        const hexValue = this.value;
+        const preview = document.getElementById('editColorPreview');
+        const colorPicker = document.getElementById('editColorPicker');
+
+        if (/^#[0-9A-Fa-f]{6}$/.test(hexValue)) {
+            preview.style.backgroundColor = hexValue;
+            preview.textContent = hexValue;
+            colorPicker.value = hexValue;
+        }
+    });
+
+    // 삭제 - 동적 폼 생성 후 제출
+    function deleteColor(colorId, colorName ) {
+        if (confirm(`정말로 "${colorName}" 색상을 삭제하시겠습니까?`)) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/color/delete';
+
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'colorId';
+            input.value = colorId;
+            form.appendChild(input);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+
+    // 폼 제출 후 성공 메시지 (필요시)
+    <c:if test="${not empty message}">
+    alert('${message}');
+    </c:if>
+</script>
+</body>
+</html>

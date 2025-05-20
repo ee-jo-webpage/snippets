@@ -1,35 +1,41 @@
 package kr.or.kosa.snippets.user.config;
 
-import org.springframework.context.annotation.Bean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import redis.embedded.RedisServer;
 
-import java.io.IOException;
-
 @Configuration
+@ConditionalOnProperty(name = "spring.redis.embedded.enabled", havingValue = "true", matchIfMissing = false)
 public class EmbeddedRedisConfig {
 
     private RedisServer redisServer;
 
-    @Bean
-    public RedisServer redisServer() throws IOException {
-        String os = System.getProperty("os.name").toLowerCase();
+    @PostConstruct
+    public void startRedis() {
+        try {
+            String os = System.getProperty("os.name").toLowerCase();
 
-        if (os.contains("mac")) {
-            System.out.println("💡 macOS 환경입니다. Embedded Redis는 실행하지 않습니다.");
-            return null; // or throw new UnsupportedOperationException()
+            if (os.contains("mac")) {
+                System.out.println("💡 macOS 환경입니다. Embedded Redis는 실행하지 않습니다.");
+                return;
+            }
+
+            redisServer = new RedisServer(6379);
+            redisServer.start();
+            System.out.println("💡 Embedded Redis 서버가 시작되었습니다.");
+        } catch (Exception e) {
+            System.err.println("💥 Embedded Redis 서버 시작 실패: " + e.getMessage());
+            e.printStackTrace();
         }
-
-        redisServer = new RedisServer(6379); // 기본 포트 6379
-        redisServer.start();
-        return redisServer;
     }
 
     @PreDestroy
     public void stopRedis() {
-        if (redisServer != null) {
+        if (redisServer != null && redisServer.isActive()) {
             redisServer.stop();
+            System.out.println("💡 Embedded Redis 서버가 중지되었습니다.");
         }
     }
 }

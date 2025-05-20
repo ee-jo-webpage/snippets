@@ -1,0 +1,947 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <c:choose>
+            <c:when test="${isMyColors}">내 색상 모음</c:when>
+            <c:otherwise>사용자 ${userId}의 색상</c:otherwise>
+        </c:choose>
+    </title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 세션 정보 패널 스타일 추가 */
+        .session-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(31, 38, 135, 0.1);
+            margin-bottom: 20px;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .session-info {
+            display: none;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 10px;
+            font-family: 'Monaco', monospace;
+            font-size: 0.9rem;
+            border: 1px solid #e9ecef;
+        }
+
+        .session-toggle-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .session-toggle-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .session-item {
+            margin-bottom: 8px;
+            padding: 5px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .session-key {
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .session-value {
+            color: #6c757d;
+            margin-left: 10px;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2d3748;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* Navigation */
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .navigation a {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .navigation a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Add Color Button */
+        .add-color-btn {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(86, 171, 47, 0.3);
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .add-color-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(86, 171, 47, 0.4);
+        }
+
+        /* Color Grid */
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px 0;
+        }
+
+        .color-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+        }
+
+        .color-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(31, 38, 135, 0.15);
+        }
+
+        .color-preview {
+            height: 120px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .color-preview::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: inherit;
+            filter: brightness(1.1);
+        }
+
+        .color-hex-overlay {
+            position: relative;
+            z-index: 1;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            background: rgba(0, 0, 0, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        .color-info {
+            padding: 24px;
+        }
+
+        .color-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .color-hex {
+            font-size: 1rem;
+            color: #718096;
+            font-family: 'Monaco', monospace;
+            background: #f7fafc;
+            padding: 8px 12px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-bottom: 16px;
+        }
+
+        /* Action Buttons */
+        .color-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 16px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-edit {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+        }
+
+        .btn-edit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4);
+        }
+
+        .btn-delete {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .btn-delete:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        /* Owner Badge */
+        .owner-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            backdrop-filter: blur(5px);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.active {
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+            overflow: hidden;
+        }
+
+        .modal.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+
+        .close:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .color-picker-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .color-picker-container input[type="color"] {
+            width: 50px;
+            height: 40px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .color-preview-box {
+            width: 100px;
+            height: 100px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            margin: 15px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .modal-footer {
+            padding: 20px 25px;
+            background: #f8f9fa;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn-modal {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4b8a 100%);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            margin-top: 40px;
+        }
+
+        .empty-state p {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .empty-state .emoji {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        /* Alert Messages */
+        .alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 500;
+            z-index: 2000;
+            transform: translateX(400px);
+            transition: all 0.3s ease;
+        }
+
+        .alert.show {
+            transform: translateX(0);
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+        }
+
+        .alert-error {
+            background: linear-gradient(135deg, #d00000 0%, #ffcdd2 100%);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .color-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                gap: 15px;
+            }
+
+            .color-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .session-panel {
+                padding: 10px;
+            }
+        }
+
+        /* Animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .color-card {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 세션 정보 확인 패널 추가 -->
+    <div class="session-panel">
+        <button class="session-toggle-btn" onclick="toggleSessionInfo()">
+            🔍 세션 정보 확인
+        </button>
+        <div id="sessionInfo" class="session-info">
+            <div class="session-item">
+                <span class="session-key">현재 사용자 ID:</span>
+                <span class="session-value">${currentUserId != null ? currentUserId : '없음'}</span>
+            </div>
+            <div class="session-item">
+                <span class="session-key">세션 ID:</span>
+                <span class="session-value" id="sessionId">로딩 중...</span>
+            </div>
+            <div class="session-item">
+                <span class="session-key">페이지 타입:</span>
+                <span class="session-value">${isMyColors ? '내 색상 페이지' : '사용자별 색상 페이지'}</span>
+            </div>
+            <div class="session-item">
+                <span class="session-key">서버 세션 데이터:</span>
+                <span class="session-value" id="serverSessionData">로딩 중...</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="header">
+        <h1>
+            <c:choose>
+                <c:when test="${isMyColors}">내 색상 모음</c:when>
+                <c:otherwise>사용자 ${userId}의 색상</c:otherwise>
+            </c:choose>
+        </h1>
+        <div class="navigation">
+            <a href="/color/all-colors">전체 색상</a>
+            <c:if test="${!isMyColors}">
+                <a href="/color/my-colors">내 색상</a>
+            </c:if>
+
+            <button class="add-color-btn" onclick="openAddModal()">
+                🎨 새 색상 추가
+            </button>
+        </div>
+    </div>
+
+    <c:if test="${not empty colorList}">
+        <div class="color-grid">
+            <c:forEach var="color" items="${colorList}" varStatus="status">
+                <div class="color-card" style="animation-delay: ${status.index * 0.1}s;">
+                    <!-- 소유자 표시 -->
+                    <c:if test="${color.userId != null}">
+                        <div class="owner-badge">
+                            <c:choose>
+                                <c:when test="${color.userId == currentUserId}">내 색상</c:when>
+                                <c:otherwise>사용자 ${color.userId}</c:otherwise>
+                            </c:choose>
+                        </div>
+                    </c:if>
+                    <c:if test="${color.userId == null}">
+                        <div class="owner-badge">기본 색상</div>
+                    </c:if>
+
+                    <div class="color-preview" style="background-color: ${color.hexCode};">
+                        <div class="color-hex-overlay">${color.hexCode}</div>
+                    </div>
+                    <div class="color-info">
+                        <div class="color-name">${color.colorId}</div>
+                        <div class="color-name">${color.name}</div>
+                        <div class="color-hex">${color.hexCode}</div>
+
+                        <!-- 수정/삭제 버튼 (내 색상일 때만 표시) -->
+                        <c:if test="${color.userId == currentUserId or (isMyColors and color.userId != null)}">
+                            <div class="color-actions">
+                                <button class="btn btn-edit"
+                                        onclick="openEditModal('${color.colorId}', '${color.name}', '${color.hexCode}')">
+                                    ✏️ 수정
+                                </button>
+                                <button class="btn btn-delete"
+                                        onclick="deleteColor('${color.colorId}', '${color.name}')">
+                                    🗑️ 삭제
+                                </button>
+                            </div>
+                        </c:if>
+                    </div>
+                </div>
+            </c:forEach>
+        </div>
+    </c:if>
+
+    <c:if test="${empty colorList}">
+        <div class="empty-state">
+            <div class="emoji">🎨</div>
+            <p>등록된 색상이 없습니다.</p>
+            <c:if test="${isMyColors}">
+                <button class="add-color-btn" onclick="openAddModal()" style="margin-top: 20px;">
+                    🎨 첫 번째 색상 추가하기
+                </button>
+            </c:if>
+        </div>
+    </c:if>
+</div>
+
+<!-- 색상 추가 모달 -->
+<div id="addModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">새 색상 추가</h2>
+            <button class="close" onclick="closeAddModal()">&times;</button>
+        </div>
+        <form id="addColorForm" action="/color/add" method="POST">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="addColorName" class="form-label">색상 이름</label>
+                    <input type="text" id="addColorName" name="name" class="form-control" required placeholder="예: 새벽의 푸른색">
+                </div>
+                <div class="form-group">
+                    <label for="addHexCode" class="form-label">색상 코드</label>
+                    <div class="color-picker-container">
+                        <input type="text" id="addHexCode" name="hexCode" class="form-control"
+                               pattern="^#[0-9A-Fa-f]{6}$" required placeholder="#FF0000">
+                        <input type="color" id="addColorPicker" value="#FF0000" onchange="updateAddHexFromPicker()">
+                    </div>
+                    <small style="color: #666; margin-top: 5px; display: block;">
+                        색상 선택기를 사용하거나 직접 입력하세요 (예: #FF0000)
+                    </small>
+                </div>
+                <div class="color-preview-box" id="addColorPreview" style="background-color: #FF0000;">
+                    #FF0000
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-modal btn-secondary" onclick="closeAddModal()">
+                    취소
+                </button>
+                <button type="submit" class="btn-modal btn-primary">
+                    추가
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 색상 수정 모달 -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">색상 수정</h2>
+            <button class="close" onclick="closeModal()">&times;</button>
+        </div>
+        <form id="editColorForm" action="/color/update" method="POST">
+            <input type="hidden" id="editColorId" name="colorId">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="editColorName" class="form-label">색상 이름</label>
+                    <input type="text" id="editColorName" name="name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="editHexCode" class="form-label">색상 코드</label>
+                    <div class="color-picker-container">
+                        <input type="text" id="editHexCode" name="hexCode" class="form-control"
+                               pattern="^#[0-9A-Fa-f]{6}$" required placeholder="#FF0000">
+                        <input type="color" id="editColorPicker" onchange="updateEditHexFromPicker()">
+                    </div>
+                    <small style="color: #666; margin-top: 5px; display: block;">
+                        색상 선택기를 사용하거나 직접 입력하세요 (예: #FF0000)
+                    </small>
+                </div>
+                <div class="color-preview-box" id="editColorPreview" style="background-color: #FFFFFF;">
+                    미리보기
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-modal btn-secondary" onclick="closeModal()">
+                    취소
+                </button>
+                <button type="submit" class="btn-modal btn-primary">
+                    저장
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // 세션 정보 토글 함수
+    function toggleSessionInfo() {
+        const sessionInfo = document.getElementById('sessionInfo');
+        if (sessionInfo.style.display === 'none' || sessionInfo.style.display === '') {
+            sessionInfo.style.display = 'block';
+            loadSessionData();
+        } else {
+            sessionInfo.style.display = 'none';
+        }
+    }
+
+    // 세션 데이터 로드 함수
+    async function loadSessionData() {
+        try {
+            // 세션 ID 가져오기 (쿠키에서)
+            const cookies = document.cookie.split(';');
+            let sessionId = '쿠키에서 세션ID를 찾을 수 없음';
+
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'JSESSIONID' || name === 'connect.sid') {
+                    sessionId = value;
+                    break;
+                }
+            }
+            document.getElementById('sessionId').textContent = sessionId;
+
+            // 서버 세션 데이터 확인 API 호출
+            try {
+                const response = await fetch('/color/check-session');
+                if (response.ok) {
+                    const sessionData = await response.json();
+                    document.getElementById('serverSessionData').innerHTML =
+                        `userId: ${sessionData.userId || '없음'}, ` +
+                        `sessionId: ${sessionData.sessionId || '없음'}`;
+                } else {
+                    document.getElementById('serverSessionData').textContent =
+                        'API 응답 오류 - 서버에서 확인하세요';
+                }
+            } catch (error) {
+                document.getElementById('serverSessionData').textContent =
+                    `세션 확인 API 없음 - ${error.message}`;
+                console.log('세션 확인 API 호출 실패:', error);
+            }
+        } catch (error) {
+            console.error('세션 정보 로드 중 오류:', error);
+            document.getElementById('serverSessionData').textContent = '오류 발생';
+        }
+    }
+
+    // 페이지 로드 시 자동으로 세션 정보 표시 (개발 단계에서만)
+    document.addEventListener('DOMContentLoaded', function() {
+        // 개발 모드에서 자동으로 세션 정보 표시
+        // toggleSessionInfo();
+    });
+
+    // 알림 메시지 표시
+    <c:if test="${not empty message}">
+    showAlert('${message}', 'success');
+    </c:if>
+    <c:if test="${not empty error}">
+    showAlert('${error}', 'error');
+    </c:if>
+
+    function showAlert(message, type) {
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type}`;
+        alert.textContent = message;
+        document.body.appendChild(alert);
+
+        // 애니메이션 효과로 표시
+        setTimeout(() => alert.classList.add('show'), 100);
+
+        // 3초 후 자동 제거
+        setTimeout(() => {
+            alert.classList.remove('show');
+            setTimeout(() => alert.remove(), 300);
+        }, 3000);
+    }
+
+    // 색상 추가 모달 관련 함수들
+    function openAddModal() {
+        // 폼 초기화
+        document.getElementById('addColorForm').reset();
+        document.getElementById('addHexCode').value = '#FF0000';
+        document.getElementById('addColorPicker').value = '#FF0000';
+        updateAddPreview();
+
+        const modal = document.getElementById('addModal');
+        modal.style.display = 'block';
+        setTimeout(() => modal.classList.add('active'), 10);
+    }
+
+    function closeAddModal() {
+        const modal = document.getElementById('addModal');
+        modal.classList.remove('active');
+        setTimeout(() => modal.style.display = 'none', 300);
+    }
+
+    // 색상 선택기에서 hex 코드 업데이트 (추가 모달)
+    function updateAddHexFromPicker() {
+        const picker = document.getElementById('addColorPicker');
+        const hexInput = document.getElementById('addHexCode');
+        const preview = document.getElementById('addColorPreview');
+
+        hexInput.value = picker.value;
+        preview.style.backgroundColor = picker.value;
+        preview.textContent = picker.value;
+    }
+
+    // 미리보기 업데이트 (추가 모달)
+    function updateAddPreview() {
+        const hexCode = document.getElementById('addHexCode').value;
+        const preview = document.getElementById('addColorPreview');
+
+        if (/^#[0-9A-Fa-f]{6}$/i.test(hexCode)) {
+            preview.style.backgroundColor = hexCode;
+            preview.textContent = hexCode;
+            document.getElementById('addColorPicker').value = hexCode;
+        }
+    }
+
+    // hex 코드 입력 시 실시간 업데이트 (추가 모달)
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('addHexCode').addEventListener('input', updateAddPreview);
+    });
+
+    // 색상 수정 모달 관련 함수들 (기존 코드)
+    function openEditModal(colorId, name, hexCode) {
+        document.getElementById('editColorId').value = colorId;
+        document.getElementById('editColorName').value = name;
+        document.getElementById('editHexCode').value = hexCode;
+        document.getElementById('editColorPicker').value = hexCode;
+        updateEditPreview();
+
+        const modal = document.getElementById('editModal');
+        modal.style.display = 'block';
+        setTimeout(() => modal.classList.add('active'), 10);
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('editModal');
+        modal.classList.remove('active');
+        setTimeout(() => modal.style.display = 'none', 300);
+    }
+
+    // 색상 선택기 업데이트 (수정 모달)
+    function updateEditHexFromPicker() {
+        const picker = document.getElementById('editColorPicker');
+        const hexInput = document.getElementById('editHexCode');
+        const preview = document.getElementById('editColorPreview');
+
+        hexInput.value = picker.value;
+        preview.style.backgroundColor = picker.value;
+        preview.textContent = picker.value;
+    }
+
+    // 미리보기 업데이트 (수정 모달)
+    function updateEditPreview() {
+        const hexCode = document.getElementById('editHexCode').value;
+        const preview = document.getElementById('editColorPreview');
+
+        if (/^#[0-9A-Fa-f]{6}$/i.test(hexCode)) {
+            preview.style.backgroundColor = hexCode;
+            preview.textContent = hexCode;
+            document.getElementById('editColorPicker').value = hexCode;
+        }
+    }
+
+    // hex 코드 입력 시 실시간 업데이트 (수정 모달)
+    document.addEventListener('DOMContentLoaded', function() {
+        const editHexInput = document.getElementById('editHexCode');
+        if (editHexInput) {
+            editHexInput.addEventListener('input', updateEditPreview);
+        }
+    });
+
+    // 모달 외부 클릭 시 닫기
+    window.onclick = function(event) {
+        const addModal = document.getElementById('addModal');
+        const editModal = document.getElementById('editModal');
+
+        if (event.target === addModal) {
+            closeAddModal();
+        }
+        if (event.target === editModal) {
+            closeModal();
+        }
+    }
+
+    // 색상 삭제
+    function deleteColor(colorId, name) {
+        if (confirm(`정말로 "${name}" 색상을 삭제하시겠습니까?`)) {
+            // 동적으로 폼 생성하여 제출
+            const form = document.createElement('form');
+            form.method = 'POST';  // DELETE 메서드는 폼에서 직접 지원하지 않음
+            form.action = '/color/delete';
+
+            // Spring에서 DELETE 메서드를 사용하기 위한 히든 필드
+            const methodInput = document.createElement('input');
+            methodInput.type = 'hidden';
+            methodInput.name = '_method';
+            methodInput.value = 'DELETE';
+            form.appendChild(methodInput);
+
+            // colorId 파라미터
+            const colorIdInput = document.createElement('input');
+            colorIdInput.type = 'hidden';
+            colorIdInput.name = 'colorId';
+            colorIdInput.value = colorId;
+            form.appendChild(colorIdInput);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+
+    // ESC 키로 모달 닫기
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeModal();
+            closeAddModal();
+        }
+    });
+</script>
+</body>
+</html>

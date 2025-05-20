@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "Snippet Highlighter",
+  "version": "1.0",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Toggle Sidebar"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "sidebar/sidebar.html",
+        "sidebar/sidebar.js",
+        "sidebar/sidebar.css",
+        "images/*"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

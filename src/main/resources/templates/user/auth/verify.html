@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+	<meta charset="UTF-8">
+	<title>이메일 인증</title>
+	<link rel="stylesheet" href="/user/css/common/form-common.css">
+	<link rel="stylesheet" href="/user/css/verify.css">
+
+</head>
+<body>
+
+<form id="verifyForm">
+	<h1>이메일 인증</h1>
+
+	<input type="hidden" name="email" id="email">
+
+	<label>
+		인증 코드:
+		<input type="text" name="code" required>
+	</label>
+
+	<button type="submit">인증하기</button>
+	<button type="button" id="resendBtn">인증 코드 재전송</button>
+
+	<div id="result"></div>
+</form>
+
+
+
+<script src="/user/js/verify.js"></script>
+</body>
+</html>

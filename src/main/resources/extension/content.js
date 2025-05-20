@@ -40,6 +40,8 @@ function init() {
     document.addEventListener("click", handleSnippetClick);
     restoreHighlights();
     detectCodeBlocks(); // 코드 블록
+    detectImageBlocks(); // 이미지
+    detectBackgroundImageBlocks(); // 백그라운드 이미지
 }
 
 // 드래그 이벤트처리 함수
@@ -925,7 +927,7 @@ function updateCodeSnippetMetadata(content, newColorId, memo) {
         });
 
         // 업데이트된 highlights를 다시 저장
-        chrome.storage.local.set({ highlights: updated }, () => {
+        chrome.storage.local.set({ highlights: updated }, async () => {
             console.log("코드 스니펫 색상/메모 업데이트 완료:", content);
 
             // 코드 블록 UI 갱신 (색상 바, 버튼 등)
@@ -1245,6 +1247,116 @@ function injectSidebarStyle() {
     // <head>에 style 삽입
     document.head.appendChild(style);
 }
+
+// 이미지태그 감지 함수
+function detectImageBlocks() {
+    const images = document.querySelectorAll("img");
+
+    images.forEach((img) => {
+        // 중복 처리 방지
+        if (img.dataset.snippetBound) return;
+        img.dataset.snippetBound = "true";
+
+        // wrapper 필요 시 처리 (이미지에 absolute 버튼 삽입을 위해)
+        const wrapper = img.parentElement;
+        if (!wrapper) return;
+
+        wrapper.style.position = "relative";
+
+        // 저장 버튼 생성
+        const saveBtn = document.createElement("button");
+        saveBtn.className = "snippet-img-btn";
+        saveBtn.textContent = "save";
+        saveBtn.style.cssText = `
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      background-color: #6bcb5a;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 13px;
+      cursor: pointer;
+      z-index: 9999;
+      display: none;
+    `;
+
+        // 마우스 오버 시 버튼 표시
+        wrapper.addEventListener("mouseenter", () => {
+            saveBtn.style.display = "block";
+        });
+        wrapper.addEventListener("mouseleave", () => {
+            saveBtn.style.display = "none";
+        });
+
+        // 클릭 이벤트 (추후 서버 저장 연결 가능)
+        saveBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            alert("🖼️ 이미지 저장 기능은 아직 연결되지 않았습니다.");
+            // 추후: showImageSavePopup(img.src, img.alt, saveBtn);
+        });
+
+        // 버튼 삽입
+        wrapper.appendChild(saveBtn);
+    });
+}
+
+// div 백그라운드 src 감지 함수
+function detectBackgroundImageBlocks() {
+    const elements = document.querySelectorAll("*"); // 모든 요소 대상으로 탐색
+
+    elements.forEach((el) => {
+        const bgImage = getComputedStyle(el).backgroundImage;
+
+        if (!bgImage || bgImage === "none") return;
+
+        const urlMatch = bgImage.match(/url\(["']?(.*?)["']?\)/);
+        if (!urlMatch || !urlMatch[1]) return;
+
+        const imageUrl = urlMatch[1];
+
+        // 중복 처리 방지
+        if (el.dataset.bgSnippetBound) return;
+        el.dataset.bgSnippetBound = "true";
+
+        el.style.position = "relative"; // 버튼 위치를 위해 필요
+
+        // 저장 버튼 생성
+        const saveBtn = document.createElement("button");
+        saveBtn.textContent = "save";
+        saveBtn.className = "snippet-bg-btn";
+        saveBtn.style.cssText = `
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      background-color: #6bcb5a;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 13px;
+      cursor: pointer;
+      z-index: 9999;
+      display: none;
+    `;
+
+        el.addEventListener("mouseenter", () => {
+            saveBtn.style.display = "block";
+        });
+        el.addEventListener("mouseleave", () => {
+            saveBtn.style.display = "none";
+        });
+
+        saveBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            alert("🖼️ 배경 이미지 저장 기능은 준비 중입니다.\nURL: " + imageUrl);
+        });
+
+        el.appendChild(saveBtn);
+    });
+}
+
 
 // 확장 프로그램과 content.js 간 메시지 통신 핸들러
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {

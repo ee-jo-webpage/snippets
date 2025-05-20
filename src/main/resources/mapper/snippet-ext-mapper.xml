@@ -37,6 +37,11 @@
         VALUES (#{snippetId}, #{content}, #{language})
     </insert>
 
+    <insert id="insertSnippetImg">
+        INSERT INTO SNIPPET_IMAGES (SNIPPET_ID, IMAGE_URL, ALT_TEXT)
+        VALUES (#{snippetId}, #{imageUrl}, #{altText})
+    </insert>
+
     <update id="updateSnippet">
         UPDATE SNIPPETS
         SET COLOR_ID = #{colorId},

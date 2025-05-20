@@ -23,6 +23,7 @@ public class SnippetService {
         switch (snippet.getType()) {
             case TEXT -> snippetExtMapper.insertSnippetText(snippet);
             case CODE -> snippetExtMapper.insertSnippetCode(snippet);
+            case IMG -> snippetExtMapper.insertSnippetImg(snippet);
         }
 
         return snippet.getSnippetId();

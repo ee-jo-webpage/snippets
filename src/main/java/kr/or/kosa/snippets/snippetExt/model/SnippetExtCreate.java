@@ -12,4 +12,6 @@ public class SnippetExtCreate {
     private String memo;
     private String content; // text, code
     private String language;
+    private String imageUrl;
+    private String altText;
 }

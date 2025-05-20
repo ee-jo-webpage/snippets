@@ -1,5 +1,6 @@
 package kr.or.kosa.snippets.user.config;
 
+import kr.or.kosa.snippets.user.service.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,6 +16,8 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+    private final CustomAuthFailureHandler customAuthFailureHandler;
+    private final CustomAuthSuccessHandler customAuthSuccessHandler;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -36,11 +39,14 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/login", "/api/register", "/api/verify-code", "/api/forgot-password").anonymous()
                         .anyRequest().permitAll()
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
                         .loginProcessingUrl("/loginproc")
+                        .successHandler(customAuthSuccessHandler)
+                        .failureHandler(customAuthFailureHandler)
                         .permitAll()
                 )
                 .logout(logout -> logout.logoutSuccessUrl("/"));

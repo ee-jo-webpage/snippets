@@ -1,30 +1,35 @@
 package kr.or.kosa.snippets.user.config;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
-import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import jakarta.annotation.PreDestroy;
 import redis.embedded.RedisServer;
 
 import java.io.IOException;
 
-@Slf4j
 @Configuration
 public class EmbeddedRedisConfig {
 
     private RedisServer redisServer;
 
-    @PostConstruct
-    public void startRedis() throws IOException {
-        redisServer = new RedisServer(6379); // 기본 포트
+    @Bean
+    public RedisServer redisServer() throws IOException {
+        String os = System.getProperty("os.name").toLowerCase();
+
+        if (os.contains("mac")) {
+            System.out.println("💡 macOS 환경입니다. Embedded Redis는 실행하지 않습니다.");
+            return null; // or throw new UnsupportedOperationException()
+        }
+
+        redisServer = new RedisServer(6379); // 기본 포트 6379
         redisServer.start();
-        log.info("✅ Embedded Redis started on port 6379");
+        return redisServer;
     }
 
     @PreDestroy
     public void stopRedis() {
-        if (redisServer != null && redisServer.isActive()) {
+        if (redisServer != null) {
             redisServer.stop();
-            log.info("🛑 Embedded Redis stopped");
         }
     }
 }

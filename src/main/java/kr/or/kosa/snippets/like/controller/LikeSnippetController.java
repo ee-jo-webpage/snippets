@@ -61,8 +61,8 @@ public class LikeSnippetController {
     // 인기 스니펫 목록 페이지 (상위 100개 제한, 페이징 처리)
     @GetMapping("/popular-snippets")
     public String showPopularSnippets(
-            @RequestParam(value = "page", defaultValue = "1") int page,
-            Model model) {
+        @RequestParam(value = "page", defaultValue = "1") int page,
+        Model model) {
 
         Integer currentUserId = AppConfig.getFixedUserId();
         int pageSize = 8; // 페이지당 8개 스니펫 표시
@@ -108,7 +108,7 @@ public class LikeSnippetController {
     }
 
     // 홈페이지 접속 시 인기 스니펫 페이지로 리다이렉트
-    @GetMapping("/")
+    @GetMapping("/ttt")
     public String home() {
         return "redirect:/popular-snippets";
     }

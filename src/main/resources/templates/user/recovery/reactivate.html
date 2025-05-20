@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title>계정 복구 완료</title>
+	<meta http-equiv="refresh" content="5;url=/login" />
+	<style>
+		body {
+			font-family: 'Segoe UI', sans-serif;
+			background-color: #f4f4f4;
+			text-align: center;
+			padding-top: 80px;
+		}
+
+		.container {
+			background: white;
+			display: inline-block;
+			padding: 2rem 3rem;
+			border-radius: 12px;
+			box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+		}
+
+		h1 {
+			color: #2d9cdb;
+		}
+
+		p {
+			margin-top: 1rem;
+			color: #333;
+		}
+
+		.timer {
+			margin-top: 0.5rem;
+			color: gray;
+		}
+	</style>
+	<link rel="stylesheet" href="/css/recovery/reactive.css">
+</head>
+<body>
+<div class="container">
+	<h1>🎉 계정이 복구되었습니다!</h1>
+	<p>5초 후 로그인 페이지로 이동합니다.</p>
+	<div class="timer">(자동으로 이동하지 않으면 <a href="/login">여기를 클릭하세요</a>)</div>
+</div>
+</body>
+</html>

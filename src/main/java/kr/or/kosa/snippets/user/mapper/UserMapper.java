@@ -17,4 +17,8 @@ public interface UserMapper {
     Users findByEmail(String email);
 
     void updateUser(Users user);
+
+    Users findDeletedUser(String email);
+
+    int restoreUser(String email);
 }

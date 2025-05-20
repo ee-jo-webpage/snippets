@@ -67,4 +67,23 @@
     </update>
 
 
+<!--비활성화 계정 활성화-->
+    <update id="restoreUser" parameterType="string">
+        UPDATE users
+        SET enabled = true,
+            deleted_at = NULL,
+            updated_at = NOW()
+        WHERE email = #{email}
+          AND enabled = false
+          AND deleted_at IS NOT NULL
+    </update>
+<!-- 유저 비활성화 찾기  -->
+    <select id="findDeletedUser" resultType="kr.or.kosa.snippets.user.model.Users">
+        SELECT *
+        FROM users
+        WHERE email = #{email}
+          AND enabled = false
+          AND deleted_at IS NOT NULL
+    </select>
+
 </mapper>

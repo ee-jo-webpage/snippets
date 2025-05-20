@@ -16,7 +16,7 @@ public class MainController {
      * 메인 페이지 (인덱스)
      * URL: / 또는 /index
      */
-    @GetMapping(value = {"/", "/index"})
+    @GetMapping(value = {"/temp", "/index"})
     public String index() {
         return "index";  // /WEB-INF/views/index.jsp
     }

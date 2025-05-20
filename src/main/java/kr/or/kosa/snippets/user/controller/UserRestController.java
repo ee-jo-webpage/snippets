@@ -1,17 +1,18 @@
 package kr.or.kosa.snippets.user.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import kr.or.kosa.snippets.user.model.UserDTO;
+import kr.or.kosa.snippets.user.model.UserUpdateDTO;
 import kr.or.kosa.snippets.user.service.AuthService;
+import kr.or.kosa.snippets.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api")
 public class UserRestController {
     private final AuthService authService;
+    private final UserService userService;
 
 
     @PostMapping("/register")
@@ -50,6 +52,7 @@ public class UserRestController {
             );
         }
     }
+
     @PostMapping("/verify-code")
     public ResponseEntity<?> verifyCode(@RequestBody Map<String, String> payload) {
         try {
@@ -59,4 +62,21 @@ public class UserRestController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
+
+    @PutMapping("/update")
+    public ResponseEntity<?> updateUser(@Valid @RequestBody UserUpdateDTO dto, BindingResult result, Principal principal) {
+        if (result.hasErrors()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "errors", result.getFieldErrors().stream()
+                            .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage))
+            ));
+        }
+
+        userService.updateUserInfo(principal.getName(), dto);
+        return ResponseEntity.ok("회원 정보가 수정되었습니다.");
+    }
+
+
+
 }

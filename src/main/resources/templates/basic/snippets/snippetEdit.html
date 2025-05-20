@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>스니펫 수정</title>
+</head>
+
+<body>
+    <h1>스니펫 수정</h1>
+
+    <form th:action="@{/snippets/edit/{snippetid}(snippetid=${snippet.snippetid})}"
+          th:object="${snippet}"
+          method="post"
+          enctype="multipart/form-data">  <!-- enctype 추가 -->
+        <table border="1">
+            <tr>
+                <th>Source URL</th>
+                <td><input type="text" th:field="*{sourceurl}" /></td>
+            </tr>
+
+            <tr>
+                <th>Type</th>
+                <td>
+                    <select th:field="*{type}" disabled id="typeSelect">
+                        <option value="code" th:selected="${snippet.type.name() == 'code'}">Code</option>
+                        <option value="text" th:selected="${snippet.type.name() == 'text'}">Text</option>
+                        <option value="img" th:selected="${snippet.type.name() == 'img'}">Image</option>
+                    </select>
+                    <input type="hidden" th:field="*{type}" />
+                </td>
+            </tr>
+
+            <tr>
+                <th>Memo</th>
+                <td><input type="text" th:field="*{memo}" /></td>
+            </tr>
+
+            <tr>
+                <th>Visibility</th>
+                <td>
+                    <select th:field="*{visibility}">
+                        <option value="1" th:selected="${snippet.visibility == 1}">Visible</option>
+                        <option value="0" th:selected="${snippet.visibility == 0}">Hidden</option>
+                    </select>
+                </td>
+            </tr>
+
+            <!-- Code 타입일 때만 보임 -->
+            <tr id="codeFields" th:style="${snippet.type.name() == 'code' ? '' : 'display:none;'}">
+                <th>Language</th>
+                <td>
+                    <select th:field="*{language}">
+                        <option value="0" th:selected="${snippet.language == 'JAVA'}">JAVA</option>
+                        <option value="1" th:selected="${snippet.language == 'PYTHON'}">PYTHON</option>
+                        <option value="2" th:selected="${snippet.language == 'C'}">C</option>
+                    </select>
+                </td>
+            </tr>
+            <tr id="codeContentField" th:style="${snippet.type.name() == 'code' ? '' : 'display:none;'}">
+                <th>Code Content</th>
+                <td><textarea th:field="*{codecontent}"></textarea></td>
+            </tr>
+
+            <!-- Text 타입일 때만 보임 -->
+            <tr id="textFields" th:style="${snippet.type.name() == 'text' ? '' : 'display:none;'}">
+                <th>Text Content</th>
+                <td><textarea th:field="*{textcontent}"></textarea></td>
+            </tr>
+
+            <!-- Image 타입일 때만 보임 -->
+            <tr id="imageFields" th:style="${snippet.type.name() == 'img' ? '' : 'display:none;'}">
+                <th>이미지 파일</th>
+                <td><input type="file" name="imageFile" accept="image/*" /></td>
+            </tr>
+            <tr id="altTextField" th:style="${snippet.type.name() == 'img' ? '' : 'display:none;'}">
+                <th>Alt Text</th>
+                <td><input type="text" th:field="*{alttext}" /></td>
+            </tr>
+        </table>
+
+        <button type="submit">수정</button>
+    </form>
+
+    <a href="/snippets">← 목록으로 돌아가기</a>
+
+    <script>
+        function showFields() {
+            const type = document.getElementById('typeSelect').value;
+            document.querySelectorAll('#codeFields, #codeContentField')
+                    .forEach(el => el.style.display = (type === 'code') ? '' : 'none');
+            document.getElementById('textFields')
+                    .style.display = (type === 'text') ? '' : 'none';
+            document.querySelectorAll('#imageFields, #altTextField')
+                    .forEach(el => el.style.display = (type === 'img') ? '' : 'none');
+        }
+        window.onload = showFields;
+    </script>
+</body>
+
+</html>

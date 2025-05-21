@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -73,7 +74,6 @@ public class LikeSnippetController {
         Integer currentUserId = AppConfig.getFixedUserId();
         int pageSize = 8; // 페이지당 8개 스니펫 표시
         int offset = (page - 1) * pageSize;
-
         boolean hasSearchFilter = (type != null && !type.isEmpty()) ||
                 (keyword != null && !keyword.isEmpty()) ||
                 (minLikes != null && minLikes > 0) ||
@@ -92,7 +92,11 @@ public class LikeSnippetController {
                 // 페이징 처리
                 int fromIndex = Math.min(offset, snippets.size());
                 int toIndex = Math.min(offset + pageSize, snippets.size());
-                snippets = snippets.subList(fromIndex, toIndex);
+                if (fromIndex < toIndex) {
+                    snippets = snippets.subList(fromIndex, toIndex);
+                } else {
+                    snippets = new ArrayList<>(); // 빈 목록 반환
+                }
             } else {
                 // 뷰 검색 모드 (기본값): 상위 100개 내에서 필터링
                 List<Snippet> allPopularSnippets = likeSnippetService.getTop100PopularSnippets(100);
@@ -121,7 +125,11 @@ public class LikeSnippetController {
                 // 페이징 처리
                 int fromIndex = Math.min(offset, snippets.size());
                 int toIndex = Math.min(offset + pageSize, snippets.size());
-                snippets = snippets.subList(fromIndex, toIndex);
+                if (fromIndex < toIndex) {
+                    snippets = snippets.subList(fromIndex, toIndex);
+                } else {
+                    snippets = new ArrayList<>(); // 빈 목록 반환
+                }
             }
         } else {
             // 검색 필터가 없는 경우 기본 인기 스니펫 목록 표시

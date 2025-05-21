@@ -73,7 +73,7 @@
         (SELECT COUNT(*) FROM likes l WHERE l.snippet_id = s.snippet_id) as actual_likes
         FROM snippets s
         LEFT JOIN snippet_tags st ON s.snippet_id = st.snippet_id
-        LEFT JOIN likeTags t ON st.tag_id = t.tag_id
+        LEFT JOIN tags t ON st.tag_id = t.tag_id
         WHERE s.visibility = 1
         <if test="type != null and type != ''">
             AND s.type = #{type}

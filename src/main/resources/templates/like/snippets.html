@@ -33,7 +33,7 @@
             margin-bottom: 15px;
         }
 
-        /* 검색 폼 스타일 추가 */
+        /* 검색 폼 스타일 */
         .search-form {
             background-color: white;
             padding: 20px;
@@ -90,11 +90,11 @@
         }
 
         /* 태그 자동완성 드롭다운 스타일 */
-        .likeTag-autocomplete {
+        .tag-autocomplete {
             position: relative;
         }
 
-        .likeTag-dropdown {
+        .tag-dropdown {
             position: absolute;
             top: 100%;
             left: 0;
@@ -110,23 +110,23 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        .likeTag-dropdown-item {
+        .tag-dropdown-item {
             padding: 10px 15px;
             cursor: pointer;
             transition: background-color 0.2s;
             border-bottom: 1px solid #f0f0f0;
         }
 
-        .likeTag-dropdown-item:hover {
+        .tag-dropdown-item:hover {
             background-color: #f8f9fa;
         }
 
-        .likeTag-dropdown-item.highlighted {
+        .tag-dropdown-item.highlighted {
             background-color: #007bff;
             color: white;
         }
 
-        .likeTag-dropdown-item:last-child {
+        .tag-dropdown-item:last-child {
             border-bottom: none;
         }
 
@@ -177,7 +177,50 @@
             transform: translateY(-1px);
         }
 
-        /* 검색 결과 정보 스타일 추가 */
+        /* 검색 옵션 스타일 - 수정 */
+        .search-options {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            border: 1px solid #ddd;
+        }
+
+        .search-option-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .search-options-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .option-btn {
+            padding: 8px 16px;
+            border: 2px solid #ddd;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            background-color: white;
+            transition: all 0.2s ease;
+        }
+
+        .option-btn.active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .option-btn:hover:not(.active) {
+            border-color: #007bff;
+            color: #007bff;
+        }
+
+        /* 검색 결과 정보 스타일 */
         .search-results-info {
             background-color: #e8f4fd;
             border: 1px solid #b8daff;
@@ -192,7 +235,7 @@
             font-size: 14px;
         }
 
-        .filter-likeTag {
+        .filter-tag {
             display: inline-block;
             background-color: #007bff;
             color: white;
@@ -389,13 +432,15 @@
     <p class="subtitle">현재 사용자: <strong>user_id = <span th:text="${currentUserId}"></span></strong></p>
 </div>
 
-<!-- 검색 필터 폼 추가 -->
+<!-- 검색 필터 폼 -->
 <div class="search-form">
     <div class="search-title">
-        🔍 인기 스니펫 검색 및 필터 (TOP 100 내에서)
+        🔍 인기 스니펫 검색 및 필터
     </div>
     <form action="/popular-snippets" method="get" id="searchForm">
         <input type="hidden" name="page" value="1">
+        <input type="hidden" name="searchMode" id="searchMode" th:value="${searchMode != null ? searchMode : 'view'}">
+
         <div class="form-row">
             <div class="form-group">
                 <label for="type">스니펫 유형</label>
@@ -416,14 +461,14 @@
                 <input type="number" id="minLikes" name="minLikes"
                        placeholder="예: 5" min="0" th:value="${searchMinLikes}">
             </div>
-            <div class="form-group likeTag-autocomplete">
+            <div class="form-group tag-autocomplete">
                 <label for="tagSearch">태그 검색</label>
                 <input type="text" id="tagSearch" name="tagSearch"
                        placeholder="태그를 입력하세요..."
                        th:value="${searchTagName}"
                        autocomplete="off">
                 <input type="hidden" id="tagName" name="tagName" th:value="${searchTagName}">
-                <div class="likeTag-dropdown" id="tagDropdown"></div>
+                <div class="tag-dropdown" id="tagDropdown"></div>
             </div>
             <div class="button-group">
                 <button type="submit" class="search-btn">
@@ -434,26 +479,46 @@
                 </a>
             </div>
         </div>
+
+        <!-- 검색 옵션 UI 개선 -->
+        <div class="search-options">
+            <div class="search-option-title">검색 범위 설정:</div>
+            <div class="search-options-group">
+                <button type="button" class="option-btn" id="viewSearchBtn"
+                        th:classappend="${searchMode == null || searchMode == 'view' ? 'active' : ''}">
+                    상위 100개 내에서 검색 (빠름)
+                </button>
+                <button type="button" class="option-btn" id="dbSearchBtn"
+                        th:classappend="${searchMode == 'db' ? 'active' : ''}">
+                    전체 데이터베이스에서 검색 (정확함)
+                </button>
+            </div>
+        </div>
     </form>
 </div>
 
-<!-- 검색 결과 정보 추가 -->
+<!-- 검색 결과 정보 표시 -->
 <div th:if="${hasSearchFilter}" class="search-results-info">
     <strong>🎯 검색 결과: </strong>
-    인기 스니펫 TOP 100 중 <span th:text="${totalSnippets}">0</span>개가 검색되었습니다.
+    <span th:if="${searchMode == 'view' || searchMode == null}">인기 스니펫 TOP 100 중</span>
+    <span th:if="${searchMode == 'db'}">전체 데이터베이스에서</span>
+    <span th:text="${totalSnippets}">0</span>개가 검색되었습니다.
     <div class="filters">
         <strong>적용된 필터:</strong>
-        <span th:if="${searchType != null and searchType != ''}" class="filter-likeTag">
+        <span th:if="${searchType != null and searchType != ''}" class="filter-tag">
             유형: <span th:text="${searchType}"></span>
         </span>
-        <span th:if="${searchKeyword != null and searchKeyword != ''}" class="filter-likeTag">
+        <span th:if="${searchKeyword != null and searchKeyword != ''}" class="filter-tag">
             키워드: <span th:text="${searchKeyword}"></span>
         </span>
-        <span th:if="${searchMinLikes != null and searchMinLikes > 0}" class="filter-likeTag">
+        <span th:if="${searchMinLikes != null and searchMinLikes > 0}" class="filter-tag">
             최소 좋아요: <span th:text="${searchMinLikes}"></span>
         </span>
-        <span th:if="${searchTagName != null and searchTagName != ''}" class="filter-likeTag">
+        <span th:if="${searchTagName != null and searchTagName != ''}" class="filter-tag">
             태그: <span th:text="${searchTagName}"></span>
+        </span>
+        <span class="filter-tag">
+            검색 모드: <span th:text="${searchMode == 'db' ? '전체 DB' : '상위 100개'}"></span>
         </span>
     </div>
 </div>
@@ -504,7 +569,7 @@
     <div class="pagination">
         <!-- 이전 페이지 버튼 -->
         <a th:if="${currentPage > 1}"
-           th:href="@{/popular-snippets(page=${currentPage - 1}, type=${searchType}, keyword=${searchKeyword}, minLikes=${searchMinLikes}, tagName=${searchTagName})}"
+           th:href="@{/popular-snippets(page=${currentPage - 1}, type=${searchType}, keyword=${searchKeyword}, minLikes=${searchMinLikes}, tagName=${searchTagName}, searchMode=${searchMode})}"
            class="page-item prev">&laquo; 이전</a>
 
         <!-- 페이지 번호 -->
@@ -512,13 +577,13 @@
             <a th:if="${pageNum == currentPage}"
                class="page-item active" th:text="${pageNum}"></a>
             <a th:unless="${pageNum == currentPage}"
-               th:href="@{/popular-snippets(page=${pageNum}, type=${searchType}, keyword=${searchKeyword}, minLikes=${searchMinLikes}, tagName=${searchTagName})}"
+               th:href="@{/popular-snippets(page=${pageNum}, type=${searchType}, keyword=${searchKeyword}, minLikes=${searchMinLikes}, tagName=${searchTagName}, searchMode=${searchMode})}"
                class="page-item" th:text="${pageNum}"></a>
         </th:block>
 
         <!-- 다음 페이지 버튼 -->
         <a th:if="${currentPage < totalPages}"
-           th:href="@{/popular-snippets(page=${currentPage + 1}, type=${searchType}, keyword=${searchKeyword}, minLikes=${searchMinLikes}, tagName=${searchTagName})}"
+           th:href="@{/popular-snippets(page=${currentPage + 1}, type=${searchType}, keyword=${searchKeyword}, minLikes=${searchMinLikes}, tagName=${searchTagName}, searchMode=${searchMode})}"
            class="page-item next">다음 &raquo;</a>
     </div>
 </div>
@@ -527,22 +592,24 @@
     $(document).ready(function() {
         console.log("=== 인기 스니펫 페이지 로드 ===");
 
-        // 태그 자동완성 기능
-        let selectedTagIndex = -1;
-        let currentTags = [];
-
-        // 검색 모드 버튼 처리
+        // 검색 모드 버튼 이벤트 처리 - 수정
         $('#viewSearchBtn').on('click', function() {
             $('#searchMode').val('view');
             $(this).addClass('active');
             $('#dbSearchBtn').removeClass('active');
+            console.log("검색 모드 변경: 상위 100개 내에서 검색");
         });
 
         $('#dbSearchBtn').on('click', function() {
             $('#searchMode').val('db');
             $(this).addClass('active');
             $('#viewSearchBtn').removeClass('active');
+            console.log("검색 모드 변경: 전체 데이터베이스에서 검색");
         });
+
+        // 태그 자동완성 기능
+        let selectedTagIndex = -1;
+        let currentTags = [];
 
         // 태그 검색 입력 처리
         $('#tagSearch').on('input', function() {
@@ -725,6 +792,17 @@
         const currentTagName = /*[[${searchTagName}]]*/ '';
         if (currentTagName) {
             $('#tagSearch').val(currentTagName);
+        }
+
+        // 현재 선택된 검색 모드 표시
+        const currentSearchMode = /*[[${searchMode}]]*/ 'view';
+        console.log("현재 검색 모드:", currentSearchMode);
+        if (currentSearchMode === 'db') {
+            $('#dbSearchBtn').addClass('active');
+            $('#viewSearchBtn').removeClass('active');
+        } else {
+            $('#viewSearchBtn').addClass('active');
+            $('#dbSearchBtn').removeClass('active');
         }
     });
 </script>

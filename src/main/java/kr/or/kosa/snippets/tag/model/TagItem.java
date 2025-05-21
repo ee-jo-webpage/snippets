@@ -7,12 +7,12 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Tag {
+public class TagItem {
     private Long tagId;
     private String name;
 
     // 매개변수가 있는 생성자
-    public Tag(String name) {
+    public TagItem(String name) {
         this.name = name;
     }
 }

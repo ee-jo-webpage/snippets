@@ -5,6 +5,11 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+# Gradle Wrapper
+gradle/wrapper/
+gradlew
+gradlew.bat
+
 ### STS ###
 .apt_generated
 .classpath
@@ -62,8 +67,9 @@ nbdist/
 
 # Gradle
 build/
-!gradle/wrapper/gradle-wrapper.jar
-!gradle/wrapper/gradle-wrapper.properties
+gradle/wrapper/
+gradlew
+gradlew.bat
 .gradle/
 gradle-app.setting
 

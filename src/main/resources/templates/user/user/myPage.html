@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+	<meta charset="UTF-8">
+	<title>마이페이지</title>
+	<link rel="stylesheet" href="/user/css/myPage.css">
+	<!--sweet alert 추가-->
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+<div class="container">
+	<h2>마이페이지</h2>
+
+	<form id="updateForm">
+		<label>이메일
+			<input type="email" name="email" th:value="${user.email}" readonly>
+		</label>
+
+		<label>닉네임
+			<input type="text" name="nickname" th:value="${user.nickname}">
+		</label>
+		<div class="btns">
+			<button type="submit">정보 수정</button>
+			<button type="button" onclick="location.href='/changePassword'">비밀번호 변경</button>
+			<button type="button" class="delete" id="deleteBtn">회원 탈퇴</button>
+		</div>
+	</form>
+</div>
+
+<script src="/user/js/myPage.js"></script>
+
+</body>
+</html>

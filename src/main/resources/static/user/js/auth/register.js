@@ -112,37 +112,37 @@ form.addEventListener('submit', async function (e) {
                     const span = document.getElementById(`${field}Error`);
                     if (span) span.innerText = msg;
 
-                    // if (msg.includes("탈퇴 처리된")) {
-                    //     await Swal.fire({
-                    //         title: "탈퇴한 계정입니다",
-                    //         text: "계정을 복구하시겠습니까?",
-                    //         icon: "warning",
-                    //         showCancelButton: true,
-                    //         confirmButtonText: "복구하기",
-                    //         cancelButtonText: "취소"
-                    //     }).then(async result => {
-                    //         if (result.isConfirmed) {
-                    //             setSubmitState(true, "복구 요청 중...");
-                    //             const res = await fetch("/api/reactive-request", {
-                    //                 method: "POST",
-                    //                 headers: { "Content-Type": "application/json" },
-                    //                 body: JSON.stringify({ email: form.email.value })
-                    //             });
-                    //             const result = await res.json();
-                    //
-                    //             if (res.ok) {
-                    //                 await Swal.fire("복구 메일 전송", result.message || "메일을 확인해주세요.", "success");
-                    //                 location.href = "/login";
-                    //             } else {
-                    //                 await Swal.fire("복구 실패", result.error || "알 수 없는 오류가 발생했습니다.", "error");
-                    //                 setSubmitState(false);
-                    //             }
-                    //         } else {
-                    //             setSubmitState(false); // 복구 취소 시
-                    //         }
-                    //     });
-                    //     return;
-                    // }
+                    if (msg.includes("탈퇴 처리된")) {
+                        await Swal.fire({
+                            title: "탈퇴한 계정입니다",
+                            text: "계정을 복구하시겠습니까?",
+                            icon: "warning",
+                            showCancelButton: true,
+                            confirmButtonText: "복구하기",
+                            cancelButtonText: "취소"
+                        }).then(async result => {
+                            if (result.isConfirmed) {
+                                setSubmitState(true, "복구 요청 중...");
+                                const res = await fetch("/api/reactive-request", {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ email: form.email.value })
+                                });
+                                const result = await res.json();
+
+                                if (res.ok) {
+                                    await Swal.fire("복구 메일 전송", result.message || "메일을 확인해주세요.", "success");
+                                    location.href = "/login";
+                                } else {
+                                    await Swal.fire("복구 실패", result.error || "알 수 없는 오류가 발생했습니다.", "error");
+                                    setSubmitState(false);
+                                }
+                            } else {
+                                setSubmitState(false); // 복구 취소 시
+                            }
+                        });
+                        return;
+                    }
 
                     if (!focused) {
                         form[field].focus();

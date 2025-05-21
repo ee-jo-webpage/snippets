@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title>계정 복구 실패</title>
+</head>
+<link rel="stylesheet" href="/css/recovery/reactive.css">
+<body>
+<div class="container">
+<h1>❌ 복구 실패</h1>
+<p th:text="${errorMessage}">에러가 발생했습니다.</p>
+<a href="/login">로그인 페이지로 이동</a>
+</div>
+</body>
+</html>

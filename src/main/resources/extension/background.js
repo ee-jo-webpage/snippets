@@ -1,13 +1,13 @@
 chrome.action.onClicked.addListener(async (tab) => {
-    const loggedIn = await checkLoginStatus();
-
-    if (loggedIn) {
+    // const loggedIn = await checkLoginStatus();
+    //
+    // if (loggedIn) {
         // 로그인 O → 사이드바 토글 메시지 전송
         chrome.tabs.sendMessage(tab.id, { action: "toggleSidebar" });
-    } else {
-        // 로그인 X → 로그인 페이지로 이동
-        chrome.tabs.create({ url: "http://localhost:8090/login" });
-    }
+    // } else {
+    //     // 로그인 X → 로그인 페이지로 이동
+    //     chrome.tabs.create({ url: "http://localhost:8090/login" });
+    // }
 });
 
 // 로그인 상태 확인 함수 (세션 기반)

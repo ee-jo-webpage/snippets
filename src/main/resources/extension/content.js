@@ -1844,6 +1844,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "refreshCodeButtons") {
         detectCodeBlocks(); // CODE 타입 버튼 및 표시 재렌더링
     }
+
+    // === 이미지 블록 버튼 UI 재적용 ===
+    if (message.action === "refreshImageButtons") {
+        detectImageBlocks();
+        detectBackgroundImageBlocks();
+    }
+
+});
+
+window.addEventListener("message", (event) => {
+    if (event.data?.type === "CLOSE_SIDEBAR_IFRAME") {
+        const iframe = document.getElementById("snippet-sidebar-wrapper");
+        if (iframe && iframe.classList.contains("open")) {
+            iframe.classList.remove("open");
+            setTimeout(() => iframe.remove(), 300);
+        }
+    }
 });
 
 if (document.readyState === "loading") {

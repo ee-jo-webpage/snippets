@@ -17,8 +17,23 @@ public class TagService {
     TagMapper tagMapper;
 
     //모든 태그 조회
-    public List<TagItem> selectAllTags() {
+    public List<TagItem> getAllTags() {
         return tagMapper.selectAllTags();
     }
 
+    //이름으로 태그 조회
+    @Transactional
+    public TagItem getTagByName(String name) {
+        return tagMapper.selectTagByName(name);
+    }
+
+    //태그 입력
+    @Transactional
+    public TagItem createTag(String name) {
+
+        TagItem tag = new TagItem(name);
+        tagMapper.insertTag(tag);
+
+        return tag;
+    }
 }

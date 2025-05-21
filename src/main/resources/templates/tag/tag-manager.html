@@ -10,6 +10,9 @@
 <div class="container">
     <!-- 세션 정보 확인 패널 -->
     <div class="session-panel">
+        <a th:href="@{/tag/init-session}" class="btn btn-warning">
+            🔑 세션 초기화 (임시 로그인)
+        </a>
         <button class="session-toggle-btn" onclick="toggleSessionInfo()">
             🔍 세션 정보 확인
         </button>

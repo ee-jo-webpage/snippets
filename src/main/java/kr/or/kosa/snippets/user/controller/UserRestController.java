@@ -160,6 +160,19 @@ public class UserRestController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody Map<String, String> payload, Principal principal) {
+        String email = principal.getName();
+        String current = payload.get("currentPassword");
+        String newPw = payload.get("newPassword");
+
+        try {
+            userService.changePassword(email, current, newPw);
+            return ResponseEntity.ok(Map.of("message", "비밀번호가 변경되었습니다."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 
 
 }

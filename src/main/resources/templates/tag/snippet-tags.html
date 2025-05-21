@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>스니펫 태그 관리</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link th:href="@{/tag/css/snippet-tags.css}" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+    <h1>📝 스니펫 태그 관리</h1>
+
+    <div class="search-bar">
+        <input type="text"
+               id="snippetSearch"
+               class="search-input"
+               placeholder="스니펫 검색 (제목, 내용, 태그...)">
+    </div>
+
+    <div id="errorMessage" class="error" style="display: none;"></div>
+
+    <div id="snippetsContainer" class="snippets-grid">
+        <div class="loading">스니펫을 불러오는 중...</div>
+    </div>
+</div>
+
+<!-- 플로팅 알림 -->
+<div id="toast" class="toast"></div>
+
+    <script th:src="@{/tag/js/snippet-tags.js}"></script>
+</body>
+</html>

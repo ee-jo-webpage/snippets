@@ -17,4 +17,12 @@ public class TagPageController {
         return "tag/tag-manager";  // /WEB-INF/views/tags/tag-manager.jsp로 이동
     }
 
+    /**
+     * 스니펫 태그 관리 페이지로 이동
+     * URL: /tags/snippet-management
+     */
+    @GetMapping("/snippet-tag")
+    public String showSnippetTagManagement() {
+        return "tag/snippet-tags";
+    }
 }

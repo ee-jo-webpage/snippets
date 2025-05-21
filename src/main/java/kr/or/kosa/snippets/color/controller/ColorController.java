@@ -70,34 +70,34 @@ public class ColorController {
         return "color/color-list";
     }
 
-    //사용자별 색상 조회
-    @GetMapping("/user/{userId}")
-    public String userColors(@PathVariable Long userId,
-                             HttpSession session,
-                             @RequestParam(required = false, defaultValue = "false") boolean includeDefault,
-                             Model model) {
-        log.info(userId + "의 색상 조회 (기본 색상 포함: " + includeDefault + ")");
-        session.setAttribute("userId", userId);
+    //사용자별 색상 조회@GetMapping("/user/{userId}")
 
-        List<Color> colorList;
-        if (includeDefault) {
-            colorList = colorService.getAllAvailableColorsByUserId(userId);
-        } else {
-            colorList = colorService.getColorsByUserId(userId);
-        }
-
-        model.addAttribute("colorList", colorList);
-        model.addAttribute("userId", userId);
-        model.addAttribute("currentUserId", session.getAttribute("userId"));
-        model.addAttribute("isMyColors", false);
-        model.addAttribute("includeDefault", includeDefault);
-
-        return "color/user-colors";
-    }
-
+    /// /    public String userColors(@PathVariable Long userId,
+    /// /                             HttpSession session,
+    /// /                             @RequestParam(required = false, defaultValue = "false") boolean includeDefault,
+    /// /                             Model model) {
+    /// /        log.info(userId + "의 색상 조회 (기본 색상 포함: " + includeDefault + ")");
+    /// /        session.setAttribute("userId", userId);
+    /// /
+    /// /        List<Color> colorList;
+    /// /        if (includeDefault) {
+    /// /            colorList = colorService.getAllAvailableColorsByUserId(userId);
+    /// /        } else {
+    /// /            colorList = colorService.getColorsByUserId(userId);
+    /// /        }
+    /// /
+    /// /        model.addAttribute("colorList", colorList);
+    /// /        model.addAttribute("userId", userId);
+    /// /        model.addAttribute("currentUserId", session.getAttribute("userId"));
+    /// /        model.addAttribute("isMyColors", false);
+    /// /        model.addAttribute("includeDefault", includeDefault);
+    /// /
+    /// /        return "color/user-colors";
+    /// /    }
+//
     // 사용자가 사용 가능한 모든 색상 조회 (기본 색상 + 사용자 지정 색상)
     // ColorController.java 수정
-    @GetMapping("/available/{userId}")
+    @GetMapping("/user/{userId}")
     public String getAvailableColors(@PathVariable Long userId,
                                      HttpSession session,
                                      Model model) {

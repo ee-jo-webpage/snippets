@@ -16,6 +16,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class UserRecoveryService {
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
+    private final MailService mailService;
 
     /**
      * 계정 비활성화
@@ -69,6 +71,24 @@ public class UserRecoveryService {
 
     public boolean restoreUser(String email) {
         return userMapper.restoreUser(email) > 0;
+    }
+
+
+    @Transactional
+    public void sendTemporaryPassword(String email) {
+        Users user = userMapper.findByEmail(email);
+        if (user == null) throw new IllegalArgumentException("유저 없음");
+
+        String tempPassword = createRandomPassword();
+        user.setPassword(passwordEncoder.encode(tempPassword));
+        userMapper.updateUser(user);
+
+        mailService.sendTemporaryPassword(user.getEmail(), tempPassword);
+        log.info("임시 비밀번호 전송: email={}, password={}", user.getEmail(), tempPassword);
+    }
+
+    private String createRandomPassword() {
+        return UUID.randomUUID().toString().substring(0, 8);
     }
 
 

@@ -22,4 +22,12 @@ public class UserPageController {
         return "/user/user/myPage";
     }
 
+
+
+    @GetMapping("/forgotPassword")
+    public String forgotPassword(Model model) {
+        return "/user/user/forgotPassword";
+    }
+
+
 }

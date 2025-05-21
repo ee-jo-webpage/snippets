@@ -105,5 +105,15 @@ public class MailService {
     public void deleteRecoveryToken(String email) {
         redisTemplate.delete("recover:" + email);
     }
+    // 임시 비밀번호 메일
+    public void sendTemporaryPassword(String to, String tempPassword) {
+        String subject = "[App] 임시 비밀번호 안내";
+        String content = String.format("""
+            <h1>임시 비밀번호 발급</h1>
+            <p>아래 비밀번호로 로그인 후 반드시 변경해주세요.</p>
+            <h2 style='color:red;'>%s</h2>
+            """, tempPassword);
+        sendHtmlMail(to, subject, content);
+    }
 
 }

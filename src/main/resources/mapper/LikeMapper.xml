@@ -4,7 +4,7 @@
 
     <!-- 좋아요 추가 (중복 방지) -->
     <insert id="addLike">
-        INSERT IGNORE INTO likes (user_id, snippet_id, created_at)
+        INSERT IGNORE INTO likes (user_id, snippet_id, created_at) /*INSERT IGNORE*/
         VALUES (#{userId}, #{snippetId}, NOW())
     </insert>
 

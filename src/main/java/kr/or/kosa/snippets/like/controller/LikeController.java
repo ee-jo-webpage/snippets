@@ -32,6 +32,6 @@ public class LikeController {
         model.addAttribute("likeCount", likeCount);
         model.addAttribute("isLiked", isLiked);
 
-        return "like/like";  // like.jsp 파일을 반환
+        return "like/like";  // like.html
     }
 }

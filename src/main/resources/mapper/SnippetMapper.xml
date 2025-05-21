@@ -155,15 +155,5 @@
         SELECT COUNT(*) FROM popular_snippets_view
     </select>
 
-    <!-- 뷰를 이용한 최신순 조회 (비교용 - 실제로는 의미없지만 테스트용) -->
-    <select id="getRecentSnippetsFromView" resultMap="SnippetResultMap">
-        SELECT snippet_id, user_id, folder_id, color_id, source_url, type, memo,
-        created_at, updated_at, like_count, visibility
-        FROM popular_snippets_view
-        ORDER BY created_at DESC
-        <if test="limit != null and limit > 0">
-            LIMIT #{limit}
-        </if>
-    </select>
 
 </mapper>

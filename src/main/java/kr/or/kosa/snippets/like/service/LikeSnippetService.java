@@ -24,13 +24,31 @@ public class LikeSnippetService {
 
     // 인기 스니펫 조회
     public List<Snippet> getPopularSnippets(Integer limit) {
+        if (limit == null || limit <= 0) {
+            limit = 100; // 기본값 설정
+        }
         return likeSnippetMapper.getPopularSnippets(limit);
     }
 
-    // 검색 기능
+    // 검색 기능 - 전체 DB에서 직접 검색
     public List<Snippet> searchSnippets(String type, String keyword, Integer minLikes, String tagName) {
+        // 검색 조건이 모두 비어있으면 기본적으로 인기순 100개 반환
+        if ((type == null || type.isEmpty()) &&
+                (keyword == null || keyword.isEmpty()) &&
+                (minLikes == null || minLikes <= 0) &&
+                (tagName == null || tagName.isEmpty())) {
+            return getPopularSnippets(100);
+        }
+
+        // 최소 좋아요 수가 null이면 0으로 설정
+        if (minLikes == null) {
+            minLikes = 0;
+        }
+
+        // 검색을 수행하고 결과 반환
         return likeSnippetMapper.searchSnippets(type, keyword, minLikes, tagName);
     }
+
 
     // 모든 태그 조회
     public List<LikeTag> getAllTags() {
@@ -47,38 +65,6 @@ public class LikeSnippetService {
         return likeSnippetMapper.getSnippetDetailById(snippetId);
     }
 
-
-    // ===== 성능 테스트용 추가 메서드들 =====
-
-    /**
-     * 모든 공개 스니펫 조회 (성능 테스트용)
-     */
-    public List<Snippet> getAllPublicSnippets() {
-        return likeSnippetMapper.getAllPublicSnippets();
-    }
-
-    /**
-     * 제한된 개수의 공개 스니펫 조회 (성능 테스트용)
-     */
-    public List<Snippet> getAllPublicSnippets(Integer limit) {
-        return likeSnippetMapper.getAllPublicSnippets().stream()
-                .limit(limit)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * 특정 사용자의 스니펫 조회 (성능 테스트용)
-     */
-    public List<Snippet> getSnippetsByUserId(Integer userId) {
-        return likeSnippetMapper.getSnippetsByUserId(userId);
-    }
-
-    /**
-     * 페이징 처리된 공개 스니펫 조회 (성능 테스트용)
-     */
-    public List<Snippet> getAllPublicSnippetsPaged(Integer offset, Integer limit) {
-        return likeSnippetMapper.getAllPublicSnippetsPaged(offset, limit);
-    }
 
 // ===== 뷰 방식 메서드들 (상위 100개로 제한) =====
 
@@ -133,9 +119,41 @@ public class LikeSnippetService {
     }
 
     /**
-     * 뷰를 이용한 최신순 조회 (비교용)
+     * 뷰에서 가져온 TOP 100 스니펫 내에서 필터링 (클라이언트 사이드)
+     * 이 메서드는 필요한 경우 서비스 측에서 인메모리 필터링을 수행하기 위한 것입니다.
      */
-    public List<Snippet> getRecentSnippetsFromView(Integer limit) {
-        return likeSnippetMapper.getRecentSnippetsFromView(limit);
+    public List<Snippet> filterSnippetsFromTop100(String type, String keyword, Integer minLikes, String tagName) {
+        // 먼저 TOP 100 스니펫을 가져옴
+        List<Snippet> allPopularSnippets = getTop100PopularSnippets(100);
+
+        // 필터링 조건이 모두 없으면 그대로 반환
+        if ((type == null || type.isEmpty()) &&
+                (keyword == null || keyword.isEmpty()) &&
+                (minLikes == null || minLikes <= 0) &&
+                (tagName == null || tagName.isEmpty())) {
+            return allPopularSnippets;
+        }
+
+        // 유형, 키워드, 좋아요 수로 필터링
+        List<Snippet> filteredSnippets = allPopularSnippets.stream()
+                .filter(s -> type == null || type.isEmpty() || s.getType().equals(type))
+                .filter(s -> keyword == null || keyword.isEmpty() ||
+                        (s.getMemo() != null && s.getMemo().toLowerCase().contains(keyword.toLowerCase())))
+                .filter(s -> minLikes == null || s.getLikeCount() >= minLikes)
+                .collect(Collectors.toList());
+
+        // 태그 필터링 (필요한 경우)
+        if (tagName != null && !tagName.isEmpty()) {
+            filteredSnippets = filteredSnippets.stream()
+                    .filter(s -> {
+                        List<LikeTag> snippetTags = getTagsBySnippetId(s.getSnippetId());
+                        return snippetTags.stream()
+                                .anyMatch(tag -> tag.getName().equalsIgnoreCase(tagName));
+                    })
+                    .collect(Collectors.toList());
+        }
+
+        return filteredSnippets;
     }
+
 }

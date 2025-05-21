@@ -54,6 +54,4 @@ public interface LikeSnippetMapper {
     // 뷰에서 전체 인기 스니펫 수 조회 (새로 추가)
     int countPopularSnippetsFromView();
 
-    // 뷰를 이용한 최신순 조회 (비교용)
-    List<Snippet> getRecentSnippetsFromView(@Param("limit") Integer limit);
 }

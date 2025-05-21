@@ -1,7 +1,5 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -351,28 +349,24 @@
             </button>
 
             <!-- 내 색상으로 이동 버튼 (세션에 userId가 있을 때만 표시) -->
-            <c:if test="${sessionScope.userId != null}">
-                <a href="/color/user/${sessionScope.userId}" class="btn btn-success">
-                    👤 내 색상 보기 (User ${sessionScope.userId})
-                </a>
-            </c:if>
+            <a th:if="${session.userId != null}" th:href="@{/color/user/{id}(id=${session.userId})}" class="btn btn-success">
+                👤 내 색상 보기 (User <span th:text="${session.userId}"></span>)
+            </a>
 
             <!-- 세션이 없을 때 초기화 버튼 -->
-            <c:if test="${sessionScope.userId == null}">
-                <a href="/init-session" class="btn btn-warning">
-                    🔑 세션 초기화 (임시 로그인)
-                </a>
-            </c:if>
+            <a th:if="${session.userId == null}" th:href="@{/init-session}" class="btn btn-warning">
+                🔑 세션 초기화 (임시 로그인)
+            </a>
         </div>
 
         <div id="sessionInfo" class="session-info">
             <div class="session-info-item">
                 <span class="session-key">현재 사용자 ID:</span>
-                <span class="session-value">${sessionScope.userId != null ? sessionScope.userId : '없음'}</span>
+                <span class="session-value" th:text="${session.userId != null ? session.userId : '없음'}"></span>
             </div>
             <div class="session-info-item">
                 <span class="session-key">세션 ID:</span>
-                <span class="session-value" id="sessionId">${sessionScope.sessionId != null ? sessionScope.sessionId : '없음'}</span>
+                <span class="session-value" id="sessionId" th:text="${session.sessionId != null ? session.sessionId : '없음'}"></span>
             </div>
             <div class="session-info-item">
                 <span class="session-key">페이지 타입:</span>
@@ -392,51 +386,42 @@
         </button>
     </div>
 
-    <c:if test="${not empty colorList}">
-        <div class="color-grid">
-            <c:forEach var="color" items="${colorList}">
-                <div class="color-card">
-                    <div class="color-preview" style="background-color: ${color.hexCode};">
-                            ${color.hexCode}
-                    </div>
-                    <div class="color-info">
-                        <div class="color-name">${color.name}</div>
-                        <div class="color-hex">${color.hexCode}</div>
-                        <c:if test="${color.userId != null}">
-                            <div class="user-info">사용자 ${color.userId}의 색상</div>
-                        </c:if>
-                        <c:if test="${color.userId == null}">
-                            <div class="user-info">기본 색상</div>
-                        </c:if>
-
-                        <!-- 사용자 색상일 때만 수정/삭제 버튼 표시 -->
-                        <c:if test="${color.userId != null}">
-                            <div class="color-actions">
-                                <button class="btn btn-sm btn-warning"
-                                        onclick="openEditModal('${color.colorId}', '${color.name}', '${color.hexCode}')">
-                                    ✎ 수정
-                                </button>
-                                <button class="btn btn-delete" onclick="deleteColor('${color.colorId}', '${color.name}')">
-                                    🗑 삭제
-                                </button>
-                            </div>
-                        </c:if>
-                    </div>
+    <div th:if="${not #lists.isEmpty(colorList)}" class="color-grid">
+        <div th:each="color : ${colorList}" class="color-card">
+            <div class="color-preview" th:style="'background-color: ' + ${color.hexCode} + ';'">
+                <span th:text="${color.hexCode}"></span>
+            </div>
+            <div class="color-info">
+                <div class="color-name" th:text="${color.name}"></div>
+                <div class="color-hex" th:text="${color.hexCode}"></div>
+                <div th:if="${color.userId != null}" class="user-info">
+                    사용자 <span th:text="${color.userId}"></span>의 색상
                 </div>
-            </c:forEach>
-        </div>
-    </c:if>
+                <div th:if="${color.userId == null}" class="user-info">기본 색상</div>
 
-    <c:if test="${empty colorList}">
-        <div class="empty-state">
-            <i>🎨</i>
-            <h3>등록된 색상이 없습니다</h3>
-            <p>첫 번째 색상을 추가해보세요!</p>
-            <button class="btn btn-primary" onclick="openAddModal()">
-                색상 추가하기
-            </button>
+                <!-- 사용자 색상일 때만 수정/삭제 버튼 표시 -->
+                <div th:if="${color.userId != null}" class="color-actions">
+                    <button class="btn btn-sm btn-warning"
+                            th:onclick="'openEditModal(\'' + ${color.colorId} + '\', \'' + ${color.name} + '\', \'' + ${color.hexCode} + '\')'">
+                        ✎ 수정
+                    </button>
+                    <button class="btn btn-delete"
+                            th:onclick="'deleteColor(\'' + ${color.colorId} + '\', \'' + ${color.name} + '\')'">
+                        🗑 삭제
+                    </button>
+                </div>
+            </div>
         </div>
-    </c:if>
+    </div>
+
+    <div th:if="${#lists.isEmpty(colorList)}" class="empty-state">
+        <i>🎨</i>
+        <h3>등록된 색상이 없습니다</h3>
+        <p>첫 번째 색상을 추가해보세요!</p>
+        <button class="btn btn-primary" onclick="openAddModal()">
+            색상 추가하기
+        </button>
+    </div>
 </div>
 
 <!-- 색상 추가 모달 -->
@@ -446,7 +431,7 @@
             <h2 class="modal-title">새 색상 추가</h2>
             <button class="close" onclick="closeModal('addModal')">&times;</button>
         </div>
-        <form id="addColorForm" action="/color/add" method="POST">
+        <form id="addColorForm" th:action="@{/color/add}" method="POST">
             <div class="modal-body">
                 <div class="form-group">
                     <label for="colorName" class="form-label">색상 이름</label>
@@ -487,7 +472,7 @@
             <h2 class="modal-title">색상 수정</h2>
             <button class="close" onclick="closeModal('editModal')">&times;</button>
         </div>
-        <form id="editColorForm" action="/color/update" method="POST">
+        <form id="editColorForm" th:action="@{/color/update}" method="POST">
             <input type="hidden" id="editColorId" name="colorId">
             <div class="modal-body">
                 <div class="form-group">
@@ -518,7 +503,7 @@
     </div>
 </div>
 
-<script>
+<script th:inline="javascript">
     // 세션 정보 토글 함수
     function toggleSessionInfo() {
         const sessionInfo = document.getElementById('sessionInfo');
@@ -660,11 +645,11 @@
     });
 
     // 삭제 - 동적 폼 생성 후 제출
-    function deleteColor(colorId, colorName ) {
+    function deleteColor(colorId, colorName) {
         if (confirm(`정말로 "${colorName}" 색상을 삭제하시겠습니까?`)) {
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = '/color/delete';
+            form.action = /*[[@{/color/delete}]]*/ '/color/delete';
 
             const input = document.createElement('input');
             input.type = 'hidden';
@@ -678,9 +663,9 @@
     }
 
     // 폼 제출 후 성공 메시지 (필요시)
-    <c:if test="${not empty message}">
-    alert('${message}');
-    </c:if>
+    /*[# th:if="${message != null}"]*/
+    alert(/*[[${message}]]*/ '');
+    /*[/]*/
 </script>
 </body>
 </html>

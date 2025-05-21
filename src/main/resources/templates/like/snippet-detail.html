@@ -188,19 +188,19 @@
             white-space: pre-wrap;
         }
 
-        .tag-section {
+        .likeTag-section {
             margin-top: 30px;
             padding-top: 20px;
             border-top: 1px solid #e1e4e8;
         }
 
-        .tag-list {
+        .likeTag-list {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
         }
 
-        .tag {
+        .likeTag {
             background-color: #0366d6;
             color: white;
             padding: 6px 12px;
@@ -209,7 +209,7 @@
             font-weight: bold;
         }
 
-        .no-tags {
+        .no-likeTags {
             color: #666;
             font-style: italic;
         }
@@ -306,12 +306,12 @@ console.log('샘플 코드');
     </div>
 
     <!-- 태그 섹션 -->
-    <div class="tag-section">
+    <div class="likeTag-section">
         <div class="content-title">태그</div>
-        <div class="tag-list" th:if="${!#lists.isEmpty(tags)}">
-            <span th:each="tag : ${tags}" class="tag" th:text="${tag.name}"></span>
+        <div class="likeTag-list" th:if="${!#lists.isEmpty(likeTags)}">
+            <span th:each="likeTag : ${likeTags}" class="likeTag" th:text="${likeTag.name}"></span>
         </div>
-        <div th:if="${#lists.isEmpty(tags)}" class="no-tags">
+        <div th:if="${#lists.isEmpty(likeTags)}" class="no-likeTags">
             연결된 태그가 없습니다.
         </div>
     </div>

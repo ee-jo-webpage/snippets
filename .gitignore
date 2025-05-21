@@ -5,6 +5,11 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+# Gradle Wrapper
+gradle/wrapper/
+gradlew
+gradlew.bat
+
 ### STS ###
 .apt_generated
 .classpath
@@ -16,6 +21,7 @@ build/
 bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
+.metadata/
 
 ### IntelliJ IDEA ###
 .idea
@@ -42,7 +48,6 @@ out/
 *.iml
 *.ipr
 *.iws
-.metadata/         # 이 줄 추가
 
 # Eclipse
 .eclipse/
@@ -50,6 +55,7 @@ out/
 .classpath
 .settings/
 bin/
+.metadata/
 
 # NetBeans
 nbproject/private/
@@ -61,11 +67,11 @@ nbdist/
 
 # Gradle
 build/
+gradle/wrapper/
+gradlew
+gradlew.bat
 .gradle/
 gradle-app.setting
-gradle/wrapper/    # 이 줄 추가 (gradle/wrapper 전체 제외)
-gradlew            # 이 줄 추가 (gradlew 파일 제외)
-gradlew.bat        # 이 줄 추가 (윈도우용 gradlew.bat 제외)
 
 # Maven
 target/

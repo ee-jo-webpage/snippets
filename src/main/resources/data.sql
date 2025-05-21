@@ -25,7 +25,7 @@ INSERT INTO `snippet_colors` (`user_id`, `name`, `hex_code`) VALUES
                                                                  (2, '연한 파란색', '#a7d1f7');
 
 -- 태그 데이터 (tag_id 제거)
-INSERT INTO `tags` (`name`) VALUES
+INSERT INTO `likeTags` (`name`) VALUES
                                 ('JavaScript'),
                                 ('React'),
                                 ('Java'),

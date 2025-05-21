@@ -2,8 +2,8 @@ package kr.or.kosa.snippets.like.service;
 
 import kr.or.kosa.snippets.like.mapper.LikeSnippetMapper;
 import kr.or.kosa.snippets.like.mapper.TagMapper;
+import kr.or.kosa.snippets.like.model.LikeTag;
 import kr.or.kosa.snippets.like.model.Snippet;
-import kr.or.kosa.snippets.like.model.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -33,12 +33,12 @@ public class LikeSnippetService {
     }
 
     // 모든 태그 조회
-    public List<Tag> getAllTags() {
+    public List<LikeTag> getAllTags() {
         return tagMapper.getAllTags();
     }
 
     // 특정 스니펫의 태그 조회
-    public List<Tag> getTagsBySnippetId(Integer snippetId) {
+    public List<LikeTag> getTagsBySnippetId(Integer snippetId) {
         return tagMapper.getTagsBySnippetId(snippetId);
     }
 

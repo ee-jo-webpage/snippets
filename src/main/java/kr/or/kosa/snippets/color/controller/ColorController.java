@@ -67,7 +67,7 @@ public class ColorController {
         List<Color> colorList = colorService.getAllColors();
         model.addAttribute("colorList", colorList);
 
-        return "colors/color-list";
+        return "color/color-list";
     }
 
     //사용자별 색상 조회
@@ -90,7 +90,7 @@ public class ColorController {
         model.addAttribute("currentUserId", session.getAttribute("userId")); // 추가
         model.addAttribute("isMyColors", false); // 추가
 
-        return "colors/user-colors";
+        return "color/user-colors";
     }
 
     // 로그인한 사용자 자신의 색상만 조회하는 경우(세션)

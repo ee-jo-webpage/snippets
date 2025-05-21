@@ -311,6 +311,8 @@ document.querySelectorAll("#sortPopup div").forEach((item) => {
         // UI에 반영
         setSelectedSort(sortType); // 선택된 항목 강조
         renderHighlights(sorted);  // 정렬된 카드 렌더링
+
+        sortPopup.classList.remove("show");
     });
 });
 

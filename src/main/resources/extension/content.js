@@ -33,6 +33,55 @@ const CODE_BLOCK_SELECTORS = `
   .notion-code-block code
 `;
 
+// 코드 스니펫 언어 패턴 감지 함수
+function detectLanguage(content = "") {
+    // 각 언어별 고유 문법/패턴을 정의한 정규 표현식 리스트
+    const patterns = [
+        { lang: "JavaScript", regex: /\b(function|const|let|var|=>)\b/ },
+        { lang: "TypeScript", regex: /\binterface\b|\bimplements\b/ },
+        { lang: "Python", regex: /\bdef |import (os|sys|re|numpy|pandas)/ },
+        { lang: "Java", regex: /\bpublic\s+(class|static)|\bimport\s+java\./ },
+        { lang: "C", regex: /#include\s*<stdio\.h>/ },
+        { lang: "C++", regex: /#include\s*<iostream>/ },
+        { lang: "C#", regex: /\busing\s+System|class\s+\w+\s*{/ },
+        { lang: "Go", regex: /\bfunc\s+\w+\(|package\s+\w+/ },
+        { lang: "Rust", regex: /\bfn\s+\w+\s*\(|use\s+std::/ },
+        { lang: "PHP", regex: /<\?php\b/ },
+        { lang: "Ruby", regex: /\bdef\s+\w+|puts\s+/ },
+        { lang: "Kotlin", regex: /\bfun\s+\w+\(|val\s+\w+/ },
+        { lang: "Swift", regex: /\bfunc\s+\w+\(|import\s+Swift/ },
+        { lang: "Scala", regex: /\bobject\b|\bdef\b/ },
+        { lang: "Perl", regex: /\buse\s+strict;|\bmy\s+\$/ },
+        { lang: "Shell", regex: /#!\/bin\/bash|\becho\b/ },
+        {
+            lang: "HTML",
+            regex:
+                /<(html|head|body|div|span|a|p|ul|ol|li|h[1-6]|img|form|input|button|section|article|nav|footer|header|main|br|hr|table|thead|tbody|tr|td|th|label|textarea)[\s>]/i,
+        },
+        { lang: "CSS", regex: /[^{]+\s*{[^}]*}/ },
+        { lang: "SQL", regex: /\b(SELECT|INSERT|UPDATE|DELETE)\b/i },
+        { lang: "JSON", regex: /^\s*{[^]*}\s*$/ },
+        { lang: "XML", regex: /^\s*<\?xml\b/ },
+        { lang: "Markdown", regex: /^#{1,6}\s+/m },
+        { lang: "YAML", regex: /^[a-zA-Z0-9_-]+:\s+/ },
+        { lang: "Dockerfile", regex: /^\s*FROM\s+\w+/ },
+        { lang: "Makefile", regex: /^\s*\w+:\s+/ },
+        { lang: "Bash", regex: /#!\/bin\/bash/ },
+        { lang: "PowerShell", regex: /^\s*Get-/ },
+        { lang: "R", regex: /\bfunction\s*\(|<-|library\(/ },
+        { lang: "MATLAB", regex: /\bfunction\b.*=\s+\w+/ },
+        { lang: "Lua", regex: /\blocal\s+\w+\s*=\s*function\b/ },
+    ];
+
+    // 모든 패턴을 순회하며 일치하는 첫 번째 언어 반환
+    for (const { lang, regex } of patterns) {
+        if (regex.test(content)) return lang;
+    }
+
+    // 어떤 패턴과도 일치하지 않으면 "Unknown" 반환
+    return "unknown";
+}
+
 // 초기화 함수
 function init() {
     console.log("init()함수 호출!")
@@ -437,7 +486,7 @@ async function detectCodeBlocks() {
         // 언어 정보 추출 (예: class="language-js" → js)
         const classList = Array.from(block.classList);
         const langClass = classList.find((cls) => cls.startsWith("language-"));
-        const language = langClass ? langClass.replace("language-", "") : null;
+        const language = langClass ? langClass.replace("language-", "") : detectLanguage(codeText);
 
         // 기존 저장 버튼/색상 바 제거 (중복 방지)
         const existingBtn = wrapper.querySelector(".snippet-code-btn");

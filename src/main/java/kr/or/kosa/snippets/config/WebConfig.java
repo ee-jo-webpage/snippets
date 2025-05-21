@@ -12,10 +12,9 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
-            // .allowedOrigins("http://localhost:8090", CHROME_EXTENSION_ID)
-            .allowedOrigins("*")
+            .allowedOrigins("http://localhost:8090", CHROME_EXTENSION_ID)
             .allowedMethods("*")
-            .allowedHeaders("*");
-            // .allowCredentials(true);
+            .allowedHeaders("*")
+            .allowCredentials(true);
     }
 }

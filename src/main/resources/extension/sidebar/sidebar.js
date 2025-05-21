@@ -116,15 +116,15 @@ async function deleteSnippet(snippetId) {
         // 1. 로컬 highlights 불러오기
         const { highlights = [] } = await chrome.storage.local.get("highlights");
 
-        // 2. 삭제 대상 스니펫 찾기
+        // 2. 삭제 대상 찾기
         const target = highlights.find((h) => h.snippetId === snippetId);
 
-        // 3. 해당 항목 제외한 새 리스트 저장
+        // 3. 로컬에서 제거 후 저장
         const updated = highlights.filter((h) => h.snippetId !== snippetId);
         await chrome.storage.local.set({ highlights: updated });
         console.log("로컬에서 삭제됨:", snippetId);
 
-        // 4. content.js에 코드 버튼 재적용 요청
+        // 4. 코드 하이라이트 버튼 재적용
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             if (tabs[0]?.id) {
                 chrome.tabs.sendMessage(tabs[0].id, {
@@ -133,22 +133,21 @@ async function deleteSnippet(snippetId) {
             }
         });
 
-        // 5. 서버에도 DELETE 요청 (serverId가 있을 경우)
+        //  5. 서버에서 삭제 (background.js에 프록시 요청)
         if (target?.serverId) {
-            try {
-                const res = await fetch(
-                    `http://localhost:8090/api/snippets/${target.serverId}`,
-                    { method: "DELETE" }
-                );
-                if (!res.ok) {
-                    const msg = await res.text();
-                    console.warn("⚠️ 서버 삭제 실패:", msg);
-                } else {
-                    console.log("🛰️ 서버에서도 삭제 완료:", target.serverId);
+            chrome.runtime.sendMessage(
+                {
+                    action: "deleteSnippet",
+                    snippetId: target.serverId,
+                },
+                (response) => {
+                    if (response?.success) {
+                        console.log("🛰️ 서버에서 삭제 완료:", target.serverId);
+                    } else {
+                        console.warn("❌ 서버 삭제 실패:", response?.error);
+                    }
                 }
-            } catch (err) {
-                console.warn("⚠️ 서버 요청 실패 (무시 가능):", err.message);
-            }
+            );
         }
 
         // 6. content.js에 하이라이트 제거 요청
@@ -159,12 +158,11 @@ async function deleteSnippet(snippetId) {
             });
         });
 
-        // 7. 사이드바 UI에서 카드 제거
+        // 7. UI에서 카드 제거 + 다시 렌더링
         const card = document.querySelector(
             `.snippet-card[data-snippet-id="${snippetId}"]`
         );
         if (card) card.remove();
-        // UI 갱신: 남은 하이라이트 기반으로 다시 렌더링
         renderHighlights(updated);
     } catch (err) {
         console.error("삭제 처리 중 오류:", err);

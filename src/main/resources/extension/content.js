@@ -280,6 +280,7 @@ async function applyHighlight(colorId = 1) {
         sourceUrl: location.href,
         colorId,
         content: highlightText,
+        type: "TEXT",
     };
 
     // 서버 저장 요청 시도
@@ -902,6 +903,7 @@ async function saveCodeSnippet(
 
 // 스니펫 데이터를 서버로 전송하는 함수 (TEXT, CODE, IMG 공통)
 async function sendSnippetToServer(snippet) {
+    console.log(snippet);
     // 공통 필드
     const payload = {
         type: snippet.type || "TEXT",        // 스니펫 타입: TEXT, CODE, IMG
@@ -924,30 +926,49 @@ async function sendSnippetToServer(snippet) {
         payload.altText = snippet.altText || "";   // alt 텍스트 (선택)
     }
 
-    try {
-        // POST 요청으로 서버에 전송
-        const res = await fetch("http://localhost:8090/api/snippets", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-        });
+    // try {
+    //     // POST 요청으로 서버에 전송
+    //     const res = await fetch("http://localhost:8090/api/snippets", {
+    //         method: "POST",
+    //         headers: { "Content-Type": "application/json" },
+    //         body: JSON.stringify(payload),
+    //     });
+    //
+    //     // 실패 응답인 경우 경고 출력 후 null 반환
+    //     if (!res.ok) {
+    //         const error = await res.text();
+    //         console.warn("❌ 서버 오류:", error);
+    //         return null;
+    //     }
+    //
+    //     // 정상 응답: 서버에서 받은 snippetId 반환
+    //     const result = await res.json();
+    //     return result.snippetId;
+    // } catch (err) {
+    //     // 네트워크 또는 서버 연결 실패
+    //     console.warn("❌ 네트워크 오류:", err);
+    //     console.warn("⚠️ 현재 서버와 연결되어 있지 않습니다. 저장은 로컬에만 반영됩니다.");
+    //     return null;
+    // }
 
-        // 실패 응답인 경우 경고 출력 후 null 반환
-        if (!res.ok) {
-            const error = await res.text();
-            console.warn("❌ 서버 오류:", error);
-            return null;
-        }
-
-        // 정상 응답: 서버에서 받은 snippetId 반환
-        const result = await res.json();
-        return result.snippetId;
-    } catch (err) {
-        // 네트워크 또는 서버 연결 실패
-        console.warn("❌ 네트워크 오류:", err);
-        console.warn("⚠️ 현재 서버와 연결되어 있지 않습니다. 저장은 로컬에만 반영됩니다.");
-        return null;
-    }
+    // 프록시 요청으로 변경
+    return new Promise((resolve, reject) => {
+        chrome.runtime.sendMessage(
+            {
+                action: "sendSnippetToServer",
+                payload,
+            },
+            (response) => {
+                if (chrome.runtime.lastError) {
+                    reject(new Error(chrome.runtime.lastError.message));
+                } else if (response.success) {
+                    resolve(response.snippetId);
+                } else {
+                    reject(new Error(response.error));
+                }
+            }
+        );
+    });
 }
 
 // 코드 스니펫 수정 서버 전송 함수
@@ -961,28 +982,41 @@ function updateCodeSnippetMetadata(content, newColorId, memo) {
             if (item.type === "CODE" && item.content.trim() === content.trim()) {
                 // 서버에 저장된 경우 → 서버에도 PATCH 요청
                 if ("serverId" in item) {
-                    fetch(`http://localhost:8090/api/snippets/${item.serverId}`, {
-                        method: "PATCH",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ colorId: newColorId, memo }),
-                    })
-                        .then((res) => {
-                            if (!res.ok) {
-                                return res.text().then((msg) => {
-                                    console.warn("⚠️ 서버 코드 메모 수정 실패:", msg);
-                                });
-                            }
-                            console.log("🛰️ 서버 코드 메모 수정 완료:", item.serverId);
-                        })
-                        .catch((err) => {
-                            console.warn("⚠️ 서버 요청 실패:", err.message);
-                        });
+
+                    // fetch(`http://localhost:8090/api/snippets/${item.serverId}`, {
+                    //     method: "PATCH",
+                    //     headers: { "Content-Type": "application/json" },
+                    //     body: JSON.stringify({ colorId: newColorId, memo }),
+                    // })
+                    //     .then((res) => {
+                    //         if (!res.ok) {
+                    //             return res.text().then((msg) => {
+                    //                 console.warn("⚠️ 서버 코드 메모 수정 실패:", msg);
+                    //             });
+                    //         }
+                    //         console.log("🛰️ 서버 코드 메모 수정 완료:", item.serverId);
+                    //     })
+                    //     .catch((err) => {
+                    //         console.warn("⚠️ 서버 요청 실패:", err.message);
+                    //     });
+
+                    // 프록시 요청으로 변경
+                    chrome.runtime.sendMessage({
+                        action: "updateSnippet",
+                        snippetId: item.serverId,
+                        payload: { colorId: newColorId, memo },
+                    }, (response) => {
+                        if (response?.success) {
+                            console.log("🛰️ 서버 코드 메타 수정 완료:", item.serverId);
+                        } else {
+                            console.warn("❌ 서버 코드 메타 수정 실패:", response?.error);
+                        }
+                    });
                 }
 
                 // 로컬에서도 해당 항목 업데이트
                 return { ...item, colorId: newColorId, memo };
             }
-
             return item;
         });
 
@@ -998,52 +1032,46 @@ function updateCodeSnippetMetadata(content, newColorId, memo) {
 
 // 텍스트 스니펫 수정 서버 전송 함수
 function updateSnippetMetadata(snippetId, newColorId, memo) {
-    // 현재 문서 내에서 해당 snippetId를 가진 모든 하이라이트 영역 찾기
+    // 1. DOM에서 하이라이팅된 요소들의 색상 업데이트
     const targets = document.querySelectorAll(
         `snippet[data-snippet-id="${snippetId}"]`
     );
-
-    // 각 요소의 색상 속성/스타일 변경
     targets.forEach((el) => {
         el.setAttribute("data-color", newColorId);
         el.style.backgroundColor = colorMap[newColorId];
     });
 
-    // 로컬 하이라이트 목록 불러오기
+    // 2. 로컬 스토리지에서 하이라이트 목록 조회
     chrome.storage.local.get(["highlights"], (result) => {
         const highlights = result.highlights || [];
 
-        // 해당 snippetId에 해당하는 항목 업데이트
         const updated = highlights.map((item) => {
             if (item.snippetId === snippetId) {
-                // 서버에 저장된 경우 → 서버에 PATCH 요청
+                // ✅ 서버에 저장된 항목이라면 background로 PATCH 요청
                 if ("serverId" in item) {
-                    fetch(`http://localhost:8090/api/snippets/${item.serverId}`, {
-                        method: "PATCH",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ colorId: newColorId, memo }),
-                    })
-                        .then((res) => {
-                            if (!res.ok) {
-                                return res.text().then((msg) => {
-                                    console.warn("⚠️ 서버 색상/메모 변경 실패:", msg);
-                                });
+                    chrome.runtime.sendMessage(
+                        {
+                            action: "updateSnippet",
+                            snippetId: item.serverId,
+                            payload: { colorId: newColorId, memo },
+                        },
+                        (response) => {
+                            if (response?.success) {
+                                console.log("🛰️ 서버 색상/메모 변경 완료:", item.serverId);
+                            } else {
+                                console.warn("❌ 서버 색상/메모 변경 실패:", response?.error);
                             }
-                            console.log("🛰️ 서버 색상/메모 변경 완료:", item.serverId);
-                        })
-                        .catch((err) => {
-                            console.warn("⚠️ 서버 요청 실패:", err.message);
-                        });
+                        }
+                    );
                 }
 
-                // 로컬 항목도 업데이트
+                // 로컬 항목도 수정
                 return { ...item, colorId: newColorId, memo };
             }
-
             return item;
         });
 
-        // 로컬 하이라이트 반영 저장
+        // 3. 로컬 하이라이트 저장
         chrome.storage.local.set({ highlights: updated }, () => {
             console.log("✅ 색상/메모 업데이트 완료:", snippetId);
         });
@@ -1547,16 +1575,16 @@ function showImageSavePopup(imgUrl, altText, btnElement, isBackground = false) {
 
 // 이미지 스니펫을 저장하거나 수정하고 서버 및 로컬 스토리지에 반영하는 함수
 async function saveImageSnippet(imgUrl, altText, colorId, memo, btnElement) {
-    // 기존 저장된 스니펫 목록 불러오기
     const { highlights = [] } = await chrome.storage.local.get("highlights");
 
-    // 동일 이미지 URL로 저장된 스니펫 있는지 확인
-    let snippet = highlights.find((item) => item.type === "IMG" && item.imageUrl === imgUrl);
+    let snippet = highlights.find(
+        (item) => item.type === "IMG" && item.imageUrl === imgUrl
+    );
 
     let updated = [];
 
     if (snippet) {
-        // 수정 모드: 기존 정보 유지, 색상/메모만 갱신
+        // 수정 모드
         const serverId = snippet.serverId;
         const snippetId = snippet.snippetId;
 
@@ -1566,27 +1594,29 @@ async function saveImageSnippet(imgUrl, altText, colorId, memo, btnElement) {
             memo,
         };
 
-        // 수정한 스니펫으로 교체
         updated = highlights.map((item) =>
             item.snippetId === snippetId ? newSnippet : item
         );
 
-        // 서버에도 PATCH 요청 전송
+        // 프록시 요청 변경
         if (serverId) {
-            try {
-                await fetch(`http://localhost:8090/api/snippets/${serverId}`, {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ colorId, memo }),
-                });
-                console.log("🛰️ 서버 이미지 메타 수정 완료:", serverId);
-            } catch (err) {
-                console.warn("⚠️ 서버 이미지 수정 실패", err.message);
-            }
+            chrome.runtime.sendMessage(
+                {
+                    action: "updateSnippet",
+                    snippetId: serverId,
+                    payload: { colorId, memo },
+                },
+                (response) => {
+                    if (response?.success) {
+                        console.log("🛰️ 서버 이미지 메타 수정 완료:", serverId);
+                    } else {
+                        console.warn("❌ 서버 이미지 메타 수정 실패:", response?.error);
+                    }
+                }
+            );
         }
-
     } else {
-        // 신규 저장 모드
+        // 신규 저장
         snippet = {
             snippetId: crypto.randomUUID(),
             type: "IMG",
@@ -1600,7 +1630,6 @@ async function saveImageSnippet(imgUrl, altText, colorId, memo, btnElement) {
 
         updated = [...highlights, snippet];
 
-        // 서버에 신규 등록
         try {
             const serverId = await sendSnippetToServer(snippet);
             if (serverId) snippet.serverId = serverId;
@@ -1609,10 +1638,10 @@ async function saveImageSnippet(imgUrl, altText, colorId, memo, btnElement) {
         }
     }
 
-    // 로컬 저장소에 갱신
+    // 로컬 저장소 반영
     await chrome.storage.local.set({ highlights: updated });
 
-    // 버튼 텍스트 'edit'으로 변경
+    // UI 업데이트
     if (btnElement) btnElement.textContent = "edit";
     detectImageBlocks();
     detectBackgroundImageBlocks();

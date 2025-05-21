@@ -556,8 +556,8 @@
     <div class="header">
         <h1 th:text="${isMyColors ? '내 색상 모음' : '사용자 ' + userId + '의 색상'}">색상 모음</h1>
         <div class="navigation">
-            <a th:href="@{/color/all-colors}">전체 색상</a>
-            <a th:if="${!isMyColors}" th:href="@{/color/my-colors}">내 색상</a>
+<!--            <a th:if="${!isMyColors}" th:href="@{/color/user/{id}(id=${currentUserId})}">내 색상</a>-->
+            <a th:href="@{/color/available/{id}(id=${currentUserId})}">사용 가능한 색상</a>
 
             <button class="add-color-btn" onclick="openAddModal()">
                 🎨 새 색상 추가
@@ -572,7 +572,7 @@
                  th:text="${color.userId == currentUserId ? '내 색상' : '사용자 ' + color.userId}">
                 색상 소유자
             </div>
-            <div th:if="${color.userId == null}" class="owner-badge">기본 색상</div>
+
 
             <div class="color-preview" th:style="'background-color: ' + ${color.hexCode} + ';'">
                 <div class="color-hex-overlay" th:text="${color.hexCode}">#FFFFFF</div>
@@ -585,11 +585,16 @@
                 <!-- 수정/삭제 버튼 (내 색상일 때만 표시) -->
                 <div th:if="${color.userId == currentUserId or (isMyColors and color.userId != null)}" class="color-actions">
                     <button class="btn btn-edit"
-                            th:onclick="'openEditModal(\'' + ${color.colorId} + '\', \'' + ${color.name} + '\', \'' + ${color.hexCode} + '\')'">
+                            onclick="openEditModal(this)"
+                            th:data-color-id="${color.colorId}"
+                            th:data-name="${color.name}"
+                            th:data-hex-code="${color.hexCode}">
                         ✏️ 수정
                     </button>
                     <button class="btn btn-delete"
-                            th:onclick="'deleteColor(\'' + ${color.colorId} + '\', \'' + ${color.name} + '\')'">
+                            onclick="deleteColor(this)"
+                            th:data-color-id="${color.colorId}"
+                            th:data-name="${color.name}">
                         🗑️ 삭제
                     </button>
                 </div>
@@ -817,7 +822,11 @@
     });
 
     // 색상 수정 모달 관련 함수들 (기존 코드)
-    function openEditModal(colorId, name, hexCode) {
+    function openEditModal(buttonElement) {
+        const colorId = buttonElement.getAttribute('data-color-id');
+        const name = buttonElement.getAttribute('data-name');
+        const hexCode = buttonElement.getAttribute('data-hex-code');
+
         document.getElementById('editColorId').value = colorId;
         document.getElementById('editColorName').value = name;
         document.getElementById('editHexCode').value = hexCode;
@@ -880,7 +889,10 @@
     }
 
     // 색상 삭제
-    function deleteColor(colorId, name) {
+    function deleteColor(buttonElement) {
+        const colorId = buttonElement.getAttribute('data-color-id');
+        const name = buttonElement.getAttribute('data-name');
+
         if (confirm(`정말로 "${name}" 색상을 삭제하시겠습니까?`)) {
             // 동적으로 폼 생성하여 제출
             const form = document.createElement('form');

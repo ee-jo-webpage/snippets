@@ -1,6 +1,6 @@
 package kr.or.kosa.snippets.like.controller;
 
-import kr.or.kosa.snippets.like.model.Tag;
+import kr.or.kosa.snippets.like.model.LikeTag;
 import kr.or.kosa.snippets.like.service.LikeSnippetService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -22,20 +22,20 @@ public class TagRestController {
      */
     @GetMapping("/search")
     public List<String> searchTags(@RequestParam(value = "query", defaultValue = "") String query) {
-        List<Tag> allTags = likeSnippetService.getAllTags();
+        List<LikeTag> allLikeTags = likeSnippetService.getAllTags();
 
         // 검색어가 비어있으면 모든 태그 반환 (중복 제거)
         if (query.trim().isEmpty()) {
-            return allTags.stream()
-                    .map(Tag::getName)
+            return allLikeTags.stream()
+                    .map(LikeTag::getName)
                     .distinct()  // 중복 제거
                     .collect(Collectors.toList());
         }
 
         // 검색어로 필터링 (대소문자 구분 없이) + 중복 제거
-        return allTags.stream()
-                .filter(tag -> tag.getName().toLowerCase().contains(query.toLowerCase()))
-                .map(Tag::getName)
+        return allLikeTags.stream()
+                .filter(likeTag -> likeTag.getName().toLowerCase().contains(query.toLowerCase()))
+                .map(LikeTag::getName)
                 .distinct()  // 중복 제거
                 .collect(Collectors.toList());
     }
@@ -46,7 +46,7 @@ public class TagRestController {
     @GetMapping("/all")
     public List<String> getAllTags() {
         return likeSnippetService.getAllTags().stream()
-                .map(Tag::getName)
+                .map(LikeTag::getName)
                 .distinct()  // 중복 제거
                 .collect(Collectors.toList());
     }

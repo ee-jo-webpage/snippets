@@ -3,7 +3,7 @@ package kr.or.kosa.snippets.like.controller;
 import kr.or.kosa.snippets.config.AppConfig;
 import kr.or.kosa.snippets.like.mapper.LikeSnippetMapper;
 import kr.or.kosa.snippets.like.model.Snippet;
-import kr.or.kosa.snippets.like.model.Tag;
+import kr.or.kosa.snippets.like.model.LikeTag;
 import kr.or.kosa.snippets.like.service.LikeService;
 import kr.or.kosa.snippets.like.service.LikeSnippetService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +41,7 @@ public class LikeSnippetController {
         }
 
         // 스니펫 태그 조회
-        List<Tag> tags = likeSnippetService.getTagsBySnippetId(snippetId);
+        List<LikeTag> likeTags = likeSnippetService.getTagsBySnippetId(snippetId);
 
         // 좋아요 상태 확인
         boolean isLiked = likeService.isLiked(snippetId);
@@ -51,7 +51,7 @@ public class LikeSnippetController {
         snippet.setLikeCount((int) actualLikeCount);
 
         model.addAttribute("snippet", snippet);
-        model.addAttribute("tags", tags);
+        model.addAttribute("tags", likeTags);
         model.addAttribute("isLiked", isLiked);
         model.addAttribute("currentUserId", currentUserId);
 
@@ -107,9 +107,4 @@ public class LikeSnippetController {
         return "like/snippets";
     }
 
-    // 홈페이지 접속 시 인기 스니펫 페이지로 리다이렉트
-    @GetMapping("/ttt")
-    public String home() {
-        return "redirect:/popular-snippets";
-    }
 }

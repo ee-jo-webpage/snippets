@@ -90,11 +90,11 @@
         }
 
         /* 태그 자동완성 드롭다운 스타일 */
-        .tag-autocomplete {
+        .likeTag-autocomplete {
             position: relative;
         }
 
-        .tag-dropdown {
+        .likeTag-dropdown {
             position: absolute;
             top: 100%;
             left: 0;
@@ -110,23 +110,23 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        .tag-dropdown-item {
+        .likeTag-dropdown-item {
             padding: 10px 15px;
             cursor: pointer;
             transition: background-color 0.2s;
             border-bottom: 1px solid #f0f0f0;
         }
 
-        .tag-dropdown-item:hover {
+        .likeTag-dropdown-item:hover {
             background-color: #f8f9fa;
         }
 
-        .tag-dropdown-item.highlighted {
+        .likeTag-dropdown-item.highlighted {
             background-color: #007bff;
             color: white;
         }
 
-        .tag-dropdown-item:last-child {
+        .likeTag-dropdown-item:last-child {
             border-bottom: none;
         }
 
@@ -192,7 +192,7 @@
             font-size: 14px;
         }
 
-        .filter-tag {
+        .filter-likeTag {
             display: inline-block;
             background-color: #007bff;
             color: white;
@@ -416,14 +416,14 @@
                 <input type="number" id="minLikes" name="minLikes"
                        placeholder="예: 5" min="0" th:value="${searchMinLikes}">
             </div>
-            <div class="form-group tag-autocomplete">
+            <div class="form-group likeTag-autocomplete">
                 <label for="tagSearch">태그 검색</label>
                 <input type="text" id="tagSearch" name="tagSearch"
                        placeholder="태그를 입력하세요..."
                        th:value="${searchTagName}"
                        autocomplete="off">
                 <input type="hidden" id="tagName" name="tagName" th:value="${searchTagName}">
-                <div class="tag-dropdown" id="tagDropdown"></div>
+                <div class="likeTag-dropdown" id="tagDropdown"></div>
             </div>
             <div class="button-group">
                 <button type="submit" class="search-btn">
@@ -443,16 +443,16 @@
     인기 스니펫 TOP 100 중 <span th:text="${totalSnippets}">0</span>개가 검색되었습니다.
     <div class="filters">
         <strong>적용된 필터:</strong>
-        <span th:if="${searchType != null and searchType != ''}" class="filter-tag">
+        <span th:if="${searchType != null and searchType != ''}" class="filter-likeTag">
             유형: <span th:text="${searchType}"></span>
         </span>
-        <span th:if="${searchKeyword != null and searchKeyword != ''}" class="filter-tag">
+        <span th:if="${searchKeyword != null and searchKeyword != ''}" class="filter-likeTag">
             키워드: <span th:text="${searchKeyword}"></span>
         </span>
-        <span th:if="${searchMinLikes != null and searchMinLikes > 0}" class="filter-tag">
+        <span th:if="${searchMinLikes != null and searchMinLikes > 0}" class="filter-likeTag">
             최소 좋아요: <span th:text="${searchMinLikes}"></span>
         </span>
-        <span th:if="${searchTagName != null and searchTagName != ''}" class="filter-tag">
+        <span th:if="${searchTagName != null and searchTagName != ''}" class="filter-likeTag">
             태그: <span th:text="${searchTagName}"></span>
         </span>
     </div>
@@ -546,7 +546,7 @@
         // 키보드 네비게이션
         $('#tagSearch').on('keydown', function(e) {
             const dropdown = $('#tagDropdown');
-            const items = dropdown.find('.tag-dropdown-item');
+            const items = dropdown.find('.likeTag-dropdown-item');
 
             switch(e.key) {
                 case 'ArrowDown':
@@ -573,7 +573,7 @@
 
         // 클릭으로 드롭다운 닫기
         $(document).on('click', function(e) {
-            if (!$(e.target).closest('.tag-autocomplete').length) {
+            if (!$(e.target).closest('.likeTag-autocomplete').length) {
                 hideTagDropdown();
             }
         });
@@ -581,12 +581,12 @@
         // 태그 검색 함수
         function searchTags(query) {
             $.ajax({
-                url: '/api/tags/search',
+                url: '/api/likeTags/search',
                 type: 'GET',
                 data: { query: query },
-                success: function(tags) {
-                    currentTags = tags;
-                    showTagDropdown(tags, query);
+                success: function(likeTags) {
+                    currentTags = likeTags;
+                    showTagDropdown(likeTags, query);
                 },
                 error: function() {
                     console.error('태그 검색 실패');
@@ -596,18 +596,18 @@
         }
 
         // 태그 드롭다운 표시
-        function showTagDropdown(tags, query) {
+        function showTagDropdown(likeTags, query) {
             const dropdown = $('#tagDropdown');
             dropdown.empty();
 
-            if (tags.length === 0) {
+            if (likeTags.length === 0) {
                 dropdown.append('<div class="no-results-dropdown">검색 결과가 없습니다</div>');
             } else {
-                tags.forEach(function(tag, index) {
-                    const item = $('<div class="tag-dropdown-item"></div>')
-                        .text(tag)
+                likeTags.forEach(function(likeTag, index) {
+                    const item = $('<div class="likeTag-dropdown-item"></div>')
+                        .text(likeTag)
                         .on('click', function() {
-                            selectTag(tag);
+                            selectTag(likeTag);
                         });
                     dropdown.append(item);
                 });

@@ -356,15 +356,23 @@ chrome.storage.local.get("highlights", (result) => {
 
 chrome.storage.onChanged.addListener((changes, area) => {
     if (area === "local" && changes.highlights) {
-        // 삭제 흐름에서는 renderHighlights 호출 생략 (deleteSnippet 내부에서 처리됨)
         const newHighlights = changes.highlights.newValue || [];
-
-        // 만약 추가된 경우만 애니메이션 렌더링 허용
         const oldHighlights = changes.highlights.oldValue || [];
+
+        let lastAddedId = null;
+
+        // 새로 추가된 경우에만 lastAddedId 부여
         if (newHighlights.length > oldHighlights.length) {
-            const last = newHighlights[newHighlights.length - 1];
-            const lastId = last?.snippetId;
-            renderHighlights(newHighlights, lastId);
+            lastAddedId = newHighlights[newHighlights.length - 1]?.snippetId;
+        }
+
+        // 삭제된 항목 있는 경우에는 deleteSnippet 쪽에서 처리하므로 무시
+        const deleted = oldHighlights.filter(
+            (prev) => !newHighlights.some((curr) => curr.snippetId === prev.snippetId)
+        );
+
+        if (deleted.length === 0) {
+            renderHighlights(newHighlights, lastAddedId);
         }
     }
 });

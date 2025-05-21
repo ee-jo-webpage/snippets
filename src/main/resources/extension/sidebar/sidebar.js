@@ -10,7 +10,7 @@ const colorMap = {
 };
 
 // 사이드바에 하이라이트된 스니펫 목록을 카드 형식으로 렌더링하는 함수
-function renderHighlights(highlights) {
+function renderHighlights(highlights, lastAddedId = null) {
     const root = document.getElementById("sidebar-root");
     root.innerHTML = ""; // 기존 목록 초기화
 
@@ -38,6 +38,10 @@ function renderHighlights(highlights) {
         card.className = "snippet-card";
         card.dataset.snippetId = h.snippetId;
         card.style.backgroundColor = colorMap[h.colorId] || "#FFFF88";
+
+        if (h.snippetId === lastAddedId) {
+            card.classList.add("animate-in");
+        }
 
         // ▶ 스니펫 내용 미리보기 or 썸네일
         const contentDiv = document.createElement("div");
@@ -179,8 +183,14 @@ async function deleteSnippet(snippetId) {
         const card = document.querySelector(
             `.snippet-card[data-snippet-id="${snippetId}"]`
         );
-        if (card) card.remove();
-        renderHighlights(updated);
+
+        if (card) {
+            card.classList.add("animate-out");
+            card.addEventListener("animationend", () => {
+                card.remove();
+                renderHighlights(updated); // 애니메이션 후 다시 렌더링
+            }, {once: true}); // 애니메이션 시간과 동일
+        }
 
         // 삭제된 이미지 스니펫이면 → 이미지 위 버튼 텍스트를 "save"로 바꿈
         if (target?.type === "IMG") {
@@ -200,11 +210,23 @@ async function deleteSnippet(snippetId) {
 }
 
 // 정렬 팝업 토글 버튼 이벤트 핸들러
-document.getElementById("sortToggleBtn").addEventListener("click", () => {
-    const popup = document.getElementById("sortPopup");
+const sortToggleBtn = document.getElementById("sortToggleBtn");
+const sortPopup = document.getElementById("sortPopup");
 
-    // 현재 표시 여부에 따라 토글 처리
-    popup.style.display = popup.style.display === "none" ? "block" : "none";
+sortToggleBtn.addEventListener("click", (e) => {
+    e.stopPropagation(); // 바깥 클릭 처리 방지
+    sortPopup.classList.toggle("show");
+});
+
+// 바깥 클릭 시 팝업 닫기
+document.addEventListener("click", (e) => {
+    if (
+        sortPopup.classList.contains("show") &&
+        !sortPopup.contains(e.target) &&
+        !sortToggleBtn.contains(e.target)
+    ) {
+        sortPopup.classList.remove("show");
+    }
 });
 
 // 초기 정렬 세팅 함수
@@ -289,7 +311,6 @@ document.querySelectorAll("#sortPopup div").forEach((item) => {
         // UI에 반영
         setSelectedSort(sortType); // 선택된 항목 강조
         renderHighlights(sorted);  // 정렬된 카드 렌더링
-        document.getElementById("sortPopup").style.display = "none"; // 팝업 닫기
     });
 });
 
@@ -318,19 +339,30 @@ document.addEventListener("DOMContentLoaded", () => {
     if (powerBtn) {
         powerBtn.addEventListener("click", () => {
             // 부모(content.js)에게 메시지 보냄
-            window.parent.postMessage({ type: "CLOSE_SIDEBAR_IFRAME" }, "*");
+            window.parent.postMessage({type: "CLOSE_SIDEBAR_IFRAME"}, "*");
         });
     }
 });
 
 chrome.storage.local.get("highlights", (result) => {
-    console.log("highlights 호출!")
-    renderHighlights(result.highlights || []);
+    const highlights = result.highlights || [];
+    const lastAdded = highlights[highlights.length - 1];
+    const lastAddedId = lastAdded?.snippetId;
+    renderHighlights(highlights, lastAddedId);
 });
+
 
 chrome.storage.onChanged.addListener((changes, area) => {
     if (area === "local" && changes.highlights) {
-        renderHighlights(changes.highlights.newValue || []);
-        console.log("🔁 로컬 스토리지 변경 감지됨");
+        // 삭제 흐름에서는 renderHighlights 호출 생략 (deleteSnippet 내부에서 처리됨)
+        const newHighlights = changes.highlights.newValue || [];
+
+        // 만약 추가된 경우만 애니메이션 렌더링 허용
+        const oldHighlights = changes.highlights.oldValue || [];
+        if (newHighlights.length > oldHighlights.length) {
+            const last = newHighlights[newHighlights.length - 1];
+            const lastId = last?.snippetId;
+            renderHighlights(newHighlights, lastId);
+        }
     }
 });

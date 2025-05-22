@@ -10,7 +10,7 @@ const colorMap = {
 };
 
 // 사이드바에 하이라이트된 스니펫 목록을 카드 형식으로 렌더링하는 함수
-function renderHighlights(highlights) {
+function renderHighlights(highlights, lastAddedId = null) {
     const root = document.getElementById("sidebar-root");
     root.innerHTML = ""; // 기존 목록 초기화
 
@@ -39,10 +39,30 @@ function renderHighlights(highlights) {
         card.dataset.snippetId = h.snippetId;
         card.style.backgroundColor = colorMap[h.colorId] || "#FFFF88";
 
-        // ▶ 스니펫 내용 미리보기 (100자 이내)
+        if (h.snippetId === lastAddedId) {
+            card.classList.add("animate-in");
+        }
+
+        // ▶ 스니펫 내용 미리보기 or 썸네일
         const contentDiv = document.createElement("div");
         contentDiv.className = "snippet-content";
-        contentDiv.textContent = `“${extractPreview(h)}”`;
+
+        if (h.type === "IMG" && h.imageUrl) {
+            // 이미지 스니펫일 경우 썸네일 이미지로 표시
+            const img = document.createElement("img");
+            img.src = h.imageUrl;
+            img.alt = h.altText || "image";
+            img.style = `
+                        width: 100%;
+                        height: 120px;
+                        object-fit: cover;
+                        border-radius: 6px;
+                        `;
+            contentDiv.appendChild(img);
+        } else {
+            // TEXT, CODE 스니펫은 요약 미리보기
+            contentDiv.textContent = `“${extractPreview(h)}”`;
+        }
 
         // ▶ 카드 하단 푸터 구성 (출처 + 언어 + 삭제 버튼)
         const footer = document.createElement("div");
@@ -91,6 +111,7 @@ function renderHighlights(highlights) {
         // 루트에 카드 추가
         root.appendChild(card);
     });
+
 }
 
 // content 요약 정보 추출 함수
@@ -114,18 +135,18 @@ function getDomain(url) {
 async function deleteSnippet(snippetId) {
     try {
         // 1. 로컬 highlights 불러오기
-        const { highlights = [] } = await chrome.storage.local.get("highlights");
+        const {highlights = []} = await chrome.storage.local.get("highlights");
 
-        // 2. 삭제 대상 스니펫 찾기
+        // 2. 삭제 대상 찾기
         const target = highlights.find((h) => h.snippetId === snippetId);
 
-        // 3. 해당 항목 제외한 새 리스트 저장
+        // 3. 로컬에서 제거 후 저장
         const updated = highlights.filter((h) => h.snippetId !== snippetId);
-        await chrome.storage.local.set({ highlights: updated });
+        await chrome.storage.local.set({highlights: updated});
         console.log("로컬에서 삭제됨:", snippetId);
 
-        // 4. content.js에 코드 버튼 재적용 요청
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        // 4. 코드 하이라이트 버튼 재적용
+        chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
             if (tabs[0]?.id) {
                 chrome.tabs.sendMessage(tabs[0].id, {
                     action: "refreshCodeButtons",
@@ -133,55 +154,84 @@ async function deleteSnippet(snippetId) {
             }
         });
 
-        // 5. 서버에도 DELETE 요청 (serverId가 있을 경우)
+        //  5. 서버에서 삭제 (background.js에 프록시 요청)
         if (target?.serverId) {
-            try {
-                const res = await fetch(
-                    `http://localhost:8090/api/snippets/${target.serverId}`,
-                    { method: "DELETE" }
-                );
-                if (!res.ok) {
-                    const msg = await res.text();
-                    console.warn("⚠️ 서버 삭제 실패:", msg);
-                } else {
-                    console.log("🛰️ 서버에서도 삭제 완료:", target.serverId);
+            chrome.runtime.sendMessage(
+                {
+                    action: "deleteSnippet",
+                    snippetId: target.serverId,
+                },
+                (response) => {
+                    if (response?.success) {
+                        console.log("🛰️ 서버에서 삭제 완료:", target.serverId);
+                    } else {
+                        console.warn("❌ 서버 삭제 실패:", response?.error);
+                    }
                 }
-            } catch (err) {
-                console.warn("⚠️ 서버 요청 실패 (무시 가능):", err.message);
-            }
+            );
         }
 
         // 6. content.js에 하이라이트 제거 요청
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
             chrome.tabs.sendMessage(tabs[0].id, {
                 action: "removeHighlight",
                 snippetId,
             });
         });
 
-        // 7. 사이드바 UI에서 카드 제거
+        // 7. UI에서 카드 제거 + 다시 렌더링
         const card = document.querySelector(
             `.snippet-card[data-snippet-id="${snippetId}"]`
         );
-        if (card) card.remove();
-        // UI 갱신: 남은 하이라이트 기반으로 다시 렌더링
-        renderHighlights(updated);
+
+        if (card) {
+            card.classList.add("animate-out");
+            card.addEventListener("animationend", () => {
+                card.remove();
+                renderHighlights(updated); // 애니메이션 후 다시 렌더링
+            }, {once: true}); // 애니메이션 시간과 동일
+        }
+
+        // 삭제된 이미지 스니펫이면 → 이미지 위 버튼 텍스트를 "save"로 바꿈
+        if (target?.type === "IMG") {
+            // 이미지와 배경 이미지 모두 재스캔하여 버튼 상태 초기화
+            chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+                if (tabs[0]?.id) {
+                    chrome.tabs.sendMessage(tabs[0].id, {
+                        action: "refreshImageButtons", // content.js 에서 이 메시지 처리
+                    });
+                }
+            });
+        }
+
     } catch (err) {
         console.error("삭제 처리 중 오류:", err);
     }
 }
 
 // 정렬 팝업 토글 버튼 이벤트 핸들러
-document.getElementById("sortToggleBtn").addEventListener("click", () => {
-    const popup = document.getElementById("sortPopup");
+const sortToggleBtn = document.getElementById("sortToggleBtn");
+const sortPopup = document.getElementById("sortPopup");
 
-    // 현재 표시 여부에 따라 토글 처리
-    popup.style.display = popup.style.display === "none" ? "block" : "none";
+sortToggleBtn.addEventListener("click", (e) => {
+    e.stopPropagation(); // 바깥 클릭 처리 방지
+    sortPopup.classList.toggle("show");
+});
+
+// 바깥 클릭 시 팝업 닫기
+document.addEventListener("click", (e) => {
+    if (
+        sortPopup.classList.contains("show") &&
+        !sortPopup.contains(e.target) &&
+        !sortToggleBtn.contains(e.target)
+    ) {
+        sortPopup.classList.remove("show");
+    }
 });
 
 // 초기 정렬 세팅 함수
 (async function initSort() {
-    const { sortType } = await chrome.storage.local.get("sortType");
+    const {sortType} = await chrome.storage.local.get("sortType");
 
     // 저장된 정렬 타입이 있다면 UI에 반영
     if (sortType) {
@@ -193,44 +243,44 @@ document.getElementById("sortToggleBtn").addEventListener("click", () => {
 function detectLanguage(content = "") {
     // 각 언어별 고유 문법/패턴을 정의한 정규 표현식 리스트
     const patterns = [
-        { lang: "JavaScript", regex: /\b(function|const|let|var|=>)\b/ },
-        { lang: "TypeScript", regex: /\binterface\b|\bimplements\b/ },
-        { lang: "Python", regex: /\bdef |import (os|sys|re|numpy|pandas)/ },
-        { lang: "Java", regex: /\bpublic\s+(class|static)|\bimport\s+java\./ },
-        { lang: "C", regex: /#include\s*<stdio\.h>/ },
-        { lang: "C++", regex: /#include\s*<iostream>/ },
-        { lang: "C#", regex: /\busing\s+System|class\s+\w+\s*{/ },
-        { lang: "Go", regex: /\bfunc\s+\w+\(|package\s+\w+/ },
-        { lang: "Rust", regex: /\bfn\s+\w+\s*\(|use\s+std::/ },
-        { lang: "PHP", regex: /<\?php\b/ },
-        { lang: "Ruby", regex: /\bdef\s+\w+|puts\s+/ },
-        { lang: "Kotlin", regex: /\bfun\s+\w+\(|val\s+\w+/ },
-        { lang: "Swift", regex: /\bfunc\s+\w+\(|import\s+Swift/ },
-        { lang: "Scala", regex: /\bobject\b|\bdef\b/ },
-        { lang: "Perl", regex: /\buse\s+strict;|\bmy\s+\$/ },
-        { lang: "Shell", regex: /#!\/bin\/bash|\becho\b/ },
+        {lang: "JavaScript", regex: /\b(function|const|let|var|=>)\b/},
+        {lang: "TypeScript", regex: /\binterface\b|\bimplements\b/},
+        {lang: "Python", regex: /\bdef |import (os|sys|re|numpy|pandas)/},
+        {lang: "Java", regex: /\bpublic\s+(class|static)|\bimport\s+java\./},
+        {lang: "C", regex: /#include\s*<stdio\.h>/},
+        {lang: "C++", regex: /#include\s*<iostream>/},
+        {lang: "C#", regex: /\busing\s+System|class\s+\w+\s*{/},
+        {lang: "Go", regex: /\bfunc\s+\w+\(|package\s+\w+/},
+        {lang: "Rust", regex: /\bfn\s+\w+\s*\(|use\s+std::/},
+        {lang: "PHP", regex: /<\?php\b/},
+        {lang: "Ruby", regex: /\bdef\s+\w+|puts\s+/},
+        {lang: "Kotlin", regex: /\bfun\s+\w+\(|val\s+\w+/},
+        {lang: "Swift", regex: /\bfunc\s+\w+\(|import\s+Swift/},
+        {lang: "Scala", regex: /\bobject\b|\bdef\b/},
+        {lang: "Perl", regex: /\buse\s+strict;|\bmy\s+\$/},
+        {lang: "Shell", regex: /#!\/bin\/bash|\becho\b/},
         {
             lang: "HTML",
             regex:
                 /<(html|head|body|div|span|a|p|ul|ol|li|h[1-6]|img|form|input|button|section|article|nav|footer|header|main|br|hr|table|thead|tbody|tr|td|th|label|textarea)[\s>]/i,
         },
-        { lang: "CSS", regex: /[^{]+\s*{[^}]*}/ },
-        { lang: "SQL", regex: /\b(SELECT|INSERT|UPDATE|DELETE)\b/i },
-        { lang: "JSON", regex: /^\s*{[^]*}\s*$/ },
-        { lang: "XML", regex: /^\s*<\?xml\b/ },
-        { lang: "Markdown", regex: /^#{1,6}\s+/m },
-        { lang: "YAML", regex: /^[a-zA-Z0-9_-]+:\s+/ },
-        { lang: "Dockerfile", regex: /^\s*FROM\s+\w+/ },
-        { lang: "Makefile", regex: /^\s*\w+:\s+/ },
-        { lang: "Bash", regex: /#!\/bin\/bash/ },
-        { lang: "PowerShell", regex: /^\s*Get-/ },
-        { lang: "R", regex: /\bfunction\s*\(|<-|library\(/ },
-        { lang: "MATLAB", regex: /\bfunction\b.*=\s+\w+/ },
-        { lang: "Lua", regex: /\blocal\s+\w+\s*=\s*function\b/ },
+        {lang: "CSS", regex: /[^{]+\s*{[^}]*}/},
+        {lang: "SQL", regex: /\b(SELECT|INSERT|UPDATE|DELETE)\b/i},
+        {lang: "JSON", regex: /^\s*{[^]*}\s*$/},
+        {lang: "XML", regex: /^\s*<\?xml\b/},
+        {lang: "Markdown", regex: /^#{1,6}\s+/m},
+        {lang: "YAML", regex: /^[a-zA-Z0-9_-]+:\s+/},
+        {lang: "Dockerfile", regex: /^\s*FROM\s+\w+/},
+        {lang: "Makefile", regex: /^\s*\w+:\s+/},
+        {lang: "Bash", regex: /#!\/bin\/bash/},
+        {lang: "PowerShell", regex: /^\s*Get-/},
+        {lang: "R", regex: /\bfunction\s*\(|<-|library\(/},
+        {lang: "MATLAB", regex: /\bfunction\b.*=\s+\w+/},
+        {lang: "Lua", regex: /\blocal\s+\w+\s*=\s*function\b/},
     ];
 
     // 모든 패턴을 순회하며 일치하는 첫 번째 언어 반환
-    for (const { lang, regex } of patterns) {
+    for (const {lang, regex} of patterns) {
         if (regex.test(content)) return lang;
     }
 
@@ -243,7 +293,7 @@ document.querySelectorAll("#sortPopup div").forEach((item) => {
     item.addEventListener("click", async (e) => {
         const sortType = e.target.dataset.sort; // "recent" | "oldest" | "color"
 
-        const { highlights = [] } = await chrome.storage.local.get("highlights");
+        const {highlights = []} = await chrome.storage.local.get("highlights");
         let sorted = [...highlights]; // 원본 복사 후 정렬
 
         // 정렬 조건별로 처리
@@ -256,12 +306,13 @@ document.querySelectorAll("#sortPopup div").forEach((item) => {
         }
 
         // 정렬 상태를 로컬에 저장
-        await chrome.storage.local.set({ highlights: sorted, sortType });
+        await chrome.storage.local.set({highlights: sorted, sortType});
 
         // UI에 반영
         setSelectedSort(sortType); // 선택된 항목 강조
         renderHighlights(sorted);  // 정렬된 카드 렌더링
-        document.getElementById("sortPopup").style.display = "none"; // 팝업 닫기
+
+        sortPopup.classList.remove("show");
     });
 });
 
@@ -284,14 +335,44 @@ document.addEventListener("click", async (e) => {
     }
 });
 
-chrome.storage.local.get("highlights", (result) => {
-    console.log("highlights 호출!")
-    renderHighlights(result.highlights || []);
+// 사이드바 종료 이벤트 핸들러
+document.addEventListener("DOMContentLoaded", () => {
+    const powerBtn = document.querySelector(".sidebar-power-btn");
+    if (powerBtn) {
+        powerBtn.addEventListener("click", () => {
+            // 부모(content.js)에게 메시지 보냄
+            window.parent.postMessage({type: "CLOSE_SIDEBAR_IFRAME"}, "*");
+        });
+    }
 });
+
+chrome.storage.local.get("highlights", (result) => {
+    const highlights = result.highlights || [];
+    const lastAdded = highlights[highlights.length - 1];
+    const lastAddedId = lastAdded?.snippetId;
+    renderHighlights(highlights, lastAddedId);
+});
+
 
 chrome.storage.onChanged.addListener((changes, area) => {
     if (area === "local" && changes.highlights) {
-        renderHighlights(changes.highlights.newValue || []);
-        console.log("🔁 로컬 스토리지 변경 감지됨");
+        const newHighlights = changes.highlights.newValue || [];
+        const oldHighlights = changes.highlights.oldValue || [];
+
+        let lastAddedId = null;
+
+        // 새로 추가된 경우에만 lastAddedId 부여
+        if (newHighlights.length > oldHighlights.length) {
+            lastAddedId = newHighlights[newHighlights.length - 1]?.snippetId;
+        }
+
+        // 삭제된 항목 있는 경우에는 deleteSnippet 쪽에서 처리하므로 무시
+        const deleted = oldHighlights.filter(
+            (prev) => !newHighlights.some((curr) => curr.snippetId === prev.snippetId)
+        );
+
+        if (deleted.length === 0) {
+            renderHighlights(newHighlights, lastAddedId);
+        }
     }
 });

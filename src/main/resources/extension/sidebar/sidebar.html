@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8"/>
     <title>My Snippets</title>
-    <link rel="stylesheet" href="sidebar.css" />
+    <link rel="stylesheet" href="sidebar.css"/>
 </head>
 <body>
     <div id="sidebar-wrapper">
         <header class="sidebar-header">
             <span class="title">My Snippets</span>
             <button class="dropdown-btn" id="sortToggleBtn">☰</button>
-            <div id="sortPopup" class="sort-popup" style="display: none">
+            <div id="sortPopup" class="sort-popup">
                 <div data-sort="recent">Most recent first</div>
                 <div data-sort="oldest">Oldest first</div>
                 <div data-sort="color">Color order</div>
@@ -19,7 +19,9 @@
 
         <main id="sidebar-root"></main>
 
-        <footer class="sidebar-footer">Hello, World</footer>
+        <footer class="sidebar-footer">
+            <div class="sidebar-power-btn" title="닫기">⏻</div>
+        </footer>
     </div>
     <script src="sidebar.js"></script>
 </body>

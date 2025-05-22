@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>스니펫 목록</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 600;
+        }
+
+        .snippet-count {
+            margin-top: 0.5rem;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .toolbar {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #eee;
+            background: #f8f9fa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .filter-select {
+            padding: 0.75rem 1rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            background: white;
+            min-width: 120px;
+        }
+
+        .btn-new {
+            background: #48bb78;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: background 0.2s ease;
+        }
+
+        .btn-new:hover {
+            background: #38a169;
+            text-decoration: none;
+            color: white;
+        }
+
+        .snippets-grid {
+            padding: 2rem;
+        }
+
+        .snippet-card {
+            border: 1px solid #e1e5e9;
+            border-radius: 12px;
+            padding: 1.5rem;
+            background: white;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .snippet-card:hover {
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+
+        .snippet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .snippet-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin: 0;
+            flex: 1;
+            margin-right: 1rem;
+        }
+
+        .snippet-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-view {
+            background: #4facfe;
+            color: white;
+        }
+
+        .btn-view:hover {
+            background: #3182ce;
+            color: white;
+            text-decoration: none;
+        }
+
+        .btn-edit {
+            background: #ed8936;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #dd6b20;
+            color: white;
+            text-decoration: none;
+        }
+
+        .btn-bookmark {
+            background: #f7fafc;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+            min-width: 100px;
+        }
+
+        .btn-bookmark:hover {
+            background: #edf2f7;
+            border-color: #cbd5e0;
+        }
+
+        .btn-bookmark.bookmarked {
+            background: #ffd700;
+            color: #744210;
+            border-color: #f6e05e;
+        }
+
+        .btn-bookmark.bookmarked:hover {
+            background: #f6e05e;
+            border-color: #ecc94b;
+        }
+
+        .snippet-meta {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .meta-item {
+            background: #edf2f7;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        .meta-item.type-code {
+            background: #bee3f8;
+            color: #2b6cb0;
+        }
+
+        .meta-item.type-text {
+            background: #c6f6d5;
+            color: #2f855a;
+        }
+
+        .meta-item.type-img {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .snippet-content {
+            background: #f7fafc;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #4facfe;
+            margin-bottom: 1rem;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            color: #2d3748;
+        }
+
+        .snippet-id {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: #4facfe;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #718096;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #4a5568;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #48bb78;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            display: none;
+            font-weight: 500;
+        }
+
+        .toast.error {
+            background: #f56565;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-bar {
+                min-width: auto;
+            }
+
+            .snippet-header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .snippet-actions {
+                align-self: stretch;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>💻 스니펫 모음</h1>
+        <div class="snippet-count" th:text="|총 ${#lists.size(snippets)}개의 스니펫|">총 0개의 스니펫</div>
+    </div>
+
+    <div class="toolbar">
+        <div class="search-bar">
+            <input type="text"
+                   id="searchInput"
+                   class="search-input"
+                   placeholder="스니펫 검색 (제목, 메모, 내용...)">
+            <select id="typeFilter" class="filter-select">
+                <option value="">모든 타입</option>
+                <option value="CODE">코드</option>
+                <option value="TEXT">텍스트</option>
+                <option value="IMG">이미지</option>
+            </select>
+        </div>
+        <a th:href="@{/snippets/new}" class="btn-new">
+            ➕ 새 스니펫 추가
+        </a>
+    </div>
+
+    <div th:if="${snippets == null or #lists.isEmpty(snippets)}" class="empty-state">
+        <h3>📝 등록된 스니펫이 없습니다</h3>
+        <p>첫 번째 스니펫을 등록해보세요!</p>
+        <a th:href="@{/snippets/new}" class="btn-new">스니펫 추가하기</a>
+    </div>
+
+    <div th:unless="${snippets == null or #lists.isEmpty(snippets)}" class="snippets-grid" id="snippetsContainer">
+        <div th:each="snippet : ${snippets}"
+             class="snippet-card"
+             th:data-type="${snippet.type?.name()}"
+             th:data-user-id="${snippet.userId}"
+             th:data-memo="${snippet.memo}">
+
+            <div class="snippet-id" th:text="'#' + ${snippet.snippetId}">ID</div>
+
+            <div class="snippet-header">
+                <h3 class="snippet-title" th:text="${snippet.memo ?: '제목 없음'}">
+                    스니펫 제목
+                </h3>
+                <div class="snippet-actions">
+                    <a th:href="@{/snippets/{id}(id=${snippet.snippetId})}" class="btn btn-view">
+                        👁️ 상세보기
+                    </a>
+                    <a th:href="@{/snippets/edit/{id}(id=${snippet.snippetId})}" class="btn btn-edit">
+                        ✏️ 수정
+                    </a>
+                    <button class="btn btn-bookmark"
+                            th:data-snippet-id="${snippet.snippetId}"
+                            onclick="toggleBookmark(this)">
+                        <span class="bookmark-icon">⭐</span>
+                        <span class="bookmark-text">북마크</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="snippet-meta">
+                    <span class="meta-item"
+                          th:classappend="${snippet.type?.name() == 'CODE' ? 'type-code' : (snippet.type?.name() == 'TEXT' ? 'type-text' : (snippet.type?.name() == 'IMG' ? 'type-img' : ''))}"
+                          th:text="${snippet.type?.name() ?: '타입 없음'}">타입</span>
+                <span class="meta-item" th:if="${snippet.userId}" th:text="'작성자: 사용자' + ${snippet.userId}">작성자</span>
+                <span class="meta-item" th:text="'생성일: ' + ${snippet.createdAt ?: '날짜 없음'}">생성일</span>
+                <span class="meta-item" th:if="${snippet.sourceUrl}" th:text="'출처 있음'">출처</span>
+            </div>
+
+            <div class="snippet-content" th:if="${snippet.memo}">
+                <div th:text="${#strings.abbreviate(snippet.memo, 300)}">
+                    스니펫 내용이 여기에 표시됩니다...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 토스트 메시지 -->
+<div id="toast" class="toast"></div>
+
+<script th:inline="javascript">
+    // 세션에서 사용자 ID 가져오기 (서버에서 전달)
+    let currentUserId = /*[[${session.userId}]]*/ null;
+
+    $(document).ready(function() {
+        // 페이지 로드 시 모든 스니펫의 북마크 상태 확인
+        loadBookmarkStates();
+
+        // 검색 및 필터링 기능
+        const searchInput = $('#searchInput');
+        const typeFilter = $('#typeFilter');
+
+        function filterSnippets() {
+            const searchTerm = searchInput.val().toLowerCase();
+            const selectedType = typeFilter.val();
+
+            $('.snippet-card').each(function() {
+                const card = $(this);
+                const title = card.find('.snippet-title').text().toLowerCase();
+                const memo = card.data('memo') ? card.data('memo').toString().toLowerCase() : '';
+                const snippetId = card.find('.snippet-id').text().toLowerCase();
+                const type = card.data('type') || '';
+
+                const matchesSearch = !searchTerm ||
+                    title.includes(searchTerm) ||
+                    memo.includes(searchTerm) ||
+                    snippetId.includes(searchTerm);
+
+                const matchesType = !selectedType || type === selectedType;
+
+                if (matchesSearch && matchesType) {
+                    card.show();
+                } else {
+                    card.hide();
+                }
+            });
+
+            updateNoResultsMessage();
+        }
+
+        function updateNoResultsMessage() {
+            const visibleCards = $('.snippet-card:visible').length;
+            $('#noResults').remove();
+            if (visibleCards === 0 && $('.snippet-card').length > 0) {
+                $('#snippetsContainer').append(
+                    '<div id="noResults" class="empty-state">' +
+                    '<h3>🔍 검색 결과가 없습니다</h3>' +
+                    '<p>다른 검색어나 필터를 시도해보세요.</p>' +
+                    '</div>'
+                );
+            }
+        }
+
+        // 이벤트 리스너
+        searchInput.on('input', filterSnippets);
+        typeFilter.on('change', filterSnippets);
+    });
+
+    // 모든 스니펫의 북마크 상태 로드
+    function loadBookmarkStates() {
+        if (!currentUserId) return;
+
+        $('.btn-bookmark').each(function() {
+            const button = $(this);
+            const snippetId = button.data('snippet-id');
+            checkBookmarkStatus(snippetId, button);
+        });
+    }
+
+    // 개별 북마크 상태 확인
+    function checkBookmarkStatus(snippetId, button) {
+        $.get(`/api/bookmarks/check/${snippetId}`)
+            .done(function(response) {
+                updateBookmarkButton(button, response.isBookmarked);
+            })
+            .fail(function() {
+                console.warn(`북마크 상태 확인 실패: ${snippetId}`);
+            });
+    }
+
+    // 북마크 토글
+    function toggleBookmark(element) {
+        if (!currentUserId) {
+            showToast('로그인이 필요합니다.', 'error');
+            return;
+        }
+
+        const button = $(element);
+        const snippetId = button.data('snippet-id');
+        const isCurrentlyBookmarked = button.hasClass('bookmarked');
+
+        // 버튼 비활성화 및 로딩 표시
+        button.prop('disabled', true);
+        const originalContent = button.html();
+        button.html('<span class="loading-spinner"></span> 처리중...');
+
+        const url = isCurrentlyBookmarked ?
+            `/api/bookmarks/${snippetId}` :
+            '/api/bookmarks';
+        const method = isCurrentlyBookmarked ? 'DELETE' : 'POST';
+        const data = isCurrentlyBookmarked ? null : { snippetId: snippetId };
+
+        $.ajax({
+            url: url,
+            method: method,
+            contentType: 'application/json',
+            data: data ? JSON.stringify(data) : null,
+            success: function(response) {
+                if (response.success) {
+                    updateBookmarkButton(button, !isCurrentlyBookmarked);
+                    showToast(response.message);
+                } else {
+                    showToast(response.message, 'error');
+                }
+            },
+            error: function(xhr) {
+                const errorMessage = xhr.responseJSON?.message || '오류가 발생했습니다.';
+                showToast(errorMessage, 'error');
+            },
+            complete: function() {
+                // 버튼 복원
+                button.prop('disabled', false);
+                if (!button.hasClass('bookmarked') && !button.hasClass('processing')) {
+                    button.html(originalContent);
+                }
+            }
+        });
+    }
+
+    // 북마크 버튼 상태 업데이트
+    function updateBookmarkButton(button, isBookmarked) {
+        const icon = button.find('.bookmark-icon');
+        const text = button.find('.bookmark-text');
+
+        if (isBookmarked) {
+            button.addClass('bookmarked');
+            icon.text('⭐');
+            text.text('북마크됨');
+            button.removeClass('processing');
+        } else {
+            button.removeClass('bookmarked');
+            icon.text('☆');
+            text.text('북마크');
+            button.removeClass('processing');
+        }
+    }
+
+    // 토스트 메시지 표시
+    function showToast(message, type = 'success') {
+        const toast = $('#toast');
+        toast.removeClass('error').text(message);
+
+        if (type === 'error') {
+            toast.addClass('error');
+        }
+
+        toast.fadeIn(300);
+        setTimeout(function() {
+            toast.fadeOut(300);
+        }, 3000);
+    }
+</script>
+</body>
+</html>

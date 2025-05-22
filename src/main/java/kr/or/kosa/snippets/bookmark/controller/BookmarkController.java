@@ -41,32 +41,6 @@ public class BookmarkController {
 
         return "bookmark/bookmark-list"; // simple-test.html로 변경
     }
-    
-    
-    //테스트 후 삭제
-    @GetMapping("/test")
-    public String testSimple(Model model) {
-        model.addAttribute("message", "테스트 성공!");
-        model.addAttribute("count", 2);
-        return "bookmark/simple-test";
-    }
-
-    //북마크 생성
-    @PostMapping("/add")
-    public String inserBookmark(HttpSession session, Bookmark bookmark, @ModelAttribute Snippets snippets,
-                                  RedirectAttributes  redirectAttrs) {
-        log.info("북마크 생성 진입");
-
-        try {
-            //세션에서 사용자 ID 가져오기
-            Long userId = (Long) session.getAttribute("userId");
-            bookmark.setUserId(userId);
 
 
-        } catch (Exception e) {
-            log.info("흑흑");
-        }
-
-        return null;
-    }
 }

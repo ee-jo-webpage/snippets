@@ -4,6 +4,9 @@ import kr.or.kosa.snippets.user.model.Users;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Mapper
 public interface UserMapper {
 
@@ -21,4 +24,8 @@ public interface UserMapper {
     Users findDeletedUser(String email);
 
     int restoreUser(String email);
+
+    void deleteAll(@Param("users") List<Users> expiredUsers);
+    List<Users> findAllByEnabledFalseAndDeletedAtBefore(LocalDateTime cutoff);
+    List<Users> existsByEmailAndEnabledFalseBefore(LocalDateTime cutoff);
 }

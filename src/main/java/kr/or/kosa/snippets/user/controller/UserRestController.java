@@ -1,6 +1,7 @@
 package kr.or.kosa.snippets.user.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import kr.or.kosa.snippets.user.model.UserDTO;
 import kr.or.kosa.snippets.user.model.UserUpdateDTO;
@@ -62,7 +63,7 @@ public class UserRestController {
 
     /**
      * 회원 가입시 인증 API
-     * */
+     */
     @PostMapping("/verify-code")
     public ResponseEntity<?> verifyCode(@RequestBody Map<String, String> payload) {
         try {
@@ -101,7 +102,6 @@ public class UserRestController {
             return ResponseEntity.status(500).body(Map.of("error", "탈퇴 처리 중 오류 발생"));
         }
     }
-
 
 
     @PostMapping("/restore")
@@ -150,5 +150,44 @@ public class UserRestController {
 
         return ResponseEntity.ok(Map.of("message", "복구 메일이 전송되었습니다."));
     }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> sendTempPassword(@RequestBody Map<String, String> payload) {
+        try {
+            userRecoveryService.sendTemporaryPassword(payload.get("email"));
+            return ResponseEntity.ok("임시 비밀번호가 이메일로 전송되었습니다.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody Map<String, String> payload, Principal principal) {
+        String email = principal.getName();
+        String current = payload.get("currentPassword");
+        String newPw = payload.get("newPassword");
+
+        try {
+            userService.changePassword(email, current, newPw);
+            return ResponseEntity.ok(Map.of("message", "비밀번호가 변경되었습니다."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+    @GetMapping("/session-user")
+    public ResponseEntity<?> sessionUser(HttpServletRequest request, Principal principal) {
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            System.out.println("세션 없음");
+            return ResponseEntity.status(401).build(); // 세션 자체가 없는 경우
+        }
+
+        if (principal != null) {
+            System.out.println("세션 ID: " + session.getId());
+            return ResponseEntity.ok(Map.of("username", principal.getName()));
+        }
+
+        return ResponseEntity.status(401).build(); // 인증 안 된 사용자
+    }
+
 
 }

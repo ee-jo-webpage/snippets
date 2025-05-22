@@ -41,4 +41,16 @@ public class UserService {
         user.setUpdatedAt(LocalDateTime.now());
         userMapper.updateUser(user);
     }
+
+
+    public void changePassword(String email, String current, String newPw) {
+        Users user = userMapper.findByEmail(email);
+        if (user == null || !passwordEncoder.matches(current, user.getPassword())) {
+            throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
+        }
+        String encoded = passwordEncoder.encode(newPw);
+        user.setPassword(encoded);
+        user.setUpdatedAt(LocalDateTime.now());
+        userMapper.updateUser(user);
+    }
 }

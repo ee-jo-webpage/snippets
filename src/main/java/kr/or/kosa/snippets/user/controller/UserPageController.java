@@ -22,4 +22,16 @@ public class UserPageController {
         return "/user/user/myPage";
     }
 
+
+    @GetMapping("/forgotPassword")
+    public String forgotPassword(Model model) {
+        return "/user/user/forgotPassword";
+    }
+
+    @GetMapping("/changePassword")
+    public String changePasswordPage(Principal principal) {
+        if (principal == null) return "redirect:/login";
+        return "/user/user/changePassword";
+    }
+
 }

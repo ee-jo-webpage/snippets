@@ -1,170 +1,244 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="kr.or.kosa.snippets.basic.mapper.SnippetsMapper">
 
-	<resultMap id="SnippetsResultMap" type="kr.or.kosa.snippets.basic.model.Snippets">
-		<result property="snippetid" column="snippet_id" />
-		<result property="userid" column="user_id" />
-		<result property="folderid" column="folder_id" />
-		<result property="colorid" column="color_id" />
-		<result property="sourceurl" column="source_url" />
-		<result property="type" column="type"
-			typeHandler="org.apache.ibatis.type.EnumTypeHandler" />
-		<result property="memo" column="memo" />
-		<result property="createdat" column="created_at" />
-		<result property="updatedat" column="updated_at" />
-		<result property="likecount" column="like_count" />
-		<result property="visibility" column="visibility" />
+  <resultMap id="SnippetsResultMap" type="kr.or.kosa.snippets.basic.model.Snippets">
+    <result property="snippetId"   column="snippet_id" />
+    <result property="userId"      column="user_id" />
+    <result property="folderId"    column="folder_id" />
+    <result property="colorId"     column="color_id" />
+    <result property="sourceUrl"   column="source_url" />
+    <result property="type"        column="type"
+      typeHandler="org.apache.ibatis.type.EnumTypeHandler" />
+    <result property="memo"        column="memo" />
+    <result property="createdAt"   column="created_at" />
+    <result property="updatedAt"   column="updated_at" />
+    <result property="likeCount"   column="like_count" />
+    <result property="visibility"  column="visibility" />
 
-		<result property="codecontent" column="code_content" />
-		<result property="textcontent" column="text_content" />
-		<result property="language" column="language" />
+    <result property="codeContent" column="code_content" />
+    <result property="textContent" column="text_content" />
+    <result property="language"    column="language" />
 
-		<result property="imageurl" column="image_url" />
-		<result property="alttext" column="alt_text" />
-	</resultMap>
+    <result property="imageUrl"    column="image_url" />
+    <result property="altText"     column="alt_text" />
+  </resultMap>
 
-	<!--전체조회-->	
-	<select id="getAllSnippets" resultMap="SnippetsResultMap">
-		SELECT * FROM snippets
-	</select>
+  <!-- 전체 조회 -->
+  <select id="getAllSnippets" resultMap="SnippetsResultMap">
+    SELECT * FROM snippets
+  </select>
 
-	<!--상세조회-->
-	<select id="getSnippetsById" resultMap="SnippetsResultMap" parameterType="map">
-    SELECT s.snippet_id, s.user_id, s.folder_id, s.color_id, s.source_url, s.type, s.memo, s.created_at, s.updated_at,
-           s.like_count, s.visibility,
-           <choose>
-               <when test="type != null and type.name() == 'text'">
-                   t.text_content AS text_content
-               </when>
-               <otherwise>
-                   NULL AS text_content
-               </otherwise>
-           </choose>,
-           <choose>
-               <when test="type != null and type.name() == 'code'">
-                   c.language AS language,
-                   c.code_content AS code_content
-               </when>
-               <otherwise>
-                   NULL AS language,
-                   NULL AS code_content
-               </otherwise>
-           </choose>,
-           <choose>
-               <when test="type != null and type.name() == 'img'">
-                   i.image_url AS image_url,
-                   i.alt_text AS alt_text
-               </when>
-               <otherwise>
-                   NULL AS image_url,
-                   NULL AS alt_text
-               </otherwise>
-           </choose>
-		    FROM snippets s
-		    <choose>
-		        <when test="type != null and type.name() == 'code'">
-		            LEFT JOIN snippet_codes c ON s.snippet_id = c.snippet_id
-		        </when>
-		        <when test="type != null and type.name() == 'text'">
-		            LEFT JOIN snippet_texts t ON s.snippet_id = t.snippet_id
-		        </when>
-		        <when test="type != null and type.name() == 'img'">
-		            LEFT JOIN snippet_images i ON s.snippet_id = i.snippet_id
-		        </when>
-		    </choose>
-		    WHERE s.snippet_id = #{snippetid}
-		</select>
+  <!-- 상세 조회 -->
+  <select
+    id="getSnippetsById"
+    resultMap="SnippetsResultMap"
+    parameterType="map">
+    SELECT
+      s.snippet_id,
+      s.user_id,
+      s.folder_id,
+      s.color_id,
+      s.source_url,
+      s.type,
+      s.memo,
+      s.created_at,
+      s.updated_at,
+      s.like_count,
+      s.visibility,
+      <choose>
+        <when test="type != null and type.name() == 'TEXT'">
+          t.text_content AS text_content
+        </when>
+        <otherwise>
+          NULL AS text_content
+        </otherwise>
+      </choose>,
+      <choose>
+        <when test="type != null and type.name() == 'CODE'">
+          c.language AS language,
+          c.code_content AS code_content
+        </when>
+        <otherwise>
+          NULL AS language,
+          NULL AS code_content
+        </otherwise>
+      </choose>,
+      <choose>
+        <when test="type != null and type.name() == 'IMG'">
+          i.image_url AS image_url,
+          i.alt_text AS alt_text
+        </when>
+        <otherwise>
+          NULL AS image_url,
+          NULL AS alt_text
+        </otherwise>
+      </choose>
+    FROM snippets s
+    <choose>
+      <when test="type != null and type.name() == 'CODE'">
+        LEFT JOIN snippet_codes c ON s.snippet_id = c.snippet_id
+      </when>
+      <when test="type != null and type.name() == 'TEXT'">
+        LEFT JOIN snippet_texts t ON s.snippet_id = t.snippet_id
+      </when>
+      <when test="type != null and type.name() == 'IMG'">
+        LEFT JOIN snippet_images i ON s.snippet_id = i.snippet_id
+      </when>
+    </choose>
+    WHERE s.snippet_id = #{snippetId}
+  </select>
 
-		
-		
-	<!--추가하기-->
-	<!-- 1. snippets 기본정보 insert -->
-	<insert id="insertSnippetBasic" parameterType="kr.or.kosa.snippets.basic.model.Snippets" useGeneratedKeys="true" keyProperty="snippetid" keyColumn="snippet_id">
-	    INSERT INTO snippets (
-	        user_id, folder_id, color_id, source_url, type, memo, created_at, updated_at, like_count, visibility
-	    ) VALUES (
-	        #{userid}, #{folderid}, #{colorid}, #{sourceurl}, #{type}, #{memo}, NOW(), NOW(), #{likecount}, #{visibility}
-	    )
-	</insert>
-	
-	<insert id="insertSnippetCode" parameterType="kr.or.kosa.snippets.basic.model.Snippets">
-	    INSERT INTO snippet_codes (snippet_id, code_content, language)
-	    VALUES (#{snippetid}, #{codecontent}, #{language})
-	</insert>
-	
-	<insert id="insertSnippetText" parameterType="kr.or.kosa.snippets.basic.model.Snippets">
-	    INSERT INTO snippet_texts (snippet_id, text_content)
-	    VALUES (#{snippetid}, #{textcontent})
-	</insert>
-	
-	<insert id="insertSnippetImage" parameterType="kr.or.kosa.snippets.basic.model.Snippets">
-	    INSERT INTO snippet_images (snippet_id, image_url, alt_text)
-	    VALUES (#{snippetid}, #{imageurl}, #{alttext})
-	</insert>
+  <!-- 추가하기: snippets 기본정보 insert -->
+  <insert
+    id="insertSnippetBasic"
+    parameterType="kr.or.kosa.snippets.basic.model.Snippets"
+    useGeneratedKeys="true"
+    keyProperty="snippetId"
+    keyColumn="snippet_id">
+    INSERT INTO snippets (
+      user_id,
+      folder_id,
+      color_id,
+      source_url,
+      type,
+      memo,
+      created_at,
+      updated_at,
+      like_count,
+      visibility
+    ) VALUES (
+      #{userId},
+      #{folderId},
+      #{colorId},
+      #{sourceUrl},
+      #{type},
+      #{memo},
+      NOW(),
+      NOW(),
+      #{likeCount},
+      #{visibility}
+    )
+  </insert>
 
+  <insert
+    id="insertSnippetCode"
+    parameterType="kr.or.kosa.snippets.basic.model.Snippets">
+    INSERT INTO snippet_codes (
+      snippet_id,
+      code_content,
+      language
+    ) VALUES (
+      #{snippetId},
+      #{codeContent},
+      #{language}
+    )
+  </insert>
 
-	<!--삭제하기-->
-	<delete id="deleteSnippetCodeBySnippetId" parameterType="int">
-	    DELETE FROM snippet_codes WHERE snippet_id = #{snippetid}
-	</delete>
-	
-	<delete id="deleteSnippetTextBySnippetId" parameterType="int">
-	    DELETE FROM snippet_texts WHERE snippet_id = #{snippetid}
-	</delete>
-	
-	<delete id="deleteSnippetImageBySnippetId" parameterType="int">
-	    DELETE FROM snippet_images WHERE snippet_id = #{snippetid}
-	</delete>
-	
-	<delete id="deleteSnippets" parameterType="int">
-	    DELETE FROM snippets WHERE snippet_id = #{snippetid}
-	</delete>
-	
-	<!--스니펫 타입 찾기-->
-	<select id="getSnippetTypeById" parameterType="int" resultType="kr.or.kosa.snippets.basic.model.SnippetTypeBasic">
-    	SELECT type FROM snippets WHERE snippet_id = #{snippetid}
-	</select>
-	
-	<!--수정하기-->
-	<update id="updateSnippetCode" parameterType="kr.or.kosa.snippets.basic.model.Snippets">
-	    UPDATE snippet_codes
-	    SET
-	        code_content = #{codecontent},
-	        language = #{language}
-	    WHERE snippet_id = #{snippetid}
-	</update>
-	
-	<update id="updateSnippetText" parameterType="kr.or.kosa.snippets.basic.model.Snippets">
-	    UPDATE snippet_texts
-	    SET
-	        text_content = #{textcontent}
-	    WHERE snippet_id = #{snippetid}
-	</update>
-	
-	<update id="updateSnippetImage" parameterType="kr.or.kosa.snippets.basic.model.Snippets">
-	    UPDATE snippet_images
-	    SET
-	        image_url = #{imageurl},
-	        alt_text = #{alttext}
-	    WHERE snippet_id = #{snippetid}
-	</update>
-	
-	<update id="updateSnippetBasic" parameterType="kr.or.kosa.snippets.basic.model.Snippets">
-	    UPDATE snippets
-	    SET
-	        user_id = #{userid},
-	        folder_id = #{folderid},
-	        color_id = #{colorid},
-	        source_url = #{sourceurl},
-	        type = #{type},
-	        memo = #{memo},
-	        updated_at = NOW(),
-	        like_count = #{likecount},
-	        visibility = #{visibility}
-	    WHERE snippet_id = #{snippetid}
-	</update>
+  <insert
+    id="insertSnippetText"
+    parameterType="kr.or.kosa.snippets.basic.model.Snippets">
+    INSERT INTO snippet_texts (
+      snippet_id,
+      text_content
+    ) VALUES (
+      #{snippetId},
+      #{textContent}
+    )
+  </insert>
 
+  <insert
+    id="insertSnippetImage"
+    parameterType="kr.or.kosa.snippets.basic.model.Snippets">
+    INSERT INTO snippet_images (
+      snippet_id,
+      image_url,
+      alt_text
+    ) VALUES (
+      #{snippetId},
+      #{imageUrl},
+      #{altText}
+    )
+  </insert>
 
+  <!-- 삭제하기 -->
+  <delete id="deleteSnippetCodeBySnippetId" parameterType="java.lang.Long">
+    DELETE FROM snippet_codes
+    WHERE snippet_id = #{snippetId}
+  </delete>
+
+  <delete id="deleteSnippetTextBySnippetId" parameterType="java.lang.Long">
+    DELETE FROM snippet_texts
+    WHERE snippet_id = #{snippetId}
+  </delete>
+
+  <delete id="deleteSnippetImageBySnippetId" parameterType="java.lang.Long">
+    DELETE FROM snippet_images
+    WHERE snippet_id = #{snippetId}
+  </delete>
+
+  <delete id="deleteSnippets" parameterType="java.lang.Long">
+    DELETE FROM snippets
+    WHERE snippet_id = #{snippetId}
+  </delete>
+
+  <!-- 스니펫 타입 찾기 -->
+  <select
+    id="getSnippetTypeById"
+    parameterType="java.lang.Long"
+    resultType="kr.or.kosa.snippets.basic.model.SnippetTypeBasic">
+    SELECT type
+    FROM snippets
+    WHERE snippet_id = #{snippetId}
+  </select>
+
+  <!-- 수정하기 -->
+  <update
+    id="updateSnippetCode"
+    parameterType="kr.or.kosa.snippets.basic.model.Snippets">
+    UPDATE snippet_codes
+    SET
+      code_content = #{codeContent},
+      language     = #{language}
+    WHERE snippet_id = #{snippetId}
+  </update>
+
+  <update
+    id="updateSnippetText"
+    parameterType="kr.or.kosa.snippets.basic.model.Snippets">
+    UPDATE snippet_texts
+    SET
+      text_content = #{textContent}
+    WHERE snippet_id = #{snippetId}
+  </update>
+
+  <update
+    id="updateSnippetImage"
+    parameterType="kr.or.kosa.snippets.basic.model.Snippets">
+    UPDATE snippet_images
+    SET
+      image_url = #{imageUrl},
+      alt_text  = #{altText}
+    WHERE snippet_id = #{snippetId}
+  </update>
+
+  <update
+    id="updateSnippetBasic"
+    parameterType="kr.or.kosa.snippets.basic.model.Snippets">
+    UPDATE snippets
+    SET
+      user_id      = #{userId},
+      folder_id    = #{folderId},
+      color_id     = #{colorId},
+      source_url   = #{sourceUrl},
+      type         = #{type},
+      memo         = #{memo},
+      updated_at   = NOW(),
+      like_count   = #{likeCount},
+      visibility   = #{visibility}
+    WHERE snippet_id = #{snippetId}
+  </update>
 
 </mapper>

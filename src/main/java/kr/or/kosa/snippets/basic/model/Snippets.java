@@ -7,22 +7,22 @@ import lombok.Data;
 
 @Data
 public class Snippets {
-	
-	private int snippetid;
-	private int userid;
-	private int folderid;
-	private int colorid;
-	private String sourceurl;
-	private SnippetTypeBasic type;
-	private String memo;
-	private Date createdat;
-	private Date updatedat;
-	private int likecount;
-	private int visibility;
-	
-	private String codecontent;
-	private String textcontent;    
+   
+   private Long snippetId;
+   private Long userId;
+   private Long folderId;
+   private Long colorId;
+   private String sourceUrl;
+   private SnippetTypeBasic type;
+   private String memo;
+   private Date createdAt;
+   private Date updatedAt;
+   private int likeCount;
+   private int visibility;
+   
+   private String codeContent;
+   private String textContent;    
     private String language;    
-    private String imageurl;    
-    private String alttext;
+    private String imageUrl;    
+    private String altText;
 }

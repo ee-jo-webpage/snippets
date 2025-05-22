@@ -2,57 +2,57 @@
 <html xmlns:th="http://www.thymeleaf.org">
 
 <head>
-	<meta charset="UTF-8">
-	<title>Snippets List</title>
+   <meta charset="UTF-8">
+   <title>Snippets List</title>
 </head>
 
 <body>
-	<h1>Snippets List</h1>
+   <h1>Snippets List</h1>
 
-	<table border="1">
-		<thead>
-			<tr>
-				<th>Snippet ID</th>
-				<th>User ID</th>
-				<th>Folder ID</th>
-				<th>Color ID</th>
-				<th>Source URL</th>
-				<th>Type</th>
-				<th>Memo</th>
-				<th>Created At</th>
-				<th>Updated At</th>
-				<th>Like Count</th>
-				<th>Visibility</th>
-			</tr>
-		</thead>
-		<tbody>
-			<!-- Snippets 리스트를 반복하여 출력 -->
-			<tr th:each="snippet : ${snippets}">
+   <table border="1">
+      <thead>
+         <tr>
+            <th>Snippet ID</th>
+            <th>User ID</th>
+            <th>Folder ID</th>
+            <th>Color ID</th>
+            <th>Source URL</th>
+            <th>Type</th>
+            <th>Memo</th>
+            <th>Created At</th>
+            <th>Updated At</th>
+            <th>Like Count</th>
+            <th>Visibility</th>
+         </tr>
+      </thead>
+      <tbody>
+         <!-- Snippets 리스트를 반복하여 출력 -->
+         <tr th:each="snippet : ${snippets}">
 
-				<td th:text="${snippet.snippetid}"></td>
-				<td th:text="${snippet.userid}"></td>
-				<td th:text="${snippet.folderid}"></td>
-				<td th:text="${snippet.colorid}"></td>
-				<td th:text="${snippet.sourceurl}"></td>
-				<td th:text="${snippet.type}"></td>
-				<td th:text="${snippet.memo}"></td>
-				<td th:text="${snippet.createdat}"></td>
-				<td th:text="${snippet.updatedat}"></td>
-				<td th:text="${snippet.likecount}"></td>
-				<td th:text="${snippet.visibility}"></td>
-				<td>
-					<a th:href="@{/snippets/{id}(id=${snippet.snippetid})}">상세 보기</a>
-				</td>
-			</tr>
-		</tbody>
-	</table>
-	
-	<a href="/snippets/new">
-		<button>스니펫 추가</button>
-	</a>
-	
-	<!-- 페이지 내비게이션 또는 다른 링크 추가 가능 -->
-	<a href="/">Go to Home</a>
+            <td th:text="${snippet.snippetId}"></td>
+            <td th:text="${snippet.userId}"></td>
+            <td th:text="${snippet.folderId}"></td>
+            <td th:text="${snippet.colorId}"></td>
+            <td th:text="${snippet.sourceUrl}"></td>
+            <td th:text="${snippet.type}"></td>
+            <td th:text="${snippet.memo}"></td>
+            <td th:text="${snippet.createdAt}"></td>
+            <td th:text="${snippet.updatedAt}"></td>
+            <td th:text="${snippet.likeCount}"></td>
+            <td th:text="${snippet.visibility}"></td>
+            <td>
+               <a th:href="@{/snippets/{id}(id=${snippet.snippetId})}">상세 보기</a>
+            </td>
+         </tr>
+      </tbody>
+   </table>
+   
+   <a href="/snippets/new">
+      <button>스니펫 추가</button>
+   </a>
+   
+   <!-- 페이지 내비게이션 또는 다른 링크 추가 가능 -->
+   <a href="/">Go to Home</a>
 </body>
 
 </html>

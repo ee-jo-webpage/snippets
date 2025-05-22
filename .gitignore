@@ -123,3 +123,6 @@ node_modules/
 *.tar.gz
 *.rar
 hs_err_pid*
+
+#s3
+.env

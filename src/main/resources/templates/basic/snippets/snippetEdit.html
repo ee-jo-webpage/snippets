@@ -106,22 +106,22 @@
   <div class="notepad">
     <h1>스니펫 수정</h1>
 
-    <form th:action="@{/snippets/edit/{snippetid}(snippetid=${snippet.snippetid})}"
+    <form th:action="@{/snippets/edit/{snippetId}(snippetId=${snippet.snippetId})}"
           th:object="${snippet}"
           method="post"
           enctype="multipart/form-data">
       <table>
         <tr>
           <th>Source URL</th>
-          <td><input type="text" th:field="*{sourceurl}" /></td>
+          <td><input type="text" th:field="*{sourceUrl}" /></td>
         </tr>
         <tr>
           <th>Type</th>
           <td>
             <select th:field="*{type}" disabled id="typeSelect">
-              <option value="code" th:selected="${snippet.type.name()=='code'}">Code</option>
-              <option value="text" th:selected="${snippet.type.name()=='text'}">Text</option>
-              <option value="img" th:selected="${snippet.type.name()=='img'}">Image</option>
+              <option value="CODE" th:selected="${snippet.type.name()=='CODE'}">Code</option>
+              <option value="TEXT" th:selected="${snippet.type.name()=='TEXT'}">Text</option>
+              <option value="IMG" th:selected="${snippet.type.name()=='IMG'}">Image</option>
             </select>
             <input type="hidden" th:field="*{type}" />
           </td>
@@ -139,7 +139,7 @@
             </select>
           </td>
         </tr>
-        <tr id="codeFields" th:style="${snippet.type.name()=='code'? '':'display:none;'}">
+        <tr id="codeFields" th:style="${snippet.type.name()=='CODE'? '':'display:none;'}">
           <th>Language</th>
           <td>
             <select th:field="*{language}">
@@ -149,21 +149,21 @@
             </select>
           </td>
         </tr>
-        <tr id="codeContentField" th:style="${snippet.type.name()=='code'? '':'display:none;'}">
+        <tr id="codeContentField" th:style="${snippet.type.name()=='CODE'? '':'display:none;'}">
           <th>Code Content</th>
-          <td><textarea th:field="*{codecontent}" rows="6"></textarea></td>
+          <td><textarea th:field="*{codeContent}" rows="6"></textarea></td>
         </tr>
-        <tr id="textFields" th:style="${snippet.type.name()=='text'? '':'display:none;'}">
+        <tr id="textFields" th:style="${snippet.type.name()=='TEXT'? '':'display:none;'}">
           <th>Text Content</th>
-          <td><textarea th:field="*{textcontent}" rows="6"></textarea></td>
+          <td><textarea th:field="*{textContent}" rows="6"></textarea></td>
         </tr>
-        <tr id="imageFields" th:style="${snippet.type.name()=='img'? '':'display:none;'}">
+        <tr id="imageFields" th:style="${snippet.type.name()=='IMG'? '':'display:none;'}">
           <th>이미지 파일</th>
           <td><input type="file" name="imageFile" accept="image/*" /></td>
         </tr>
-        <tr id="altTextField" th:style="${snippet.type.name()=='img'? '':'display:none;'}">
+        <tr id="altTextField" th:style="${snippet.type.name()=='IMG'? '':'display:none;'}">
           <th>Alt Text</th>
-          <td><input type="text" th:field="*{alttext}" /></td>
+          <td><input type="text" th:field="*{altText}" /></td>
         </tr>
       </table>
 
@@ -177,11 +177,11 @@
     function showFields() {
       const type = document.getElementById('typeSelect').value;
       document.querySelectorAll('#codeFields, #codeContentField')
-              .forEach(el => el.style.display = (type==='code')? '': 'none');
+              .forEach(el => el.style.display = (type==='CODE')? '': 'none');
       document.getElementById('textFields')
-              .style.display = (type==='text')? '': 'none';
+              .style.display = (type==='TEXT')? '': 'none';
       document.querySelectorAll('#imageFields, #altTextField')
-              .forEach(el => el.style.display = (type==='img')? '': 'none');
+              .forEach(el => el.style.display = (type==='IMG')? '': 'none');
     }
     window.onload = showFields;
 

@@ -22,4 +22,7 @@ public interface SnippetExtMapper {
     void insertSnippetImg(SnippetExtCreate snippet);
 
     Optional<Long> findUserIdBySnippetId(Long snippetId);
+
+    int countDuplicate(SnippetExtCreate snippet);
+
 }

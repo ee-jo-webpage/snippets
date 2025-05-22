@@ -1,11 +1,11 @@
 package kr.or.kosa.snippets.snippetExt.exception;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.nio.file.AccessDeniedException;
 import java.util.Map;
 import jakarta.persistence.EntityNotFoundException;
 
@@ -32,6 +32,19 @@ public class SnippetExceptionHandler {
     public ResponseEntity<?> handleNotFound(EntityNotFoundException ex) {
         return ResponseEntity.status(404).body(Map.of(
             "error", "Not Found",
+            "message", ex.getMessage()
+        ));
+    }
+
+    @ExceptionHandler(DuplicateSnippetException.class)
+    public ResponseEntity<?> handleDuplicate(DuplicateSnippetException ex) {
+        return ResponseEntity.status(409).body(Map.of("error", ex.getMessage()));
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> handleIllegalArgument(IllegalArgumentException ex) {
+        return ResponseEntity.badRequest().body(Map.of(
+            "error", "Invalid Argument",
             "message", ex.getMessage()
         ));
     }

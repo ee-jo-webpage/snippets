@@ -60,6 +60,36 @@ public class TagController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdTag);
     }
 
+    //스니펫에 태그 추가
+    @PostMapping("/snippet/{snippetId}/tags/{tagId}")
+    public ResponseEntity<Void> addTagToSnippet(@PathVariable Long snippetId,
+                                                @PathVariable Long tagId) {
+        boolean added = tagService.addTagToSnippet(snippetId, tagId);
+
+        if (added) {
+            return ResponseEntity.ok().build();
+        }
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).build();
+    }
+
+    //특정 스니펫의 모든 태그 조회
+    // TagController.java 파일 수정
+    @GetMapping("/snippets/{snippetId}")
+    public ResponseEntity<List<TagItem>> getTagBySnippetId(@PathVariable Long snippetId) {
+        if (snippetId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        System.out.println("스니펫 ID: " + snippetId + " 태그 조회 요청");
+        List<TagItem> tags = tagService.getTagsBySnippetId(snippetId);
+        System.out.println("스니펫 ID: " + snippetId + ", 태그 수: " + (tags != null ? tags.size() : "null"));
+
+        return ResponseEntity.ok(tags != null ? tags : new ArrayList<>());
+    }
+
+
+
 
 
 }

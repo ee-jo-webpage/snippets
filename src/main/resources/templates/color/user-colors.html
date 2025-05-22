@@ -37,7 +37,7 @@
         <h1 th:text="${isMyColors ? '내 색상 모음' : '사용자 ' + userId + '의 색상'}">색상 모음</h1>
         <div class="navigation">
 <!--            <a th:if="${!isMyColors}" th:href="@{/color/user/{id}(id=${currentUserId})}">내 색상</a>-->
-            <a th:href="@{/color/available/{id}(id=${currentUserId})}">사용 가능한 색상</a>
+            <a th:href="@{/color/user/{id}(id=${currentUserId})}">사용 가능한 색상</a>
 
             <button class="add-color-btn" onclick="openAddModal()">
                 🎨 새 색상 추가

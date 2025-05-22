@@ -23,8 +23,8 @@
     <!--    </resultMap>-->
 
     <insert id="insertSnippet" useGeneratedKeys="true" keyProperty="snippetId">
-        INSERT INTO SNIPPETS (SOURCE_URL, TYPE, COLOR_ID, MEMO)
-        VALUES (#{sourceUrl}, #{type}, #{colorId}, #{memo})
+        INSERT INTO SNIPPETS (SOURCE_URL, TYPE, COLOR_ID, MEMO, USER_ID)
+        VALUES (#{sourceUrl}, #{type}, #{colorId}, #{memo}, #{userId})
     </insert>
 
     <insert id="insertSnippetText">
@@ -54,5 +54,11 @@
         FROM SNIPPETS
         WHERE SNIPPET_ID = #{id}
     </delete>
+
+    <select id="findUserIdBySnippetId" resultType="long">
+        SELECT USER_ID
+        FROM SNIPPETS
+        WHERE SNIPPET_ID = #{snippetId}
+    </select>
 
 </mapper>

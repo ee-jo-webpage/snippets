@@ -6,6 +6,7 @@ import lombok.Data;
 @Data
 public class SnippetExtCreate {
     private Long snippetId;
+    private Long userId;
     private Long colorId;
     private String sourceUrl;
     private SnippetType type;

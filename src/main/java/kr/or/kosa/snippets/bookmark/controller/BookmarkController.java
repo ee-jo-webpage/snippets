@@ -8,14 +8,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RequestMapping("/bookmark")
 @Slf4j
@@ -24,8 +23,6 @@ public class BookmarkController {
 
     @Autowired
     BookmarkService bookmarkService;
-
-
 
     //사용자별 북마크 조회
     @GetMapping
@@ -39,7 +36,58 @@ public class BookmarkController {
         model.addAttribute("bookmarks", bookmarkList);
         model.addAttribute("count", bookmarkList.size());
 
-        return "bookmark/bookmark-list"; // simple-test.html로 변경
+        return "bookmark/bookmark-list";
+    }
+
+    //북마크된 스니펫 상세보기 (추가)
+    @GetMapping("/snippet/{snippetId}")
+    public String getBookmarkedSnippetDetail(@PathVariable Long snippetId, HttpSession session, Model model) {
+        Long userId = (Long) session.getAttribute("userId");
+
+        // 북마크된 스니펫인지 확인
+        if (!bookmarkService.isBookmarked(userId, snippetId)) {
+            return "redirect:/bookmark"; // 북마크되지 않은 스니펫이면 북마크 목록으로
+        }
+
+        Snippets snippet = bookmarkService.getSnippetById(snippetId);
+        if (snippet == null) {
+            return "error/404";
+        }
+
+        model.addAttribute("snippet", snippet);
+        model.addAttribute("isBookmarked", true);
+        return "bookmark/snippet-detail"; // 북마크용 상세 페이지
+    }
+
+    //북마크에서 제거 (POST 방식)
+    @PostMapping("/remove/{snippetId}")
+    public String removeBookmarkFromList(@PathVariable Long snippetId, HttpSession session, RedirectAttributes redirectAttributes) {
+        Long userId = (Long) session.getAttribute("userId");
+
+        try {
+            bookmarkService.removeBookmark(userId, snippetId);
+            redirectAttributes.addFlashAttribute("message", "북마크에서 제거되었습니다.");
+        } catch (Exception e) {
+            log.error("북마크 제거 중 오류 발생", e);
+            redirectAttributes.addFlashAttribute("error", "북마크 제거 중 오류가 발생했습니다.");
+        }
+
+        return "redirect:/bookmark";
+    }
+
+    @GetMapping("/snippets")
+    public String getSnippetsForBookmark(HttpSession session, Model model) {
+        Long userId = (Long) session.getAttribute("userId");
+        log.info("북마크용 스니펫 목록 조회 - 사용자 ID: {}", userId);
+
+        List<Snippets> allSnippets = bookmarkService.getAllSnippets();
+        log.info("조회된 스니펫 수: {}", allSnippets.size());
+
+        // userId가 null이어도 페이지는 보여주되, 북마크 기능만 비활성화
+        model.addAttribute("snippets", allSnippets);
+        model.addAttribute("userId", userId);
+
+        return "bookmark/snippets-with-bookmark";
     }
 
 

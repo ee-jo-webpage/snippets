@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>스니펫 목록 - 북마크</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 600;
+        }
+
+        .nav-links {
+            padding: 1rem 2rem;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+        }
+
+        .nav-links a {
+            color: #667eea;
+            text-decoration: none;
+            margin-right: 2rem;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+
+        .snippets-grid {
+            padding: 2rem;
+        }
+
+        .snippet-card {
+            border: 1px solid #e1e5e9;
+            border-radius: 12px;
+            padding: 1.5rem;
+            background: white;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .snippet-card:hover {
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+
+        .snippet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .snippet-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin: 0;
+            flex: 1;
+            margin-right: 1rem;
+        }
+
+        .snippet-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-view {
+            background: #4299e1;
+            color: white;
+        }
+
+        .btn-view:hover {
+            background: #3182ce;
+            color: white;
+            text-decoration: none;
+        }
+
+        .btn-bookmark {
+            background: #e2e8f0;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-bookmark:hover {
+            background: #cbd5e0;
+        }
+
+        .btn-bookmark.bookmarked {
+            background: #ffd700;
+            color: #744210;
+            border-color: #ffd700;
+        }
+
+        .snippet-meta {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .meta-item {
+            background: #edf2f7;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        .meta-item.type-code {
+            background: #bee3f8;
+            color: #2b6cb0;
+        }
+
+        .meta-item.type-text {
+            background: #c6f6d5;
+            color: #2f855a;
+        }
+
+        .meta-item.type-img {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .snippet-content {
+            background: #f7fafc;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 1rem;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            color: #2d3748;
+        }
+
+        .snippet-id {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: #667eea;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #718096;
+        }
+
+        .alert {
+            padding: 1rem 1.5rem;
+            margin: 1rem 2rem;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .alert-warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+
+        @media (max-width: 768px) {
+            .snippet-header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .snippet-actions {
+                align-self: stretch;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>📝 스니펫 목록</h1>
+        <p>마음에 드는 스니펫을 북마크해보세요!</p>
+    </div>
+
+    <div class="nav-links">
+        <a href="/snippets">전체 스니펫 목록</a>
+        <a href="/bookmark">내 북마크</a>
+        <a href="/bookmark/snippets">북마크하기</a>
+    </div>
+
+    <!-- 알림 메시지 -->
+    <div id="alertMessage" style="display: none;"></div>
+
+    <!-- 세션 정보 안내 -->
+    <div th:if="${userId != null}" class="alert alert-success">
+        ✅ 사용자 ID <span th:text="${userId}"></span>으로 북마크가 저장됩니다.
+    </div>
+    <div th:unless="${userId != null}" class="alert alert-warning">
+        ⚠️ 세션에 사용자 정보가 없어서 북마크 기능을 사용할 수 없습니다.
+    </div>
+
+    <div th:if="${snippets == null or #lists.isEmpty(snippets)}" class="empty-state">
+        <h3>📝 등록된 스니펫이 없습니다</h3>
+        <p>첫 번째 스니펫을 만들어보세요!</p>
+    </div>
+
+    <div th:unless="${snippets == null or #lists.isEmpty(snippets)}" class="snippets-grid">
+        <div th:each="snippet : ${snippets}"
+             class="snippet-card"
+             th:data-snippet-id="${snippet.snippetId}">
+
+            <div class="snippet-id" th:text="'#' + ${snippet.snippetId}">ID</div>
+
+            <div class="snippet-header">
+                <h3 class="snippet-title">
+                    <span th:if="${snippet.memo != null and !#strings.isEmpty(snippet.memo)}" th:text="${snippet.memo}">스니펫 제목</span>
+                    <span th:unless="${snippet.memo != null and !#strings.isEmpty(snippet.memo)}">제목 없음</span>
+                </h3>
+                <div class="snippet-actions">
+                    <a th:href="@{/snippets/{id}(id=${snippet.snippetId})}" class="btn btn-view">
+                        👁️ 보기
+                    </a>
+                    <button th:if="${userId != null}"
+                            class="btn btn-bookmark bookmark-btn"
+                            th:data-snippet-id="${snippet.snippetId}"
+                            onclick="toggleBookmark(this)">
+                        <span class="bookmark-icon">☆</span>
+                        <span class="bookmark-text">북마크</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="snippet-meta">
+                <span class="meta-item">
+                    <span th:if="${snippet.type != null}" th:text="${snippet.type.name()}"
+                          th:class="'meta-item ' + ${snippet.type.name() == 'CODE' ? 'type-code' : (snippet.type.name() == 'TEXT' ? 'type-text' : 'type-img')}">타입</span>
+                    <span th:unless="${snippet.type != null}">타입 없음</span>
+                </span>
+                <span class="meta-item">
+                    생성일: <span th:if="${snippet.createdAt != null}" th:text="${#dates.format(snippet.createdAt, 'yyyy-MM-dd')}">날짜</span>
+                    <span th:unless="${snippet.createdAt != null}">날짜 없음</span>
+                </span>
+                <span th:if="${snippet.sourceUrl != null and !#strings.isEmpty(snippet.sourceUrl)}" class="meta-item">출처 있음</span>
+            </div>
+
+            <!-- 메모 미리보기 -->
+            <div th:if="${snippet.memo != null and !#strings.isEmpty(snippet.memo)}" class="snippet-content">
+                <div th:text="${#strings.abbreviate(snippet.memo, 200)}">
+                    스니펫 내용이 여기에 표시됩니다...
+                </div>
+            </div>
+
+            <!-- 코드 타입 미리보기 -->
+            <div th:if="${snippet.type != null and snippet.type.name() == 'CODE'}" class="snippet-content">
+                <strong>코드 스니펫</strong>
+                <div th:if="${snippet.codeContent != null and !#strings.isEmpty(snippet.codeContent)}">
+                    <pre th:text="${#strings.abbreviate(snippet.codeContent, 150)}">코드 내용</pre>
+                </div>
+                <div th:if="${snippet.language != null and !#strings.isEmpty(snippet.language)}" class="meta-item">
+                    언어: <span th:text="${snippet.language}">언어</span>
+                </div>
+            </div>
+
+            <!-- 텍스트 타입 미리보기 -->
+            <div th:if="${snippet.type != null and snippet.type.name() == 'TEXT'}" class="snippet-content">
+                <strong>텍스트 스니펫</strong>
+                <div th:if="${snippet.textContent != null and !#strings.isEmpty(snippet.textContent)}">
+                    <p th:text="${#strings.abbreviate(snippet.textContent, 200)}">텍스트 내용</p>
+                </div>
+            </div>
+
+            <!-- 이미지 타입 미리보기 -->
+            <div th:if="${snippet.type != null and snippet.type.name() == 'IMG'}" class="snippet-content">
+                <strong>이미지 스니펫</strong>
+                <div th:if="${snippet.imageUrl != null and !#strings.isEmpty(snippet.imageUrl)}">
+                    <img th:src="${snippet.imageUrl}"
+                         th:alt="${snippet.altText}"
+                         style="max-width: 200px; max-height: 150px; border-radius: 4px;">
+                </div>
+                <div th:if="${snippet.altText != null and !#strings.isEmpty(snippet.altText)}">
+                    <p th:text="${snippet.altText}">이미지 설명</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // 세션 기반이므로 별도의 초기 로드는 필요 없음 (서버에서 이미 상태 전달)
+        console.log('페이지 로드 완료 - 세션 북마크 사용');
+    });
+
+    // 모든 스니펫의 북마크 상태 확인
+    function checkAllBookmarkStatus() {
+        $('.bookmark-btn').each(function() {
+            const button = $(this);
+            const snippetId = button.data('snippet-id');
+            checkBookmarkStatus(snippetId, button);
+        });
+    }
+
+    // 개별 스니펫의 북마크 상태 확인
+    function checkBookmarkStatus(snippetId, buttonElement) {
+        $.ajax({
+            url: '/api/bookmarks/check',
+            method: 'GET',
+            data: { snippetId: snippetId },
+            success: function(response) {
+                if (response.success && response.bookmarked) {
+                    updateBookmarkButton(buttonElement, true);
+                }
+            },
+            error: function(xhr) {
+                console.log('북마크 상태 확인 실패:', xhr.responseText);
+            }
+        });
+    }
+
+    // 북마크 토글
+    function toggleBookmark(buttonElement) {
+        const button = $(buttonElement);
+        const snippetId = button.data('snippet-id');
+
+        // 로딩 상태
+        button.addClass('loading');
+
+        $.ajax({
+            url: '/api/bookmarks/toggle',
+            method: 'POST',
+            data: { snippetId: snippetId },
+            success: function(response) {
+                button.removeClass('loading');
+
+                if (response.success) {
+                    updateBookmarkButton(button, response.bookmarked);
+                    showAlert(response.message, 'success');
+                } else {
+                    showAlert(response.message, 'error');
+                }
+            },
+            error: function(xhr) {
+                button.removeClass('loading');
+                console.error('북마크 토글 실패:', xhr.responseText);
+                showAlert('북마크 처리 중 오류가 발생했습니다.', 'error');
+            }
+        });
+    }
+
+    // 북마크 버튼 상태 업데이트
+    function updateBookmarkButton(button, isBookmarked) {
+        const icon = button.find('.bookmark-icon');
+        const text = button.find('.bookmark-text');
+
+        if (isBookmarked) {
+            button.addClass('bookmarked');
+            icon.text('★');
+            text.text('북마크됨');
+        } else {
+            button.removeClass('bookmarked');
+            icon.text('☆');
+            text.text('북마크');
+        }
+    }
+
+    // 알림 메시지 표시
+    function showAlert(message, type) {
+        const alertDiv = $('#alertMessage');
+        alertDiv.removeClass('alert-success alert-error alert-warning')
+            .addClass('alert alert-' + type)
+            .text(message)
+            .show();
+
+        // 3초 후 자동 숨김
+        setTimeout(function() {
+            alertDiv.fadeOut();
+        }, 3000);
+    }
+</script>
+</body>
+</html>

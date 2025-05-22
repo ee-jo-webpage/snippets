@@ -23,8 +23,35 @@ public class BookmarkRestController {
     @Autowired
     BookmarkService bookmarkService;
 
-    //북마크 추가
-    public ResponseEntity<?> addBookmark(@RequestBody Bookmark request, HttpSession session) {
+    //북마크 토글 (추가/삭제)
+    @PostMapping("/toggle")
+    public ResponseEntity<?> toggleBookmark(@RequestParam Long snippetId, HttpSession session) {
+        try {
+            Long userId = (Long) session.getAttribute("userId");
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("success", false, "message", "로그인이 필요합니다."));
+            }
+
+            boolean isBookmarked = bookmarkService.toggleBookmark(userId, snippetId);
+            String message = isBookmarked ? "북마크가 추가되었습니다." : "북마크가 제거되었습니다.";
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "bookmarked", isBookmarked,
+                    "message", message
+            ));
+
+        } catch (Exception e) {
+            log.error("북마크 토글 중 오류 발생", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", "북마크 처리 중 오류가 발생했습니다."));
+        }
+    }
+
+    //북마크 추가 (기존 메서드 수정)
+    @PostMapping("/add")
+    public ResponseEntity<?> addBookmark(@RequestParam Long snippetId, HttpSession session) {
         try {
             Long userId = (Long) session.getAttribute("userId");
             if (userId == null) {
@@ -33,11 +60,11 @@ public class BookmarkRestController {
             }
 
             // 이미 북마크되어 있는지 확인
-            if (bookmarkService.isBookmarked(userId, request.getSnippetId())) {
+            if (bookmarkService.isBookmarked(userId, snippetId)) {
                 return ResponseEntity.ok(Map.of("success", false, "message", "이미 북마크된 스니펫입니다."));
             }
 
-            bookmarkService.addBookmark(userId, request.getSnippetId());
+            bookmarkService.addBookmark(userId, snippetId);
             return ResponseEntity.ok(Map.of("success", true, "message", "북마크가 추가되었습니다."));
 
         } catch (Exception e) {
@@ -47,4 +74,50 @@ public class BookmarkRestController {
         }
     }
 
+    //북마크 삭제
+    @DeleteMapping("/remove")
+    public ResponseEntity<?> removeBookmark(@RequestParam Long snippetId, HttpSession session) {
+        try {
+            Long userId = (Long) session.getAttribute("userId");
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("success", false, "message", "로그인이 필요합니다."));
+            }
+
+            if (!bookmarkService.isBookmarked(userId, snippetId)) {
+                return ResponseEntity.ok(Map.of("success", false, "message", "북마크되지 않은 스니펫입니다."));
+            }
+
+            bookmarkService.removeBookmark(userId, snippetId);
+            return ResponseEntity.ok(Map.of("success", true, "message", "북마크가 제거되었습니다."));
+
+        } catch (Exception e) {
+            log.error("북마크 삭제 중 오류 발생", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", "북마크 삭제 중 오류가 발생했습니다."));
+        }
+    }
+
+    //북마크 여부 확인
+    @GetMapping("/check")
+    public ResponseEntity<?> checkBookmark(@RequestParam Long snippetId, HttpSession session) {
+        try {
+            Long userId = (Long) session.getAttribute("userId");
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("success", false, "message", "로그인이 필요합니다."));
+            }
+
+            boolean isBookmarked = bookmarkService.isBookmarked(userId, snippetId);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "bookmarked", isBookmarked
+            ));
+
+        } catch (Exception e) {
+            log.error("북마크 확인 중 오류 발생", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", "북마크 확인 중 오류가 발생했습니다."));
+        }
+    }
 }

@@ -42,6 +42,26 @@
             opacity: 0.9;
         }
 
+        /* 알림 메시지 스타일 추가 */
+        .alert {
+            padding: 1rem 1.5rem;
+            margin: 1rem 2rem;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
         .search-section {
             padding: 1.5rem 2rem;
             border-bottom: 1px solid #eee;
@@ -179,6 +199,11 @@
             color: #2f855a;
         }
 
+        .meta-item.type-img {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
         .snippet-content {
             background: #f7fafc;
             padding: 1rem;
@@ -262,6 +287,10 @@
         <div class="bookmark-count" th:text="|총 ${count}개의 북마크|">총 0개의 북마크</div>
     </div>
 
+    <!-- 알림 메시지 표시 영역 추가 -->
+    <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
     <div class="search-section">
         <div class="search-bar">
             <input type="text"
@@ -307,17 +336,41 @@
             </div>
 
             <div class="snippet-meta">
-                    <span class="meta-item"
-                          th:classappend="${bookmark.type?.name() == 'CODE' ? 'type-code' : (bookmark.type?.name() == 'TEXT' ? 'type-text' : '')}"
-                          th:text="${bookmark.type?.name() ?: '타입 없음'}">타입</span>
-                <span class="meta-item" th:text="'생성일: ' + ${bookmark.createdAt ?: '날짜 없음'}">생성일</span>
+                <span class="meta-item"
+                      th:classappend="${bookmark.type?.name() == 'CODE' ? 'type-code' : (bookmark.type?.name() == 'TEXT' ? 'type-text' : 'type-img')}"
+                      th:text="${bookmark.type?.name() ?: '타입 없음'}">타입</span>
+                <span class="meta-item" th:text="'생성일: ' + ${#dates.format(bookmark.createdAt, 'yyyy-MM-dd')}">생성일</span>
                 <span class="meta-item" th:if="${bookmark.sourceUrl}" th:text="'출처 있음'">출처</span>
             </div>
 
+            <!-- 타입별 콘텐츠 미리보기 추가 -->
             <div class="snippet-content" th:if="${bookmark.memo}">
                 <div th:text="${#strings.abbreviate(bookmark.memo, 200)}">
                     스니펫 내용이 여기에 표시됩니다...
                 </div>
+            </div>
+
+            <!-- 코드 타입 미리보기 -->
+            <div th:if="${bookmark.type?.name() == 'CODE' and bookmark.codeContent}" class="snippet-content">
+                <strong>코드:</strong>
+                <pre th:text="${#strings.abbreviate(bookmark.codeContent, 150)}">코드 내용</pre>
+                <span th:if="${bookmark.language}" class="meta-item" th:text="'언어: ' + ${bookmark.language}">언어</span>
+            </div>
+
+            <!-- 텍스트 타입 미리보기 -->
+            <div th:if="${bookmark.type?.name() == 'TEXT' and bookmark.textContent}" class="snippet-content">
+                <strong>텍스트:</strong>
+                <p th:text="${#strings.abbreviate(bookmark.textContent, 200)}">텍스트 내용</p>
+            </div>
+
+            <!-- 이미지 타입 미리보기 -->
+            <div th:if="${bookmark.type?.name() == 'IMG'}" class="snippet-content">
+                <strong>이미지:</strong>
+                <img th:if="${bookmark.imageUrl}"
+                     th:src="${bookmark.imageUrl}"
+                     th:alt="${bookmark.altText}"
+                     style="max-width: 200px; max-height: 150px; border-radius: 4px;">
+                <p th:if="${bookmark.altText}" th:text="${bookmark.altText}">이미지 설명</p>
             </div>
         </div>
     </div>
@@ -373,19 +426,23 @@
         typeFilter.on('change', filterBookmarks);
     });
 
-    // 북마크 제거 함수
+    // 북마크 제거 함수 - REST API 사용으로 수정
     function removeBookmark(snippetId) {
         if (!confirm('이 북마크를 제거하시겠습니까?')) {
             return;
         }
 
         $.ajax({
-            url: /*[[@{/bookmark/remove}]]*/ '/bookmark/remove',
+            url: '/api/bookmarks/remove',
             method: 'DELETE',
             data: { snippetId: snippetId },
             success: function(response) {
-                alert('북마크가 제거되었습니다.');
-                location.reload();
+                if (response.success) {
+                    alert(response.message);
+                    location.reload();
+                } else {
+                    alert(response.message);
+                }
             },
             error: function(xhr) {
                 alert('북마크 제거 중 오류가 발생했습니다.');

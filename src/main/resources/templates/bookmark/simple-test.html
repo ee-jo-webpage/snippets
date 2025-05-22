@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>간단 데이터 테스트</title>
+</head>
+<body>
+<h1>북마크 데이터 테스트</h1>
+
+<p>총 개수: <span th:text="${count}">0</span></p>
+
+<div th:if="${bookmarks != null}">
+    <h3>북마크 목록:</h3>
+    <div th:each="item, stat : ${bookmarks}" style="border: 1px solid #ccc; margin: 10px; padding: 10px;">
+        <p><strong>번호:</strong> <span th:text="${stat.count}">1</span></p>
+        <p><strong>스니펫 ID:</strong> <span th:text="${item.snippetId}">ID</span></p>
+        <p><strong>메모:</strong> <span th:text="${item.memo}">메모</span></p>
+        <p><strong>타입:</strong> <span th:text="${item.type}">타입</span></p>
+    </div>
+</div>
+
+<div th:if="${bookmarks == null}">
+    <p style="color: red;">bookmarks가 null입니다!</p>
+</div>
+</body>
+</html>

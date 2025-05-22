@@ -114,15 +114,15 @@
       <table>
         <tr>
           <th>Source URL</th>
-          <td><input type="text" th:field="*{sourceurl}" /></td>
+          <td><input type="text" th:field="*{sourceUrl}" /></td>
         </tr>
         <tr>
           <th>Type</th>
           <td>
             <select th:field="*{type}" id="typeSelect" onchange="showFields()">
-              <option value="code">Code</option>
-              <option value="text">Text</option>
-              <option value="img">Image</option>
+              <option value="CODE">Code</option>
+              <option value="TEXT">Text</option>
+              <option value="IMG">Image</option>
             </select>
           </td>
         </tr>
@@ -151,11 +151,11 @@
         </tr>
         <tr class="codeFields" style="display:none;">
           <th>Code Content</th>
-          <td><textarea th:field="*{codecontent}" rows="6"></textarea></td>
+          <td><textarea th:field="*{codeContent}" rows="6"></textarea></td>
         </tr>
         <tr id="textFields" style="display:none;">
           <th>Text Content</th>
-          <td><textarea th:field="*{textcontent}" rows="6"></textarea></td>
+          <td><textarea th:field="*{textContent}" rows="6"></textarea></td>
         </tr>
         <tr class="imageFields" style="display:none;">
           <th>이미지 파일</th>
@@ -163,7 +163,7 @@
         </tr>
         <tr class="imageFields" style="display:none;">
           <th>Alt Text</th>
-          <td><input type="text" th:field="*{alttext}" /></td>
+          <td><input type="text" th:field="*{altText}" /></td>
         </tr>
       </table>
 
@@ -177,11 +177,11 @@
     function showFields() {
       const type = document.getElementById('typeSelect').value;
       document.querySelectorAll('.codeFields')
-              .forEach(el => el.style.display = (type === 'code') ? '' : 'none');
+              .forEach(el => el.style.display = (type === 'CODE') ? '' : 'none');
       document.getElementById('textFields')
-              .style.display = (type === 'text') ? '' : 'none';
+              .style.display = (type === 'TEXT') ? '' : 'none';
       document.querySelectorAll('.imageFields')
-              .forEach(el => el.style.display = (type === 'img') ? '' : 'none');
+              .forEach(el => el.style.display = (type === 'IMG') ? '' : 'none');
     }
     window.onload = showFields;
 

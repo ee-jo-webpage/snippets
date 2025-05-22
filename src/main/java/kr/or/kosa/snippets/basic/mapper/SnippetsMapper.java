@@ -14,7 +14,7 @@ public interface SnippetsMapper {
     List<Snippets> getAllSnippets();
 
     // 상세보기
-    Snippets getSnippetsById(@Param("snippetid") int snippetid, @Param("type") SnippetTypeBasic type);
+    Snippets getSnippetsById(@Param("snippetId") Long snippetId, @Param("type") SnippetTypeBasic type);
 
 
     // 기본 스니펫 등록 (snippets 테이블)
@@ -38,16 +38,16 @@ public interface SnippetsMapper {
 
     
     // 코드 게시글 삭제
-    void deleteSnippetCodeBySnippetId(@Param("snippetid") int snippetid);
+    void deleteSnippetCodeBySnippetId(@Param("snippetId") Long snippetId);
     // 텍스트 게시글 삭제
-    void deleteSnippetTextBySnippetId(@Param("snippetid") int snippetid);
+    void deleteSnippetTextBySnippetId(@Param("snippetId") Long snippetId);
     // 이미지 게시글 삭제
-    void deleteSnippetImageBySnippetId(@Param("snippetid") int snippetid);
+    void deleteSnippetImageBySnippetId(@Param("snippetId") Long snippetId);
     // 게시글 삭제
-    void deleteSnippets(@Param("snippetid") int snippetid);
+    void deleteSnippets(@Param("snippetId") Long snippetId);
     // 추가: snippets에서 type 조회 (getSnippetsById에서 type이 null일 때 사용)
     // 수정: @Param 을 붙여서 이름을 명시
-    SnippetTypeBasic getSnippetTypeById(@Param("snippetid") int snippetid);
+    SnippetTypeBasic getSnippetTypeById(@Param("snippetId") Long snippetId);
 
     
 }

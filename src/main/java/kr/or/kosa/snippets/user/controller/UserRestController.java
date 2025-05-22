@@ -173,6 +173,21 @@ public class UserRestController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+    @GetMapping("/session-user")
+    public ResponseEntity<?> sessionUser(HttpServletRequest request, Principal principal) {
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            System.out.println("세션 없음");
+            return ResponseEntity.status(401).build(); // 세션 자체가 없는 경우
+        }
+
+        if (principal != null) {
+            System.out.println("세션 ID: " + session.getId());
+            return ResponseEntity.ok(Map.of("username", principal.getName()));
+        }
+
+        return ResponseEntity.status(401).build(); // 인증 안 된 사용자
+    }
 
 
 }

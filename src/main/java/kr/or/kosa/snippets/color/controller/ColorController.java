@@ -142,7 +142,6 @@ public class ColorController {
 
 
     //색상등록
-    //색상등록
     @PostMapping("/add")
     public String createColor(@ModelAttribute Color color, HttpSession session, RedirectAttributes redirectAttrs){
         try {

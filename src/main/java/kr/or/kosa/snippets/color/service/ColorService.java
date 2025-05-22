@@ -50,6 +50,16 @@ public class ColorService {
         return colorList;
     }
 
+    public List<Color> getAllAvailableColorsByUserId(Long userId) {
+        try {
+            List<Color> colorList = colorMapper.getAllAvailableColorsByUserId(userId);
+            log.info("사용자 {}의 사용 가능한 색상 {} 개 조회됨", userId, colorList.size());
+            return colorList;
+        } catch (Exception e) {
+            log.error("사용자 {}의 사용 가능한 색상 조회 중 오류 발생", userId, e);
+            throw e;
+        }
+    }
     
     public void insertColor(Color color) {
         if (color.getName() == null || color.getName().trim().isEmpty()) {

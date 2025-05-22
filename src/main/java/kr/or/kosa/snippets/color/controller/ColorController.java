@@ -70,27 +70,56 @@ public class ColorController {
         return "color/color-list";
     }
 
-    //사용자별 색상 조회
-    @GetMapping("/user/{userId}")
-    public String userColors(@PathVariable Long userId,
-                             HttpSession session,
-                             Model model) {
+    //사용자별 색상 조회@GetMapping("/user/{userId}")
 
-        log.info(userId + "의 색상 조회");
+    /// /    public String userColors(@PathVariable Long userId,
+    /// /                             HttpSession session,
+    /// /                             @RequestParam(required = false, defaultValue = "false") boolean includeDefault,
+    /// /                             Model model) {
+    /// /        log.info(userId + "의 색상 조회 (기본 색상 포함: " + includeDefault + ")");
+    /// /        session.setAttribute("userId", userId);
+    /// /
+    /// /        List<Color> colorList;
+    /// /        if (includeDefault) {
+    /// /            colorList = colorService.getAllAvailableColorsByUserId(userId);
+    /// /        } else {
+    /// /            colorList = colorService.getColorsByUserId(userId);
+    /// /        }
+    /// /
+    /// /        model.addAttribute("colorList", colorList);
+    /// /        model.addAttribute("userId", userId);
+    /// /        model.addAttribute("currentUserId", session.getAttribute("userId"));
+    /// /        model.addAttribute("isMyColors", false);
+    /// /        model.addAttribute("includeDefault", includeDefault);
+    /// /
+    /// /        return "color/user-colors";
+    /// /    }
+//
+    // 사용자가 사용 가능한 모든 색상 조회 (기본 색상 + 사용자 지정 색상)
+    // ColorController.java 수정
+    @GetMapping("/user/{userId}")
+    public String getAvailableColors(@PathVariable Long userId,
+                                     HttpSession session,
+                                     Model model) {
+        log.info("사용자 {}의 사용 가능한 색상 조회", userId);
         session.setAttribute("userId", userId);
 
-        // 세션 설정 직후 확인
-        log.info("세션에 저장된 userId: {}", session.getAttribute("userId"));
-        log.info("세션 ID: {}", session.getId());
+        try {
+            List<Color> colorList = colorService.getAllAvailableColorsByUserId(userId);
 
-        List<Color> colorList = colorService.getColorsByUserId(userId);
+            model.addAttribute("colorList", colorList);
+            model.addAttribute("userId", userId);
+            model.addAttribute("currentUserId", session.getAttribute("userId"));
+            model.addAttribute("isMyColors", false);
+            model.addAttribute("isAvailableColors", true);
 
-        model.addAttribute("colorList", colorList);
-        model.addAttribute("userId", userId);
-        model.addAttribute("currentUserId", session.getAttribute("userId")); // 추가
-        model.addAttribute("isMyColors", false); // 추가
-
-        return "color/user-colors";
+            return "color/user-colors";
+        } catch (Exception e) {
+            log.error("사용자 {}의 사용 가능한 색상 조회 중 오류: {}", userId, e.getMessage(), e);
+            model.addAttribute("error", "색상 정보를 불러오는 중 오류가 발생했습니다.");
+            model.addAttribute("colorList", List.of()); // 빈 리스트로 초기화
+            return "color/user-colors"; // 에러가 있어도 페이지 렌더링
+        }
     }
 
     // 로그인한 사용자 자신의 색상만 조회하는 경우(세션)

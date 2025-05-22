@@ -16,6 +16,7 @@
         <result property="deletedAt" column="deleted_at"/>
         <result property="reason" column="reason"/>
         <result property="role" column="role"/>
+        <result property="loginType" column="login_type"/>
     </resultMap>
 
 
@@ -48,9 +49,9 @@
 
     <insert id="insertUser" parameterType="kr.or.kosa.snippets.user.model.Users" useGeneratedKeys="true"
             keyProperty="userId">
-        INSERT INTO users (email, nickname, password, enabled, created_at, updated_at, deleted_at, reason, role)
+        INSERT INTO users (email, nickname, password, enabled, created_at, updated_at, deleted_at, reason, role,login_type)
         VALUES (#{email}, #{nickname}, #{password}, #{enabled}, #{createdAt}, #{updatedAt}, #{deletedAt}, #{reason},
-                #{role})
+                #{role}, #{loginType})
     </insert>
 
     <update id="updateUser" parameterType="kr.or.kosa.snippets.user.model.Users">

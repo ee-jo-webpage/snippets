@@ -5,13 +5,15 @@ import kr.or.kosa.snippets.user.mapper.UserMapper;
 import kr.or.kosa.snippets.user.model.UserUpdateDTO;
 import kr.or.kosa.snippets.user.model.Users;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -52,5 +54,18 @@ public class UserService {
         user.setPassword(encoded);
         user.setUpdatedAt(LocalDateTime.now());
         userMapper.updateUser(user);
+    }
+
+
+    public void revokeGoogleAccessToken(String accessToken) {
+        String revokeUrl = "https://oauth2.googleapis.com/revoke?token=" + accessToken;
+
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            restTemplate.postForLocation(revokeUrl, null);
+            log.info("✅ 구글 accessToken 해제 성공: {}", accessToken);
+        } catch (Exception e) {
+            log.warn("⚠️ 구글 accessToken 해제 실패: {}", e.getMessage());
+        }
     }
 }

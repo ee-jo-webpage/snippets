@@ -82,7 +82,7 @@ form.addEventListener('submit', async function (e) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
-
+        console.log("✅ 서버 응답 수신됨", response);
         let result;
         try {
             result = await response.json();

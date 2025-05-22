@@ -13,15 +13,17 @@
 
 	<form id="updateForm">
 		<label>이메일
-			<input type="email" name="email" th:value="${user.email}" readonly>
+			<input type="email" name="email" th:value="${email}" readonly>
 		</label>
 
 		<label>닉네임
-			<input type="text" name="nickname" th:value="${user.nickname}">
+			<input type="text" name="nickname" th:value="${nickname}">
 		</label>
 		<div class="btns">
 			<button type="submit">정보 수정</button>
-			<button type="button" onclick="location.href='/changePassword'">비밀번호 변경</button>
+			<span th:if="${#authentication.principal.loginType == 'LOCAL'}">
+				<button type="button" onclick="location.href='/changePassword'">비밀번호 변경</button>
+			</span>
 			<button type="button" class="delete" id="deleteBtn">회원 탈퇴</button>
 		</div>
 	</form>

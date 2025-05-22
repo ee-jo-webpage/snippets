@@ -6,12 +6,10 @@ import jakarta.validation.Valid;
 import kr.or.kosa.snippets.user.model.UserDTO;
 import kr.or.kosa.snippets.user.model.UserUpdateDTO;
 import kr.or.kosa.snippets.user.model.Users;
-import kr.or.kosa.snippets.user.service.AuthService;
-import kr.or.kosa.snippets.user.service.MailService;
-import kr.or.kosa.snippets.user.service.UserRecoveryService;
-import kr.or.kosa.snippets.user.service.UserService;
+import kr.or.kosa.snippets.user.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
@@ -88,6 +86,21 @@ public class UserRestController {
         return ResponseEntity.ok("회원 정보가 수정되었습니다.");
     }
 
+//    @PostMapping("/delete")
+//    public ResponseEntity<?> deleteAccount(@RequestBody Map<String, String> payload,
+//                                           Principal principal,
+//                                           HttpServletRequest request) {
+//        try {
+//            String email = principal.getName();
+//            String reason = payload.get("reason");
+//            userRecoveryService.deactivateUser(email, reason);
+//            request.logout(); // 세션 초기화
+//            return ResponseEntity.ok(Map.of("message", "계정이 비활성화되었습니다."));
+//        } catch (Exception e) {
+//            return ResponseEntity.status(500).body(Map.of("error", "탈퇴 처리 중 오류 발생"));
+//        }
+//    }
+
     @PostMapping("/delete")
     public ResponseEntity<?> deleteAccount(@RequestBody Map<String, String> payload,
                                            Principal principal,
@@ -95,6 +108,17 @@ public class UserRestController {
         try {
             String email = principal.getName();
             String reason = payload.get("reason");
+
+            Users user = userService.findByEmail(email);
+
+            // 구글 로그인 유저라면 연동 해제 시도
+            if ("GOOGLE".equalsIgnoreCase(user.getLoginType())) {
+                String accessToken = (String) request.getSession().getAttribute("oauth2AccessToken");
+                if (accessToken != null) {
+                    userService.revokeGoogleAccessToken(accessToken);
+                }
+            }
+
             userRecoveryService.deactivateUser(email, reason);
             request.logout(); // 세션 초기화
             return ResponseEntity.ok(Map.of("message", "계정이 비활성화되었습니다."));
@@ -160,6 +184,7 @@ public class UserRestController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
     @PostMapping("/change-password")
     public ResponseEntity<?> changePassword(@RequestBody Map<String, String> payload, Principal principal) {
         String email = principal.getName();
@@ -173,21 +198,13 @@ public class UserRestController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
     @GetMapping("/session-user")
-    public ResponseEntity<?> sessionUser(HttpServletRequest request, Principal principal) {
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            System.out.println("세션 없음");
-            return ResponseEntity.status(401).build(); // 세션 자체가 없는 경우
+    public ResponseEntity<?> getSessionUser(@AuthenticationPrincipal CustomUserDetails details) {
+        if (details == null) {
+            return ResponseEntity.status(401).build();
         }
-
-        if (principal != null) {
-            System.out.println("세션 ID: " + session.getId());
-            return ResponseEntity.ok(Map.of("username", principal.getName()));
-        }
-
-        return ResponseEntity.status(401).build(); // 인증 안 된 사용자
+        return ResponseEntity.ok().build();
     }
-
 
 }

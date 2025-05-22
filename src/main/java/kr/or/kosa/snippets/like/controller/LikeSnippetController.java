@@ -13,9 +13,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.stream.Collectors;
 
 @Controller
 public class LikeSnippetController {
@@ -61,26 +63,78 @@ public class LikeSnippetController {
     // 인기 스니펫 목록 페이지 (상위 100개 제한, 페이징 처리)
     @GetMapping("/popular-snippets")
     public String showPopularSnippets(
-        @RequestParam(value = "page", defaultValue = "1") int page,
-        Model model) {
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "type", required = false) String type,
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "minLikes", required = false) Integer minLikes,
+            @RequestParam(value = "tagName", required = false) String tagName,
+            @RequestParam(value = "searchMode", required = false, defaultValue = "view") String searchMode,
+            Model model) {
 
         Integer currentUserId = AppConfig.getFixedUserId();
         int pageSize = 8; // 페이지당 8개 스니펫 표시
         int offset = (page - 1) * pageSize;
+        boolean hasSearchFilter = (type != null && !type.isEmpty()) ||
+                (keyword != null && !keyword.isEmpty()) ||
+                (minLikes != null && minLikes > 0) ||
+                (tagName != null && !tagName.isEmpty());
 
-        // 뷰를 통해 페이징 처리된 인기 스니펫 조회 (상위 100개 내에서만)
-        List<Snippet> snippets = likeSnippetService.getPopularSnippetsPagedFromView(offset, pageSize);
-        int totalSnippets = likeSnippetService.countPopularSnippetsFromView(); // 최대 100개
+        List<Snippet> snippets;
+        int totalSnippets;
 
-        // 뷰 실패 시 기존 방식으로 페이징 대체
-        if (snippets == null || snippets.isEmpty()) {
-            // 기존 방식으로 상위 100개 중에서 페이징
-            List<Snippet> allPopularSnippets = likeSnippetService.getPopularSnippets(100);
-            totalSnippets = Math.min(allPopularSnippets.size(), 100);
+        // 검색 모드에 따라 처리 방식 다르게 적용
+        if (hasSearchFilter) {
+            if ("db".equals(searchMode)) {
+                // DB 검색 모드: 전체 데이터베이스에서 직접 검색
+                snippets = likeSnippetService.searchSnippets(type, keyword, minLikes, tagName);
+                totalSnippets = snippets.size();
 
-            int fromIndex = Math.min(offset, allPopularSnippets.size());
-            int toIndex = Math.min(offset + pageSize, allPopularSnippets.size());
-            snippets = allPopularSnippets.subList(fromIndex, toIndex);
+                // 페이징 처리
+                int fromIndex = Math.min(offset, snippets.size());
+                int toIndex = Math.min(offset + pageSize, snippets.size());
+                if (fromIndex < toIndex) {
+                    snippets = snippets.subList(fromIndex, toIndex);
+                } else {
+                    snippets = new ArrayList<>(); // 빈 목록 반환
+                }
+            } else {
+                // 뷰 검색 모드 (기본값): 상위 100개 내에서 필터링
+                List<Snippet> allPopularSnippets = likeSnippetService.getTop100PopularSnippets(100);
+
+                // 메모리 내에서 필터링
+                snippets = allPopularSnippets.stream()
+                        .filter(s -> type == null || type.isEmpty() || s.getType().equals(type))
+                        .filter(s -> keyword == null || keyword.isEmpty() ||
+                                (s.getMemo() != null && s.getMemo().toLowerCase().contains(keyword.toLowerCase())))
+                        .filter(s -> minLikes == null || s.getLikeCount() >= minLikes)
+                        .collect(Collectors.toList());
+
+                // 태그 필터링은 별도 처리 필요 (태그 정보가 포함되어 있지 않음)
+                if (tagName != null && !tagName.isEmpty()) {
+                    snippets = snippets.stream()
+                            .filter(s -> {
+                                List<LikeTag> snippetTags = likeSnippetService.getTagsBySnippetId(s.getSnippetId());
+                                return snippetTags.stream()
+                                        .anyMatch(tag -> tag.getName().equalsIgnoreCase(tagName));
+                            })
+                            .collect(Collectors.toList());
+                }
+
+                totalSnippets = snippets.size();
+
+                // 페이징 처리
+                int fromIndex = Math.min(offset, snippets.size());
+                int toIndex = Math.min(offset + pageSize, snippets.size());
+                if (fromIndex < toIndex) {
+                    snippets = snippets.subList(fromIndex, toIndex);
+                } else {
+                    snippets = new ArrayList<>(); // 빈 목록 반환
+                }
+            }
+        } else {
+            // 검색 필터가 없는 경우 기본 인기 스니펫 목록 표시
+            snippets = likeSnippetService.getPopularSnippetsPagedFromView(offset, pageSize);
+            totalSnippets = likeSnippetService.countPopularSnippetsFromView(); // 최대 100개
         }
 
         // 각 스니펫의 좋아요 상태 확인
@@ -100,9 +154,12 @@ public class LikeSnippetController {
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", totalPages);
         model.addAttribute("totalSnippets", totalSnippets);
-
-        // 검색이나 정렬 기능 없이 인기 스니펫만 표시
-        model.addAttribute("hasSearchFilter", false);
+        model.addAttribute("searchType", type);
+        model.addAttribute("searchKeyword", keyword);
+        model.addAttribute("searchMinLikes", minLikes);
+        model.addAttribute("searchTagName", tagName);
+        model.addAttribute("searchMode", searchMode);
+        model.addAttribute("hasSearchFilter", hasSearchFilter);
 
         return "like/snippets";
     }

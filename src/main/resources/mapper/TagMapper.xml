@@ -5,14 +5,14 @@
     <!-- 모든 태그 조회 -->
     <select id="getAllTags" resultType="kr.or.kosa.snippets.like.model.LikeTag">
         SELECT tag_id as tagId, name
-        FROM likeTags
+        FROM tags
         ORDER BY name
     </select>
 
     <!-- 특정 스니펫의 태그 조회 -->
     <select id="getTagsBySnippetId" resultType="kr.or.kosa.snippets.like.model.LikeTag">
         SELECT t.tag_id as tagId, t.name
-        FROM likeTags t
+        FROM tags t
                  JOIN snippet_tags st ON t.tag_id = st.tag_id
         WHERE st.snippet_id = #{snippetId}
         ORDER BY t.name

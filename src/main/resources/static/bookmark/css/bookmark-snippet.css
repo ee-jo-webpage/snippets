@@ -16,7 +16,7 @@ body {
 }
 
 .header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
     color: white;
     padding: 2rem;
     text-align: center;
@@ -28,48 +28,33 @@ body {
     font-weight: 600;
 }
 
-.bookmark-count {
+.snippet-count {
     margin-top: 0.5rem;
     font-size: 1.1rem;
     opacity: 0.9;
 }
 
-/* 알림 메시지 스타일 추가 */
-.alert {
-    padding: 1rem 1.5rem;
-    margin: 1rem 2rem;
-    border-radius: 8px;
-    font-weight: 500;
-}
-
-.alert-success {
-    background-color: #d4edda;
-    border: 1px solid #c3e6cb;
-    color: #155724;
-}
-
-.alert-error {
-    background-color: #f8d7da;
-    border: 1px solid #f5c6cb;
-    color: #721c24;
-}
-
-.search-section {
+.toolbar {
     padding: 1.5rem 2rem;
     border-bottom: 1px solid #eee;
     background: #f8f9fa;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
 }
 
 .search-bar {
     display: flex;
     gap: 1rem;
     align-items: center;
-    flex-wrap: wrap;
+    flex: 1;
+    min-width: 300px;
 }
 
 .search-input {
     flex: 1;
-    min-width: 250px;
     padding: 0.75rem 1rem;
     border: 2px solid #e1e5e9;
     border-radius: 8px;
@@ -79,7 +64,7 @@ body {
 
 .search-input:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: #4facfe;
 }
 
 .filter-select {
@@ -90,11 +75,27 @@ body {
     min-width: 120px;
 }
 
-.bookmarks-grid {
+.btn-new {
+    background: #48bb78;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: background 0.2s ease;
+}
+
+.btn-new:hover {
+    background: #38a169;
+    text-decoration: none;
+    color: white;
+}
+
+.snippets-grid {
     padding: 2rem;
 }
 
-.bookmark-card {
+.snippet-card {
     border: 1px solid #e1e5e9;
     border-radius: 12px;
     padding: 1.5rem;
@@ -102,21 +103,22 @@ body {
     margin-bottom: 1.5rem;
     transition: all 0.3s ease;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    position: relative;
 }
 
-.bookmark-card:hover {
+.snippet-card:hover {
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     transform: translateY(-2px);
 }
 
-.bookmark-header {
+.snippet-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 1rem;
 }
 
-.bookmark-title {
+.snippet-title {
     font-size: 1.4rem;
     font-weight: 600;
     color: #2d3748;
@@ -125,7 +127,7 @@ body {
     margin-right: 1rem;
 }
 
-.bookmark-actions {
+.snippet-actions {
     display: flex;
     gap: 0.5rem;
     flex-shrink: 0;
@@ -146,7 +148,7 @@ body {
 }
 
 .btn-view {
-    background: #4299e1;
+    background: #4facfe;
     color: white;
 }
 
@@ -156,13 +158,38 @@ body {
     text-decoration: none;
 }
 
-.btn-remove {
-    background: #f56565;
+.btn-edit {
+    background: #ed8936;
     color: white;
 }
 
-.btn-remove:hover {
-    background: #e53e3e;
+.btn-edit:hover {
+    background: #dd6b20;
+    color: white;
+    text-decoration: none;
+}
+
+.btn-bookmark {
+    background: #f7fafc;
+    color: #4a5568;
+    border: 2px solid #e2e8f0;
+    min-width: 100px;
+}
+
+.btn-bookmark:hover {
+    background: #edf2f7;
+    border-color: #cbd5e0;
+}
+
+.btn-bookmark.bookmarked {
+    background: #ffd700;
+    color: #744210;
+    border-color: #f6e05e;
+}
+
+.btn-bookmark.bookmarked:hover {
+    background: #f6e05e;
+    border-color: #ecc94b;
 }
 
 .snippet-meta {
@@ -200,7 +227,7 @@ body {
     background: #f7fafc;
     padding: 1rem;
     border-radius: 8px;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #4facfe;
     margin-bottom: 1rem;
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     font-size: 0.875rem;
@@ -212,16 +239,12 @@ body {
     position: absolute;
     top: 1rem;
     right: 1rem;
-    background: #667eea;
+    background: #4facfe;
     color: white;
     padding: 0.25rem 0.5rem;
     border-radius: 4px;
     font-size: 0.75rem;
     font-weight: 500;
-}
-
-.bookmark-card {
-    position: relative;
 }
 
 .empty-state {
@@ -236,33 +259,54 @@ body {
     color: #4a5568;
 }
 
-.btn-primary {
-    background: #667eea;
+.toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #48bb78;
     color: white;
-    padding: 0.75rem 1.5rem;
-    text-decoration: none;
+    padding: 1rem 1.5rem;
     border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    display: none;
     font-weight: 500;
 }
 
-.btn-primary:hover {
-    background: #5a67d8;
-    text-decoration: none;
-    color: white;
+.toast.error {
+    background: #f56565;
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
 @media (max-width: 768px) {
-    .search-bar {
+    .toolbar {
         flex-direction: column;
         align-items: stretch;
     }
 
-    .bookmark-header {
+    .search-bar {
+        min-width: auto;
+    }
+
+    .snippet-header {
         flex-direction: column;
         gap: 1rem;
     }
 
-    .bookmark-actions {
+    .snippet-actions {
         align-self: stretch;
     }
 

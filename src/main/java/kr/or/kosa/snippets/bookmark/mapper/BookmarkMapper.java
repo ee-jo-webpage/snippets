@@ -30,4 +30,8 @@ public interface BookmarkMapper {
 
     @Select("SELECT * FROM snippets ORDER BY created_at DESC")
     List<Snippets> selectAllSnippets();
+
+    // 특정 사용자가 작성한 모든 스니펫 조회 (추가)
+    @Select("SELECT * FROM snippets WHERE user_id = #{userId} ORDER BY created_at DESC")
+    List<Snippets> selectSnippetsByUserId(@Param("userId") Long userId);
 }

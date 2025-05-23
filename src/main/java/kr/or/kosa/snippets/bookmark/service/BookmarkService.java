@@ -64,4 +64,9 @@ public class BookmarkService {
     public List<Snippets> getAllSnippets() {
         return bookmarkMapper.selectAllSnippets();
     }
+
+    // 특정 사용자가 작성한 모든 스니펫 조회 (추가)
+    public List<Snippets> getSnippetsByUserId(Long userId) {
+        return bookmarkMapper.selectSnippetsByUserId(userId);
+    }
 }

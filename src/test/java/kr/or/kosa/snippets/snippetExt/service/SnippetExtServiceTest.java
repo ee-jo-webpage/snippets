@@ -11,7 +11,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class SnippetExtServiceTest {
-
     private SnippetExtMapper mapper;
     private SnippetExtService service;
 

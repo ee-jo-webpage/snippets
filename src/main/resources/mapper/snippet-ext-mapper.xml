@@ -23,8 +23,8 @@
     <!--    </resultMap>-->
 
     <insert id="insertSnippet" useGeneratedKeys="true" keyProperty="snippetId">
-        INSERT INTO SNIPPETS (SOURCE_URL, TYPE, COLOR_ID, MEMO)
-        VALUES (#{sourceUrl}, #{type}, #{colorId}, #{memo})
+        INSERT INTO SNIPPETS (SOURCE_URL, TYPE, COLOR_ID, MEMO, USER_ID)
+        VALUES (#{sourceUrl}, #{type}, #{colorId}, #{memo}, #{userId})
     </insert>
 
     <insert id="insertSnippetText">
@@ -54,5 +54,46 @@
         FROM SNIPPETS
         WHERE SNIPPET_ID = #{id}
     </delete>
+
+    <select id="findUserIdBySnippetId" resultType="long">
+        SELECT USER_ID
+        FROM SNIPPETS
+        WHERE SNIPPET_ID = #{snippetId}
+    </select>
+
+    <select id="countDuplicate" resultType="int">
+        <choose>
+            <when test="typeName == 'TEXT'">
+                SELECT COUNT(1)
+                FROM SNIPPETS s
+                JOIN SNIPPET_TEXTS t ON s.snippet_id = t.snippet_id
+                WHERE s.USER_ID = #{userId}
+                AND s.TYPE = #{typeName}
+                AND s.SOURCE_URL = #{sourceUrl}
+                AND t.CONTENT = #{content}
+            </when>
+            <when test="typeName == 'CODE'">
+                SELECT COUNT(1)
+                FROM SNIPPETS s
+                JOIN SNIPPET_CODES c ON s.snippet_id = c.snippet_id
+                WHERE s.USER_ID = #{userId}
+                AND s.TYPE = #{typeName}
+                AND c.LANGUAGE = #{language}
+                AND c.CONTENT = #{content}
+            </when>
+            <when test="typeName == 'IMG'">
+                SELECT COUNT(1)
+                FROM SNIPPETS s
+                JOIN SNIPPET_IMAGES i ON s.snippet_id = i.snippet_id
+                WHERE s.USER_ID = #{userId}
+                AND s.TYPE = #{typeName}
+                AND i.IMAGE_URL = #{imageUrl}
+            </when>
+            <otherwise>
+                SELECT 0
+            </otherwise>
+        </choose>
+    </select>
+
 
 </mapper>

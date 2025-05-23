@@ -4,6 +4,7 @@ import kr.or.kosa.snippets.tag.mapper.TagMapper;
 import kr.or.kosa.snippets.tag.model.SnippetTag;
 import kr.or.kosa.snippets.tag.model.TagItem;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.annotations.Delete;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,12 @@ public class TagService {
     @Transactional
     public TagItem getTagByName(String name) {
         return tagMapper.selectTagByName(name);
+    }
+
+    //태그Id로 태그 조회
+    @Transactional
+    public TagItem selectTagByTagId(Long tagId) {
+        return tagMapper.selectTagById(tagId);
     }
 
     //태그 입력
@@ -57,5 +64,29 @@ public class TagService {
     public List<TagItem> getTagsBySnippetId(Long snippetId) {
         return tagMapper.selectTagBySnippetId(snippetId);
     }
+
+    //태그 삭제 - 연결된 관계도 삭제
+    @Transactional
+    public boolean deleteTag(Long tagId) {
+        TagItem tag = tagMapper.selectTagById(tagId);
+
+        if (tag != null) {
+            //먼저 snippet_tag에서 관련 레코드 삭제
+            tagMapper.deleteSnippetTagsByTagId(tagId);
+            //그 다음 태그 삭제
+            tagMapper.deleteTag(tagId);
+            return true;
+        }
+
+        return false;
+    }
+
+    //스니펫에서 태그 제거
+    @Transactional
+    public boolean removeTagFromSnippet(Long snippetId, Long tagId) {
+        return tagMapper.deleteSnippetTag(snippetId, tagId) > 0;
+    }
+
+
 
 }

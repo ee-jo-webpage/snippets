@@ -88,6 +88,19 @@ public class TagController {
         return ResponseEntity.ok(tags != null ? tags : new ArrayList<>());
     }
 
+    //스니펫에서 태그 제거
+    @DeleteMapping("/snippets/{snippetId}/tags/{tagId}")
+    public ResponseEntity<Void> removeTagFromSnippet(@PathVariable Long snippetId,
+                                                     @PathVariable Long tagId) {
+        boolean removed = tagService.removeTagFromSnippet(snippetId, tagId);
+
+        if (removed) {
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.notFound().build();
+
+    }
 
 
 

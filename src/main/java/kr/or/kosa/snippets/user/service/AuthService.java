@@ -38,6 +38,7 @@ public class AuthService {
                 .nickname(dto.getNickname())
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .enabled(false)
+                .loginType("LOCAL")
                 .createdAt(LocalDateTime.now())
                 .role("ROLE_USER")
                 .build();

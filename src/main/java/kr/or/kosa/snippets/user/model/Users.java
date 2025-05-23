@@ -31,4 +31,6 @@ public class Users {
     private String reason;
 
     private String role;
+
+    private String loginType;
 }

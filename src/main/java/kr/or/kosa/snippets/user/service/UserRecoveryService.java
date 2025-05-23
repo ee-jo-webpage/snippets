@@ -77,8 +77,10 @@ public class UserRecoveryService {
     @Transactional
     public void sendTemporaryPassword(String email) {
         Users user = userMapper.findByEmail(email);
-        if (user == null) throw new IllegalArgumentException("유저 없음");
-
+//        if (user == null) throw new IllegalArgumentException("유저 없음");
+        if (user == null || !"LOCAL".equals(user.getLoginType())) {
+            throw new IllegalStateException("소셜 계정은 비밀번호 변경이 불가능합니다.");
+        }
         String tempPassword = createRandomPassword();
         user.setPassword(passwordEncoder.encode(tempPassword));
         userMapper.updateUser(user);

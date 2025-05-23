@@ -2,6 +2,7 @@ package kr.or.kosa.snippets.user.controller;
 
 import kr.or.kosa.snippets.user.mapper.UserMapper;
 import kr.or.kosa.snippets.user.model.Users;
+import kr.or.kosa.snippets.user.service.CustomOAuth2UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -15,14 +16,29 @@ import java.util.List;
 @Slf4j
 public class UserCleanupScheduler {
     private final UserMapper userMapper;
+    private final CustomOAuth2UserService customOAuth2UserService;
 
     @Transactional
-    @Scheduled(cron = "0 * * * * *") // 매 분 0초마다 실행
+    @Scheduled(cron = "0 * * * * *") // 매일 1시마다 0초에 실행
     public void deleteExpiredUsers() {
         log.info("🔧 [비활성 계정 삭제] 실행");
 
-        LocalDateTime cutoff = LocalDateTime.now().minusMinutes(1); // 1분 전 기준
+        LocalDateTime cutoff = LocalDateTime.now().minusMinutes(1); // 예시용: 1분 전
         List<Users> expiredUsers = userMapper.findAllByEnabledFalseAndDeletedAtBefore(cutoff);
+
+        for (Users user : expiredUsers) {
+            if ("GOOGLE".equalsIgnoreCase(user.getLoginType())) {
+                log.info("🔌 [구글 계정 revoke] 시도: {}", user.getEmail());
+
+                // accessToken은 없음 → revoke 실패 감수
+                try {
+                    customOAuth2UserService.deleteUser(user.getEmail(), null); // accessToken 없이 호출
+                } catch (Exception e) {
+                    log.warn("⚠️ 구글 revoke 실패 (무시하고 삭제 진행): {}", e.getMessage());
+                }
+            }
+        }
+
         if (!expiredUsers.isEmpty()) {
             userMapper.deleteAll(expiredUsers);
             log.info("✅ {}명의 비활성 사용자 삭제 완료", expiredUsers.size());

@@ -88,7 +88,7 @@
                     <a href="/snippets/create" class="btn btn-primary">
                         <i class="fas fa-plus me-2"></i>새 스니펫 추가
                     </a>
-                    <a href="/tags/manager" class="btn btn-outline-secondary">
+                    <a href="/tag/manager" class="btn btn-outline-secondary">
                         <i class="fas fa-tags me-2"></i>태그 관리
                     </a>
                 </div>
@@ -388,7 +388,8 @@
 
     // 현재 태그 로드
     function loadCurrentTags() {
-        fetch(`/api/snippets/${currentSnippetId}/tags`)
+        console.log(currentSnippetId)
+        fetch('/api/snippets/' + currentSnippetId + '/tags')
             .then(response => response.json())
             .then(tags => {
                 const container = document.getElementById('currentTags');

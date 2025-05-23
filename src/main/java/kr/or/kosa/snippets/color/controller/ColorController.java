@@ -4,13 +4,20 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import kr.or.kosa.snippets.color.model.Color;
 import kr.or.kosa.snippets.color.service.ColorService;
+import kr.or.kosa.snippets.user.service.CustomUserDetails;
+import kr.or.kosa.snippets.user.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.security.Principal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +29,16 @@ public class ColorController {
 
     @Autowired
     private ColorService colorService;
+    @Autowired
+    private UserService userService;
+
+    // private 헬퍼 메서드
+    private Long requireLogin(CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다");
+        }
+        return userDetails.getUserId();
+    }
 
     // 개선된 세션 처리 메서드
     private Long getUserIdFromSession(HttpSession session) {
@@ -122,31 +139,34 @@ public class ColorController {
         }
     }
 
-    // 로그인한 사용자 자신의 색상만 조회하는 경우(세션)
-//    @GetMapping("/my-colors")
-//    public String getMyColors(Model model, HttpSession session) {
-//        // 세션에서 사용자 ID 가져오기 (실제로는 Spring Security 사용)
-//        Long currentUserId = (Long) session.getAttribute("userId");
-//
-//        if (currentUserId == null) {
-//            return "redirect:/login";  // 로그인되지 않은 경우
-//        }
-//
-//        log.info("현재 사용자 {}의 색상 조회", currentUserId);
-//        List<Color> colorList = colorService.getColorsByUserId(currentUserId);
-//
-//        model.addAttribute("colorList", colorList);
-//        model.addAttribute("isMyColors", true);
-//        return "colors/user-colors";
-//    }
+    // 로그인한 사용자 자신의 색상만 조회하는 경우
+    @GetMapping("/my-colors")
+    public String getMyColors(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
+
+        Long userId = requireLogin(userDetails);
+//        Long userId = userDetails.getUserId(); 시큐리티 체인 수정시 얘만 남길것 requireLogin 삭제
+
+        List<Color> colors = colorService.getAllAvailableColorsByUserId(userDetails.getUserId());
+
+        model.addAttribute("colorList", colors);
+        model.addAttribute("userId", userId);
+        model.addAttribute("currentUserId", userId);
+        model.addAttribute("isMyColors", true);
+        model.addAttribute("isAvailableColors", true);
+
+        return "color/user-colors";
+    }
 
 
     //색상등록
     @PostMapping("/add")
-    public String createColor(@ModelAttribute Color color, HttpSession session, RedirectAttributes redirectAttrs){
+    public String createColor(@AuthenticationPrincipal CustomUserDetails userDetails,
+                              @ModelAttribute Color color, RedirectAttributes redirectAttrs){
+        Long userId = null;
         try {
-            // 세션에서 사용자 ID 가져오기
-            Long userId = getUserIdFromSession(session);
+            userId = requireLogin(userDetails);
+//        Long userId = userDetails.getUserId(); 시큐리티 체인 수정시 얘만 남길것 requireLogin 삭제
+
             color.setUserId(userId);
 
             log.info("색상 등록 시도 - 사용자 ID: {}, 색상명: {}", userId, color.getName());
@@ -157,16 +177,22 @@ public class ColorController {
             redirectAttrs.addFlashAttribute("messageType", "success");
 
             // 사용자 색상 페이지로 리다이렉트
-            return "redirect:/color/user/" + userId;
+            return "redirect:/color/my-colors";
 
+        } catch (ResponseStatusException e) {
+            log.error("인증 실패", e);
+            return "redirect:/login";
         } catch (Exception e) {
             log.error("색상 등록 실패", e);
             redirectAttrs.addFlashAttribute("error", e.getMessage());
             redirectAttrs.addFlashAttribute("messageType", "error");
 
-            // 에러 시에도 사용자 페이지로
-            Long userId = getUserIdFromSession(session);
-            return "redirect:/color/user/" + userId;
+            //에러 나도 내 색상 페이지(userId 있을 때만)
+            if (userId != null) {
+                return "redirect:/color/my-colors";
+            } else {
+                return "redirect:/login";
+            }
         }
     }
 

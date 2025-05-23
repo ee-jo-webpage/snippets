@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.or.kosa.snippets.user.loginLog.LoginLogMapper">
+
+    <insert id="insertLoginLog">
+        INSERT INTO login_log (email, ip, user_agent, login_at, success)
+        VALUES (#{email}, #{ip}, #{userAgent}, #{loginAt}, #{success})
+    </insert>
+
+    <insert id="insertLoginLogs">
+        INSERT INTO login_log (email, ip, user_agent, login_at, success)
+        VALUES
+        <foreach collection="list" item="log" separator=",">
+            (#{log.email}, #{log.ip}, #{log.userAgent}, #{log.loginAt}, #{log.success})
+        </foreach>
+    </insert>
+
+    <delete id="deleteOldLogs">
+        DELETE FROM login_log
+        WHERE login_at &lt; #{cutoff}
+    </delete>
+
+</mapper>

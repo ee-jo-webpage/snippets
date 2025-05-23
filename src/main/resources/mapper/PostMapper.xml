@@ -53,13 +53,13 @@
         WHERE p.post_id = #{postId} AND p.status = 'published'
     </select>
 
-    <insert id="insertPost" parameterType="kr.or.kosa.snippets.board.model.Post"
+    <insert id="insertPost" parameterType="kr.or.kosa.snippets.community.model.Post"
             useGeneratedKeys="true" keyProperty="postId">
         INSERT INTO posts (user_id, category_id, title, content, view_count, created_at, updated_at, is_notice, status)
         VALUES (#{userId}, #{categoryId}, #{title}, #{content}, 0, NOW(), NOW(), #{isNotice}, #{status})
     </insert>
 
-    <update id="updatePost" parameterType="kr.or.kosa.snippets.board.model.Post">
+    <update id="updatePost" parameterType="kr.or.kosa.snippets.community.model.Post">
         UPDATE posts
         SET category_id = #{categoryId},
             title = #{title},
@@ -125,7 +125,7 @@
     </select>
 
     <!-- 임시저장 기능 -->
-    <resultMap id="DraftResultMap" type="kr.or.kosa.snippets.board.model.PostDraft">
+    <resultMap id="DraftResultMap" type="kr.or.kosa.snippets.community.model.PostDraft">
         <id property="draftId" column="draft_id"/>
         <result property="userId" column="user_id"/>
         <result property="categoryId" column="category_id"/>
@@ -148,13 +148,13 @@
         WHERE draft_id = #{draftId}
     </select>
 
-    <insert id="insertDraft" parameterType="kr.or.kosa.snippets.board.model.PostDraft"
+    <insert id="insertDraft" parameterType="kr.or.kosa.snippets.community.model.PostDraft"
             useGeneratedKeys="true" keyProperty="draftId">
         INSERT INTO post_drafts (user_id, category_id, title, content, created_at, updated_at)
         VALUES (#{userId}, #{categoryId}, #{title}, #{content}, NOW(), NOW())
     </insert>
 
-    <update id="updateDraft" parameterType="kr.or.kosa.snippets.board.model.PostDraft">
+    <update id="updateDraft" parameterType="kr.or.kosa.snippets.community.model.PostDraft">
         UPDATE post_drafts
         SET category_id = #{categoryId},
             title = #{title},

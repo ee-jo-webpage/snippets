@@ -22,13 +22,13 @@
         WHERE category_id = #{categoryId}
     </select>
 
-    <insert id="insertCategory" parameterType="kr.or.kosa.snippets.board.model.BoardCategory"
+    <insert id="insertCategory" parameterType="kr.or.kosa.snippets.community.model.BoardCategory"
             useGeneratedKeys="true" keyProperty="categoryId">
         INSERT INTO board_categories (name, description, order_num, created_at)
         VALUES (#{name}, #{description}, #{orderNum}, NOW())
     </insert>
 
-    <update id="updateCategory" parameterType="kr.or.kosa.snippets.board.model.BoardCategory">
+    <update id="updateCategory" parameterType="kr.or.kosa.snippets.community.model.BoardCategory">
         UPDATE board_categories
         SET name = #{name},
             description = #{description},

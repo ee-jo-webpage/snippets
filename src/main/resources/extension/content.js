@@ -4,24 +4,24 @@ let popup = null;
 let selectedRange = null;
 
 const colorMap = {
-    0: "#FFFF88", // Pastel Yellow
-    1: "#FFFACD", // Lemon Chiffon
-    2: "#AEC6CF", // Powder Blue
-    3: "#FFD1DC", // Cotton Candy
-    4: "#C1F0DC", // Mint Cream
-    5: "#E6E6FA", // Lavender Mist
-    6: "#B0E0E6", // Sky Blue
-    7: "#FFDAB9", // Peach Puff
+    // 0: "#FFFF88", // Pastel Yellow
+    // 1: "#FFFACD", // Lemon Chiffon
+    // 2: "#AEC6CF", // Powder Blue
+    // 3: "#FFD1DC", // Cotton Candy
+    // 4: "#C1F0DC", // Mint Cream
+    // 5: "#E6E6FA", // Lavender Mist
+    // 6: "#B0E0E6", // Sky Blue
+    // 7: "#FFDAB9", // Peach Puff
 };
 const colorMapName = {
-    0: "Pastel Yellow",
-    1: "Lemon Chiffon",
-    2: "Powder Blue",
-    3: "Cotton Candy",
-    4: "Mint Cream",
-    5: "Lavender Mist",
-    6: "Sky Blue",
-    7: "Peach Puff",
+    // 0: "Pastel Yellow",
+    // 1: "Lemon Chiffon",
+    // 2: "Powder Blue",
+    // 3: "Cotton Candy",
+    // 4: "Mint Cream",
+    // 5: "Lavender Mist",
+    // 6: "Sky Blue",
+    // 7: "Peach Puff",
 };
 const CODE_BLOCK_SELECTORS = `
   .se-code-source, .se-section, se-component-content,
@@ -84,13 +84,28 @@ function detectLanguage(content = "") {
 
 // 초기화 함수
 function init() {
-    console.log("init()함수 호출!")
+    console.log("init() 호출");
+
     document.addEventListener("mouseup", handleMouseUp);
     document.addEventListener("click", handleSnippetClick);
     restoreHighlights();
-    detectCodeBlocks(); // 코드 블록
-    detectImageBlocks(); // 이미지
-    detectBackgroundImageBlocks(); // 백그라운드 이미지
+    detectCodeBlocks();
+    detectImageBlocks();
+    detectBackgroundImageBlocks();
+
+    fetchColorData()
+        .then((colors) => {
+            colors.forEach(({ colorId, hexCode, name }) => {
+                colorMap[colorId] = hexCode;
+                colorMapName[colorId] = name;
+            });
+            console.log("서버 색상 정보 로드 완료");
+        })
+        .catch((err) => {
+            console.warn("❌ 서버 색상 정보 불러오기 실패:", err.message);
+            setDefaultColors();
+            console.log("기본 색상 정보로 대체 완료");
+        });
 }
 
 // 드래그 이벤트처리 함수
@@ -321,7 +336,7 @@ function showPopup(rect) {
     popup = document.createElement("div");
     popup.id = "highlight-popup";
 
-    // 기본 스타일 지정
+    // 팝업 기본 스타일
     popup.style.position = "absolute";
     popup.style.background = "white";
     popup.style.padding = "8px";
@@ -332,26 +347,21 @@ function showPopup(rect) {
     popup.style.zIndex = "999999";
     popup.style.gap = "6px";
 
-    // 팝업 위치 계산 (선택 영역 아래)
+    // 팝업 위치 계산
     const margin = 6;
     const scrollTop = window.scrollY;
     const scrollLeft = window.scrollX;
-
     const popupTop = rect.bottom + scrollTop + margin;
     let popupLeft = rect.left + scrollLeft;
 
-    // 팝업을 먼저 DOM에 추가해야 offsetWidth를 정확히 계산할 수 있음
-    document.body.appendChild(popup);
+    document.body.appendChild(popup); // 먼저 추가해야 offsetWidth 계산 가능
 
     const popupWidth = popup.offsetWidth;
     const viewportWidth = document.documentElement.clientWidth;
 
-    // 오른쪽 화면을 넘는 경우 위치 보정 (왼쪽으로 붙이기)
     if (popupLeft + popupWidth > viewportWidth - 10) {
         popupLeft = Math.max(viewportWidth - popupWidth - 10, 10);
     }
-
-    // 왼쪽 화면도 넘는 경우 보정 (최소 여백 유지)
     if (popupLeft < 10) {
         popupLeft = 10;
     }
@@ -359,48 +369,52 @@ function showPopup(rect) {
     popup.style.top = `${popupTop}px`;
     popup.style.left = `${popupLeft}px`;
 
-    // 색상 버튼 그룹 생성 (처음엔 0~3번만 보임)
+    // 색상 버튼 컨테이너
     const container = document.createElement("div");
     container.style.display = "flex";
     container.style.gap = "6px";
 
-    for (let colorId = 0; colorId <= 3; colorId++) {
-        container.appendChild(createColorBtn(colorId));
-    }
+    // 🔸 최대 8개까지만 사용
+    const sortedColorIds = getSortedColorIds().slice(0, 8);
+    const mainColorIds = sortedColorIds.slice(0, 4);
+    const extraColorIds = sortedColorIds.slice(4);
 
-    // ▶ 토글 버튼 생성 (4~7번 확장용)
+    mainColorIds.forEach(colorId => container.appendChild(createColorBtn(colorId)));
+
+    // ▶ 색상 확장 버튼
     const toggleBtn = document.createElement("div");
     toggleBtn.textContent = "\u25B6"; // ▶
     toggleBtn.style.cssText = `
-    width: 24px;
-    height: 24px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: #6bcb5a;
-    border-radius: 50%;
-    font-size: 14px;
-    cursor: pointer;
-    color: white;
-  `;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #6bcb5a;
+        border-radius: 50%;
+        font-size: 14px;
+        cursor: pointer;
+        color: white;
+    `;
 
     let expanded = false;
     toggleBtn.addEventListener("click", () => {
         expanded = !expanded;
+
         if (expanded) {
-            for (let i = 4; i <= 7; i++) {
-                container.appendChild(createColorBtn(i));
-            }
+            extraColorIds.forEach(colorId =>
+                container.appendChild(createColorBtn(colorId))
+            );
             toggleBtn.textContent = "\u25C0"; // ◀
         } else {
-            container.querySelectorAll(".color-btn").forEach((btn) => {
+            container.querySelectorAll(".color-btn").forEach(btn => {
                 const id = parseInt(btn.dataset.colorId, 10);
-                if (id >= 4) btn.remove();
+                if (extraColorIds.includes(id)) btn.remove();
             });
             toggleBtn.textContent = "\u25B6"; // ▶
         }
 
-        // 팝업이 다시 넓어졌을 경우에도 우측 끝 넘지 않도록 보정
+        // 팝업 너비 다시 보정
         const newPopupWidth = popup.offsetWidth;
         if (popupLeft + newPopupWidth > viewportWidth - 10) {
             popup.style.left = `${Math.max(viewportWidth - newPopupWidth - 10, 10)}px`;
@@ -408,7 +422,7 @@ function showPopup(rect) {
     });
 
     popup.appendChild(container);
-    popup.appendChild(toggleBtn);
+    if (extraColorIds.length > 0) popup.appendChild(toggleBtn);
 }
 
 // 색상 선택용 원형 버튼을 생성하는 함수
@@ -466,198 +480,174 @@ function isSnippetAlreadySaved(content, highlights) {
 // 페이지 내 코드 블록을 감지, UI 추가 함수
 async function detectCodeBlocks() {
     // 로컬 스토리지에서 저장된 하이라이트 목록 가져오기
-    const highlights =
-        (await chrome.storage.local.get("highlights")).highlights || [];
+    const highlights = (await chrome.storage.local.get("highlights")).highlights || [];
 
     // 코드 블록 전체 선택 (예: pre > code, div.code 등)
     const blocks = document.querySelectorAll(CODE_BLOCK_SELECTORS);
 
     blocks.forEach((block) => {
-        // 코드 블록을 감싸는 wrapper 요소 확보 (pre 또는 div)
         const wrapper = block.closest("pre, div") || block.parentElement;
         if (!wrapper) return;
 
-        // wrapper에 position 설정 (버튼과 바 위치 지정용)
         wrapper.style.position = "relative";
 
-        // 코드 텍스트 추출 및 저장 여부 확인
         const codeText = block.innerText.trim();
         const alreadySaved = isSnippetAlreadySaved(codeText, highlights);
 
-        // 언어 정보 추출 (예: class="language-js" → js)
         const classList = Array.from(block.classList);
         const langClass = classList.find((cls) => cls.startsWith("language-"));
         const language = langClass ? langClass.replace("language-", "") : detectLanguage(codeText);
 
-        // 기존 저장 버튼/색상 바 제거 (중복 방지)
-        const existingBtn = wrapper.querySelector(".snippet-code-btn");
-        if (existingBtn) existingBtn.remove();
+        // 기존 UI 제거
+        wrapper.querySelector(".snippet-code-btn")?.remove();
+        wrapper.querySelector(".code-highlight-bar")?.remove();
 
-        const existingBar = wrapper.querySelector(".code-highlight-bar");
-        if (existingBar) existingBar.remove();
-
-        // 이미 저장된 경우 색상 바 표시 (좌측 6px 너비)
+        // 하이라이트 색상 바
+        let currentColorId = null;
         if (alreadySaved) {
-            const matched = highlights.find(
-                (s) => s.type === "CODE" && s.content.trim() === codeText.trim()
-            );
+            const matched = highlights.find((s) => s.type === "CODE" && s.content.trim() === codeText.trim());
             if (matched?.colorId != null) {
+                currentColorId = matched.colorId;
+
                 const bar = document.createElement("div");
                 bar.className = "code-highlight-bar";
                 bar.style.cssText = `
-                                      position: absolute;
-                                      top: 0;
-                                      left: 0;
-                                      width: 6px;
-                                      height: 100%;
-                                      background-color: ${colorMap[matched.colorId]};
-                                      border-top-left-radius: 6px;
-                                      border-bottom-left-radius: 6px;
-                                    `;
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 6px;
+                    height: 100%;
+                    background-color: ${colorMap[currentColorId]};
+                    border-top-left-radius: 6px;
+                    border-bottom-left-radius: 6px;
+                `;
                 wrapper.appendChild(bar);
             }
         }
 
-        // 저장/수정 버튼 생성
+        // 저장/수정 버튼
         const saveBtn = document.createElement("button");
         saveBtn.className = "snippet-code-btn";
         saveBtn.textContent = alreadySaved ? "edit" : "save";
         saveBtn.style.cssText = `
-                                  position: absolute;
-                                  top: 6px;
-                                  left: 6px;
-                                  background-color: #6bcb5a;
-                                  color: white;
-                                  border: none;
-                                  border-radius: 6px;
-                                  padding: 6px 10px;
-                                  font-size: 13px;
-                                  cursor: pointer;
-                                  z-index: 9999;
-                                  display: none;
-                                `;
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            background-color: #6bcb5a;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 13px;
+            cursor: pointer;
+            z-index: 9999;
+            display: none;
+        `;
 
-        // 마우스 오버 시 버튼 보이기
-        wrapper.addEventListener("mouseenter", () => {
-            saveBtn.style.display = "block";
-        });
-        wrapper.addEventListener("mouseleave", () => {
-            saveBtn.style.display = "none";
-        });
+        wrapper.addEventListener("mouseenter", () => saveBtn.style.display = "block");
+        wrapper.addEventListener("mouseleave", () => saveBtn.style.display = "none");
 
-        // 버튼 클릭 시 팝업 띄우기 (저장 or 수정)
         saveBtn.addEventListener("click", (e) => {
             e.stopPropagation();
-
-            // 버튼 위치 기준 팝업 위치 계산
             const rect = saveBtn.getBoundingClientRect();
 
             if (alreadySaved) {
                 const existing = highlights.find(
                     (s) => s.type === "CODE" && s.content.trim() === codeText.trim()
                 );
-                const currentMemo = existing?.memo || "";
-                const currentColorId = existing?.colorId || 1;
+                const memo = existing?.memo || "";
+                const colorId = existing?.colorId || 1;
 
-                // 수정 팝업 호출
-                showCodeEditPopup(
-                    codeText,
-                    rect,
-                    currentColorId,
-                    currentMemo,
-                    saveBtn,
-                    language
-                );
+                showCodeEditPopup(codeText, rect, colorId, memo, saveBtn, language);
             } else {
-                // 신규 저장 팝업 호출
-                showCodeColorPopup(codeText, rect, false, saveBtn, language);
+                // 선택된 colorId를 넘겨서 해당 색상은 팝업에서 제외되게 처리
+                showCodeColorPopup(codeText, rect, false, saveBtn, language, currentColorId);
             }
         });
 
-        // 버튼을 wrapper에 삽입
         wrapper.appendChild(saveBtn);
     });
 }
 
 // 코드스니펫 색상 선택 팝업
-function showCodeColorPopup(
-    codeText,
-    rect,
-    isEdit = false,
-    saveBtn = null,
-    language = null
-) {
+function showCodeColorPopup(codeText, rect, isEdit = false, saveBtn = null, language = null) {
     removePopup(); // 기존 팝업 제거
 
-    // 팝업 요소 생성 및 스타일 지정
+    // 팝업 생성
     popup = document.createElement("div");
     popup.id = "code-color-popup";
     popup.style = `
-    position: absolute;
-    top: ${window.scrollY + rect.bottom + 6}px;
-    left: ${window.scrollX + rect.left}px;
-    background: white;
-    padding: 8px;
-    border-radius: 10px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    z-index: 2147483647;
-  `;
+        position: absolute;
+        top: ${window.scrollY + rect.bottom + 6}px;
+        left: ${window.scrollX + rect.left}px;
+        background: white;
+        padding: 8px;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        z-index: 2147483647;
+    `;
 
-    // 색상 버튼 담는 컨테이너
+    // 색상 버튼 영역
     const container = document.createElement("div");
     container.style.display = "flex";
     container.style.gap = "6px";
 
-    // 기본 색상 버튼(0~3)만 생성
-    for (let colorId = 0; colorId <= 3; colorId++) {
+    // 🔸 최대 8개까지, colorId 내림차순 정렬
+    const sortedColorIds = getSortedColorIds().slice(0, 8);
+    const mainColorIds = sortedColorIds.slice(0, 4);
+    const extraColorIds = sortedColorIds.slice(4);
+
+    // 기본 4개 색상 버튼 생성
+    mainColorIds.forEach((colorId) => {
         container.appendChild(
             createColorBtnForCode(codeText, colorId, isEdit, saveBtn, language)
         );
-    }
+    });
 
-    // ▶ 토글 버튼 생성 (색상 확장)
+    // ▶ 색상 확장 버튼 생성
     const toggleBtn = document.createElement("div");
     toggleBtn.textContent = "\u25B6"; // ▶
     toggleBtn.style.cssText = `
-    width: 24px;
-    height: 24px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: #6bcb5a;
-    border-radius: 50%;
-    font-size: 14px;
-    cursor: pointer;
-    color: white;
-  `;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #6bcb5a;
+        border-radius: 50%;
+        font-size: 14px;
+        cursor: pointer;
+        color: white;
+    `;
 
     let expanded = false;
     toggleBtn.addEventListener("click", () => {
         expanded = !expanded;
 
         if (expanded) {
-            // 확장: 색상 버튼 4~7 추가
-            for (let i = 4; i <= 7; i++) {
+            // 확장 시: 나머지 색상 추가
+            extraColorIds.forEach((colorId) => {
                 container.appendChild(
-                    createColorBtnForCode(codeText, i, isEdit, saveBtn, language)
+                    createColorBtnForCode(codeText, colorId, isEdit, saveBtn, language)
                 );
-            }
+            });
             toggleBtn.textContent = "\u25C0"; // ◀
         } else {
-            // 축소: 4~7 제거
+            // 축소 시: 추가 색상 제거
             container.querySelectorAll(".color-btn").forEach((btn) => {
                 const id = parseInt(btn.dataset.colorId, 10);
-                if (id >= 4) btn.remove();
+                if (extraColorIds.includes(id)) btn.remove();
             });
             toggleBtn.textContent = "\u25B6"; // ▶
         }
     });
 
+    // 최종 구성
     popup.appendChild(container);
-    popup.appendChild(toggleBtn);
+    if (extraColorIds.length > 0) popup.appendChild(toggleBtn);
     document.body.appendChild(popup);
 }
 
@@ -672,114 +662,117 @@ function showCodeEditPopup(
 ) {
     removePopup(); // 기존 팝업 제거
 
-    // 팝업 요소 생성 및 스타일 지정
+    // 팝업 박스 생성 및 스타일 지정
     popup = document.createElement("div");
     popup.id = "code-edit-popup";
     popup.style = `
-    position: absolute;
-    top: ${window.scrollY + rect.bottom + 6}px;
-    left: ${window.scrollX + rect.left}px;
-    background: white;
-    padding: 10px;
-    border-radius: 10px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    z-index: 2147483647;
-    min-width: 220px;
-    max-width: 300px;
-    box-sizing: border-box;
-  `;
+        position: absolute;
+        top: ${window.scrollY + rect.bottom + 6}px;
+        left: ${window.scrollX + rect.left}px;
+        background: white;
+        padding: 10px;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 2147483647;
+        min-width: 220px;
+        max-width: 300px;
+        box-sizing: border-box;
+    `;
 
-    // 색상 버튼 행
+    // 색상 선택 버튼들이 들어갈 행 요소
     const colorRow = document.createElement("div");
     colorRow.style.display = "flex";
     colorRow.style.flexWrap = "wrap";
     colorRow.style.gap = "6px";
 
-    let selectedColorId = currentColorId;
+    let selectedColorId = currentColorId; // 기본 선택된 색상
 
-    for (let colorId = 0; colorId <= 7; colorId++) {
+    // 🔸 현재 선택된 색상을 제외한 나머지 색상 최대 8개 표시
+    const sortedColorIds = getSortedColorIds()
+        .filter((id) => id !== currentColorId)
+        .slice(0, 8);
+
+    // 색상 버튼 생성
+    sortedColorIds.forEach((colorId) => {
         const btn = document.createElement("div");
         btn.className = "color-btn";
         btn.dataset.colorId = colorId;
         btn.title = colorMapName[colorId];
         btn.style.cssText = `
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background-color: ${colorMap[colorId]};
-      border: 1px solid #ccc;
-      cursor: pointer;
-    `;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: ${colorMap[colorId]};
+            border: 1px solid #ccc;
+            cursor: pointer;
+        `;
 
-        if (colorId === currentColorId) {
-            // 현재 선택된 색상은 비활성 표시
-            btn.classList.add("current-color");
-            btn.style.opacity = "0.3";
-            btn.style.border = "1px solid #aaa";
-            btn.style.cursor = "not-allowed";
-        } else {
-            // 클릭 시 선택 표시 변경
-            btn.addEventListener("click", () => {
-                selectedColorId = colorId;
-                colorRow.querySelectorAll(".color-btn").forEach((b) => {
-                    b.style.outline = "none";
-                });
-                btn.style.outline = "2px solid green";
+        // 클릭 시 선택된 색상으로 업데이트
+        btn.addEventListener("click", () => {
+            selectedColorId = colorId;
+
+            // 기존 강조 제거
+            colorRow.querySelectorAll(".color-btn").forEach((b) => {
+                b.style.outline = "none";
             });
-        }
+
+            // 선택된 버튼에 강조 표시
+            btn.style.outline = "2px solid green";
+        });
 
         colorRow.appendChild(btn);
-    }
+    });
 
-    // 메모 입력창
+    // 메모 입력 textarea
     const memoInput = document.createElement("textarea");
     memoInput.placeholder = "write memo!";
     memoInput.value = currentMemo;
     memoInput.rows = 2;
     memoInput.className = "memo-input";
     memoInput.style.cssText = `
-    width: 100%;
-    font-size: 13px;
-    padding: 8px 10px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    resize: none;
-    font-family: inherit;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
-    box-sizing: border-box;
-  `;
+        width: 100%;
+        font-size: 13px;
+        padding: 8px 10px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        resize: none;
+        font-family: inherit;
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+        box-sizing: border-box;
+    `;
 
-    // 수정 버튼
+    // 수정 저장 버튼
     const updateBtn = document.createElement("button");
     updateBtn.textContent = "update";
     updateBtn.style.cssText = `
-    align-self: flex-end;
-    background-color: #6bcb5a;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 6px 10px;
-    font-size: 13px;
-    cursor: pointer;
-  `;
+        align-self: flex-end;
+        background-color: #6bcb5a;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 13px;
+        cursor: pointer;
+    `;
 
+    // 저장 버튼 클릭 시 → 서버 및 스토리지 반영
     updateBtn.addEventListener("click", async () => {
         const memo = memoInput.value.trim();
         await saveCodeSnippet(
             codeText,
             selectedColorId,
-            true, // isEdit = true
+            true,       // isEdit = true
             saveBtn,
             language,
             memo
         );
-        removePopup();
+        removePopup(); // 팝업 제거
     });
 
-    // 팝업 구성 요소 삽입
+    // 팝업 구성 완료
     popup.appendChild(colorRow);
     popup.appendChild(memoInput);
     popup.appendChild(updateBtn);
@@ -1111,77 +1104,60 @@ function showUpdatePopup(
     popup = document.createElement("div");
     popup.id = "color-picker-popup";
     popup.style = `
-    position: absolute;
-    top: ${window.scrollY + rect.bottom + 6}px;
-    left: ${window.scrollX + rect.left}px;
-    background: white;
-    padding: 10px;
-    border-radius: 10px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    z-index: 2147483647;
-    min-width: 220px;
-    max-width: 300px;
-    box-sizing: border-box;
-  `;
+        position: absolute;
+        top: ${window.scrollY + rect.bottom + 6}px;
+        left: ${window.scrollX + rect.left}px;
+        background: white;
+        padding: 10px;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 2147483647;
+        min-width: 220px;
+        max-width: 300px;
+        box-sizing: border-box;
+    `;
 
     // 색상 버튼 행 구성
     const colorRow = document.createElement("div");
     colorRow.style.display = "flex";
+    colorRow.style.flexWrap = "wrap";
     colorRow.style.gap = "6px";
 
-    for (let colorId = 0; colorId <= 7; colorId++) {
+    // 🔸 현재 선택된 색상을 제외한 colorId 내림차순 정렬 후 최대 8개만 사용
+    const sortedColorIds = getSortedColorIds()
+        .filter((id) => id !== currentColorId)
+        .slice(0, 8);
+
+    sortedColorIds.forEach((colorId) => {
         const btn = document.createElement("div");
         btn.className = "color-btn";
         btn.dataset.colorId = colorId;
         btn.title = colorMapName[colorId];
         btn.style.cssText = `
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background-color: ${colorMap[colorId]};
-      cursor: pointer;
-      border: 1px solid #ccc;
-      opacity: 1;
-      position: relative;
-    `;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: ${colorMap[colorId]};
+            cursor: pointer;
+            border: 1px solid #ccc;
+        `;
 
-        if (colorId === currentColorId) {
-            // 현재 선택된 색상은 비활성화 스타일로 표시
-            btn.classList.add("current-color");
-            btn.style.opacity = "0.3";
-            btn.style.border = "1px solid #aaa";
-            btn.style.cursor = "not-allowed";
-        } else {
-            // 클릭 시 선택된 색상 갱신 및 스타일 적용
-            btn.addEventListener("click", () => {
-                selectedColorId = colorId;
+        // 클릭 시 스타일 및 선택값 갱신
+        btn.addEventListener("click", () => {
+            selectedColorId = colorId;
 
-                // 버튼 스타일 초기화
-                popup.querySelectorAll(".color-btn").forEach((b) => {
-                    const bColorId = parseInt(b.dataset.colorId);
-                    if (b.classList.contains("current-color")) {
-                        b.style.opacity = "0.3";
-                        b.style.border = "1px solid #aaa";
-                        b.style.cursor = "not-allowed";
-                    } else {
-                        b.style.opacity = "1";
-                        b.style.border = "1px solid #ccc";
-                        b.style.cursor = "pointer";
-                    }
-                });
-
-                // 현재 선택된 버튼에 강조 스타일 적용
-                btn.style.opacity = "0.8";
-                btn.style.border = "2px solid green";
-                btn.style.cursor = "not-allowed";
+            colorRow.querySelectorAll(".color-btn").forEach((b) => {
+                b.style.outline = "none";
             });
-        }
+
+            btn.style.outline = "2px solid green";
+        });
 
         colorRow.appendChild(btn);
-    }
+    });
 
     // 메모 입력창 구성
     const memoInput = document.createElement("textarea");
@@ -1190,39 +1166,39 @@ function showUpdatePopup(
     memoInput.rows = 2;
     memoInput.className = "memo-input";
     memoInput.style.cssText = `
-    width: 100%;
-    font-size: 13px;
-    padding: 8px 10px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    resize: none;
-    font-family: inherit;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
-    box-sizing: border-box;
-  `;
+        width: 100%;
+        font-size: 13px;
+        padding: 8px 10px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        resize: none;
+        font-family: inherit;
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+        box-sizing: border-box;
+    `;
 
-    // 저장 버튼 생성
+    // 저장 버튼 구성
     const saveBtn = document.createElement("button");
     saveBtn.textContent = "update";
     saveBtn.style.cssText = `
-    align-self: flex-end;
-    background-color: #6bcb5a;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 6px 10px;
-    font-size: 13px;
-    cursor: pointer;
-  `;
+        align-self: flex-end;
+        background-color: #6bcb5a;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 13px;
+        cursor: pointer;
+    `;
 
-    // 저장 클릭 → 색상/메모 로컬 및 서버 반영
+    // 저장 로직
     saveBtn.addEventListener("click", () => {
         const memo = memoInput.value.trim();
         updateSnippetMetadata(snippetId, selectedColorId, memo);
         removePopup();
     });
 
-    // 팝업 최종 구성
+    // 팝업 구성
     popup.appendChild(colorRow);
     popup.appendChild(memoInput);
     popup.appendChild(saveBtn);
@@ -1527,7 +1503,13 @@ function showImageSavePopup(imgUrl, altText, btnElement, isBackground = false) {
     colorRow.style = "display: flex; flex-wrap: wrap; gap: 6px;";
     let selectedColorId = 1; // 기본 색상 ID
 
-    for (let i = 0; i <= 7; i++) {
+    // 🔸 colorId를 내림차순으로 정렬 후 최대 8개만 표시
+    const sortedColorIds = Object.keys(colorMap)
+        .map(Number)
+        .sort((a, b) => b - a)
+        .slice(0, 8);
+
+    sortedColorIds.forEach((i) => {
         const btn = document.createElement("div");
         btn.dataset.colorId = i;
         btn.style = `
@@ -1547,7 +1529,7 @@ function showImageSavePopup(imgUrl, altText, btnElement, isBackground = false) {
             btn.style.outline = "2px solid green";
         });
         colorRow.appendChild(btn);
-    }
+    });
 
     // 실제 저장 버튼 생성 및 클릭 처리
     const saveBtn = document.createElement("button");
@@ -1656,6 +1638,7 @@ function showImageEditPopup(snippet, btnElement) {
     let selectedColorId = snippet.colorId || 1;
     const currentMemo = snippet.memo || "";
 
+    // 팝업 컨테이너
     popup = document.createElement("div");
     popup.id = "image-edit-popup";
     popup.style = `
@@ -1673,17 +1656,18 @@ function showImageEditPopup(snippet, btnElement) {
         width: 280px;
     `;
 
-    // 이미지 미리보기 구성
+    // 이미지 미리보기
     const preview = document.createElement("img");
     preview.src = snippet.imageUrl;
     preview.alt = snippet.altText || "image";
     preview.style = `
-        width: 100%; height: 160px;
+        width: 100%;
+        height: 160px;
         object-fit: cover;
         border-radius: 6px;
     `;
 
-    // 메모 입력창 구성
+    // 메모 입력창
     const memoInput = document.createElement("textarea");
     memoInput.placeholder = "write memo!";
     memoInput.rows = 2;
@@ -1699,64 +1683,42 @@ function showImageEditPopup(snippet, btnElement) {
         box-sizing: border-box;
     `;
 
-    // 색상 선택 영역 구성
+    // 색상 선택 버튼들
     const colorRow = document.createElement("div");
     colorRow.style = "display: flex; flex-wrap: wrap; gap: 6px;";
 
-    for (let i = 0; i <= 7; i++) {
+    const sortedColorIds = getSortedColorIds()
+        .filter((id) => id !== selectedColorId) // 현재 색상 제외
+        .slice(0, 8); // 최대 8개
+
+    sortedColorIds.forEach((id) => {
         const btn = document.createElement("div");
-        btn.dataset.colorId = i;
+        btn.dataset.colorId = id;
+        btn.title = colorMapName[id];
         btn.style = `
-            width: 24px; height: 24px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
-            background-color: ${colorMap[i]};
+            background-color: ${colorMap[id]};
             border: 1px solid #ccc;
             cursor: pointer;
         `;
 
-        if (i === (snippet.colorId ?? -1)) {
-            // 현재 저장된 색상은 비활성화
-            btn.style.opacity = "0.3";
-            btn.style.border = "1px solid #aaa";
-            btn.style.cursor = "not-allowed";
-            btn.classList.add("current-color");
-        } else {
-            // 선택된 색상 강조
-            if (i === selectedColorId) {
-                btn.style.border = "2px solid green";
-                btn.style.opacity = "0.8";
-                btn.style.cursor = "not-allowed";
-            }
+        btn.addEventListener("click", () => {
+            selectedColorId = id;
 
-            // 클릭 시 색상 선택 변경
-            btn.addEventListener("click", () => {
-                selectedColorId = i;
-
-                // 기존 스타일 초기화
-                popup.querySelectorAll("[data-color-id]").forEach((b) => {
-                    const bId = parseInt(b.dataset.colorId, 10);
-                    if (bId === snippet.colorId) {
-                        b.style.opacity = "0.3";
-                        b.style.border = "1px solid #aaa";
-                        b.style.cursor = "not-allowed";
-                    } else {
-                        b.style.opacity = "1";
-                        b.style.border = "1px solid #ccc";
-                        b.style.cursor = "pointer";
-                    }
-                });
-
-                // 새 선택 스타일 반영
-                btn.style.border = "2px solid green";
-                btn.style.opacity = "0.8";
-                btn.style.cursor = "not-allowed";
+            // 스타일 초기화 및 새로 선택한 버튼 강조
+            popup.querySelectorAll("[data-color-id]").forEach((b) => {
+                b.style.outline = "none";
             });
-        }
+
+            btn.style.outline = "2px solid green";
+        });
 
         colorRow.appendChild(btn);
-    }
+    });
 
-    // 업데이트 버튼 구성
+    // 업데이트 버튼
     const updateBtn = document.createElement("button");
     updateBtn.textContent = "update";
     updateBtn.style = `
@@ -1770,7 +1732,6 @@ function showImageEditPopup(snippet, btnElement) {
         cursor: pointer;
     `;
 
-    // 클릭 시 서버/스토리지에 반영하고 팝업 종료 및 UI 재검사
     updateBtn.addEventListener("click", async () => {
         const memo = memoInput.value.trim();
         await saveImageSnippet(snippet.imageUrl, snippet.altText, selectedColorId, memo, btnElement);
@@ -1779,8 +1740,53 @@ function showImageEditPopup(snippet, btnElement) {
         detectBackgroundImageBlocks();
     });
 
+    // 팝업 구성
     popup.append(preview, colorRow, memoInput, updateBtn);
     document.body.appendChild(popup);
+}
+
+// 서버에서 색상정보 가져오기
+async function fetchColorData() {
+    return new Promise((resolve, reject) => {
+        chrome.runtime.sendMessage({ action: "fetchColorData" }, (response) => {
+            if (chrome.runtime.lastError) {
+                reject(new Error(chrome.runtime.lastError.message));
+            } else if (response?.success) {
+                resolve(response.colors);
+            } else {
+                reject(new Error(response?.error || "Unknown error"));
+            }
+        });
+    });
+}
+
+function setDefaultColors() {
+    Object.assign(colorMap, {
+        0: "#FFFF88",  // Pastel Yellow
+        1: "#FFFACD",  // Lemon Chiffon
+        2: "#AEC6CF",  // Powder Blue
+        3: "#FFD1DC",  // Cotton Candy
+        4: "#C1F0DC",  // Mint Cream
+        5: "#E6E6FA",  // Lavender Mist
+        6: "#B0E0E6",  // Sky Blue
+        7: "#FFDAB9",  // Peach Puff
+    });
+    Object.assign(colorMapName, {
+        0: "Pastel Yellow",
+        1: "Lemon Chiffon",
+        2: "Powder Blue",
+        3: "Cotton Candy",
+        4: "Mint Cream",
+        5: "Lavender Mist",
+        6: "Sky Blue",
+        7: "Peach Puff",
+    });
+}
+
+function getSortedColorIds() {
+    return Object.keys(colorMap)
+        .map(Number)
+        .sort((a, b) => b - a); // colorId 기준 내림차순 정렬
 }
 
 // 확장 프로그램과 content.js 간 메시지 통신 핸들러

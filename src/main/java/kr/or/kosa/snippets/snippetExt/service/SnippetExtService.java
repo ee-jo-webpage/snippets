@@ -3,6 +3,7 @@ package kr.or.kosa.snippets.snippetExt.service;
 import jakarta.persistence.EntityNotFoundException;
 import kr.or.kosa.snippets.snippetExt.exception.DuplicateSnippetException;
 import kr.or.kosa.snippets.snippetExt.mapper.SnippetExtMapper;
+import kr.or.kosa.snippets.snippetExt.model.ColorExt;
 import kr.or.kosa.snippets.snippetExt.model.SnippetExtCreate;
 import kr.or.kosa.snippets.snippetExt.model.SnippetExtUpdate;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +12,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Objects;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -105,5 +106,10 @@ public class SnippetExtService {
 
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
+    }
+
+    public List<ColorExt> getColorsByUserId(Long userId) {
+        List<ColorExt> colorList = snippetExtMapper.findColorsByUserId(userId);
+        return colorList;
     }
 }

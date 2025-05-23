@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RequestMapping("/bookmark")
 @Slf4j
@@ -73,29 +74,64 @@ public class BookmarkController {
         return "redirect:/bookmark";
     }
 
+    // 전체 스니펫 목록 조회 (북마크 여부 포함) - 수정된 메서드
     @GetMapping("/snippets")
-    public String getSnippetsForBookmark(HttpSession session, Model model) {
+    public String getAllSnippetsWithBookmarkStatus(HttpSession session, Model model) {
         Long userId = (Long) session.getAttribute("userId");
-        log.info("북마크용 스니펫 목록 조회 - 사용자 ID: {}", userId);
+        log.info("전체 스니펫 목록 조회 - 사용자 ID: {}", userId);
 
-        if (userId == null) {
-            // 로그인하지 않은 경우 빈 목록
-            model.addAttribute("snippets", new ArrayList<>());
-            model.addAttribute("userId", null);
-            return "bookmark/snippets-with-bookmark";
+        // 전체 스니펫 조회
+        List<Snippets> allSnippets = bookmarkService.getAllSnippets();
+        log.info("전체 스니펫 수: {}", allSnippets.size());
+
+        if (userId != null) {
+            // 사용자가 북마크한 스니펫 ID 목록 조회
+            List<Snippets> bookmarkedSnippets = bookmarkService.getAllBookmarkByUserId(userId);
+            Set<Long> bookmarkedSnippetIds = bookmarkedSnippets.stream()
+                    .map(Snippets::getSnippetId)
+                    .collect(Collectors.toSet());
+
+            log.info("사용자 {}의 북마크된 스니펫 ID: {}", userId, bookmarkedSnippetIds);
+
+            // 모델에 북마크된 스니펫 ID 목록 추가
+            model.addAttribute("bookmarkedSnippetIds", bookmarkedSnippetIds);
+        } else {
+            model.addAttribute("bookmarkedSnippetIds", new HashSet<>());
         }
 
-        // 해당 사용자가 북마크한 스니펫들만 가져오기
-        List<Snippets> userBookmarkedSnippets = bookmarkService.getAllBookmarkByUserId(userId);
-        log.info("사용자 {}의 북마크된 스니펫 수: {}", userId, userBookmarkedSnippets.size());
-
-        model.addAttribute("snippets", userBookmarkedSnippets);
+        model.addAttribute("snippets", allSnippets);
         model.addAttribute("userId", userId);
 
         return "bookmark/snippets-with-bookmark";
     }
 
+    // 특정 사용자가 작성한 스니펫 목록 조회 (추가)
+    @GetMapping("/my-snippets")
+    public String getMySnippetsWithBookmarkStatus(HttpSession session, Model model) {
+        Long userId = (Long) session.getAttribute("userId");
+        log.info("내가 작성한 스니펫 목록 조회 - 사용자 ID: {}", userId);
 
+        if (userId == null) {
+            model.addAttribute("snippets", new ArrayList<>());
+            model.addAttribute("userId", null);
+            model.addAttribute("bookmarkedSnippetIds", new HashSet<>());
+            return "bookmark/snippets-with-bookmark";
+        }
 
+        // 내가 작성한 스니펫 조회
+        List<Snippets> mySnippets = bookmarkService.getSnippetsByUserId(userId);
+        log.info("사용자 {}가 작성한 스니펫 수: {}", userId, mySnippets.size());
 
+        // 내가 북마크한 스니펫 ID 목록 조회
+        List<Snippets> bookmarkedSnippets = bookmarkService.getAllBookmarkByUserId(userId);
+        Set<Long> bookmarkedSnippetIds = bookmarkedSnippets.stream()
+                .map(Snippets::getSnippetId)
+                .collect(Collectors.toSet());
+
+        model.addAttribute("snippets", mySnippets);
+        model.addAttribute("userId", userId);
+        model.addAttribute("bookmarkedSnippetIds", bookmarkedSnippetIds);
+
+        return "bookmark/snippets-with-bookmark";
+    }
 }

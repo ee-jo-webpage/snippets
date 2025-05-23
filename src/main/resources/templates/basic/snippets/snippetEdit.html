@@ -80,7 +80,7 @@
     button {
       display: inline-block;
       padding: 0.5rem 1rem;
-      background: ccc(0, 0, 0);
+      background: #ccc;
       color: rgb(0, 0, 0);
       border: none;
       border-radius: 4px;
@@ -118,52 +118,52 @@
         <tr>
           <th>Type</th>
           <td>
-            <select th:field="*{type}" disabled id="typeSelect">
-              <option value="CODE" th:selected="${snippet.type.name()=='CODE'}">Code</option>
-              <option value="TEXT" th:selected="${snippet.type.name()=='TEXT'}">Text</option>
-              <option value="IMG" th:selected="${snippet.type.name()=='IMG'}">Image</option>
-            </select>
-            <input type="hidden" th:field="*{type}" />
-          </td>
-        </tr>
-        <tr>
-          <th>Memo</th>
-          <td><input type="text" th:field="*{memo}" /></td>
-        </tr>
-        <tr>
-          <th>Visibility</th>
-          <td>
-            <select th:field="*{visibility}">
-              <option value="1" th:selected="${snippet.visibility==1}">Visible</option>
-              <option value="0" th:selected="${snippet.visibility==0}">Hidden</option>
+            <select th:field="*{type}" id="typeSelect" onchange="showFields()">
+              <option value="CODE" th:selected="${snippet.type.name() == 'CODE'}">Code</option>
+              <option value="TEXT" th:selected="${snippet.type.name() == 'TEXT'}">Text</option>
+              <option value="IMG" th:selected="${snippet.type.name() == 'IMG'}">Image</option>
             </select>
           </td>
         </tr>
-        <tr id="codeFields" th:style="${snippet.type.name()=='CODE'? '':'display:none;'}">
-          <th>Language</th>
-          <td>
-            <select th:field="*{language}">
-              <option value="0" th:selected="${snippet.language=='JAVA'}">JAVA</option>
-              <option value="1" th:selected="${snippet.language=='PYTHON'}">PYTHON</option>
-              <option value="2" th:selected="${snippet.language=='C'}">C</option>
-            </select>
-          </td>
-        </tr>
-        <tr id="codeContentField" th:style="${snippet.type.name()=='CODE'? '':'display:none;'}">
+
+        <!-- Code Content Field -->
+        <tr id="codeContentField" th:style="${snippet.type.name() == 'CODE' ? '' : 'display:none;'}">
           <th>Code Content</th>
-          <td><textarea th:field="*{codeContent}" rows="6"></textarea></td>
+          <td>
+            <textarea th:field="*{codeContent}" name="content" rows="6"></textarea> <!-- name을 content로 변경 -->
+          </td>
         </tr>
-        <tr id="textFields" th:style="${snippet.type.name()=='TEXT'? '':'display:none;'}">
+
+        <!-- Text Content Field -->
+        <tr id="textContentField" th:style="${snippet.type.name() == 'TEXT' ? '' : 'display:none;'}">
           <th>Text Content</th>
-          <td><textarea th:field="*{textContent}" rows="6"></textarea></td>
+          <td>
+            <textarea th:field="*{textContent}" name="content" rows="6"></textarea> <!-- name을 content로 변경 -->
+          </td>
         </tr>
-        <tr id="imageFields" th:style="${snippet.type.name()=='IMG'? '':'display:none;'}">
+
+        <!-- Image Fields -->
+        <tr id="imageFields" th:style="${snippet.type.name() == 'IMG' ? '' : 'display:none;'}">
           <th>이미지 파일</th>
           <td><input type="file" name="imageFile" accept="image/*" /></td>
         </tr>
-        <tr id="altTextField" th:style="${snippet.type.name()=='IMG'? '':'display:none;'}">
+
+        <!-- Alt Text for Image -->
+        <tr id="altTextField" th:style="${snippet.type.name() == 'IMG' ? '' : 'display:none;'}">
           <th>Alt Text</th>
           <td><input type="text" th:field="*{altText}" /></td>
+        </tr>
+
+        <!-- Language Field for Code -->
+        <tr id="languageField" th:style="${snippet.type.name() == 'CODE' ? '' : 'display:none;'}">
+          <th>Language</th>
+          <td>
+            <select th:field="*{language}">
+              <option value="JAVA" th:selected="${snippet.language == 'JAVA'}">JAVA</option>
+              <option value="PYTHON" th:selected="${snippet.language == 'PYTHON'}">PYTHON</option>
+              <option value="C" th:selected="${snippet.language == 'C'}">C</option>
+            </select>
+          </td>
         </tr>
       </table>
 
@@ -176,23 +176,36 @@
   <script>
     function showFields() {
       const type = document.getElementById('typeSelect').value;
-      document.querySelectorAll('#codeFields, #codeContentField')
-              .forEach(el => el.style.display = (type==='CODE')? '': 'none');
-      document.getElementById('textFields')
-              .style.display = (type==='TEXT')? '': 'none';
-      document.querySelectorAll('#imageFields, #altTextField')
-              .forEach(el => el.style.display = (type==='IMG')? '': 'none');
+
+      // Hide all fields before showing the selected ones and reset values
+      resetValues();
+
+      // Display the corresponding content fields
+      document.getElementById('codeContentField').style.display = (type === 'CODE') ? '' : 'none';
+      document.getElementById('textContentField').style.display = (type === 'TEXT') ? '' : 'none';
+      document.getElementById('imageFields').style.display = (type === 'IMG') ? '' : 'none';
+      document.getElementById('altTextField').style.display = (type === 'IMG') ? '' : 'none';
+      document.getElementById('languageField').style.display = (type === 'CODE') ? '' : 'none';
     }
+
+    function resetValues() {
+      // Reset values for hidden fields
+      document.querySelectorAll('#codeContentField textarea, #textContentField textarea, #altTextField input').forEach((el) => {
+        el.value = ''; // Clear the value
+      });
+    }
+
     window.onload = showFields;
 
     document.querySelectorAll('input[type="text"], textarea, select').forEach(el => {
       const toggleFilled = () => {
-        if (el.value && el.value.trim()!=='') el.classList.add('filled');
+        if (el.value && el.value.trim() !== '') el.classList.add('filled');
         else el.classList.remove('filled');
       };
       el.addEventListener('input', toggleFilled);
       toggleFilled();
     });
   </script>
+
 </body>
 </html>

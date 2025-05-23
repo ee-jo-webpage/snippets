@@ -18,8 +18,7 @@
     <result property="likeCount"   column="like_count" />
     <result property="visibility"  column="visibility" />
 
-    <result property="codeContent" column="code_content" />
-    <result property="textContent" column="text_content" />
+    <result property="content" column="content" />
     <result property="language"    column="language" />
 
     <result property="imageUrl"    column="image_url" />
@@ -32,64 +31,73 @@
   </select>
 
   <!-- 상세 조회 -->
-  <select
-    id="getSnippetsById"
-    resultMap="SnippetsResultMap"
-    parameterType="map">
-    SELECT
-      s.snippet_id,
-      s.user_id,
-      s.folder_id,
-      s.color_id,
-      s.source_url,
-      s.type,
-      s.memo,
-      s.created_at,
-      s.updated_at,
-      s.like_count,
-      s.visibility,
-      <choose>
-        <when test="type != null and type.name() == 'TEXT'">
-          t.text_content AS text_content
-        </when>
-        <otherwise>
-          NULL AS text_content
-        </otherwise>
-      </choose>,
-      <choose>
-        <when test="type != null and type.name() == 'CODE'">
-          c.language AS language,
-          c.code_content AS code_content
-        </when>
-        <otherwise>
-          NULL AS language,
-          NULL AS code_content
-        </otherwise>
-      </choose>,
-      <choose>
-        <when test="type != null and type.name() == 'IMG'">
-          i.image_url AS image_url,
-          i.alt_text AS alt_text
-        </when>
-        <otherwise>
-          NULL AS image_url,
-          NULL AS alt_text
-        </otherwise>
-      </choose>
-    FROM snippets s
-    <choose>
-      <when test="type != null and type.name() == 'CODE'">
-        LEFT JOIN snippet_codes c ON s.snippet_id = c.snippet_id
-      </when>
-      <when test="type != null and type.name() == 'TEXT'">
-        LEFT JOIN snippet_texts t ON s.snippet_id = t.snippet_id
-      </when>
-      <when test="type != null and type.name() == 'IMG'">
-        LEFT JOIN snippet_images i ON s.snippet_id = i.snippet_id
-      </when>
-    </choose>
-    WHERE s.snippet_id = #{snippetId}
-  </select>
+  <select id="getSnippetsById" resultMap="SnippetsResultMap">
+	  SELECT
+	    s.snippet_id,
+	    s.user_id,
+	    s.folder_id,
+	    s.color_id,
+	    s.source_url,
+	    s.type,
+	    s.memo,
+	    s.created_at,
+	    s.updated_at,
+	    s.like_count,
+	    s.visibility,
+	
+	    <!-- 1) TEXT, CODE 두 가지 content 분기 -->
+	    <choose>
+	      <when test="type.name() == 'TEXT'">
+	        t.content AS content
+	      </when>
+	      <when test="type.name() == 'CODE'">
+	        c.content AS content
+	      </when>
+	      <otherwise>
+	        NULL AS content
+	      </otherwise>
+	    </choose>,
+	
+	    <!-- 2) CODE 일 때만 language -->
+	    <choose>
+	      <when test="type.name() == 'CODE'">
+	        c.language AS language
+	      </when>
+	      <otherwise>
+	        NULL AS language
+	      </otherwise>
+	    </choose>,
+	
+	    <!-- 3) IMG 일 때만 이미지 필드 -->
+	    <choose>
+	      <when test="type.name() == 'IMG'">
+	        i.image_url AS image_url,
+	        i.alt_text  AS alt_text
+	      </when>
+	      <otherwise>
+	        NULL AS image_url,
+	        NULL AS alt_text
+	      </otherwise>
+	    </choose>
+	
+	  FROM snippets s
+	
+	  <!-- 조인도 유형별로 분기 -->
+	  <choose>
+	    <when test="type.name() == 'TEXT'">
+	      LEFT JOIN snippet_texts  t ON s.snippet_id = t.snippet_id
+	    </when>
+	    <when test="type.name() == 'CODE'">
+	      LEFT JOIN snippet_codes  c ON s.snippet_id = c.snippet_id
+	    </when>
+	    <when test="type.name() == 'IMG'">
+	      LEFT JOIN snippet_images i ON s.snippet_id = i.snippet_id
+	    </when>
+	  </choose>
+	
+	  WHERE s.snippet_id = #{snippetId}
+	</select>
+
 
   <!-- 추가하기: snippets 기본정보 insert -->
   <insert
@@ -110,9 +118,9 @@
       like_count,
       visibility
     ) VALUES (
-      #{userId},
-      #{folderId},
-      #{colorId},
+      1,
+      1,
+      1,
       #{sourceUrl},
       #{type},
       #{memo},
@@ -128,11 +136,11 @@
     parameterType="kr.or.kosa.snippets.basic.model.Snippets">
     INSERT INTO snippet_codes (
       snippet_id,
-      code_content,
+      content,
       language
     ) VALUES (
       #{snippetId},
-      #{codeContent},
+      #{content},
       #{language}
     )
   </insert>
@@ -142,10 +150,10 @@
     parameterType="kr.or.kosa.snippets.basic.model.Snippets">
     INSERT INTO snippet_texts (
       snippet_id,
-      text_content
+      content
     ) VALUES (
       #{snippetId},
-      #{textContent}
+      #{content}
     )
   </insert>
 
@@ -200,8 +208,8 @@
     parameterType="kr.or.kosa.snippets.basic.model.Snippets">
     UPDATE snippet_codes
     SET
-      code_content = #{codeContent},
-      language     = #{language}
+      content = #{content},
+      language = #{language}
     WHERE snippet_id = #{snippetId}
   </update>
 
@@ -210,7 +218,7 @@
     parameterType="kr.or.kosa.snippets.basic.model.Snippets">
     UPDATE snippet_texts
     SET
-      text_content = #{textContent}
+      content = #{content}
     WHERE snippet_id = #{snippetId}
   </update>
 
@@ -229,9 +237,9 @@
     parameterType="kr.or.kosa.snippets.basic.model.Snippets">
     UPDATE snippets
     SET
-      user_id      = #{userId},
-      folder_id    = #{folderId},
-      color_id     = #{colorId},
+      user_id      = 1,
+      folder_id    = 1,
+      color_id     = 1,
       source_url   = #{sourceUrl},
       type         = #{type},
       memo         = #{memo},

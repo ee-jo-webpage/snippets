@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>스니펫 수정 - 코드</title>
+</head>
+<body>
+  <h1>코드 수정</h1>
+  <form th:action="@{/snippets/edit/{snippetId}(snippetId=${snippet.snippetId})}" th:object="${snippet}" method="post">
+    <table>
+      <tr>
+        <th>Source URL</th>
+        <td><input type="text" th:field="*{sourceUrl}" /></td>
+      </tr>
+      <tr>
+        <th>Code Content</th>
+        <td><textarea th:field="*{content}" name="content" rows="6"></textarea></td>
+      </tr>
+      <tr>
+        <th>Language</th>
+        <td>
+          <select th:field="*{language}">
+            <option value="JAVA" th:selected="${snippet.language == 'JAVA'}">JAVA</option>
+            <option value="PYTHON" th:selected="${snippet.language == 'PYTHON'}">PYTHON</option>
+            <option value="C" th:selected="${snippet.language == 'C'}">C</option>
+          </select>
+        </td>
+      </tr>
+    </table>
+    <button type="submit">수정</button>
+  </form>
+  <a href="/snippets" class="back">← 목록으로 돌아가기</a>
+</body>
+</html>

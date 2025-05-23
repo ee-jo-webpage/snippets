@@ -1,6 +1,5 @@
 package kr.or.kosa.snippets.like.service;
 
-import kr.or.kosa.snippets.config.AppConfig;
 import kr.or.kosa.snippets.like.mapper.LikeMapper;
 import kr.or.kosa.snippets.like.mapper.LikeSnippetMapper;
 import kr.or.kosa.snippets.like.model.Like;
@@ -19,12 +18,10 @@ public class LikeService {
     @Autowired
     private LikeSnippetMapper likeSnippetMapper;
 
-    // 좋아요 추가 (고정 사용자) - snippets 테이블 업데이트 없음
-    public void addLike(Integer snippetId) {
-        Integer userId = AppConfig.getFixedUserId(); // 고정 사용자 ID (2)
-
+    // 좋아요 추가 (실제 사용자 ID 사용)
+    public void addLike(Integer snippetId, Long userId) {
         // 스니펫이 존재하는지 확인
-                Snippet snippet = likeSnippetMapper.getSnippetById(snippetId);
+        Snippet snippet = likeSnippetMapper.getSnippetById(snippetId);
         if (snippet == null) {
             throw new RuntimeException("스니펫을 찾을 수 없습니다: " + snippetId);
         }
@@ -33,21 +30,19 @@ public class LikeService {
         System.out.println("스니펫 정보: " + snippet.getMemo() + " (소유자: " + snippet.getUserId() + ")");
 
         // INSERT IGNORE로 인해 중복 좋아요는 자동 방지됨
-        likeMapper.addLike(userId, snippetId);
+        likeMapper.addLike(userId.intValue(), snippetId);
 
-        // snippets 테이블은 업데이트하지 않음 (기존 데이터 보존)
+        // snippets 테이블의 like_count 업데이트
         long actualCount = likeMapper.countLikes(snippetId);
         likeSnippetMapper.updateLikeCount(snippetId, (int) actualCount);
 
         System.out.println("현재 실제 좋아요 수: " + actualCount);
     }
 
-    // 좋아요 취소 (고정 사용자) - snippets 테이블 업데이트 없음
-    public void removeLike(Integer snippetId) {
-        Integer userId = AppConfig.getFixedUserId(); // 고정 사용자 ID (2)
-
+    // 좋아요 취소 (실제 사용자 ID 사용)
+    public void removeLike(Integer snippetId, Long userId) {
         System.out.println("좋아요 취소 - userId: " + userId + ", snippetId: " + snippetId);
-        likeMapper.removeLike(userId, snippetId);
+        likeMapper.removeLike(userId.intValue(), snippetId);
 
         // 실시간 좋아요 수 조회 후 snippets 테이블 업데이트
         long actualCount = likeMapper.countLikes(snippetId);
@@ -64,15 +59,13 @@ public class LikeService {
         return count;
     }
 
-    // 고정 사용자가 누른 좋아요 목록 반환
-    public List<Like> getUserLikes() {
-        Integer userId = AppConfig.getFixedUserId(); // 고정 사용자 ID (1)
-        return likeMapper.getUserLikes(userId);
+    // 특정 사용자가 누른 좋아요 목록 반환
+    public List<Like> getUserLikes(Long userId) {
+        return likeMapper.getUserLikes(userId.intValue());
     }
 
-    // 고정 사용자가 특정 스니펫에 좋아요를 눌렀는지 확인
-    public boolean isLiked(Integer snippetId) {
-        Integer userId = AppConfig.getFixedUserId(); // 고정 사용자 ID (1)
-        return likeMapper.isLiked(userId, snippetId);
+    // 특정 사용자가 특정 스니펫에 좋아요를 눌렀는지 확인
+    public boolean isLiked(Integer snippetId, Long userId) {
+        return likeMapper.isLiked(userId.intValue(), snippetId);
     }
 }

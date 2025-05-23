@@ -4,11 +4,8 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class AppConfig {
+    // 고정 사용자 ID 설정을 제거합니다.
+    // 이제 실제 로그인한 사용자 정보를 사용합니다.
 
-    // 구글 확장프로그램용 고정 사용자 ID (코딩하는사람)
-    private static final Integer FIXED_USER_ID = 2;
-
-    public static Integer getFixedUserId() {
-        return FIXED_USER_ID;
-    }
+    // 필요한 경우 다른 설정들을 여기에 추가할 수 있습니다.
 }

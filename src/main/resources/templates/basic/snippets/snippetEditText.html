@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>스니펫 수정 - 텍스트</title>
+</head>
+<body>
+  <h1>텍스트 수정</h1>
+  <form th:action="@{/snippets/edit/{snippetId}(snippetId=${snippet.snippetId})}" th:object="${snippet}" method="post">
+    <table>
+      <tr>
+        <th>Source URL</th>
+        <td><input type="text" th:field="*{sourceUrl}" /></td>
+      </tr>
+      <tr>
+        <th>Text Content</th>
+        <td><textarea th:field="*{content}" name="content" rows="6"></textarea></td>
+      </tr>
+    </table>
+    <button type="submit">수정</button>
+  </form>
+  <a href="/snippets" class="back">← 목록으로 돌아가기</a>
+</body>
+</html>

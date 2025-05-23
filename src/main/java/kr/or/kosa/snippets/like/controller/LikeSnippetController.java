@@ -41,7 +41,15 @@ public class LikeSnippetController {
         Snippet snippet = likeSnippetMapper.getSnippetDetailById(snippetId);
 
         if (snippet == null) {
-            return "redirect:/popular-snippets"; // 스니펫이 없으면 인기 스니펫 페이지로 리다이렉트
+            return "redirect:/popular-snippets";
+        }
+
+        // 비공개 스니펫 접근 권한 체크
+        if (!snippet.isVisibility()) { // visibility가 false(0)인 경우
+            if (userDetails == null || !userDetails.getUserId().equals((long) snippet.getUserId())) {
+                // 로그인하지 않았거나 작성자가 아닌 경우 접근 거부
+                return "redirect:/popular-snippets";
+            }
         }
 
         // 스니펫 태그 조회

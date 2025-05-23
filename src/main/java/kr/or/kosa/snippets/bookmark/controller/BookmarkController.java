@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpSession;
 import kr.or.kosa.snippets.basic.model.Snippets;
 import kr.or.kosa.snippets.bookmark.model.Bookmark;
 import kr.or.kosa.snippets.bookmark.service.BookmarkService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.annotations.Select;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/bookmark")
 @Slf4j
 @Controller
+@RequiredArgsConstructor
 public class BookmarkController {
 
     @Autowired

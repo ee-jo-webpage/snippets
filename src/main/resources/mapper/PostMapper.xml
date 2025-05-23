@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.kosa.snippets.community.mapper.PostMapper">
+
+    <resultMap id="PostResultMap" type="kr.or.kosa.snippets.community.model.Post">
+        <id property="postId" column="post_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="viewCount" column="view_count"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="isNotice" column="is_notice"/>
+        <result property="status" column="status"/>
+        <result property="nickname" column="nickname"/>
+        <result property="categoryName" column="category_name"/>
+        <result property="commentCount" column="comment_count"/>
+    </resultMap>
+
+    <select id="getAllPosts" resultMap="PostResultMap">
+        SELECT p.post_id, p.user_id, p.category_id, p.title, p.content,
+               p.view_count, p.created_at, p.updated_at, p.is_notice, p.status,
+               u.nickname, c.name as category_name,
+               (SELECT COUNT(*) FROM comments WHERE post_id = p.post_id) as comment_count
+        FROM posts p
+                 JOIN users u ON p.user_id = u.user_id
+                 JOIN board_categories c ON p.category_id = c.category_id
+        WHERE p.status = 'published'
+        ORDER BY p.is_notice DESC, p.created_at DESC
+    </select>
+
+    <select id="getPostsByCategoryId" parameterType="Integer" resultMap="PostResultMap">
+        SELECT p.post_id, p.user_id, p.category_id, p.title, p.content,
+               p.view_count, p.created_at, p.updated_at, p.is_notice, p.status,
+               u.nickname, c.name as category_name,
+               (SELECT COUNT(*) FROM comments WHERE post_id = p.post_id) as comment_count
+        FROM posts p
+                 JOIN users u ON p.user_id = u.user_id
+                 JOIN board_categories c ON p.category_id = c.category_id
+        WHERE p.category_id = #{categoryId} AND p.status = 'published'
+        ORDER BY p.is_notice DESC, p.created_at DESC
+    </select>
+
+    <select id="getPostById" parameterType="Integer" resultMap="PostResultMap">
+        SELECT p.post_id, p.user_id, p.category_id, p.title, p.content,
+               p.view_count, p.created_at, p.updated_at, p.is_notice, p.status,
+               u.nickname, c.name as category_name,
+               (SELECT COUNT(*) FROM comments WHERE post_id = p.post_id) as comment_count
+        FROM posts p
+                 JOIN users u ON p.user_id = u.user_id
+                 JOIN board_categories c ON p.category_id = c.category_id
+        WHERE p.post_id = #{postId} AND p.status = 'published'
+    </select>
+
+    <insert id="insertPost" parameterType="kr.or.kosa.snippets.board.model.Post"
+            useGeneratedKeys="true" keyProperty="postId">
+        INSERT INTO posts (user_id, category_id, title, content, view_count, created_at, updated_at, is_notice, status)
+        VALUES (#{userId}, #{categoryId}, #{title}, #{content}, 0, NOW(), NOW(), #{isNotice}, #{status})
+    </insert>
+
+    <update id="updatePost" parameterType="kr.or.kosa.snippets.board.model.Post">
+        UPDATE posts
+        SET category_id = #{categoryId},
+            title = #{title},
+            content = #{content},
+            updated_at = NOW(),
+            is_notice = #{isNotice},
+            status = #{status}
+        WHERE post_id = #{postId}
+    </update>
+
+    <delete id="deletePost" parameterType="Integer">
+        UPDATE posts
+        SET status = 'deleted',
+            updated_at = NOW()
+        WHERE post_id = #{postId}
+    </delete>
+
+    <update id="increaseViewCount" parameterType="Integer">
+        UPDATE posts
+        SET view_count = view_count + 1
+        WHERE post_id = #{postId}
+    </update>
+
+    <!-- 검색 기능 -->
+    <select id="searchPosts" resultMap="PostResultMap">
+        SELECT p.post_id, p.user_id, p.category_id, p.title, p.content,
+        p.view_count, p.created_at, p.updated_at, p.is_notice, p.status,
+        u.nickname, c.name as category_name,
+        (SELECT COUNT(*) FROM comments WHERE post_id = p.post_id) as comment_count
+        FROM posts p
+        JOIN users u ON p.user_id = u.user_id
+        JOIN board_categories c ON p.category_id = c.category_id
+        WHERE p.status = 'published'
+        <if test="categoryId != null">
+            AND p.category_id = #{categoryId}
+        </if>
+        <if test="startDate != null">
+            AND p.created_at >= #{startDate}
+        </if>
+        <if test="endDate != null">
+            AND p.created_at &lt;= #{endDate}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            <choose>
+                <when test="searchType == 'title'">
+                    AND p.title LIKE CONCAT('%', #{keyword}, '%')
+                </when>
+                <when test="searchType == 'content'">
+                    AND p.content LIKE CONCAT('%', #{keyword}, '%')
+                </when>
+                <when test="searchType == 'writer'">
+                    AND u.nickname LIKE CONCAT('%', #{keyword}, '%')
+                </when>
+                <when test="searchType == 'titleContent'">
+                    AND (p.title LIKE CONCAT('%', #{keyword}, '%') OR p.content LIKE CONCAT('%', #{keyword}, '%'))
+                </when>
+                <otherwise>
+                    AND (p.title LIKE CONCAT('%', #{keyword}, '%') OR p.content LIKE CONCAT('%', #{keyword}, '%'))
+                </otherwise>
+            </choose>
+        </if>
+        ORDER BY p.is_notice DESC, p.created_at DESC
+    </select>
+
+    <!-- 임시저장 기능 -->
+    <resultMap id="DraftResultMap" type="kr.or.kosa.snippets.board.model.PostDraft">
+        <id property="draftId" column="draft_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="getDraftsByUserId" parameterType="Long" resultMap="DraftResultMap">
+        SELECT draft_id, user_id, category_id, title, content, created_at, updated_at
+        FROM post_drafts
+        WHERE user_id = #{userId}
+        ORDER BY updated_at DESC
+    </select>
+
+    <select id="getDraftById" parameterType="Integer" resultMap="DraftResultMap">
+        SELECT draft_id, user_id, category_id, title, content, created_at, updated_at
+        FROM post_drafts
+        WHERE draft_id = #{draftId}
+    </select>
+
+    <insert id="insertDraft" parameterType="kr.or.kosa.snippets.board.model.PostDraft"
+            useGeneratedKeys="true" keyProperty="draftId">
+        INSERT INTO post_drafts (user_id, category_id, title, content, created_at, updated_at)
+        VALUES (#{userId}, #{categoryId}, #{title}, #{content}, NOW(), NOW())
+    </insert>
+
+    <update id="updateDraft" parameterType="kr.or.kosa.snippets.board.model.PostDraft">
+        UPDATE post_drafts
+        SET category_id = #{categoryId},
+            title = #{title},
+            content = #{content},
+            updated_at = NOW()
+        WHERE draft_id = #{draftId} AND user_id = #{userId}
+    </update>
+
+    <delete id="deleteDraft" parameterType="Integer">
+        DELETE FROM post_drafts WHERE draft_id = #{draftId}
+    </delete>
+</mapper>

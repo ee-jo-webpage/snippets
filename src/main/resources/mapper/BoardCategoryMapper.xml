@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.kosa.snippets.community.mapper.BoardCategoryMapper">
+
+    <resultMap id="CategoryResultMap" type="kr.or.kosa.snippets.community.model.BoardCategory">
+        <id property="categoryId" column="category_id"/>
+        <result property="name" column="name"/>
+        <result property="description" column="description"/>
+        <result property="orderNum" column="order_num"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <select id="getAllCategories" resultMap="CategoryResultMap">
+        SELECT category_id, name, description, order_num, created_at
+        FROM board_categories
+        ORDER BY order_num
+    </select>
+
+    <select id="getCategoryById" parameterType="Integer" resultMap="CategoryResultMap">
+        SELECT category_id, name, description, order_num, created_at
+        FROM board_categories
+        WHERE category_id = #{categoryId}
+    </select>
+
+    <insert id="insertCategory" parameterType="kr.or.kosa.snippets.board.model.BoardCategory"
+            useGeneratedKeys="true" keyProperty="categoryId">
+        INSERT INTO board_categories (name, description, order_num, created_at)
+        VALUES (#{name}, #{description}, #{orderNum}, NOW())
+    </insert>
+
+    <update id="updateCategory" parameterType="kr.or.kosa.snippets.board.model.BoardCategory">
+        UPDATE board_categories
+        SET name = #{name},
+            description = #{description},
+            order_num = #{orderNum}
+        WHERE category_id = #{categoryId}
+    </update>
+
+    <delete id="deleteCategory" parameterType="Integer">
+        DELETE FROM board_categories WHERE category_id = #{categoryId}
+    </delete>
+</mapper>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>스니펫 목록</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link th:href="@{/bookmark/css/bookmark-snippet.css}" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>💻 스니펫 모음</h1>
+        <div class="snippet-count" th:text="|총 ${#lists.size(snippets)}개의 스니펫|">총 0개의 스니펫</div>
+    </div>
+
+    <div class="toolbar">
+        <div class="search-bar">
+            <input type="text"
+                   id="searchInput"
+                   class="search-input"
+                   placeholder="스니펫 검색 (제목, 메모, 내용...)">
+            <select id="typeFilter" class="filter-select">
+                <option value="">모든 타입</option>
+                <option value="CODE">코드</option>
+                <option value="TEXT">텍스트</option>
+                <option value="IMG">이미지</option>
+            </select>
+        </div>
+        <a th:href="@{/snippets/new}" class="btn-new">
+            ➕ 새 스니펫 추가
+        </a>
+    </div>
+
+    <div th:if="${snippets == null or #lists.isEmpty(snippets)}" class="empty-state">
+        <h3>📝 등록된 스니펫이 없습니다</h3>
+        <p>첫 번째 스니펫을 등록해보세요!</p>
+        <a th:href="@{/snippets/new}" class="btn-new">스니펫 추가하기</a>
+    </div>
+
+    <div th:unless="${snippets == null or #lists.isEmpty(snippets)}" class="snippets-grid" id="snippetsContainer">
+        <div th:each="snippet : ${snippets}"
+             class="snippet-card"
+             th:data-type="${snippet.type?.name()}"
+             th:data-user-id="${snippet.userId}"
+             th:data-memo="${snippet.memo}">
+
+            <div class="snippet-id" th:text="'#' + ${snippet.snippetId}">ID</div>
+
+            <div class="snippet-header">
+                <h3 class="snippet-title" th:text="${snippet.memo ?: '제목 없음'}">
+                    스니펫 제목
+                </h3>
+                <div class="snippet-actions">
+                    <a th:href="@{/snippets/{id}(id=${snippet.snippetId})}" class="btn btn-view">
+                        👁️ 상세보기
+                    </a>
+                    <a th:href="@{/snippets/edit/{id}(id=${snippet.snippetId})}" class="btn btn-edit">
+                        ✏️ 수정
+                    </a>
+                    <button class="btn btn-bookmark"
+                            th:data-snippet-id="${snippet.snippetId}"
+                            onclick="toggleBookmark(this)">
+                        <span class="bookmark-icon">⭐</span>
+                        <span class="bookmark-text">북마크</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="snippet-meta">
+                    <span class="meta-item"
+                          th:classappend="${snippet.type?.name() == 'CODE' ? 'type-code' : (snippet.type?.name() == 'TEXT' ? 'type-text' : (snippet.type?.name() == 'IMG' ? 'type-img' : ''))}"
+                          th:text="${snippet.type?.name() ?: '타입 없음'}">타입</span>
+                <span class="meta-item" th:if="${snippet.userId}" th:text="'작성자: 사용자' + ${snippet.userId}">작성자</span>
+                <span class="meta-item" th:text="'생성일: ' + ${snippet.createdAt ?: '날짜 없음'}">생성일</span>
+                <span class="meta-item" th:if="${snippet.sourceUrl}" th:text="'출처 있음'">출처</span>
+            </div>
+
+            <div class="snippet-content" th:if="${snippet.memo}">
+                <div th:text="${#strings.abbreviate(snippet.memo, 300)}">
+                    스니펫 내용이 여기에 표시됩니다...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 토스트 메시지 -->
+<div id="toast" class="toast"></div>
+
+<script th:inline="javascript"></script>
+<script th:src="@{/bookmark/js/bookmark-snippet.js}"></script>
+</body>
+</html>

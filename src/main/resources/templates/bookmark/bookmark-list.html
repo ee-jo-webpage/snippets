@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>내 북마크</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link th:href="@{/bookmark/css/bookmark-list.css}" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>📚 내 북마크</h1>
+        <div class="bookmark-count" th:text="|총 ${count}개의 북마크|">총 0개의 북마크</div>
+    </div>
+
+    <!-- 알림 메시지 표시 영역 추가 -->
+    <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+    <div class="search-section">
+        <div class="search-bar">
+            <input type="text"
+                   id="bookmarkSearchInput"
+                   class="search-input"
+                   placeholder="북마크 검색 (제목, 메모, 스니펫 ID...)">
+            <select id="bookmarkTypeFilter" class="filter-select">
+                <option value="">모든 타입</option>
+                <option value="CODE">코드</option>
+                <option value="TEXT">텍스트</option>
+                <option value="IMG">이미지</option>
+            </select>
+        </div>
+    </div>
+
+    <div th:if="${bookmarks == null or #lists.isEmpty(bookmarks)}" class="empty-state">
+        <h3>🌟 아직 북마크한 스니펫이 없습니다</h3>
+        <p>마음에 드는 스니펫을 북마크하여 나중에 쉽게 찾아보세요!</p>
+        <a th:href="@{/snippets}" class="btn btn-primary">스니펫 둘러보기</a>
+    </div>
+
+    <div th:unless="${bookmarks == null or #lists.isEmpty(bookmarks)}" class="bookmarks-grid" id="bookmarksContainer">
+        <div th:each="bookmark, stat : ${bookmarks}"
+             class="bookmark-card"
+             th:data-type="${bookmark.type?.name()}"
+             th:data-memo="${bookmark.memo}">
+
+            <div class="snippet-id" th:text="'#' + ${bookmark.snippetId}">ID</div>
+
+            <div class="bookmark-header">
+                <h3 class="bookmark-title" th:text="${bookmark.memo ?: '제목 없음'}">
+                    북마크 제목
+                </h3>
+                <div class="bookmark-actions">
+                    <a th:href="@{/snippets/{id}(id=${bookmark.snippetId})}" class="btn btn-view">
+                        👁️ 보기
+                    </a>
+                    <button class="btn btn-remove"
+                            th:onclick="|removeBookmark(${bookmark.snippetId})|">
+                        🗑️ 제거
+                    </button>
+                </div>
+            </div>
+
+            <div class="snippet-meta">
+                <span class="meta-item"
+                      th:classappend="${bookmark.type?.name() == 'CODE' ? 'type-code' : (bookmark.type?.name() == 'TEXT' ? 'type-text' : 'type-img')}"
+                      th:text="${bookmark.type?.name() ?: '타입 없음'}">타입</span>
+                <span class="meta-item" th:text="'생성일: ' + ${#dates.format(bookmark.createdAt, 'yyyy-MM-dd')}">생성일</span>
+                <span class="meta-item" th:if="${bookmark.sourceUrl}" th:text="'출처 있음'">출처</span>
+            </div>
+
+            <!-- 타입별 콘텐츠 미리보기 추가 -->
+            <div class="snippet-content" th:if="${bookmark.memo}">
+                <div th:text="${#strings.abbreviate(bookmark.memo, 200)}">
+                    스니펫 내용이 여기에 표시됩니다...
+                </div>
+            </div>
+
+            <!-- 코드 타입 미리보기 -->
+            <div th:if="${bookmark.type?.name() == 'CODE' and bookmark.codeContent}" class="snippet-content">
+                <strong>코드:</strong>
+                <pre th:text="${#strings.abbreviate(bookmark.codeContent, 150)}">코드 내용</pre>
+                <span th:if="${bookmark.language}" class="meta-item" th:text="'언어: ' + ${bookmark.language}">언어</span>
+            </div>
+
+            <!-- 텍스트 타입 미리보기 -->
+            <div th:if="${bookmark.type?.name() == 'TEXT' and bookmark.textContent}" class="snippet-content">
+                <strong>텍스트:</strong>
+                <p th:text="${#strings.abbreviate(bookmark.textContent, 200)}">텍스트 내용</p>
+            </div>
+
+            <!-- 이미지 타입 미리보기 -->
+            <div th:if="${bookmark.type?.name() == 'IMG'}" class="snippet-content">
+                <strong>이미지:</strong>
+                <img th:if="${bookmark.imageUrl}"
+                     th:src="${bookmark.imageUrl}"
+                     th:alt="${bookmark.altText}"
+                     style="max-width: 200px; max-height: 150px; border-radius: 4px;">
+                <p th:if="${bookmark.altText}" th:text="${bookmark.altText}">이미지 설명</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript"></script>
+<script th:src="@{/bookmark/js/bookmark-list.js}"></script>
+</body>
+</html>

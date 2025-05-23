@@ -20,9 +20,9 @@ public class Snippets {
    private int likeCount;
    private int visibility;
    
-   private String codeContent;
-   private String textContent;    
-    private String language;    
-    private String imageUrl;    
-    private String altText;
+
+   private String Content;    
+   private String language;    
+   private String imageUrl;    
+   private String altText;
 }

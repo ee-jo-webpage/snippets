@@ -19,12 +19,12 @@
     </tr>
     <tr th:if="${snippet.type.name() == 'CODE'}">
         <th>Code Content</th>
-        <td><pre><code th:text="${snippet.codeContent}"></code></pre></td>
+        <td><pre><code th:text="${snippet.content}"></code></pre></td>
     </tr>
 
     <tr th:if="${snippet.type.name() == 'TEXT'}">
         <th>Text Content</th>
-        <td th:text="${snippet.textContent}"></td>
+        <td th:text="${snippet.content}"></td>
     </tr>
 
     <tr th:if="${snippet.type.name() == 'IMG'}">

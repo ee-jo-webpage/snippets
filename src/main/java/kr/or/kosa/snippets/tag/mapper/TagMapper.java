@@ -1,5 +1,6 @@
 package kr.or.kosa.snippets.tag.mapper;
 
+import kr.or.kosa.snippets.basic.model.Snippets;
 import kr.or.kosa.snippets.tag.model.SnippetTag;
 import kr.or.kosa.snippets.tag.model.TagItem;
 import org.apache.ibatis.annotations.*;
@@ -11,6 +12,10 @@ import java.util.Map;
 @Mapper
 @Repository("tagMapperBean")
 public interface TagMapper {
+
+    //임시 - 이후 삭제할 것
+    @Select("SELECT * FROM snippets WHERE user_id = #{userId}")
+    List<Snippets> selectAllSnippetsByUserId(Long userId);
 
     //모든 태그 조회
     @Select("SELECT * FROM tags ORDER BY name")
@@ -50,6 +55,7 @@ public interface TagMapper {
     //태그ID로 태그 제거
     @Delete("DELETE FROM snippet_tags WHERE tag_id = #{tagId}")
     int deleteSnippetTagsByTagId(Long tagId);
+
 
 
 }

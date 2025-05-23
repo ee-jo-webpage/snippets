@@ -1,5 +1,6 @@
 package kr.or.kosa.snippets.tag.service;
 
+import kr.or.kosa.snippets.basic.model.Snippets;
 import kr.or.kosa.snippets.tag.mapper.TagMapper;
 import kr.or.kosa.snippets.tag.model.SnippetTag;
 import kr.or.kosa.snippets.tag.model.TagItem;
@@ -17,6 +18,11 @@ public class TagService {
 
     @Autowired
     TagMapper tagMapper;
+
+    //임시 -> 사용자별 스니펫 조회 => 이후 삭제할 것
+    public List<Snippets> getSnippetsByUserId(Long userId) {
+        return tagMapper.selectAllSnippetsByUserId(userId);
+    }
 
     //모든 태그 조회
     public List<TagItem> getAllTags() {

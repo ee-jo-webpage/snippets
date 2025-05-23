@@ -3,10 +3,12 @@ package kr.or.kosa.snippets.tag.controller;
 import kr.or.kosa.snippets.basic.service.SnippetService;
 import kr.or.kosa.snippets.tag.model.TagItem;
 import kr.or.kosa.snippets.tag.service.TagService;
+import kr.or.kosa.snippets.user.service.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,9 +24,18 @@ public class TagController {
     @Autowired
     private SnippetService snippetService;
 
+    private Long requireLogin(CustomUserDetails userDetails) {
+        if (userDetails == null) {
+
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다");
+        }
+        return userDetails.getUserId();
+    }
+
     //모든 태그 조회
     @GetMapping
     public ResponseEntity<List<TagItem>> getAllTags() {
+
         List<TagItem> tags = tagService.getAllTags();
 
         return ResponseEntity.ok(tags);

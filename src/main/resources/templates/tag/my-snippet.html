@@ -222,7 +222,7 @@
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <small class="text-muted">
                                         <i class="fas fa-calendar me-1"></i>
-                                        <span th:text="${#temporals.format(snippet.createdAt, 'yyyy-MM-dd HH:mm')}">생성일</span>
+<!--                                        <span th:text="${#temporals.format(snippet.createdAt, 'yyyy-MM-dd HH:mm')}">생성일</span>-->
                                     </small>
                                     <span th:class="'badge ' + (${snippet.visibility} == 1 ? 'bg-success' : 'bg-secondary')">
                                             <i th:class="'fas ' + (${snippet.visibility} == 1 ? 'fa-eye' : 'fa-eye-slash') + ' me-1'"></i>

@@ -1,5 +1,6 @@
 package kr.or.kosa.snippets.snippetExt.controller;
 
+import kr.or.kosa.snippets.snippetExt.model.ColorExt;
 import kr.or.kosa.snippets.snippetExt.model.SnippetExtCreate;
 import kr.or.kosa.snippets.snippetExt.model.SnippetExtUpdate;
 import kr.or.kosa.snippets.snippetExt.service.SnippetExtService;
@@ -11,6 +12,7 @@ import org.springframework.security.authentication.AuthenticationCredentialsNotF
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -57,5 +59,14 @@ public class SnippetApiController {
     ) {
         snippetExtService.deleteSnippet(id, requireLogin(details));
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/color")
+    public ResponseEntity<?> getColorByUserId(
+        @AuthenticationPrincipal CustomUserDetails details
+    ) {
+        Long userId = details.getUserId();
+        List<ColorExt> colorList = snippetExtService.getColorsByUserId(userId);
+        return ResponseEntity.ok(colorList);
     }
 }

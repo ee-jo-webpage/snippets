@@ -5,22 +5,11 @@
 
 <mapper namespace="kr.or.kosa.snippets.snippetExt.mapper.SnippetExtMapper">
 
-    <!-- SnippetResultMap  -->
-    <!--    <resultMap id="SnippetResultMap" type="com.example.model.SnippetExt">-->
-    <!--        <id property="snippetId" column="snippet_id"/>-->
-    <!--        <result property="sourceUrl" column="source_url"/>-->
-    <!--        <result property="type" column="type"/>-->
-    <!--        <result property="colorId" column="color_id"/>-->
-    <!--    </resultMap>-->
-
-    <!-- SnippetTextResultMap -->
-    <!--    <resultMap id="SnippetTextResultMap" type="com.example.model.SnippetExt">-->
-    <!--        <id property="snippetId" column="snippet_id"/>-->
-    <!--        <result property="sourceUrl" column="source_url"/>-->
-    <!--        <result property="type" column="type"/>-->
-    <!--        <result property="colorId" column="color_id"/>-->
-    <!--        <result property="content" column="content"/>-->
-    <!--    </resultMap>-->
+    <resultMap id="colorMap" type="kr.or.kosa.snippets.snippetExt.model.ColorExt">
+        <id property="colorId" column="COLOR_ID" />
+        <result property="hexCode" column="HEX_CODE" />
+        <result property="name" column="NAME" />
+    </resultMap>
 
     <insert id="insertSnippet" useGeneratedKeys="true" keyProperty="snippetId">
         INSERT INTO SNIPPETS (SOURCE_URL, TYPE, COLOR_ID, MEMO, USER_ID)
@@ -95,5 +84,12 @@
         </choose>
     </select>
 
+    <select id="findColorsByUserId" resultMap="colorMap">
+        SELECT COLOR_ID, HEX_CODE, NAME
+        FROM SNIPPET_COLORS
+        WHERE USER_ID = #{userId}
+           OR USER_ID = 0
+        ORDER BY COLOR_ID DESC
+    </select>
 
 </mapper>

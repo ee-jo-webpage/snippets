@@ -1,4 +1,4 @@
-const colorMap = {
+let colorMap = {
     0: "#FFFF88",
     1: "#FFFACD",
     2: "#AEC6CF",
@@ -288,6 +288,23 @@ function detectLanguage(content = "") {
     return "Unknown";
 }
 
+// 서버에서 색상 정보를 받아오느 함수
+async function fetchColorMapFromServer() {
+    try {
+        const response = await fetch("http://localhost:8090/api/snippets/color");
+        const data = await response.json();
+        const newColorMap = {};
+        data.forEach((color) => {
+            newColorMap[color.colorId] = color.hexCode;
+        });
+        colorMap = newColorMap;
+        console.log("서버에서 colorMap 로드 완료:", colorMap);
+    } catch (error) {
+        console.error("❌ colorMap 로딩 실패:", error);
+    }
+}
+
+
 // 정렬 항목 클릭 이벤트 핸들러
 document.querySelectorAll("#sortPopup div").forEach((item) => {
     item.addEventListener("click", async (e) => {
@@ -346,7 +363,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-chrome.storage.local.get("highlights", (result) => {
+chrome.storage.local.get("highlights", async (result) => {
+    await fetchColorMapFromServer();
     const highlights = result.highlights || [];
     const lastAdded = highlights[highlights.length - 1];
     const lastAddedId = lastAdded?.snippetId;

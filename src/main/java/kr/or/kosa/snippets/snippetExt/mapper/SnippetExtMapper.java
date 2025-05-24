@@ -1,9 +1,11 @@
 package kr.or.kosa.snippets.snippetExt.mapper;
 
+import kr.or.kosa.snippets.snippetExt.model.ColorExt;
 import kr.or.kosa.snippets.snippetExt.model.SnippetExtCreate;
 import kr.or.kosa.snippets.snippetExt.model.SnippetExtUpdate;
 import org.apache.ibatis.annotations.Mapper;
 
+import java.util.List;
 import java.util.Optional;
 
 @Mapper
@@ -25,4 +27,5 @@ public interface SnippetExtMapper {
 
     int countDuplicate(SnippetExtCreate snippet);
 
+    List<ColorExt> findColorsByUserId(Long userId);
 }

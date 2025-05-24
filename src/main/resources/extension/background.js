@@ -80,6 +80,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         return true; // async 응답 위해 필요
     }
+
+    // 4. 스니펫 색상 불러오기
+    if (message.action === "fetchColorData") {
+        fetch("http://localhost:8090/api/snippets/color", {
+            credentials: "include", // 세션 유지 필요 시
+        })
+            .then((res) => {
+                if (!res.ok) throw new Error("Server error");
+                return res.json();
+            })
+            .then((data) => {
+                sendResponse({ success: true, colors: data });
+            })
+            .catch((err) => {
+                sendResponse({ success: false, error: err.message });
+            });
+
+        // async 응답 허용
+        return true;
+    }
 });
 
 // debounce 함수 정의 (lodash 없이 사용)

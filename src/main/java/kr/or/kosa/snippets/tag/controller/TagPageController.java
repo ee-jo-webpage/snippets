@@ -1,18 +1,18 @@
 package kr.or.kosa.snippets.tag.controller;
 
 import kr.or.kosa.snippets.basic.model.Snippets;
-import kr.or.kosa.snippets.basic.service.SnippetService;
+import kr.or.kosa.snippets.tag.model.TagItem;
 import kr.or.kosa.snippets.tag.service.TagService;
 import kr.or.kosa.snippets.user.service.CustomUserDetails;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -20,17 +20,13 @@ import java.util.List;
 @Slf4j
 public class TagPageController {
 
-    private final SnippetService snippetService;
-    private final TagService tagService;
-
-    public TagPageController(SnippetService snippetService, TagService tagService) {
-        this.snippetService = snippetService;
-        this.tagService = tagService;
-    }
+    @Autowired
+    private TagService tagService;
 
     private Long requireLogin(CustomUserDetails userDetails) {
         if (userDetails == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다");
+            log.warn("사용자 인증 정보가 없습니다.");
+            return null;
         }
         return userDetails.getUserId();
     }
@@ -40,29 +36,51 @@ public class TagPageController {
      * URL: /tags/manager
      */
     @GetMapping("/manager")
-    public String showTagManager(@AuthenticationPrincipal CustomUserDetails userDetails) {
-
-        Long currentId = requireLogin(userDetails);
-//        Long currentId = userDetails.getUserId();
-
-        return "tag/tag-manager";  // /WEB-INF/views/tags/tag-manager.jsp로 이동
+    public String showTagManager() {
+        return "tag/tag-manager";
     }
 
     /**
      * 스니펫 태그 관리 페이지로 이동
-     * URL: /tags/snippet-management
+     * URL: /tags/snippet-tag
      */
     @GetMapping("/snippet-tag")
     public String showSnippetTagManagement(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
-        //Long currentId = requireLogin(userDetails);
-        Long currentId = userDetails.getUserId();
 
-        List<Snippets> snippetList = tagService.getSnippetsByUserId(currentId);
-        System.out.println("---------------------------------------" + snippetList );
-        model.addAttribute("userId", currentId);
-        model.addAttribute("currentId", currentId);
-        model.addAttribute("snippetList", snippetList);
+        try {
+            Long currentId = requireLogin(userDetails);
+            log.info("스니펫 태그 관리 페이지 접근 - 사용자 ID: {}", currentId);
 
-        return "tag/my-snippet";
+            if (currentId == null) {
+                // 로그인되지 않은 경우 빈 데이터로 설정
+                model.addAttribute("snippets", new ArrayList<>());
+                model.addAttribute("tags", new ArrayList<>());
+                model.addAttribute("userId", null);
+                model.addAttribute("error", "로그인이 필요합니다.");
+                return "tag/snippet-tags";
+            }
+
+            // 내가 작성한 스니펫 조회
+            List<Snippets> mySnippets = tagService.getSnippetsByUserId(currentId);
+            log.info("사용자 {}가 작성한 스니펫 수: {}", currentId, mySnippets != null ? mySnippets.size() : 0);
+
+            // 내가 만든 태그 목록 조회
+            List<TagItem> myTags = tagService.getTagsByUserId(currentId);
+            log.info("사용자 {}가 만든 태그 수: {}", currentId, myTags != null ? myTags.size() : 0);
+
+            // null 체크 및 기본값 설정
+            model.addAttribute("snippets", mySnippets != null ? mySnippets : new ArrayList<>());
+            model.addAttribute("tags", myTags != null ? myTags : new ArrayList<>());
+            model.addAttribute("userId", currentId);
+
+        } catch (Exception e) {
+            log.error("스니펫/태그 조회 중 오류 발생", e);
+            model.addAttribute("snippets", new ArrayList<>());
+            model.addAttribute("tags", new ArrayList<>());
+            model.addAttribute("userId", null);
+            model.addAttribute("error", "데이터를 불러오는 중 오류가 발생했습니다: " + e.getMessage());
+        }
+
+        return "tag/snippet-tags";
     }
 }

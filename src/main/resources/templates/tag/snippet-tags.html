@@ -8,27 +8,6 @@
 </head>
 <body>
 <div class="container">
-    <!-- 세션 정보 확인 패널 추가 -->
-    <div class="session-panel">
-        <button class="session-toggle-btn" onclick="toggleSessionInfo()">
-            🔍 세션 정보 확인
-        </button>
-        <div id="sessionInfo" class="session-info">
-            <div class="session-item">
-                <span class="session-key">현재 사용자 ID:</span>
-                <span class="session-value" th:text="${currentId != null ? currentId : '없음'}">없음</span>
-            </div>
-            <div class="session-item">
-                <span class="session-key">세션 ID:</span>
-                <span class="session-value" id="sessionId">로딩 중...</span>
-            </div>
-            <div class="session-item">
-                <span class="session-key">서버 세션 데이터:</span>
-                <span class="session-value" id="serverSessionData">로딩 중...</span>
-            </div>
-        </div>
-    </div>
-
     <h1>📝 스니펫 태그 관리</h1>
 
     <div class="search-bar">
@@ -48,63 +27,6 @@
 <!-- 플로팅 알림 -->
 <div id="toast" class="toast"></div>
 
-    <script>
-        // 세션 정보 토글 함수
-        function toggleSessionInfo() {
-            const sessionInfo = document.getElementById('sessionInfo');
-            if (sessionInfo.style.display === 'none' || sessionInfo.style.display === '') {
-                sessionInfo.style.display = 'block';
-                loadSessionData();
-            } else {
-                sessionInfo.style.display = 'none';
-            }
-        }
-
-        // 세션 데이터 로드 함수
-        async function loadSessionData() {
-            try {
-                // 세션 ID 가져오기 (쿠키에서)
-                const cookies = document.cookie.split(';');
-                let sessionId = '쿠키에서 세션ID를 찾을 수 없음';
-
-                for (let cookie of cookies) {
-                    const [name, value] = cookie.trim().split('=');
-                    if (name === 'JSESSIONID' || name === 'connect.sid') {
-                        sessionId = value;
-                        break;
-                    }
-                }
-                document.getElementById('sessionId').textContent = sessionId;
-
-                // 서버 세션 데이터 확인 API 호출
-                try {
-                    const response = await fetch('/color/check-session');
-                    if (response.ok) {
-                        const sessionData = await response.json();
-                        document.getElementById('serverSessionData').innerHTML =
-                            `userId: ${sessionData.userId || '없음'}, ` +
-                            `sessionId: ${sessionData.sessionId || '없음'}`;
-                    } else {
-                        document.getElementById('serverSessionData').textContent =
-                            'API 응답 오류 - 서버에서 확인하세요';
-                    }
-                } catch (error) {
-                    document.getElementById('serverSessionData').textContent =
-                        `세션 확인 API 없음 - ${error.message}`;
-                    console.log('세션 확인 API 호출 실패:', error);
-                }
-            } catch (error) {
-                console.error('세션 정보 로드 중 오류:', error);
-                document.getElementById('serverSessionData').textContent = '오류 발생';
-            }
-        }
-
-        // 페이지 로드 시 자동으로 세션 정보 표시 (개발 단계에서만)
-        document.addEventListener('DOMContentLoaded', function() {
-            // 개발 모드에서 자동으로 세션 정보 표시
-            // toggleSessionInfo();
-        });
-    </script>
 <script th:src="@{/tag/js/snippet-tags.js}"></script>
 </body>
 </html>

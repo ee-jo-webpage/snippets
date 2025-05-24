@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.or.kosa.snippets.user.blockIp.BlockedIpLogMapper">
+
+    <insert id="insertBlockedIpLog">
+        INSERT INTO blocked_ip_log
+            (ip, country, city, user_agent, is_bot, blocked_at, unblock_at)
+        VALUES
+            (#{ip}, #{country}, #{city}, #{userAgent}, #{isBot}, #{blockedAt}, #{unblockAt})
+    </insert>
+
+    <select id="findAllBlockedIpLogs" resultType="kr.or.kosa.snippets.user.blockIp.BlockedIpLog">
+        SELECT * FROM blocked_ip_log
+    </select>
+    <select id="findAllStillBlocked" resultType="kr.or.kosa.snippets.user.blockIp.BlockedIpLog">
+        SELECT * FROM blocked_ip_log
+        WHERE unblock_at > NOW()
+    </select>
+
+</mapper>

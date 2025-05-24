@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+	<meta charset="UTF-8">
+	<title>IP 차단 로그</title>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<style>
+		body {
+			font-family: Arial, sans-serif;
+			padding: 2rem;
+			background-color: #f9f9f9;
+		}
+
+		h1, h2 {
+			text-align: center;
+			color: #333;
+		}
+
+		table {
+			width: 100%;
+			border-collapse: collapse;
+			margin-top: 1rem;
+			background-color: #fff;
+			box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+		}
+
+		th, td {
+			padding: 12px;
+			border-bottom: 1px solid #ddd;
+			text-align: center;
+		}
+
+		th {
+			background-color: #f0f0f0;
+			color: #555;
+		}
+
+		td {
+			font-size: 0.95rem;
+		}
+
+		canvas {
+			max-width: 600px;
+			margin: 2rem auto;
+			display: block;
+		}
+	</style>
+</head>
+<body>
+<h1>IP 차단 로그</h1>
+
+<table>
+	<thead>
+	<tr>
+		<th>IP</th>
+		<th>국가</th>
+		<th>도시</th>
+		<th>유저 에이전트</th>
+		<th>Bot 여부</th>
+		<th>차단 시간</th>
+	</tr>
+	</thead>
+	<tbody id="logTableBody"></tbody>
+</table>
+
+<h2>차단 국가 분포</h2>
+<canvas id="countryChart"></canvas>
+
+<h2>Bot vs Browser</h2>
+<canvas id="typeChart"></canvas>
+
+<script>
+	async function fetchBlockedIps() {
+		const res = await fetch("/api/admin/blocked-ips");
+		const data = await res.json();
+
+		const tbody = document.getElementById("logTableBody");
+		tbody.innerHTML = "";
+
+		const countryCounts = {};
+		let botCount = 0, browserCount = 0;
+
+		data.forEach(log => {
+			const row = `
+          <tr>
+            <td>${log.ip}</td>
+            <td>${log.country || 'N/A'}</td>
+            <td>${log.city || 'N/A'}</td>
+            <td>${log.userAgent || 'N/A'}</td>
+            <td>${log.bot ? "✅" : "❌"}</td>
+            <td>${log.blockedAt}</td>
+          </tr>`;
+			tbody.insertAdjacentHTML("beforeend", row);
+
+			const country = log.country || "Unknown";
+			countryCounts[country] = (countryCounts[country] || 0) + 1;
+			log.bot ? botCount++ : browserCount++;
+		});
+
+		updateCharts(countryCounts, botCount, browserCount);
+	}
+
+	let countryChart, typeChart;
+
+	function updateCharts(countryCounts, botCount, browserCount) {
+		const countries = Object.keys(countryCounts);
+		const counts = Object.values(countryCounts);
+
+		if (!countryChart) {
+			countryChart = new Chart(document.getElementById('countryChart'), {
+				type: 'bar',
+				data: {
+					labels: countries,
+					datasets: [{
+						label: 'Blocked IPs by Country',
+						data: counts,
+						borderWidth: 1
+					}]
+				},
+				options: {
+					responsive: true,
+					scales: {
+						y: {
+							beginAtZero: true
+						}
+					}
+				}
+			});
+		} else {
+			countryChart.data.labels = countries;
+			countryChart.data.datasets[0].data = counts;
+			countryChart.update();
+		}
+
+		if (!typeChart) {
+			typeChart = new Chart(document.getElementById('typeChart'), {
+				type: 'pie',
+				data: {
+					labels: ['Bot', 'Browser'],
+					datasets: [{
+						data: [botCount, browserCount],
+						backgroundColor: ['#ff4d4f', '#4e91f9']
+					}]
+				},
+				options: {
+					responsive: true
+				}
+			});
+		} else {
+			typeChart.data.datasets[0].data = [botCount, browserCount];
+			typeChart.update();
+		}
+	}
+
+	setInterval(fetchBlockedIps, 5000);
+	fetchBlockedIps(); // 초기 로딩
+</script>
+</body>
+</html>

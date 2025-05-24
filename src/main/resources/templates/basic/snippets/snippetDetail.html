@@ -27,10 +27,13 @@
         <td th:text="${snippet.content}"></td>
     </tr>
 
+    <!-- 이미지 표시 (이미지 타입일 때) -->
     <tr th:if="${snippet.type.name() == 'IMG'}">
         <th>Image</th>
         <td>
-            <img th:src="${snippet.imageUrl}" alt="Snippet Image" th:if="${snippet.imageUrl != null}" />
+            <!-- 이미지가 있으면 화면에 표시 -->
+            <img th:src="@{${snippet.imageUrl}}" alt="Snippet Image" th:if="${snippet.imageUrl != null}" />
+            <!-- Alt 텍스트가 있으면 화면에 표시 -->
             <p th:text="${snippet.altText}" th:if="${snippet.altText != null}"></p>
         </td>
     </tr>
@@ -41,7 +44,7 @@
     <button>수정</button>
 </a>
 
-<!--삭제 버튼-->
+<!-- 삭제 버튼 -->
 <form th:action="@{/snippets/delete/{snippetId}(snippetId=${snippet.snippetId})}" method="post" onsubmit="return confirm('정말 삭제하시겠습니까?');">
     <button type="submit">삭제</button>
 </form>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <title>스니펫 추가 – Code</title>
+  <style> /* 기존 notepad 스타일 동일 적용 가능 */ </style>
+</head>
+<body>
+  <h1>Code 스니펫 추가</h1>
+  <form th:action="@{/snippets/new}" th:object="${snippet}"
+        method="post" enctype="multipart/form-data">
+
+    <!-- 반드시 hidden 으로 타입 전달 -->
+    <input type="hidden" name="type" value="CODE"/>
+
+    <table>
+      <tr><th>Source URL</th>
+          <td><input type="text" th:field="*{sourceUrl}" /></td></tr>
+      <tr><th>Memo</th>
+          <td><textarea th:field="*{memo}" rows="3"></textarea></td></tr>
+      <tr><th>Visibility</th>
+          <td>
+            <select th:field="*{visibility}">
+              <option value="1">Visible</option>
+              <option value="0">Hidden</option>
+            </select>
+          </td></tr>
+
+      <tr><th>Language</th>
+          <td>
+            <select th:field="*{language}">
+              <option value="JAVA">JAVA</option>
+              <option value="PYTHON">PYTHON</option>
+              <option value="C">C</option>
+            </select>
+          </td></tr>
+      <tr><th>Code Content</th>
+          <td><textarea th:field="*{content}" rows="10" required></textarea></td></tr>
+    </table>
+
+    <button type="submit">추가</button>
+  </form>
+  <a href="/snippets">← 목록으로 돌아가기</a>
+</body>
+</html>

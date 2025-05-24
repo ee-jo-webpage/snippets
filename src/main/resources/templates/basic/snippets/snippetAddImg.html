@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <title>스니펫 추가 – Image</title>
+</head>
+<body>
+  <h1>Image 스니펫 추가</h1>
+  <form th:action="@{/snippets/new}" th:object="${snippet}"
+        method="post" enctype="multipart/form-data">
+    <input type="hidden" name="type" value="IMG"/>
+    <table>
+      <tr><th>Source URL</th>
+          <td><input type="text" th:field="*{sourceUrl}" /></td></tr>
+      <tr><th>Memo</th>
+          <td><textarea th:field="*{memo}" rows="3"></textarea></td></tr>
+      <tr><th>Visibility</th>
+          <td>
+            <select th:field="*{visibility}">
+              <option value="1">Visible</option>
+              <option value="0">Hidden</option>
+            </select>
+          </td></tr>
+      <tr><th>Alt Text</th>
+          <td><input type="text" th:field="*{altText}" /></td></tr>
+      <tr><th>Image File</th>
+          <td><input type="file" name="imageFile" accept="image/*" required/></td></tr>
+    </table>
+    <button type="submit">추가</button>
+  </form>
+  <a href="/snippets">← 목록으로 돌아가기</a>
+</body>
+</html>

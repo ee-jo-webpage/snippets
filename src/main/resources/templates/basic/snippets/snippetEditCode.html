@@ -5,17 +5,81 @@
   <title>스니펫 수정 - 코드</title>
 </head>
 <body>
-  <h1>코드 수정</h1>
+  <h1>스니펫 수정</h1>
   <form th:action="@{/snippets/edit/{snippetId}(snippetId=${snippet.snippetId})}" th:object="${snippet}" method="post">
     <table>
+      <!-- User ID - 읽기 전용 -->
+      <tr>
+        <th>User ID</th>
+        <td><input type="text" th:value="${snippet.userId}" readonly="readonly" /></td>
+      </tr>
+      
+      <!-- Folder ID - 읽기 전용 -->
+      <tr>
+        <th>Folder ID</th>
+        <td><input type="text" th:value="${snippet.folderId}" readonly="readonly" /></td>
+      </tr>
+
+      <!-- Color ID - 수정 가능 -->
+      <tr>
+        <th>Color ID</th>
+        <td><input type="text" th:field="*{colorId}" /></td>
+      </tr>
+
+      <!-- Source URL - 읽기 전용 -->
       <tr>
         <th>Source URL</th>
-        <td><input type="text" th:field="*{sourceUrl}" /></td>
+        <td><input type="text" th:field="*{sourceUrl}" readonly="readonly" /></td>
       </tr>
+
+      <!-- Type - 읽기 전용 -->
       <tr>
-        <th>Code Content</th>
-        <td><textarea th:field="*{content}" name="content" rows="6"></textarea></td>
+        <th>Type</th>
+        <td><input type="text" th:value="${snippet.type}" readonly="readonly" /></td>
       </tr>
+
+      <!-- Memo - 수정 가능 -->
+      <tr>
+        <th>Memo</th>
+        <td><textarea th:field="*{memo}" rows="4"></textarea></td>
+      </tr>
+
+      <!-- Created At - 읽기 전용 -->
+      <tr>
+        <th>Created At</th>
+        <td><input type="text" th:value="${snippet.createdAt}" readonly="readonly" /></td>
+      </tr>
+
+      <!-- Updated At - 읽기 전용 -->
+      <tr>
+        <th>Updated At</th>
+        <td><input type="text" th:value="${snippet.updatedAt}" readonly="readonly" /></td>
+      </tr>
+
+      <!-- Like Count - 읽기 전용 -->
+      <tr>
+        <th>Like Count</th>
+        <td><input type="number" th:value="${snippet.likeCount}" readonly="readonly" /></td>
+      </tr>
+
+      <!-- Visibility - 수정 가능 -->
+      <tr>
+        <th>Visibility</th>
+        <td>
+          <select th:field="*{visibility}">
+            <option value="1" th:selected="${snippet.visibility == 1}">Visible</option>
+            <option value="0" th:selected="${snippet.visibility == 0}">Hidden</option>
+          </select>
+        </td>
+      </tr>
+
+      <!-- Content - 수정 가능 -->
+      <tr>
+        <th>Content</th>
+        <td><textarea th:field="*{content}" rows="6"></textarea></td>
+      </tr>
+
+      <!-- Language - 수정 가능 -->
       <tr>
         <th>Language</th>
         <td>
@@ -26,9 +90,11 @@
           </select>
         </td>
       </tr>
+
     </table>
     <button type="submit">수정</button>
   </form>
+
   <a href="/snippets" class="back">← 목록으로 돌아가기</a>
 </body>
 </html>

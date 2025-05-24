@@ -246,6 +246,61 @@ h1 {
     margin-bottom: 20px;
 }
 
+/* 세션 정보 패널 스타일 추가 */
+.session-panel {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 15px;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(31, 38, 135, 0.1);
+    margin-bottom: 20px;
+    border: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+.session-info {
+    display: none;
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 10px;
+    font-family: 'Monaco', monospace;
+    font-size: 0.9rem;
+    border: 1px solid #e9ecef;
+}
+
+.session-toggle-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 20px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.session-toggle-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.session-item {
+    margin-bottom: 8px;
+    padding: 5px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.session-key {
+    font-weight: bold;
+    color: #495057;
+}
+
+.session-value {
+    color: #6c757d;
+    margin-left: 10px;
+}
+
 /* 반응형 */
 @media (max-width: 768px) {
     .snippets-grid {

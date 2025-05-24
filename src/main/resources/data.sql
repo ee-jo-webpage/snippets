@@ -1,101 +1,161 @@
--- 스키마 지정
-USE `MY_SCHEMA`;
+-- 더미데이터 삽입
 
--- 사용자 데이터 (user_id 제거)
-INSERT INTO `users` (`email`, `nickname`, `password`, `enabled`, `created_at`, `updated_at`, `deleted_at`, `reason`, `role`) VALUES
-                                                                                                                                 ('admin@example.com', '관리자', '$2a$10$rJ0NKHSlxfUUtQz.wQbvNOPmUxfXKHn0O3RxOuS1fI0BVxQs.i/iG', 1, '2023-01-01 00:00:00', NULL, NULL, NULL, 'ADMIN'),
-                                                                                                                                 ('user1@example.com', '코딩하는사람', '$2a$10$65ixGN84pEFJXzbnk1x2N.y8.clEfZ/h1LyMzAE3vZ6wBIfwNEi36', 1, '2023-01-02 10:30:00', '2023-02-15 15:45:00', NULL, NULL, 'USER'),
-                                                                                                                                 ('user2@example.com', '개발자킴', '$2a$10$6hCFrT6mA0K1xrNlsZ7g8eYJJXbR5KZjdoP7DP/AUm.LoIwOTvxqq', 1, '2023-01-05 14:20:00', NULL, NULL, NULL, 'USER');
+-- 사용자 데이터
+INSERT INTO `users` (`email`, `nickname`, `password`, `enabled`, `created_at`, `role`) VALUES
+('admin@example.com', '관리자', '$2a$10$65ixGN84pEFJXzbnk1x2N.y8.clEfZ/h1LyMzAE3vZ6wBIfwNEi36', 1, '2024-01-15 10:00:00', 'ADMIN'),
+('john@example.com', 'John Doe', '$2a$10$65ixGN84pEFJXzbnk1x2N.y8.clEfZ/h1LyMzAE3vZ6wBIfwNEi36', 1, '2024-02-01 14:30:00', 'USER'),
+('jane@example.com', 'Jane Smith', '$2a$10$65ixGN84pEFJXzbnk1x2N.y8.clEfZ/h1LyMzAE3vZ6wBIfwNEi36', 1, '2024-02-10 09:15:00', 'USER'),
+('mike@example.com', 'Mike Johnson', '$2a$10$65ixGN84pEFJXzbnk1x2N.y8.clEfZ/h1LyMzAE3vZ6wBIfwNEi36', 1, '2024-02-20 16:45:00', 'USER'),
+('sarah@example.com', 'Sarah Wilson', '$2a$10$65ixGN84pEFJXzbnk1x2N.y8.clEfZ/h1LyMzAE3vZ6wBIfwNEi36', 0, '2024-03-01 11:20:00', 'USER');
 
--- 폴더 데이터 (folder_id 제거, user_id는 1,2,3 대신 실제 생성된 값 사용)
+-- 이메일 인증 데이터
+INSERT INTO `email_verifications` (`user_id`, `token`, `expires_at`, `is_verified`) VALUES
+(1, 'token123456789', '2024-01-15 12:00:00', 1),
+(2, 'token987654321', '2024-02-01 16:30:00', 1),
+(3, 'token456789123', '2024-02-10 11:15:00', 1),
+(4, 'token321654987', '2024-02-20 18:45:00', 1),
+(5, 'token789123456', '2024-03-01 13:20:00', 0);
+
+-- 폴더 데이터
 INSERT INTO `folders` (`user_id`, `name`, `parent_folder_id`) VALUES
-                                                                  (1, '관리자 폴더', NULL),
-                                                                  (2, '자바스크립트', NULL),
-                                                                  (2, '리액트', NULL),
-                                                                  (2, '유틸리티', 2),
-                                                                  (3, '자바', NULL),
-                                                                  (3, '스프링', NULL);
+-- 사용자 1 (관리자) 폴더
+(1, 'JavaScript', NULL),
+(1, 'Python', NULL),
+(1, 'React', 1),
+(1, 'Node.js', 1),
+-- 사용자 2 (John) 폴더
+(2, 'Frontend', NULL),
+(2, 'Backend', NULL),
+(2, 'CSS Tips', 5),
+(2, 'API Documentation', 6),
+-- 사용자 3 (Jane) 폴더
+(3, 'Design Resources', NULL),
+(3, 'Code Snippets', NULL),
+(3, 'UI Components', 9),
+-- 사용자 4 (Mike) 폴더
+(4, 'DevOps', NULL),
+(4, 'Database', NULL);
 
--- 스니펫 색상 데이터 (color_id 제거)
+-- 스니펫 색상 데이터
 INSERT INTO `snippet_colors` (`user_id`, `name`, `hex_code`) VALUES
-                                                                 (NULL, '파란색', '#3498db'),
-                                                                 (NULL, '빨간색', '#e74c3c'),
-                                                                 (NULL, '녹색', '#2ecc71'),
-                                                                 (NULL, '노란색', '#f1c40f'),
-                                                                 (2, '연한 파란색', '#a7d1f7');
+-- 공통 색상 (user_id NULL)
+(NULL, 'Red', '#FF5733'),
+(NULL, 'Blue', '#3498DB'),
+(NULL, 'Green', '#27AE60'),
+(NULL, 'Yellow', '#F1C40F'),
+(NULL, 'Purple', '#9B59B6'),
+-- 사용자별 커스텀 색상
+(1, 'Admin Orange', '#E67E22'),
+(2, 'John Blue', '#2980B9'),
+(3, 'Jane Pink', '#E91E63'),
+(4, 'Mike Gray', '#95A5A6');
 
--- 태그 데이터 (tag_id 제거)
-INSERT INTO `likeTags` (`name`) VALUES
-                                ('JavaScript'),
-                                ('React'),
-                                ('Java'),
-                                ('Spring'),
-                                ('Frontend'),
-                                ('Backend');
+-- 태그 데이터 (사용자별)
+INSERT INTO `tags` (`user_id`, `name`) VALUES
+-- 사용자 1 (관리자) 태그
+(1, 'javascript'),
+(1, 'react'),
+(1, 'nodejs'),
+(1, 'tutorial'),
+(1, 'best-practice'),
+-- 사용자 2 (John) 태그
+(2, 'frontend'),
+(2, 'css'),
+(2, 'html'),
+(2, 'responsive'),
+(2, 'animation'),
+-- 사용자 3 (Jane) 태그
+(3, 'design'),
+(3, 'ui'),
+(3, 'ux'),
+(3, 'component'),
+(3, 'figma'),
+-- 사용자 4 (Mike) 태그
+(4, 'devops'),
+(4, 'docker'),
+(4, 'aws'),
+(4, 'database'),
+(4, 'mysql');
 
--- 스니펫 데이터 (snippet_id 제거, 다른 ID들은 실제 생성된 값 참조)
-INSERT INTO `snippets` (`user_id`, `folder_id`, `color_id`, `source_url`, `type`, `memo`, `created_at`, `updated_at`, `like_count`, `visibility`) VALUES
-                                                                                                                                                      (2, 2, 1, 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map', 'code', '배열 맵 함수 예제', '2023-02-01 10:00:00', NULL, 5, 1),
-                                                                                                                                                      (2, 3, 3, 'https://reactjs.org/docs/hooks-state.html', 'code', 'React useState 훅 사용법', '2023-02-03 14:45:00', NULL, 8, 1),
-                                                                                                                                                      (2, 4, 5, NULL, 'code', '날짜 포맷팅 유틸리티 함수', '2023-02-05 16:15:00', NULL, 2, 1),
-                                                                                                                                                      (3, 5, 2, 'https://docs.oracle.com/javase/tutorial/java/concepts/', 'code', '자바 Stream API 예제', '2023-02-07 11:25:00', NULL, 7, 1),
-                                                                                                                                                      (3, 6, 5, 'https://spring.io/guides/gs/rest-service/', 'code', 'Spring Boot Rest Controller 예제', '2023-02-09 10:45:00', NULL, 9, 1),
-                                                                                                                                                      (2, 2, 3, NULL, 'text', '자바스크립트 학습 노트', '2023-02-20 11:40:00', NULL, 2, 1),
-                                                                                                                                                      (3, 6, 1, 'https://spring.io/blog', 'text', '스프링 프레임워크 정리', '2023-02-21 15:10:00', NULL, 7, 1),
-                                                                                                                                                      (2, 4, 4, 'https://unsplash.com/photos/example1', 'img', '웹 디자인 참고 이미지', '2023-02-24 14:15:00', NULL, 9, 1),
-                                                                                                                                                      (3, 5, 2, 'https://unsplash.com/photos/example2', 'img', '자바 프로젝트 구조도', '2023-02-25 16:30:00', NULL, 5, 1);
+-- 스니펫 데이터
+INSERT INTO `snippets` (`user_id`, `folder_id`, `color_id`, `source_url`, `type`, `memo`, `like_count`, `visibility`) VALUES
+-- 사용자 1 스니펫
+(1, 1, 1, 'https://developer.mozilla.org', 'code', 'JavaScript 배열 메소드 정리', 15, 1),
+(1, 1, 2, NULL, 'text', 'React Hook 사용법 노트', 8, 1),
+(1, 3, 3, 'https://reactjs.org', 'code', 'useState 훅 예제', 22, 1),
+(1, 2, 4, NULL, 'text', 'Python 가상환경 설정 방법', 5, 1),
+-- 사용자 2 스니펫
+(2, 5, 2, 'https://css-tricks.com', 'code', 'CSS Grid 레이아웃', 12, 1),
+(2, 7, 3, NULL, 'img', '반응형 웹 디자인 예시', 3, 1),
+(2, 6, 1, 'https://nodejs.org', 'code', 'Express.js 라우터 설정', 7, 1),
+-- 사용자 3 스니펫
+(3, 9, 8, 'https://figma.com', 'img', 'UI 컴포넌트 디자인', 18, 1),
+(3, 11, 5, NULL, 'text', '사용자 경험 개선 아이디어', 4, 1),
+(3, 10, 3, NULL, 'code', 'CSS 애니메이션 코드', 9, 1),
+-- 사용자 4 스니펫
+(4, 12, 9, 'https://docker.com', 'code', 'Docker Compose 설정', 11, 1),
+(4, 13, 2, NULL, 'text', 'MySQL 성능 최적화 팁', 6, 0);
 
--- 코드 스니펫 데이터 (snippet_id는 실제 생성된 값 참조)
+-- 코드 스니펫 내용
 INSERT INTO `snippet_codes` (`snippet_id`, `content`, `language`) VALUES
-                                                                      (1, '// 배열의 각 요소를 두 배로 만들기\nconst numbers = [1, 2, 3, 4, 5];\nconst doubled = numbers.map(num => num * 2);\nconsole.log(doubled); // [2, 4, 6, 8, 10]', 'javascript'),
-                                                                      (2, 'import React, { useState } from "react";\n\nfunction Counter() {\n  const [count, setCount] = useState(0);\n  \n  return (\n    <div>\n      <p>You clicked {count} times</p>\n      <button onClick={() => setCount(count + 1)}>\n        Click me\n      </button>\n    </div>\n  );\n}', 'jsx'),
-                                                                      (3, '/**\n * 날짜를 YYYY-MM-DD 형식으로 포맷팅\n */\nfunction formatDate(date) {\n  const year = date.getFullYear();\n  const month = String(date.getMonth() + 1).padStart(2, "0");\n  const day = String(date.getDate()).padStart(2, "0");\n  \n  return `${year}-${month}-${day}`;\n}\n\nconst today = new Date();\nconsole.log(formatDate(today));', 'javascript'),
-                                                                      (4, 'import java.util.Arrays;\nimport java.util.List;\nimport java.util.stream.Collectors;\n\npublic class StreamExample {\n    public static void main(String[] args) {\n        List<String> names = Arrays.asList("John", "Jane", "Jack", "Joe");\n        \n        // 이름이 J로 시작하고 4글자인 이름만 필터링\n        List<String> filteredNames = names.stream()\n            .filter(name -> name.startsWith("J"))\n            .filter(name -> name.length() == 4)\n            .collect(Collectors.toList());\n            \n        System.out.println(filteredNames); // [John, Jack]\n    }\n}', 'java'),
-                                                                      (5, 'import org.springframework.web.bind.annotation.RestController;\nimport org.springframework.web.bind.annotation.RequestMapping;\nimport org.springframework.web.bind.annotation.GetMapping;\nimport org.springframework.web.bind.annotation.PathVariable;\n\n@RestController\n@RequestMapping("/api/users")\npublic class UserController {\n\n    @GetMapping("/{id}")\n    public User getUserById(@PathVariable Long id) {\n        // 실제로는 서비스 계층에서 사용자 조회\n        return userService.findById(id)\n            .orElseThrow(() -> new ResourceNotFoundException("User not found"));\n    }\n}', 'java');
+(1, 'const numbers = [1, 2, 3, 4, 5];\nconst doubled = numbers.map(num => num * 2);\nconsole.log(doubled);', 'javascript'),
+(3, 'import React, { useState } from ''react'';\n\nfunction Counter() {\n  const [count, setCount] = useState(0);\n  return (\n    <div>\n      <p>Count: {count}</p>\n      <button onClick={() => setCount(count + 1)}>+</button>\n    </div>\n  );\n}', 'javascript'),
+(5, '.grid-container {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));\n  gap: 20px;\n  padding: 20px;\n}', 'css'),
+(7, 'const express = require(''express'');\nconst router = express.Router();\n\nrouter.get(''/users'', (req, res) => {\n  res.json({ message: ''Users endpoint'' });\n});\n\nmodule.exports = router;', 'javascript'),
+(10, '@keyframes fadeIn {\n  from { opacity: 0; transform: translateY(20px); }\n  to { opacity: 1; transform: translateY(0); }\n}\n\n.fade-in {\n  animation: fadeIn 0.5s ease-out;\n}', 'css'),
+(11, 'version: ''3.8''\nservices:\n  web:\n    build: .\n    ports:\n      - "3000:3000"\n  db:\n    image: mysql:8.0\n    environment:\n      MYSQL_ROOT_PASSWORD: password', 'yaml');
 
--- 텍스트 스니펫 데이터 (snippet_id는 실제 생성된 값 참조)
+-- 텍스트 스니펫 내용
 INSERT INTO `snippet_texts` (`snippet_id`, `content`) VALUES
-                                                          (6, '자바스크립트 기초 문법 정리\n\n1. 변수 선언\n- var: 함수 스코프\n- let: 블록 스코프, 재할당 가능\n- const: 블록 스코프, 재할당 불가능\n\n2. 함수 선언\n- 함수 선언식: function name() {}\n- 함수 표현식: const name = function() {}\n- 화살표 함수: const name = () => {}\n\n3. 배열 메서드\n- map(): 각 요소를 변환하여 새 배열 반환\n- filter(): 조건에 맞는 요소만 새 배열로 반환\n- reduce(): 배열의 모든 요소를 하나의 값으로 줄임\n\n4. 비동기 처리\n- Promise\n- async/await\n\n다음에 더 공부할 내용: 클로저, 프로토타입, 이벤트 루프'),
-                                                          (7, '스프링 프레임워크 핵심 개념\n\n1. IoC (Inversion of Control)\n- 객체의 생성과 관계 설정, 사용, 생명 주기 관리 등을 프레임워크가 대신 해줌\n\n2. DI (Dependency Injection)\n- 객체 간의 의존관계를 외부에서 주입\n- 생성자 주입, 세터 주입, 필드 주입\n\n3. AOP (Aspect Oriented Programming)\n- 공통 관심사를 분리하여 모듈화\n- 트랜잭션, 로깅, 보안 등에 활용\n\n4. PSA (Portable Service Abstraction)\n- 환경과 세부 기술의 변화에 관계없이 일관된 방식으로 기술 접근\n- JDBC, JPA, 트랜잭션 등\n\n5. 스프링 부트\n- 자동 설정 (Auto Configuration)\n- 내장 서버\n- 스타터 의존성\n\n다음에 공부할 내용: 스프링 시큐리티, 스프링 데이터 JPA');
+(2, 'React Hook 사용 시 주의사항:\n1. 컴포넌트 최상위에서만 호출\n2. 조건문 안에서 사용 금지\n3. useEffect 의존성 배열 주의\n4. 커스텀 훅으로 로직 재사용'),
+(4, 'Python 가상환경 설정:\n1. python -m venv venv\n2. source venv/bin/activate (Linux/Mac)\n3. venv\\Scripts\\activate (Windows)\n4. pip install -r requirements.txt'),
+(9, 'UX 개선 아이디어:\n- 로딩 상태 명확히 표시\n- 에러 메시지 사용자 친화적으로\n- 키보드 네비게이션 지원\n- 접근성 고려한 색상 사용'),
+(12, 'MySQL 성능 최적화:\n- 적절한 인덱스 설정\n- 쿼리 실행 계획 분석\n- 불필요한 컬럼 조회 피하기\n- 커넥션 풀 설정');
 
--- 이미지 스니펫 데이터 (snippet_id는 실제 생성된 값 참조)
+-- 이미지 스니펫 내용
 INSERT INTO `snippet_images` (`snippet_id`, `image_url`, `alt_text`) VALUES
-                                                                         (8, 'https://example.com/images/web-design-reference.jpg', '웹 디자인 레이아웃 참고 이미지'),
-                                                                         (9, 'https://example.com/images/java-project-structure.png', '자바 프로젝트 계층 구조 다이어그램');
+(6, '/images/responsive-design-example.png', '반응형 웹 디자인 예시 스크린샷'),
+(8, '/images/ui-component-design.png', 'Figma에서 제작한 UI 컴포넌트 디자인');
 
--- 스니펫-태그 연결 (snippet_id, tag_id는 실제 생성된 값 참조)
+-- 스니펫-태그 연결
 INSERT INTO `snippet_tags` (`snippet_id`, `tag_id`) VALUES
-                                                        (1, 1),
-                                                        (1, 5),
-                                                        (2, 2),
-                                                        (2, 5),
-                                                        (3, 1),
-                                                        (3, 5),
-                                                        (4, 3),
-                                                        (4, 6),
-                                                        (5, 4),
-                                                        (5, 6),
-                                                        (6, 1),
-                                                        (6, 5),
-                                                        (7, 4),
-                                                        (7, 6),
-                                                        (8, 5),
-                                                        (9, 3),
-                                                        (9, 6);
+-- 스니펫 1 (JavaScript 배열 메소드)
+(1, 1), (1, 5),
+-- 스니펫 2 (React Hook 노트)
+(1, 2), (1, 4),
+-- 스니펫 3 (useState 훅)
+(3, 2), (3, 4), (3, 5),
+-- 스니펫 4 (Python 가상환경)
+(4, 4),
+-- 스니펫 5 (CSS Grid)
+(5, 6), (5, 7), (5, 9),
+-- 스니펫 6 (반응형 디자인)
+(6, 9), (6, 10),
+-- 스니펫 7 (Express.js)
+(7, 3),
+-- 스니펫 8 (UI 컴포넌트)
+(8, 11), (8, 12), (8, 14),
+-- 스니펫 9 (UX 아이디어)
+(9, 13),
+-- 스니펫 10 (CSS 애니메이션)
+(10, 7), (10, 10),
+-- 스니펫 11 (Docker)
+(11, 16), (11, 17),
+-- 스니펫 12 (MySQL)
+(12, 19), (12, 20);
 
--- 좋아요 데이터 (user_id, snippet_id는 실제 생성된 값 참조)
-INSERT INTO `likes` (`user_id`, `snippet_id`, `created_at`) VALUES
-                                                                (1, 5, '2023-02-10 10:00:00'),
-                                                                (2, 4, '2023-02-08 14:30:00'),
-                                                                (2, 5, '2023-02-10 15:45:00'),
-                                                                (3, 1, '2023-02-02 09:15:00'),
-                                                                (3, 2, '2023-02-04 11:20:00');
+-- 좋아요 데이터
+INSERT INTO `likes` (`user_id`, `snippet_id`) VALUES
+-- 사용자들이 서로의 스니펫에 좋아요
+(2, 1), (3, 1), (4, 1), (2, 3), (3, 3), (4, 3),
+(1, 5), (3, 5), (4, 5), (1, 7), (3, 7),
+(1, 8), (2, 8), (4, 8), (1, 9), (2, 9),
+(1, 11), (2, 11), (3, 11), (1, 12), (2, 12);
 
--- 북마크 데이터 (user_id, snippet_id는 실제 생성된 값 참조)
+-- 북마크 데이터
 INSERT INTO `bookmarks` (`user_id`, `snippet_id`) VALUES
-                                                      (1, 2),
-                                                      (1, 5),
-                                                      (2, 4),
-                                                      (2, 9),
-                                                      (3, 1),
-                                                      (3, 8);
+-- 사용자들이 유용한 스니펫 북마크
+(2, 1), (2, 3), (2, 4),
+(3, 1), (3, 5), (3, 7),
+(4, 1), (4, 3), (4, 8),
+(1, 5), (1, 8), (1, 11);

@@ -10,4 +10,5 @@ import lombok.NoArgsConstructor;
 public class SnippetTag {
     private Long snippetId;
     private Long tagId;
+    
 }

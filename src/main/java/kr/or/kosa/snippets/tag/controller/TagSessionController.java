@@ -17,7 +17,7 @@ public class TagSessionController {
         //임시 사용자 ID를 세션에 저장
         session.setAttribute("userId", 1L);
 
-        log.info("세션 초기화 - 임시사용자 ID: 1");
+//        log.info("세션 초기화 - 임시사용자 ID: 1");
 
         redirectAttributes.addFlashAttribute("message", "임시사용자로 로그인되었습니다");
 
@@ -30,7 +30,7 @@ public class TagSessionController {
                              RedirectAttributes redirectAttrs) {
         session.setAttribute("userId", userId);
 
-        log.info("사용자 전환 - 새 사용자 ID: {}", userId);
+//        log.info("사용자 전환 - 새 사용자 ID: {}", userId);
         redirectAttrs.addFlashAttribute("message",
                 "사용자 " + userId + "로 전환되었습니다.");
 

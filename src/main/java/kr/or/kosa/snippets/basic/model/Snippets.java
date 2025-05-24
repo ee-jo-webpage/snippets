@@ -2,6 +2,8 @@ package kr.or.kosa.snippets.basic.model;
 
 import java.util.Date;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import lombok.Data;
 
 
@@ -25,4 +27,14 @@ public class Snippets {
    private String language;    
    private String imageUrl;    
    private String altText;
+   
+   private MultipartFile imageFile;
+   
+   public MultipartFile getImageFile() {
+       return imageFile;
+   }
+
+   public void setImageFile(MultipartFile imageFile) {
+       this.imageFile = imageFile;
+   }
 }

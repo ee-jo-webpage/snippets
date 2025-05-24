@@ -317,18 +317,44 @@ console.log('샘플 코드');
     </div>
 </div>
 
+<!-- snippet-detail.html의 JavaScript 부분 수정 -->
 <script th:inline="javascript">
     $(document).ready(function() {
         console.log("=== 스니펫 상세보기 로드 ===");
 
-        // 좋아요 버튼 클릭 이벤트
+        // 로그인 상태 확인
+        let isLoggedIn = [[${isLoggedIn}]];
+        let currentUserId = [[${currentUserId}]];
+
+        console.log("로그인 상태:", isLoggedIn);
+        console.log("현재 사용자 ID:", currentUserId);
+
+        // 비로그인 사용자를 위한 좋아요 버튼 처리
+        if (!isLoggedIn) {
+            $('.like-btn').each(function() {
+                $(this).removeClass('liked');
+                $(this).prop('disabled', true);
+                $(this).attr('title', '로그인이 필요합니다');
+                $(this).css({
+                    'opacity': '0.5',
+                    'cursor': 'not-allowed'
+                });
+            });
+
+            // 로그인 안내 메시지 추가
+            $('.like-section').after('<div class="login-message" style="margin-top: 10px; padding: 10px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; color: #6c757d;">좋아요 기능을 사용하려면 <a href="/login" style="color: #007bff;">로그인</a>이 필요합니다.</div>');
+
+            return; // 비로그인 사용자는 여기서 종료
+        }
+
+        // 좋아요 버튼 클릭 이벤트 (로그인한 사용자만)
         $('.like-btn').on('click', function() {
             const button = $(this);
             const snippetId = button.data('snippet-id');
             const isLiked = button.data('is-liked');
             const likeCountSpan = button.siblings('.like-count');
 
-            console.log("좋아요 버튼 클릭 - snippetId:", snippetId, "isLiked:", isLiked);
+            console.log("좋아요 버튼 클릭 - userId:", currentUserId, "snippetId:", snippetId, "isLiked:", isLiked);
 
             button.prop('disabled', true);
 
@@ -344,10 +370,18 @@ console.log('샘플 코드');
                             button.data('is-liked', false);
                             likeCountSpan.text(response.likeCount);
                             console.log('좋아요 취소 성공');
+                        } else {
+                            alert(response.message || '좋아요 취소에 실패했습니다.');
                         }
                     },
                     error: function(xhr, status, error) {
                         console.error('좋아요 취소 실패:', error);
+                        if (xhr.status === 401) {
+                            alert('로그인이 필요합니다.');
+                            window.location.href = '/login';
+                        } else {
+                            alert('좋아요 취소에 실패했습니다.');
+                        }
                     },
                     complete: function() {
                         button.prop('disabled', false);
@@ -365,10 +399,18 @@ console.log('샘플 코드');
                             button.data('is-liked', true);
                             likeCountSpan.text(response.likeCount);
                             console.log('좋아요 추가 성공');
+                        } else {
+                            alert(response.message || '좋아요 추가에 실패했습니다.');
                         }
                     },
                     error: function(xhr, status, error) {
                         console.error('좋아요 추가 실패:', error);
+                        if (xhr.status === 401) {
+                            alert('로그인이 필요합니다.');
+                            window.location.href = '/login';
+                        } else {
+                            alert('좋아요 추가에 실패했습니다.');
+                        }
                     },
                     complete: function() {
                         button.prop('disabled', false);

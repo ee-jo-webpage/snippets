@@ -1,14 +1,16 @@
 package kr.or.kosa.snippets.tag.controller;
 
-import jakarta.servlet.http.HttpSession;
 import kr.or.kosa.snippets.basic.service.SnippetService;
 import kr.or.kosa.snippets.tag.model.TagItem;
 import kr.or.kosa.snippets.tag.service.TagService;
+import kr.or.kosa.snippets.user.service.CustomUserDetails;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,14 +28,20 @@ public class TagController {
     @Autowired
     private SnippetService snippetService;
 
+    // private 헬퍼 메서드
+    private Long requireLogin(CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다");
+        }
+        return userDetails.getUserId();
+    }
+
     // 현재 사용자의 모든 태그 조회
     @GetMapping("/my-tags")
-    public ResponseEntity<List<TagItem>> getMyTags(HttpSession session) {
-        Long userId = (Long) session.getAttribute("userId");
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+    public ResponseEntity<List<TagItem>> getMyTags(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long userId = requireLogin(userDetails);
 
+        log.info("사용자 {}의 태그 조회", userId);
         List<TagItem> tags = tagService.getTagsByUserId(userId);
         return ResponseEntity.ok(tags != null ? tags : new ArrayList<>());
     }
@@ -59,11 +67,8 @@ public class TagController {
     // 새 태그 생성 (현재 사용자)
     @PostMapping
     public ResponseEntity<Map<String, Object>> createTag(@RequestBody Map<String, String> request,
-                                                         HttpSession session) {
-        Long userId = (Long) session.getAttribute("userId");
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+                                                         @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long userId = requireLogin(userDetails);
 
         String tagName = request.get("name");
         if (tagName == null || tagName.trim().isEmpty()) {
@@ -98,11 +103,8 @@ public class TagController {
     @PostMapping("/snippet/{snippetId}/tag/{tagId}")
     public ResponseEntity<Map<String, Object>> addTagToSnippet(@PathVariable Long snippetId,
                                                                @PathVariable Long tagId,
-                                                               HttpSession session) {
-        Long userId = (Long) session.getAttribute("userId");
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+                                                               @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long userId = requireLogin(userDetails);
 
         // 태그 소유권 확인
         if (!tagService.isTagOwnedByUser(tagId, userId)) {
@@ -142,11 +144,8 @@ public class TagController {
     @DeleteMapping("/snippet/{snippetId}/tag/{tagId}")
     public ResponseEntity<Map<String, Object>> removeTagFromSnippet(@PathVariable Long snippetId,
                                                                     @PathVariable Long tagId,
-                                                                    HttpSession session) {
-        Long userId = (Long) session.getAttribute("userId");
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+                                                                    @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long userId = requireLogin(userDetails);
 
         boolean removed = tagService.removeTagFromSnippet(snippetId, tagId);
         Map<String, Object> response = new HashMap<>();
@@ -164,11 +163,8 @@ public class TagController {
     // 태그 삭제 (사용자 권한 확인)
     @DeleteMapping("/{tagId}")
     public ResponseEntity<Map<String, Object>> deleteTag(@PathVariable Long tagId,
-                                                         HttpSession session) {
-        Long userId = (Long) session.getAttribute("userId");
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+                                                         @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long userId = requireLogin(userDetails);
 
         boolean deleted = tagService.deleteTag(tagId, userId);
         Map<String, Object> response = new HashMap<>();
@@ -181,5 +177,25 @@ public class TagController {
             response.put("error", "태그 삭제에 실패했습니다. 권한을 확인해주세요");
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
+    }
+
+    // 디버깅용 - 현재 인증 정보 확인
+    @GetMapping("/auth-check")
+    public ResponseEntity<Map<String, Object>> checkAuth(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        Map<String, Object> response = new HashMap<>();
+
+        if (userDetails != null) {
+            response.put("authenticated", true);
+            response.put("userId", userDetails.getUserId());
+            response.put("username", userDetails.getUsername());
+            response.put("authorities", userDetails.getAuthorities());
+        } else {
+            response.put("authenticated", false);
+            response.put("message", "로그인되지 않은 사용자입니다");
+        }
+
+        log.info("인증 확인: {}", response);
+
+        return ResponseEntity.ok(response);
     }
 }

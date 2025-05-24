@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>스니펫 프로젝트 - 기능 네비게이션</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .section h2 {
+            color: #444;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .developer {
+            font-size: 0.8em;
+            background: #f0f0f0;
+            padding: 2px 8px;
+            border-radius: 12px;
+            color: #666;
+        }
+
+        .links {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 10px;
+        }
+
+        .link-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            background: #f8f8f8;
+            border-radius: 5px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.2s;
+        }
+
+        .link-item:hover {
+            background: #e8e8e8;
+            transform: translateX(5px);
+        }
+
+        .link-item .icon {
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        .api-section {
+            background: #f0f7ff;
+            border-color: #b3d9ff;
+        }
+
+        .api-item {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+
+        .method {
+            font-weight: bold;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-right: 8px;
+        }
+
+        .method.get { background: #28a745; }
+        .method.post { background: #007bff; }
+        .method.delete { background: #dc3545; }
+        .method.patch { background: #9c27b0; color: white; }
+
+        .session-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .color-code {
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            border-radius: 3px;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🚀 스니펫 저장 프로젝트</h1>
+    <p class="subtitle">각 기능별 페이지 네비게이션</p>
+
+    <div class="session-info">
+        <strong>📌 테스트 계정 정보</strong><br>
+        기본 userId: 1 (세션 초기화 페이지에서 변경 가능)
+        <h3 style="margin: 15px 0 10px 0; font-size: 1.1em;">사용자 인증 API</h3>
+        <div class="api-item">
+            <span class="method post">POST</span> /api/register
+        </div>
+        <div class="api-item">
+            <span class="method post">POST</span> /api/verify-code
+        </div>
+        <div class="api-item">
+            <span class="method put">PUT</span> /api/update
+        </div>
+        <div class="api-item">
+            <span class="method post">POST</span> /api/delete
+        </div>
+        <div class="api-item">
+            <span class="method post">POST</span> /api/restore
+        </div>
+        <div class="api-item">
+            <span class="method post">POST</span> /api/recover-account
+        </div>
+        <div class="api-item">
+            <span class="method post">POST</span> /api/reactive-request
+        </div>
+        <div class="api-item">
+            <span class="method post">POST</span> /api/forgot-password
+        </div>
+        <div class="api-item">
+            <span class="method post">POST</span> /api/change-password
+        </div>
+        <div class="api-item">
+            <span class="method get">GET</span> /api/session-user
+        </div>
+    </div>
+
+    <!-- 스니펫 기본 기능 -->
+    <div class="section">
+        <h2>📝 스니펫 기본 기능 <span class="developer">담당: 기본팀</span></h2>
+        <div class="links">
+            <a href="/snippets" class="link-item">
+                <span class="icon">📋</span> 스니펫 목록
+            </a>
+            <a href="/snippets/new" class="link-item">
+                <span class="icon">➕</span> 스니펫 등록
+            </a>
+        </div>
+    </div>
+
+    <!-- 북마크 기능 -->
+    <div class="section">
+        <h2>⭐ 북마크 기능 <span class="developer">담당: 북마크팀</span></h2>
+        <div class="links">
+            <a href="/bookmark" class="link-item">
+                <span class="icon">📌</span> 내 북마크 목록
+            </a>
+            <a href="/bookmark/snippets" class="link-item">
+                <span class="icon">🌐</span> 전체 스니펫 (북마크 가능)
+            </a>
+            <a href="/bookmark/my-snippets" class="link-item">
+                <span class="icon">👤</span> 내가 작성한 스니펫
+            </a>
+        </div>
+    </div>
+
+    <!-- 색상 관리 -->
+    <div class="section">
+        <h2>🎨 색상 관리 <span class="developer">담당: 색상팀</span></h2>
+        <div class="links">
+            <a href="/color/all-colors" class="link-item">
+                <span class="icon">🎨</span> 전체 색상 목록
+            </a>
+            <a href="/color/user/1" class="link-item">
+                <span class="icon">👤</span> 사용자별 색상 (userId: 1)
+            </a>
+            <a href="/color/init-session" class="link-item">
+                <span class="icon">🔧</span> 세션 초기화 (테스트용)
+            </a>
+            <a href="/switch-user/2" class="link-item">
+                <span class="icon">🔄</span> 사용자 전환 (userId: 2)
+            </a>
+            <a href="/color/check-session" class="link-item">
+                <span class="icon">🔍</span> 세션 정보 확인
+            </a>
+        </div>
+    </div>
+
+    <!-- 태그 관리 -->
+    <div class="section">
+        <h2>🏷️ 태그 관리 <span class="developer">담당: 태그팀</span></h2>
+        <div class="links">
+            <a href="/tags/manager" class="link-item">
+                <span class="icon">🏷️</span> 태그 관리 페이지
+            </a>
+            <a href="/tags/snippet-tag" class="link-item">
+                <span class="icon">🔗</span> 스니펫-태그 연결 관리
+            </a>
+            <a href="/tag/init-session" class="link-item">
+                <span class="icon">🔧</span> 태그 세션 초기화
+            </a>
+            <a href="/tag/switch-user/2" class="link-item">
+                <span class="icon">🔄</span> 태그 사용자 전환
+            </a>
+        </div>
+    </div>
+
+    <!-- 좋아요 기능 -->
+    <div class="section">
+        <h2>❤️ 좋아요 기능 <span class="developer">담당: 좋아요팀</span></h2>
+        <div class="links">
+            <a href="/likePage?snippetId=1" class="link-item">
+                <span class="icon">❤️</span> 좋아요 페이지 (snippetId: 1)
+            </a>
+            <a href="/popular-snippets" class="link-item">
+                <span class="icon">🔥</span> 인기 스니펫 목록
+            </a>
+            <a href="/snippet/1" class="link-item">
+                <span class="icon">📄</span> 스니펫 상세 (좋아요 포함)
+            </a>
+        </div>
+    </div>
+
+    <!-- 스니펫 확장 기능 -->
+    <div class="section">
+        <h2>🔧 스니펫 확장 기능 (REST API) <span class="developer">담당: 스니펫확장팀</span></h2>
+        <div class="links">
+            <a href="#" onclick="alert('이 기능은 REST API로만 제공됩니다.\n\nPOST /api/snippets - 스니펫 생성\nPATCH /api/snippets/{id} - 스니펫 수정\nDELETE /api/snippets/{id} - 스니펫 삭제\n\nPostman이나 API 테스트 도구를 사용해주세요.'); return false;" class="link-item">
+                <span class="icon">📡</span> API 테스트 안내
+            </a>
+            <a href="/api-test" class="link-item" onclick="if(!confirm('API 테스트 페이지가 없을 수 있습니다. 계속하시겠습니까?')) return false;">
+                <span class="icon">🧪</span> API 테스트 페이지 (있는 경우)
+            </a>
+        </div>
+        <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px; font-size: 0.9em;">
+            <strong>💡 참고:</strong> 이 기능은 REST API로만 제공되며, Spring Security 인증이 필요합니다.<br>
+            Postman Collection이나 Swagger UI가 있다면 활용하세요.
+        </div>
+    </div>
+
+    <!-- 사용자 인증 및 관리 -->
+    <div class="section">
+        <h2>👤 사용자 인증/관리 <span class="developer">담당: 인증팀</span></h2>
+        <div class="links">
+            <a href="/" class="link-item" style="background: #e3f2fd;">
+                <span class="icon">🏠</span> 메인 페이지 (로그인 상태 확인)
+            </a>
+            <a href="/login" class="link-item">
+                <span class="icon">🔐</span> 로그인
+            </a>
+            <a href="/register" class="link-item">
+                <span class="icon">📝</span> 회원가입
+            </a>
+            <a href="/oauth2/authorization/google" class="link-item">
+                <span class="icon">🔵</span> 구글 로그인
+            </a>
+            <a href="/logout" class="link-item">
+                <span class="icon">🚪</span> 로그아웃
+            </a>
+            <a href="/verify" class="link-item">
+                <span class="icon">✉️</span> 이메일 인증
+            </a>
+            <a href="/user/mypage" class="link-item">
+                <span class="icon">👤</span> 마이페이지
+            </a>
+            <a href="/forgotPassword" class="link-item">
+                <span class="icon">🔑</span> 비밀번호 찾기
+            </a>
+            <a href="/changePassword" class="link-item">
+                <span class="icon">🔄</span> 비밀번호 변경
+            </a>
+            <a href="/reactivate?email=test@test.com&token=sample" class="link-item">
+                <span class="icon">♻️</span> 계정 복구 (샘플)
+            </a>
+        </div>
+    </div>
+
+    <!-- 추가 페이지들 -->
+    <div class="section">
+        <h2>🔧 기타 페이지 <span class="developer">담당: 각 팀</span></h2>
+        <div class="links">
+            <a href="/folders" class="link-item">
+                <span class="icon">📁</span> 폴더 관리
+            </a>
+            <a href="/snippet-tag-management" class="link-item">
+                <span class="icon">🏷️</span> 스니펫-태그 관리 (구버전)
+            </a>
+            <a href="/tag-manager" class="link-item">
+                <span class="icon">🏷️</span> 태그 매니저 (구버전)
+            </a>
+            <a href="/snippet-viewer" class="link-item">
+                <span class="icon">👁️</span> 스니펫 뷰어
+            </a>
+            <a href="/main/switch-user/3" class="link-item">
+                <span class="icon">🔄</span> 메인 사용자 전환
+            </a>
+        </div>
+    </div>
+
+    <!-- API 엔드포인트 -->
+    <div class="section api-section">
+        <h2>🔌 API 엔드포인트 <span class="developer">REST API</span></h2>
+
+        <h3 style="margin: 15px 0 10px 0; font-size: 1.1em;">스니펫 확장 API (인증 필요)</h3>
+        <div class="api-item">
+            <span class="method post">POST</span> /api/snippets <small style="color: #666;">(스니펫 생성)</small>
+        </div>
+        <div class="api-item">
+            <span class="method patch">PATCH</span> /api/snippets/{id} <small style="color: #666;">(스니펫 수정)</small>
+        </div>
+        <div class="api-item">
+            <span class="method delete">DELETE</span> /api/snippets/{id} <small style="color: #666;">(스니펫 삭제)</small>
+        </div>
+
+        <h3 style="margin: 15px 0 10px 0; font-size: 1.1em;">스니펫 기본 API</h3>
+        <div class="api-item">
+            <span class="method get">GET</span> /api/snippet <small style="color: #666;">(전체 조회)</small>
+        </div>
+
+        <h3 style="margin: 15px 0 10px 0; font-size: 1.1em;">북마크 API</h3>
+        <div class="api-item">
+            <span class="method post">POST</span> /api/bookmarks/toggle
+        </div>
+        <div class="api-item">
+            <span class="method post">POST</span> /api/bookmarks/add
+        </div>
+        <div class="api-item">
+            <span class="method delete">DELETE</span> /api/bookmarks/remove
+        </div>
+        <div class="api-item">
+            <span class="method get">GET</span> /api/bookmarks/check?snippetId={id}
+        </div>
+
+        <h3 style="margin: 15px 0 10px 0; font-size: 1.1em;">태그 API</h3>
+        <div class="api-item">
+            <span class="method get">GET</span> /api/tag
+        </div>
+        <div class="api-item">
+            <span class="method post">POST</span> /api/tag
+        </div>
+        <div class="api-item">
+            <span class="method get">GET</span> /api/tag/name/{name}
+        </div>
+        <div class="api-item">
+            <span class="method get">GET</span> /api/tag/snippets/{snippetId}
+        </div>
+        <div class="api-item">
+            <span class="method post">POST</span> /api/tag/snippet/{snippetId}/tags/{tagId}
+        </div>
+        <div class="api-item">
+            <span class="method delete">DELETE</span> /api/tag/snippets/{snippetId}/tags/{tagId}
+        </div>
+        <div class="api-item">
+            <span class="method get">GET</span> /api/tags/search?query={query}
+        </div>
+        <div class="api-item">
+            <span class="method get">GET</span> /api/tags/all
+        </div>
+
+        <h3 style="margin: 15px 0 10px 0; font-size: 1.1em;">좋아요 API</h3>
+        <div class="api-item">
+            <span class="method post">POST</span> /api/likes/add
+        </div>
+        <div class="api-item">
+            <span class="method post">POST</span> /api/likes/remove
+        </div>
+        <div class="api-item">
+            <span class="method get">GET</span> /api/likes/count?snippetId={id}
+        </div>
+        <div class="api-item">
+            <span class="method get">GET</span> /api/likes/user
+        </div>
+        <div class="api-item">
+            <span class="method get">GET</span> /api/likes/status?snippetId={id}
+        </div>
+
+        <h3 style="margin: 15px 0 10px 0; font-size: 1.1em;">스니펫 API</h3>
+        <div class="api-item">
+            <span class="method get">GET</span> /api/snippet
+        </div>
+        <div class="api-item">
+            <span class="method post">POST</span> /api/snippets
+        </div>
+        <div class="api-item">
+            <span class="method patch">PATCH</span> /api/snippets/{id}
+        </div>
+        <div class="api-item">
+            <span class="method delete">DELETE</span> /api/snippets/{id}
+        </div>
+
+        <h3 style="margin: 15px 0 10px 0; font-size: 1.1em;">색상 API</h3>
+        <div class="api-item">
+            <span class="method get">GET</span> /color/session-info
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,5 +1,6 @@
 package kr.or.kosa.snippets.user.config;
 
+import kr.or.kosa.snippets.user.loginLog.IpBlockFilter;
 import kr.or.kosa.snippets.user.service.CustomOAuth2UserService;
 import kr.or.kosa.snippets.user.service.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -22,6 +24,7 @@ public class SecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
+    private final IpBlockFilter  ipBlockFilter;
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
@@ -37,13 +40,14 @@ public class SecurityConfig {
                                 "/user/js/**",
                                 "/user/images/**"
                         ).permitAll()
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
+//                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN", "OAUTH2")
                         .requestMatchers("/loginproc").hasRole("USER") // ROLE_OAUTH2 막기
                         .requestMatchers("/changePassword").hasRole("USER") // ROLE_OAUTH2 막기
                         .requestMatchers("/login", "/api/register", "/api/verify-code", "/api/forgot-password").anonymous()
                         .anyRequest().permitAll()
                 )
+                .addFilterBefore(ipBlockFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(e -> e
                         .accessDeniedHandler(customAccessDeniedHandler))
                 .formLogin(form -> form

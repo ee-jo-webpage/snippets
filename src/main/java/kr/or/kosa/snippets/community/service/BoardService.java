@@ -140,7 +140,33 @@ public class BoardService {
         attachmentMapper.deleteAttachment(attachmentId);
     }
 
+    /**
+     * 임시저장 상세 조회
+     */
+    public PostDraft getDraftById(Integer draftId) {
+        return postMapper.getDraftById(draftId);
+    }
 
+    /**
+     * 임시저장
+     */
+    public Integer saveDraft(PostDraft draft) {
+        if (draft.getDraftId() == null) {
+            // 새로 생성
+            postMapper.insertDraft(draft);
+        } else {
+            // 기존 것 업데이트
+            postMapper.updateDraft(draft);
+        }
+        return draft.getDraftId();
+    }
+
+    /**
+     * 임시저장 삭제
+     */
+    public void deleteDraft(Integer draftId) {
+        postMapper.deleteDraft(draftId);
+    }
 
 
 

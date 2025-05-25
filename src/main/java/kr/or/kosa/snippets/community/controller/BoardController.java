@@ -28,7 +28,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Controller
-@RequestMapping("/board")
+@RequestMapping("/community")
 @RequiredArgsConstructor
 public class BoardController {
     private final BoardService boardService;
@@ -40,7 +40,7 @@ public class BoardController {
     public String boardList(Model model) {
         List<BoardCategory> categories = boardService.getAllCategories();
         model.addAttribute("categories", categories);
-        return "board/categoryList";
+        return "community/categoryList";
     }
 
     // 게시글 목록
@@ -51,7 +51,7 @@ public class BoardController {
 
         model.addAttribute("category", category);
         model.addAttribute("posts", posts);
-        return "board/postList";
+        return "community/postList";
     }
 
     // 게시글 상세
@@ -61,7 +61,7 @@ public class BoardController {
                              Model model) {
         Post post = boardService.getPostById(postId);
         if (post == null) {
-            return "redirect:/board";
+            return "redirect:/community";
         }
 
         Long currentUserId = null;
@@ -77,7 +77,7 @@ public class BoardController {
         model.addAttribute("attachments", attachments);
         model.addAttribute("currentUserId", currentUserId);
 
-        return "board/postDetail";
+        return "community/postDetail";
     }
 
     // 게시글 작성 폼
@@ -86,7 +86,7 @@ public class BoardController {
         List<BoardCategory> categories = boardService.getAllCategories();
         model.addAttribute("categories", categories);
         model.addAttribute("post", new Post());
-        return "board/postForm";
+        return "community/postForm";
     }
 
     // 게시글 작성 처리
@@ -98,7 +98,7 @@ public class BoardController {
         // post.setUserId(((CustomUserDetails) userDetails).getUserId());
 
         Integer postId = boardService.createPost(post, files);
-        return "redirect:/board/post/" + postId;
+        return "redirect:/community/post/" + postId;
     }
 
     // 게시글 수정 폼
@@ -106,7 +106,7 @@ public class BoardController {
     public String editPostForm(@PathVariable Integer postId, Model model) {
         Post post = boardService.getPostById(postId);
         if (post == null) {
-            return "redirect:/board";
+            return "redirect:/community";
         }
 
         List<BoardCategory> categories = boardService.getAllCategories();
@@ -116,7 +116,7 @@ public class BoardController {
         model.addAttribute("categories", categories);
         model.addAttribute("attachments", attachments);
 
-        return "board/postEditForm";
+        return "community/postEditForm";
     }
 
     // 게시글 수정 처리
@@ -126,7 +126,7 @@ public class BoardController {
                              @RequestParam(value = "files", required = false) MultipartFile[] files) throws IOException {
         post.setPostId(postId);
         boardService.updatePost(post, files);
-        return "redirect:/board/post/" + postId;
+        return "redirect:/community/post/" + postId;
     }
 
     // 게시글 삭제
@@ -134,11 +134,11 @@ public class BoardController {
     public String deletePost(@PathVariable Integer postId) {
         Post post = boardService.getPostById(postId);
         if (post == null) {
-            return "redirect:/board";
+            return "redirect:/community";
         }
 
         boardService.deletePost(postId);
-        return "redirect:/board/category/" + post.getCategoryId();
+        return "redirect:/community/category/" + post.getCategoryId();
     }
 
     // 게시글 검색
@@ -161,7 +161,7 @@ public class BoardController {
         model.addAttribute("startDate", startDate);
         model.addAttribute("endDate", endDate);
 
-        return "board/searchResults";
+        return "community/searchResults";
     }
 
     // 첨부파일 다운로드

@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/board/draft")
+@RequestMapping("/api/community/draft")
 @RequiredArgsConstructor
 public class DraftRestController {
     private final BoardService boardService;

@@ -119,7 +119,26 @@ public class BoardService {
     }
 
 
+    /**
+     * 게시글의 첨부파일 목록 조회
+     */
+    public List<PostAttachment> getAttachmentsByPostId(Integer postId) {
+        return attachmentMapper.getAttachmentsByPostId(postId);
+    }
 
+    /**
+     * 첨부파일 상세 조회
+     */
+    public PostAttachment getAttachmentById(Integer attachmentId) {
+        return attachmentMapper.getAttachmentById(attachmentId);
+    }
+
+    /**
+     * 첨부파일 삭제
+     */
+    public void deleteAttachment(Integer attachmentId) {
+        attachmentMapper.deleteAttachment(attachmentId);
+    }
 
 
 

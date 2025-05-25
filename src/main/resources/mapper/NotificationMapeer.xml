@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.kosa.snippets.community.mapper.NotificationMapper">
+
+    <resultMap id="NotificationResultMap" type="kr.or.kosa.snippets.community.model.Notification">
+        <id property="notificationId" column="notification_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="senderId" column="sender_id"/>
+        <result property="type" column="type"/>
+        <result property="targetId" column="target_id"/>
+        <result property="isRead" column="is_read"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="senderNickname" column="sender_nickname"/>
+        <result property="message" column="message"/>
+    </resultMap>
+
+    <!-- 사용자별 알림 목록 조회 -->
+    <select id="getNotificationsByUserId" parameterType="Long" resultMap="NotificationResultMap">
+        SELECT n.notification_id, n.user_id, n.sender_id, n.type, n.target_id,
+               n.is_read, n.created_at, u.nickname as sender_nickname
+        FROM notifications n
+                 JOIN users u ON n.sender_id = u.user_id
+        WHERE n.user_id = #{userId}
+        ORDER BY n.created_at DESC
+        LIMIT 50
+    </select>
+
+    <!-- 안읽은 알림 수 조회 -->
+    <select id="getUnreadNotificationCount" parameterType="Long" resultType="int">
+        SELECT COUNT(*)
+        FROM notifications
+        WHERE user_id = #{userId} AND is_read = 0
+    </select>
+
+    <!-- 알림 생성 -->
+    <insert id="insertNotification" parameterType="kr.or.kosa.snippets.community.model.Notification"
+            useGeneratedKeys="true" keyProperty="notificationId">
+        INSERT INTO notifications (user_id, sender_id, type, target_id, is_read, created_at)
+        VALUES (#{userId}, #{senderId}, #{type}, #{targetId}, #{isRead}, NOW())
+    </insert>
+
+    <!-- 알림 읽음 처리 -->
+    <update id="markAsRead" parameterType="Integer">
+        UPDATE notifications
+        SET is_read = 1
+        WHERE notification_id = #{notificationId}
+    </update>
+
+    <!-- 모든 알림 읽음 처리 -->
+    <update id="markAllAsRead" parameterType="Long">
+        UPDATE notifications
+        SET is_read = 1
+        WHERE user_id = #{userId} AND is_read = 0
+    </update>
+
+    <!-- 알림 삭제 -->
+    <delete id="deleteNotification" parameterType="Integer">
+        DELETE FROM notifications WHERE notification_id = #{notificationId}
+    </delete>
+
+    <!-- 특정 알림 조회 -->
+    <select id="getNotificationById" parameterType="Integer" resultMap="NotificationResultMap">
+        SELECT n.notification_id, n.user_id, n.sender_id, n.type, n.target_id,
+               n.is_read, n.created_at, u.nickname as sender_nickname
+        FROM notifications n
+                 JOIN users u ON n.sender_id = u.user_id
+        WHERE n.notification_id = #{notificationId}
+    </select>
+</mapper>

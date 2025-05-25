@@ -40,7 +40,7 @@ public class SecurityConfig {
                                 "/user/js/**",
                                 "/user/images/**"
                         ).permitAll()
-//                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN", "OAUTH2")
                         .requestMatchers("/loginproc").hasRole("USER") // ROLE_OAUTH2 막기
                         .requestMatchers("/changePassword").hasRole("USER") // ROLE_OAUTH2 막기

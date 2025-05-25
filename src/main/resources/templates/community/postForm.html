@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게시글 작성</title>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Summernote -->
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/lang/summernote-ko-KR.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/board.css}">
+
+    <style>
+        .note-editor .dropdown-toggle::after {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>게시글 작성</h1>
+        <a th:href="@{/board/category/{categoryId}(categoryId=${param.categoryId})}" class="btn btn-outline-secondary">목록으로</a>
+    </div>
+
+    <form id="postForm" th:action="@{/board/post/new}" method="post" enctype="multipart/form-data">
+        <input type="hidden" id="draftId" name="draftId" value="">
+
+        <div class="mb-3">
+            <label for="categoryId" class="form-label">카테고리</label>
+            <select id="categoryId" name="categoryId" class="form-select" required>
+                <option value="">카테고리 선택</option>
+                <option th:each="category : ${categories}"
+                        th:value="${category.categoryId}"
+                        th:text="${category.name}"
+                        th:selected="${param.categoryId != null && param.categoryId[0] == category.categoryId.toString()}"></option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="title" class="form-label">제목</label>
+            <input type="text" id="title" name="title" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="summernote" class="form-label">내용</label>
+            <textarea id="summernote" name="content"></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label for="files" class="form-label">첨부파일</label>
+            <input type="file" id="files" name="files" multiple class="form-control">
+        </div>
+
+        <div class="mb-3 form-check">
+            <input type="checkbox" id="isNotice" name="isNotice" class="form-check-input" value="true">
+            <label for="isNotice" class="form-check-label">공지사항으로 등록</label>
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <div>
+                <button type="button" id="saveAsDraft" class="btn btn-outline-secondary me-2">임시저장</button>
+                <button type="button" id="draftList" class="btn btn-outline-info">임시저장 목록</button>
+            </div>
+
+            <div>
+                <button type="button" class="btn btn-secondary me-2" onclick="location.href='/board'">취소</button>
+                <button type="submit" class="btn btn-primary">등록</button>
+            </div>
+        </div>
+
+        <div id="autoSaveStatus" class="mt-2 text-muted small"></div>
+    </form>
+</div>
+
+<!-- 임시저장 목록 모달 -->
+<div class="modal fade" id="draftListModal" tabindex="-1" aria-labelledby="draftListModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="draftListModalLabel">임시저장 목록</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="draftListContainer"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    $(document).ready(function() {
+        // Summernote 에디터 초기화
+        $('#summernote').summernote({
+            height: 300,
+            minHeight: null,
+            maxHeight: null,
+            focus: true,
+            lang: 'ko-KR',
+            placeholder: '내용을 입력하세요',
+            toolbar: [
+                ['style', ['style']],
+                ['font', ['bold', 'underline', 'clear']],
+                ['color', ['color']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['table', ['table']],
+                ['insert', ['link', 'picture', 'video']],
+                ['view', ['fullscreen', 'codeview']]
+            ],
+            callbacks: {
+                onImageUpload: function(files) {
+                    // 이미지 업로드 처리
+                    uploadImage(files[0], this);
+                }
+            }
+        });
+
+        // 이미지 업로드 함수
+        function uploadImage(file, editor) {
+            var formData = new FormData();
+            formData.append('file', file);
+
+            $.ajax({
+                url: '/board/upload-image',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(data) {
+                    // 업로드된 이미지 URL 에디터에 삽입
+                    $(editor).summernote('insertImage', data.imageUrl);
+                }
+            });
+        }
+
+        // 자동저장 관련 변수
+        let autoSaveInterval;
+        let lastSavedContent = '';
+
+        // 자동저장 시작
+        startAutoSave();
+
+        // 자동저장 시작 함수
+        function startAutoSave() {
+            autoSaveInterval = setInterval(function() {
+                const currentContent = $('#summernote').summernote('code');
+                const title = $('#title').val();
+
+                // 내용이 바뀌었을 때만 저장
+                if (currentContent !== lastSavedContent && (currentContent.trim() !== '' || title.trim() !== '')) {
+                    autoSaveDraft();
+                    lastSavedContent = currentContent;
+                }
+            }, 30000); // 30초마다 자동저장
+        }
+
+        // 자동저장 실행
+        function autoSaveDraft() {
+            const content = $('#summernote').summernote('code');
+            const title = $('#title').val();
+            const categoryId = $('#categoryId').val();
+
+            $.ajax({
+                url: '/api/board/draft/auto-save',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    draftId: $('#draftId').val() || null,
+                    title: title,
+                    content: content,
+                    categoryId: categoryId || null
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        $('#autoSaveStatus').text('마지막 저장: ' + new Date().toLocaleTimeString());
+                        $('#draftId').val(response.draftId);
+                    }
+                }
+            });
+        }
+
+        // 임시저장 버튼 클릭 이벤트
+        $('#saveAsDraft').click(function() {
+            const content = $('#summernote').summernote('code');
+            const title = $('#title').val();
+            const categoryId = $('#categoryId').val();
+
+            $.ajax({
+                url: '/api/board/draft/save',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    draftId: $('#draftId').val() || null,
+                    title: title,
+                    content: content,
+                    categoryId: categoryId || null
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        alert('임시저장되었습니다.');
+                        $('#draftId').val(response.draftId);
+                    }
+                }
+            });
+        });
+
+        // 임시저장 목록 버튼 클릭 이벤트
+        $('#draftList').click(function() {
+            loadDraftList();
+        });
+
+        // 임시저장 목록 불러오기
+        function loadDraftList() {
+            $.ajax({
+                url: '/api/board/draft/list',
+                type: 'GET',
+                success: function(response) {
+                    // 모달에 임시저장 목록 표시
+                    let html = '<ul class="list-group">';
+
+                    if (response.drafts.length === 0) {
+                        html += '<li class="list-group-item text-center">임시저장된 글이 없습니다.</li>';
+                    } else {
+                        response.drafts.forEach(function(draft) {
+                            html += `<li class="list-group-item" data-id="${draft.draftId}">
+                                            <div>제목: ${draft.title || '(제목 없음)'}</div>
+                                            <div>최종 수정일: ${new Date(draft.updatedAt).toLocaleString()}</div>
+                                            <div class="mt-2">
+                                                <button class="btn btn-sm btn-primary load-draft">불러오기</button>
+                                                <button class="btn btn-sm btn-danger delete-draft">삭제</button>
+                                            </div>
+                                         </li>`;
+                        });
+                    }
+
+                    html += '</ul>';
+
+                    $('#draftListContainer').html(html);
+                    $('#draftListModal').modal('show');
+                }
+            });
+        }
+
+        // 임시저장 불러오기 버튼 클릭 이벤트
+        $(document).on('click', '.load-draft', function() {
+            const draftId = $(this).closest('li').data('id');
+
+            $.ajax({
+                url: `/api/board/draft/${draftId}`,
+                type: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        const draft = response.draft;
+
+                        $('#draftId').val(draft.draftId);
+                        $('#title').val(draft.title);
+                        $('#categoryId').val(draft.categoryId);
+                        $('#summernote').summernote('code', draft.content);
+
+                        lastSavedContent = draft.content;
+                        $('#autoSaveStatus').text('마지막 저장: ' + new Date(draft.updatedAt).toLocaleTimeString());
+
+                        $('#draftListModal').modal('hide');
+                    }
+                }
+            });
+        });
+
+        // 임시저장 삭제 버튼 클릭 이벤트
+        $(document).on('click', '.delete-draft', function() {
+            if (confirm('정말 삭제하시겠습니까?')) {
+                const draftId = $(this).closest('li').data('id');
+
+                $.ajax({
+                    url: `/api/board/draft/${draftId}`,
+                    type: 'DELETE',
+                    success: function(response) {
+                        if (response.success) {
+                            loadDraftList();
+                        }
+                    }
+                });
+            }
+        });
+
+        // 폼 제출 시 자동저장 중단
+        $('#postForm').on('submit', function() {
+            clearInterval(autoSaveInterval);
+
+            // 임시저장 ID가 있으면 임시저장 삭제
+            const draftId = $('#draftId').val();
+            if (draftId) {
+                $.ajax({
+                    url: `/api/board/draft/${draftId}`,
+                    type: 'DELETE',
+                    async: false
+                });
+            }
+        });
+    });
+</script>
+</body>
+</html>

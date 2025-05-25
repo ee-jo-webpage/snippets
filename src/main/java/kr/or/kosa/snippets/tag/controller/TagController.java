@@ -4,10 +4,12 @@ import jakarta.servlet.http.HttpSession;
 import kr.or.kosa.snippets.basic.service.SnippetService;
 import kr.or.kosa.snippets.tag.model.TagItem;
 import kr.or.kosa.snippets.tag.service.TagService;
+import kr.or.kosa.snippets.user.service.CustomUserDetails;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -26,10 +28,21 @@ public class TagController {
     @Autowired
     private SnippetService snippetService;
 
+    private Long requireLogin(CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            log.warn("사용자 인증 정보가 없습니다.");
+            return null;
+        }
+        return userDetails.getUserId();
+    }
+
     // 현재 사용자의 모든 태그 조회
     @GetMapping("/my-tags")
-    public ResponseEntity<List<TagItem>> getMyTags(HttpSession session) {
-        Long userId = (Long) session.getAttribute("userId");
+    public ResponseEntity<List<TagItem>> getMyTags(@AuthenticationPrincipal CustomUserDetails userDetails) {
+
+//        Long userId = (Long) session.getAttribute("userId");
+        Long userId = requireLogin(userDetails);
+
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -59,8 +72,10 @@ public class TagController {
     // 새 태그 생성 (현재 사용자)
     @PostMapping
     public ResponseEntity<Map<String, Object>> createTag(@RequestBody Map<String, String> request,
-                                                         HttpSession session) {
-        Long userId = (Long) session.getAttribute("userId");
+                                                         @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        Long userId = requireLogin(userDetails);
+//        Long userId = (Long) session.getAttribute("userId");
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -98,8 +113,10 @@ public class TagController {
     @PostMapping("/snippet/{snippetId}/tag/{tagId}")
     public ResponseEntity<Map<String, Object>> addTagToSnippet(@PathVariable Long snippetId,
                                                                @PathVariable Long tagId,
-                                                               HttpSession session) {
-        Long userId = (Long) session.getAttribute("userId");
+                                                               @AuthenticationPrincipal CustomUserDetails userDetails) {
+//        Long userId = (Long) session.getAttribute("userId");
+        Long userId = requireLogin(userDetails);
+
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -142,8 +159,10 @@ public class TagController {
     @DeleteMapping("/snippet/{snippetId}/tag/{tagId}")
     public ResponseEntity<Map<String, Object>> removeTagFromSnippet(@PathVariable Long snippetId,
                                                                     @PathVariable Long tagId,
-                                                                    HttpSession session) {
-        Long userId = (Long) session.getAttribute("userId");
+                                                                    @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        Long userId = requireLogin(userDetails);
+//        Long userId = (Long) session.getAttribute("userId");
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -164,8 +183,9 @@ public class TagController {
     // 태그 삭제 (사용자 권한 확인)
     @DeleteMapping("/{tagId}")
     public ResponseEntity<Map<String, Object>> deleteTag(@PathVariable Long tagId,
-                                                         HttpSession session) {
-        Long userId = (Long) session.getAttribute("userId");
+                                                         @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long userId = requireLogin(userDetails);
+//        Long userId = (Long) session.getAttribute("userId");
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }

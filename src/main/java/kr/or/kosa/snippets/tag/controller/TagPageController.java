@@ -36,7 +36,11 @@ public class TagPageController {
      * URL: /tags/manager
      */
     @GetMapping("/manager")
-    public String showTagManager() {
+    public String showTagManager(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
+        Long userId = requireLogin(userDetails);
+        log.info("태그 관리 페이지 접근 - 사용자 ID: {}", userId);
+
+        model.addAttribute("currentUserId", userId);
         return "tag/tag-manager";
     }
 
@@ -46,14 +50,13 @@ public class TagPageController {
      */
     @GetMapping("/snippet-tag")
     public String showSnippetTagManagement(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
-
         try {
             Long currentId = requireLogin(userDetails);
             log.info("스니펫 태그 관리 페이지 접근 - 사용자 ID: {}", currentId);
 
             if (currentId == null) {
                 // 로그인되지 않은 경우 빈 데이터로 설정
-                model.addAttribute("snippets", new ArrayList<>());
+                model.addAttribute("snippetList", new ArrayList<>());  // snippets -> snippetList로 변경
                 model.addAttribute("tags", new ArrayList<>());
                 model.addAttribute("userId", null);
                 model.addAttribute("error", "로그인이 필요합니다.");
@@ -69,13 +72,13 @@ public class TagPageController {
             log.info("사용자 {}가 만든 태그 수: {}", currentId, myTags != null ? myTags.size() : 0);
 
             // null 체크 및 기본값 설정
-            model.addAttribute("snippets", mySnippets != null ? mySnippets : new ArrayList<>());
+            model.addAttribute("snippetList", mySnippets != null ? mySnippets : new ArrayList<>());  // snippets -> snippetList로 변경
             model.addAttribute("tags", myTags != null ? myTags : new ArrayList<>());
             model.addAttribute("userId", currentId);
 
         } catch (Exception e) {
             log.error("스니펫/태그 조회 중 오류 발생", e);
-            model.addAttribute("snippets", new ArrayList<>());
+            model.addAttribute("snippetList", new ArrayList<>());  // snippets -> snippetList로 변경
             model.addAttribute("tags", new ArrayList<>());
             model.addAttribute("userId", null);
             model.addAttribute("error", "데이터를 불러오는 중 오류가 발생했습니다: " + e.getMessage());

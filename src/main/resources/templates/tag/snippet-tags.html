@@ -1,32 +1,545 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>스니펫 태그 관리</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link th:href="@{/tag/css/snippet-tags.css}" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .snippet-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            border: none;
+        }
+
+        .snippet-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        .snippet-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .snippet-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .snippet-type {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+
+        .tag-input-section {
+            padding: 20px;
+            background: #f1f3f5;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .tag-input-wrapper {
+            position: relative;
+        }
+
+        .tag-input {
+            width: 100%;
+            padding: 12px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .tag-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .tag-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            margin-top: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .tag-suggestions.show {
+            display: block;
+        }
+
+        .suggestion-item {
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .suggestion-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .suggestion-item.selected {
+            background-color: #e9ecef;
+        }
+
+        .suggestion-new {
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .current-tags {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            min-height: 60px;
+        }
+
+        .tag-badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin: 3px;
+            position: relative;
+            animation: tagFadeIn 0.3s ease;
+        }
+
+        @keyframes tagFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .tag-badge .remove-tag {
+            margin-left: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: color 0.2s;
+        }
+
+        .tag-badge .remove-tag:hover {
+            color: #ffd4d4;
+        }
+
+        .empty-tags {
+            color: #868e96;
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .add-tag-hint {
+            font-size: 0.85rem;
+            color: #868e96;
+            margin-top: 8px;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+
+        .success-message {
+            color: #28a745;
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+    </style>
 </head>
 <body>
-<div class="container">
-    <h1>📝 스니펫 태그 관리</h1>
-
-    <div class="search-bar">
-        <input type="text"
-               id="snippetSearch"
-               class="search-input"
-               placeholder="스니펫 검색 (제목, 내용, 태그...)">
+<div class="main-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-tags me-2"></i>스니펫 태그 관리</h1>
+        <a href="/tags/manager" class="btn btn-outline-primary">
+            <i class="fas fa-cog me-2"></i>태그 관리
+        </a>
     </div>
 
-    <div id="errorMessage" class="error" style="display: none;"></div>
+    <!-- 로그인 필요 메시지 -->
+    <div th:if="${userId == null}" class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        로그인이 필요한 서비스입니다. <a href="/login" class="alert-link">로그인하기</a>
+    </div>
 
-    <div id="snippetsContainer" class="snippets-grid">
-        <div class="loading">스니펫을 불러오는 중...</div>
+    <!-- 스니펫 목록 -->
+    <div th:if="${userId != null}" class="row">
+        <div th:each="snippet : ${snippetList}" class="col-lg-6">
+            <div class="snippet-card">
+                <div class="snippet-header">
+                    <h3 class="snippet-title">
+                        <i class="fas fa-code me-2"></i>
+                        <span th:text="${snippet.memo != null ? snippet.memo : 'Snippet #' + snippet.snippetId}">스니펫 제목</span>
+                    </h3>
+                    <span class="snippet-type" th:text="${snippet.type}">TYPE</span>
+                </div>
+
+                <div class="tag-input-section">
+                    <!-- 태그 입력 영역 -->
+                    <div class="tag-input-wrapper">
+                        <input type="text"
+                               class="tag-input"
+                               th:id="'tagInput-' + ${snippet.snippetId}"
+                               th:data-snippet-id="${snippet.snippetId}"
+                               placeholder="태그를 입력하고 Enter를 누르세요"
+                               autocomplete="off">
+                        <div class="tag-suggestions" th:id="'suggestions-' + ${snippet.snippetId}"></div>
+                    </div>
+
+                    <div class="add-tag-hint">
+                        <i class="fas fa-info-circle me-1"></i>
+                        태그를 입력하면 자동완성이 표시됩니다. Enter 또는 클릭으로 선택하세요.
+                    </div>
+
+                    <!-- 메시지 영역 -->
+                    <div th:id="'message-' + ${snippet.snippetId}" class="mt-2"></div>
+
+                    <!-- 현재 태그 목록 -->
+                    <div class="current-tags">
+                        <div class="mb-2">
+                            <strong>현재 태그:</strong>
+                            <span class="loading-spinner" th:id="'loading-' + ${snippet.snippetId}" style="display: none;"></span>
+                        </div>
+                        <div th:id="'tags-' + ${snippet.snippetId}" class="tags-container">
+                            <div class="empty-tags">태그를 불러오는 중...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 스니펫이 없는 경우 -->
+        <div th:if="${#lists.isEmpty(snippetList)}" class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="fas fa-inbox fa-3x mb-3"></i>
+                <h4>아직 스니펫이 없습니다</h4>
+                <p>스니펫을 생성한 후 태그를 추가해보세요!</p>
+                <a href="/snippets/create" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>첫 스니펫 만들기
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- 플로팅 알림 -->
-<div id="toast" class="toast"></div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script th:inline="javascript">
+    const userId = /*[[${userId}]]*/ null;
+    const snippetList = /*[[${snippetList}]]*/ [];
+    let allUserTags = [];
+    let selectedSuggestionIndex = -1;
 
-<script th:src="@{/tag/js/snippet-tags.js}"></script>
+    // 페이지 로드 시 초기화
+    $(document).ready(function() {
+        if (userId) {
+            loadAllUserTags();
+            initializeTagInputs();
+            loadAllSnippetTags();
+        }
+    });
+
+    // 사용자의 모든 태그 로드
+    function loadAllUserTags() {
+        $.get('/api/tag/my-tags')
+            .done(function(tags) {
+                allUserTags = tags;
+                console.log('사용자 태그 로드 완료:', allUserTags.length);
+            })
+            .fail(function(xhr) {
+                console.error('태그 로드 실패:', xhr.responseText);
+            });
+    }
+
+    // 모든 스니펫의 태그 로드
+    function loadAllSnippetTags() {
+        snippetList.forEach(snippet => {
+            loadSnippetTags(snippet.snippetId);
+        });
+    }
+
+    // 특정 스니펫의 태그 로드
+    function loadSnippetTags(snippetId) {
+        const container = $(`#tags-${snippetId}`);
+
+        $.get(`/api/tag/snippet/${snippetId}`)
+            .done(function(tags) {
+                container.empty();
+
+                if (tags.length === 0) {
+                    container.html('<div class="empty-tags">아직 태그가 없습니다</div>');
+                } else {
+                    tags.forEach(tag => {
+                        const badge = $('<span class="tag-badge"></span>')
+                            .text(tag.name)
+                            .append(`<span class="remove-tag" onclick="removeTag(${snippetId}, ${tag.tagId})">×</span>`);
+                        container.append(badge);
+                    });
+                }
+            })
+            .fail(function(xhr) {
+                container.html('<div class="error-message">태그를 불러올 수 없습니다</div>');
+            });
+    }
+
+    // 태그 입력 필드 초기화
+    function initializeTagInputs() {
+        snippetList.forEach(snippet => {
+            const input = $(`#tagInput-${snippet.snippetId}`);
+            const suggestions = $(`#suggestions-${snippet.snippetId}`);
+
+            // 입력 이벤트
+            input.on('input', function() {
+                const value = $(this).val().trim();
+                if (value.length > 0) {
+                    showSuggestions(snippet.snippetId, value);
+                } else {
+                    suggestions.removeClass('show');
+                }
+            });
+
+            // 키보드 이벤트
+            input.on('keydown', function(e) {
+                const suggestions = $(`#suggestions-${snippet.snippetId}`);
+                const items = suggestions.find('.suggestion-item');
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    selectedSuggestionIndex = Math.min(selectedSuggestionIndex + 1, items.length - 1);
+                    updateSelectedSuggestion(suggestions, selectedSuggestionIndex);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    selectedSuggestionIndex = Math.max(selectedSuggestionIndex - 1, -1);
+                    updateSelectedSuggestion(suggestions, selectedSuggestionIndex);
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (selectedSuggestionIndex >= 0) {
+                        items.eq(selectedSuggestionIndex).click();
+                    } else if ($(this).val().trim()) {
+                        addNewTag(snippet.snippetId, $(this).val().trim());
+                    }
+                } else if (e.key === 'Escape') {
+                    suggestions.removeClass('show');
+                    selectedSuggestionIndex = -1;
+                }
+            });
+
+            // 포커스 아웃 이벤트
+            input.on('blur', function() {
+                setTimeout(() => {
+                    suggestions.removeClass('show');
+                    selectedSuggestionIndex = -1;
+                }, 200);
+            });
+        });
+    }
+
+    // 제안 목록 표시
+    function showSuggestions(snippetId, query) {
+        const suggestions = $(`#suggestions-${snippetId}`);
+        suggestions.empty();
+
+        // 기존 태그에서 필터링
+        const filteredTags = allUserTags.filter(tag =>
+            tag.name.toLowerCase().includes(query.toLowerCase())
+        );
+
+        // 정확히 일치하는 태그가 있는지 확인
+        const exactMatch = allUserTags.find(tag =>
+            tag.name.toLowerCase() === query.toLowerCase()
+        );
+
+        // 제안 목록 생성
+        filteredTags.forEach((tag, index) => {
+            const item = $('<div class="suggestion-item"></div>')
+                .text(tag.name)
+                .attr('data-tag-id', tag.tagId)
+                .attr('data-index', index)
+                .on('click', function() {
+                    selectExistingTag(snippetId, tag.tagId, tag.name);
+                });
+            suggestions.append(item);
+        });
+
+        // 새 태그 생성 옵션 추가 (정확히 일치하는 태그가 없을 때만)
+        if (!exactMatch && query.trim()) {
+            const newTagItem = $('<div class="suggestion-item suggestion-new"></div>')
+                .html(`<i class="fas fa-plus-circle me-2"></i>"${query}" 태그 생성`)
+                .attr('data-index', filteredTags.length)
+                .on('click', function() {
+                    addNewTag(snippetId, query);
+                });
+            suggestions.append(newTagItem);
+        }
+
+        suggestions.addClass('show');
+        selectedSuggestionIndex = -1;
+    }
+
+    // 선택된 제안 항목 업데이트
+    function updateSelectedSuggestion(suggestions, index) {
+        suggestions.find('.suggestion-item').removeClass('selected');
+        if (index >= 0) {
+            suggestions.find('.suggestion-item').eq(index).addClass('selected');
+        }
+    }
+
+    // 기존 태그 선택
+    function selectExistingTag(snippetId, tagId, tagName) {
+        showLoading(snippetId, true);
+        showMessage(snippetId, '');
+
+        $.ajax({
+            url: `/api/tag/snippet/${snippetId}/tag/${tagId}`,
+            method: 'POST',
+            contentType: 'application/json',
+            success: function(response) {
+                showMessage(snippetId, `"${tagName}" 태그가 추가되었습니다`, 'success');
+                $(`#tagInput-${snippetId}`).val('');
+                $(`#suggestions-${snippetId}`).removeClass('show');
+                loadSnippetTags(snippetId);
+            },
+            error: function(xhr) {
+                const error = xhr.responseJSON?.error || '태그 추가에 실패했습니다';
+                showMessage(snippetId, error, 'error');
+            },
+            complete: function() {
+                showLoading(snippetId, false);
+            }
+        });
+    }
+
+    // 새 태그 생성 및 추가
+    function addNewTag(snippetId, tagName) {
+        showLoading(snippetId, true);
+        showMessage(snippetId, '');
+
+        // 1. 먼저 태그 생성
+        $.ajax({
+            url: '/api/tag',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ name: tagName }),
+            success: function(response) {
+                if (response.success && response.tag) {
+                    // 2. 생성된 태그를 스니펫에 추가
+                    selectExistingTag(snippetId, response.tag.tagId, response.tag.name);
+                    // 전체 태그 목록 갱신
+                    loadAllUserTags();
+                }
+            },
+            error: function(xhr) {
+                const error = xhr.responseJSON?.error || '태그 생성에 실패했습니다';
+                showMessage(snippetId, error, 'error');
+                showLoading(snippetId, false);
+            }
+        });
+    }
+
+    // 태그 제거
+    function removeTag(snippetId, tagId) {
+        if (!confirm('이 태그를 제거하시겠습니까?')) {
+            return;
+        }
+
+        showLoading(snippetId, true);
+
+        $.ajax({
+            url: `/api/tag/snippet/${snippetId}/tag/${tagId}`,
+            method: 'DELETE',
+            success: function() {
+                showMessage(snippetId, '태그가 제거되었습니다', 'success');
+                loadSnippetTags(snippetId);
+            },
+            error: function(xhr) {
+                showMessage(snippetId, '태그 제거에 실패했습니다', 'error');
+            },
+            complete: function() {
+                showLoading(snippetId, false);
+            }
+        });
+    }
+
+    // 로딩 표시
+    function showLoading(snippetId, show) {
+        $(`#loading-${snippetId}`).toggle(show);
+    }
+
+    // 메시지 표시
+    function showMessage(snippetId, message, type = '') {
+        const messageDiv = $(`#message-${snippetId}`);
+        messageDiv.removeClass('error-message success-message');
+
+        if (message) {
+            if (type === 'error') {
+                messageDiv.addClass('error-message');
+            } else if (type === 'success') {
+                messageDiv.addClass('success-message');
+            }
+            messageDiv.text(message);
+
+            // 3초 후 메시지 제거
+            setTimeout(() => {
+                messageDiv.text('');
+            }, 3000);
+        } else {
+            messageDiv.text('');
+        }
+    }
+</script>
 </body>
 </html>

@@ -95,60 +95,98 @@ public class BoardController {
         }
     }
 
-    // 게시글 작성 폼
-    @GetMapping("/post/new")
-    public String newPostForm(Model model,
-                              @AuthenticationPrincipal CustomUserDetails userDetails) {
-        // 로그인 체크
-        if (userDetails == null) {
-            return "redirect:/login?message=loginRequired";
-        }
-
-        try {
-            List<BoardCategory> categories = boardService.getAllCategories();
-            model.addAttribute("categories", categories);
-            model.addAttribute("post", new Post());
-            model.addAttribute("currentUserNickname", userDetails.getNickname());
-
-            return "community/postForm";
-        } catch (Exception e) {
-            model.addAttribute("error", "게시글 작성 폼을 불러올 수 없습니다.");
-            return "redirect:/community";
-        }
-    }
-
-    // 게시글 작성 처리
+    // BoardController.java - addPost 메서드 수정
     @PostMapping("/post/new")
     public String addPost(@ModelAttribute Post post,
                           @RequestParam(value = "files", required = false) MultipartFile[] files,
                           @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        System.out.println("=== 게시글 등록 디버깅 시작 ===");
+
         // 로그인 체크
         if (userDetails == null) {
+            System.out.println("ERROR: 사용자가 로그인되지 않음");
             return "redirect:/login?message=loginRequired";
         }
 
         try {
-            // CustomUserDetails에서 사용자 ID 가져오기
+            // 사용자 정보 로깅
             Long userId = getCurrentUserId(userDetails);
-            post.setUserId(userId.intValue());
+            System.out.println("현재 사용자 ID: " + userId);
+            System.out.println("현재 사용자 닉네임: " + userDetails.getNickname());
+
+            // 게시글 정보 로깅
+            System.out.println("게시글 제목: " + post.getTitle());
+            System.out.println("게시글 내용 길이: " + (post.getContent() != null ? post.getContent().length() : 0));
+            System.out.println("카테고리 ID: " + post.getCategoryId());
+            System.out.println("공지사항 여부: " + post.isNotice());
+
+            // 필수 필드 검증
+            if (post.getTitle() == null || post.getTitle().trim().isEmpty()) {
+                System.out.println("ERROR: 제목이 비어있음");
+                return "redirect:/community/post/new?error=title";
+            }
+
+            if (post.getContent() == null || post.getContent().trim().isEmpty()) {
+                System.out.println("ERROR: 내용이 비어있음");
+                return "redirect:/community/post/new?error=content";
+            }
+
+            if (post.getCategoryId() == null) {
+                System.out.println("ERROR: 카테고리가 선택되지 않음");
+                return "redirect:/community/post/new?error=category";
+            }
+
+            // 사용자 ID 설정
+            if (userId != null) {
+                post.setUserId(userId.intValue());
+                System.out.println("Post에 설정된 사용자 ID: " + post.getUserId());
+            } else {
+                System.out.println("ERROR: 사용자 ID가 null");
+                return "redirect:/community/post/new?error=user";
+            }
 
             // 기본값 설정
             if (post.getStatus() == null || post.getStatus().isEmpty()) {
                 post.setStatus("published");
+                System.out.println("게시글 상태를 'published'로 설정");
             }
-            // isNotice는 boolean이므로 null 체크 불필요 (기본값은 false)
-            // 만약 null 체크가 필요하다면 Post 모델에서 Boolean으로 변경해야 함
 
+            // 공지사항 체크박스 처리 (체크되지 않으면 false로 설정)
+            System.out.println("공지사항 설정 전: " + post.isNotice());
+            // boolean primitive 타입이므로 별도 처리 불필요
+            System.out.println("공지사항 설정 후: " + post.isNotice());
+
+            // 파일 정보 로깅
+            if (files != null) {
+                System.out.println("첨부파일 개수: " + files.length);
+                for (int i = 0; i < files.length; i++) {
+                    if (!files[i].isEmpty()) {
+                        System.out.println("파일 " + (i+1) + ": " + files[i].getOriginalFilename()
+                                + " (크기: " + files[i].getSize() + " bytes)");
+                    }
+                }
+            }
+
+            // 게시글 생성
+            System.out.println("게시글 생성 시작...");
             Integer postId = boardService.createPost(post, files);
+            System.out.println("게시글 생성 완료. 생성된 게시글 ID: " + postId);
+
+            System.out.println("=== 게시글 등록 성공 ===");
             return "redirect:/community/post/" + postId + "?success=created";
 
         } catch (IOException e) {
+            System.out.println("ERROR: 파일 업로드 오류 - " + e.getMessage());
+            e.printStackTrace();
             return "redirect:/community/post/new?error=file";
         } catch (Exception e) {
-            e.printStackTrace(); // 디버깅용
+            System.out.println("ERROR: 게시글 저장 오류 - " + e.getMessage());
+            e.printStackTrace();
             return "redirect:/community/post/new?error=save";
         }
     }
+
 
     // 게시글 수정 폼
     @GetMapping("/post/{postId}/edit")

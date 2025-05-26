@@ -1,3 +1,9 @@
+// 페이지 로드 시 북마크 상태 확인
+$(document).ready(function() {
+    const bookmarkedIds = /*[[${bookmarkedSnippetIds}]]*/ [];
+    console.log('북마크된 스니펫 ID:', bookmarkedIds);
+});
+
 function toggleBookmark(button) {
     const snippetId = button.getAttribute('data-snippet-id');
 
@@ -42,7 +48,3 @@ function showAlert(message, type) {
     }, 3000);
 }
 
-// 페이지 로드 시 북마크 상태 확인
-$(document).ready(function() {
-    console.log('북마크된 스니펫 ID:', [[${bookmarkedSnippetIds}]]);
-});

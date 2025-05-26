@@ -59,16 +59,7 @@
         VALUES (#{userId}, #{categoryId}, #{title}, #{content}, 0, NOW(), NOW(), #{isNotice}, #{status})
     </insert>
 
-    <!--<update id="updatePost" parameterType="kr.or.kosa.snippets.community.model.Post">
-        UPDATE posts
-        SET category_id = #{categoryId},
-            title = #{title},
-            content = #{content},
-            updated_at = NOW(),
-            is_notice = #{isNotice},
-            status = #{status}
-        WHERE post_id = #{postId}
-    </update>-->
+
     <update id="updatePost" parameterType="kr.or.kosa.snippets.community.model.Post">
         UPDATE posts
         SET category_id = #{categoryId},

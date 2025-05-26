@@ -52,8 +52,33 @@ public class ColorService {
 
     public List<Color> getAllAvailableColorsByUserId(Long userId) {
         try {
+            log.info("=== 색상 조회 시작 - 사용자 ID: {} ===", userId);
+
+            // 기본 색상만 조회해보기
+            List<Color> defaultColors = colorMapper.getDefaultColors();
+            log.info("기본 색상 개수: {}", defaultColors.size());
+            for (Color color : defaultColors) {
+                log.info("기본 색상: ID={}, name={}, hexCode={}, userId={}",
+                        color.getColorId(), color.getName(), color.getHexCode(), color.getUserId());
+            }
+
+            // 사용자 커스텀 색상만 조회해보기
+            List<Color> userColors = colorMapper.getColorsByUserId(userId);
+            log.info("사용자 커스텀 색상 개수: {}", userColors.size());
+            for (Color color : userColors) {
+                log.info("커스텀 색상: ID={}, name={}, hexCode={}, userId={}",
+                        color.getColorId(), color.getName(), color.getHexCode(), color.getUserId());
+            }
+
+            // 통합 조회
             List<Color> colorList = colorMapper.getAllAvailableColorsByUserId(userId);
-            log.info("사용자 {}의 사용 가능한 색상 {} 개 조회됨", userId, colorList.size());
+            log.info("통합 조회된 색상 개수: {}", colorList.size());
+            for (Color color : colorList) {
+                log.info("통합 색상: ID={}, name={}, hexCode={}, userId={}",
+                        color.getColorId(), color.getName(), color.getHexCode(), color.getUserId());
+            }
+
+            log.info("=== 색상 조회 완료 ===");
             return colorList;
         } catch (Exception e) {
             log.error("사용자 {}의 사용 가능한 색상 조회 중 오류 발생", userId, e);

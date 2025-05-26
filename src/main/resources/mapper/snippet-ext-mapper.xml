@@ -6,56 +6,56 @@
 <mapper namespace="kr.or.kosa.snippets.snippetExt.mapper.SnippetExtMapper">
 
     <resultMap id="colorMap" type="kr.or.kosa.snippets.snippetExt.model.ColorExt">
-        <id property="colorId" column="COLOR_ID" />
-        <result property="hexCode" column="HEX_CODE" />
-        <result property="name" column="NAME" />
+        <id property="colorId" column="COLOR_ID"/>
+        <result property="hexCode" column="HEX_CODE"/>
+        <result property="name" column="NAME"/>
     </resultMap>
 
     <insert id="insertSnippet" useGeneratedKeys="true" keyProperty="snippetId">
-        INSERT INTO SNIPPETS (SOURCE_URL, TYPE, COLOR_ID, MEMO, USER_ID)
-        VALUES (#{sourceUrl}, #{type}, #{colorId}, #{memo}, #{userId})
+        insert into snippets (source_url, type, color_id, memo, user_id)
+        values (#{sourceUrl}, #{type}, #{colorId}, #{memo}, #{userId})
     </insert>
 
     <insert id="insertSnippetText">
-        INSERT INTO SNIPPET_TEXTS (SNIPPET_ID, CONTENT)
-        VALUES (#{snippetId}, #{content})
+        insert into snippet_texts (snippet_id, content)
+        values (#{snippetId}, #{content})
     </insert>
 
     <insert id="insertSnippetCode">
-        INSERT INTO SNIPPET_CODES (SNIPPET_ID, CONTENT, LANGUAGE)
-        VALUES (#{snippetId}, #{content}, #{language})
+        insert into snippet_codes (snippet_id, content, language)
+        values (#{snippetId}, #{content}, #{language})
     </insert>
 
     <insert id="insertSnippetImg">
-        INSERT INTO SNIPPET_IMAGES (SNIPPET_ID, IMAGE_URL, ALT_TEXT)
-        VALUES (#{snippetId}, #{imageUrl}, #{altText})
+        insert into snippet_images (snippet_id, image_url, alt_text)
+        values (#{snippetId}, #{imageUrl}, #{altText})
     </insert>
 
     <update id="updateSnippet">
-        UPDATE SNIPPETS
-        SET COLOR_ID = #{colorId},
-            MEMO     = #{memo}
-        WHERE SNIPPET_ID = ${snippetId}
+        update snippets
+        set color_id = #{colorId},
+            memo     = #{memo}
+        where snippet_id = ${snippetId}
     </update>
 
     <delete id="deleteSnippet">
-        DELETE
-        FROM SNIPPETS
-        WHERE SNIPPET_ID = #{id}
+        delete
+        from snippets
+        where snippet_id = #{id}
     </delete>
 
     <select id="findUserIdBySnippetId" resultType="long">
-        SELECT USER_ID
-        FROM SNIPPETS
-        WHERE SNIPPET_ID = #{snippetId}
+        select user_id
+        from snippets
+        where snippet_id = #{snippetId}
     </select>
 
     <select id="countDuplicate" resultType="int">
         <choose>
             <when test="typeName == 'TEXT'">
                 SELECT COUNT(1)
-                FROM SNIPPETS s
-                JOIN SNIPPET_TEXTS t ON s.snippet_id = t.snippet_id
+                FROM snippets s
+                JOIN snippet_texts t ON s.snippet_id = t.snippet_id
                 WHERE s.USER_ID = #{userId}
                 AND s.TYPE = #{typeName}
                 AND s.SOURCE_URL = #{sourceUrl}
@@ -63,20 +63,20 @@
             </when>
             <when test="typeName == 'CODE'">
                 SELECT COUNT(1)
-                FROM SNIPPETS s
-                JOIN SNIPPET_CODES c ON s.snippet_id = c.snippet_id
-                WHERE s.USER_ID = #{userId}
-                AND s.TYPE = #{typeName}
-                AND c.LANGUAGE = #{language}
-                AND c.CONTENT = #{content}
+                FROM snippets s
+                JOIN snippet_codes c ON s.snippet_id = c.snippet_id
+                WHERE s.user_id = #{userId}
+                AND s.type = #{typeName}
+                AND c.language = #{language}
+                AND c.content = #{content}
             </when>
             <when test="typeName == 'IMG'">
                 SELECT COUNT(1)
-                FROM SNIPPETS s
-                JOIN SNIPPET_IMAGES i ON s.snippet_id = i.snippet_id
-                WHERE s.USER_ID = #{userId}
-                AND s.TYPE = #{typeName}
-                AND i.IMAGE_URL = #{imageUrl}
+                FROM snippets s
+                JOIN snippet_images i ON s.snippet_id = i.snippet_id
+                WHERE s.user_id = #{userId}
+                AND s.type = #{typeName}
+                AND i.image_url = #{imageUrl}
             </when>
             <otherwise>
                 SELECT 0
@@ -85,11 +85,11 @@
     </select>
 
     <select id="findColorsByUserId" resultMap="colorMap">
-        SELECT COLOR_ID, HEX_CODE, NAME
-        FROM SNIPPET_COLORS
-        WHERE USER_ID = #{userId}
-           OR USER_ID = 0
-        ORDER BY COLOR_ID DESC
+        select color_id, hex_code, name
+        from snippet_colors
+        where user_id = #{userId}
+           or user_id = 0
+        order by color_id desc
     </select>
 
 </mapper>

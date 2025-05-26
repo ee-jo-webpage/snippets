@@ -104,14 +104,13 @@ public class BookmarkController {
     public String getMySnippetsWithBookmarkStatus(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
 
         Long currentId = requireLogin(userDetails);
-//        Long currentId = userDetails.getUserId();
-
         log.info("내가 작성한 스니펫 목록 조회 - 사용자 ID: {}", currentId);
 
         if (currentId == null) {
             model.addAttribute("snippets", new ArrayList<>());
             model.addAttribute("userId", null);
             model.addAttribute("bookmarkedSnippetIds", new HashSet<>());
+            model.addAttribute("count", 0); // count 추가
             return "bookmark/snippets-with-bookmark";
         }
 
@@ -119,15 +118,25 @@ public class BookmarkController {
         List<Snippets> mySnippets = bookmarkService.getSnippetsByUserId(currentId);
         log.info("사용자 {}가 작성한 스니펫 수: {}", currentId, mySnippets.size());
 
+        // 디버깅을 위한 추가 로그
+        if (mySnippets != null && !mySnippets.isEmpty()) {
+            log.info("첫 번째 스니펫 정보: ID={}, 메모={}",
+                    mySnippets.get(0).getSnippetId(),
+                    mySnippets.get(0).getMemo());
+        }
+
         // 내가 북마크한 스니펫 ID 목록 조회
         List<Snippets> bookmarkedSnippets = bookmarkService.getAllBookmarkByUserId(currentId);
         Set<Long> bookmarkedSnippetIds = bookmarkedSnippets.stream()
                 .map(Snippets::getSnippetId)
                 .collect(Collectors.toSet());
 
+        log.info("북마크한 스니펫 ID 목록: {}", bookmarkedSnippetIds);
+
         model.addAttribute("snippets", mySnippets);
         model.addAttribute("userId", currentId);
         model.addAttribute("bookmarkedSnippetIds", bookmarkedSnippetIds);
+        model.addAttribute("count", mySnippets.size()); // count 추가
 
         return "bookmark/snippets-with-bookmark";
     }

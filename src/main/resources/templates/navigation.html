@@ -113,6 +113,7 @@
         .method.post { background: #007bff; }
         .method.delete { background: #dc3545; }
         .method.patch { background: #9c27b0; color: white; }
+        .method.put { background: #fd7e14; }
 
         .session-info {
             background: #fff3cd;
@@ -135,147 +136,39 @@
         .hidden {
             display: none !important;
         }
+
+        .security-notice {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #155724;
+        }
+
+        .deprecated {
+            opacity: 0.7;
+            background: #f8d7da !important;
+            border-left: 4px solid #dc3545;
+        }
+
+        .deprecated::after {
+            content: " (구버전)";
+            color: #dc3545;
+            font-size: 0.8em;
+        }
     </style>
 </head>
 <body>
 <div class="container">
     <h1>🚀 스니펫 저장 프로젝트</h1>
-    <p class="subtitle">각 기능별 페이지 네비게이션</p>
+    <p class="subtitle">각 기능별 페이지 네비게이션 (Spring Security 인증 적용)</p>
 
     <div class="session-info">
-        <strong>📌 테스트 계정 정보</strong><br>
-        기본 userId: 1 (세션 초기화 페이지에서 변경 가능)
-        <h3 style="margin: 15px 0 10px 0; font-size: 1.1em;">사용자 인증 API</h3>
-        <div class="api-item">
-            <span class="method post">POST</span> /api/register
-        </div>
-        <div class="api-item">
-            <span class="method post">POST</span> /api/verify-code
-        </div>
-        <div class="api-item">
-            <span class="method put">PUT</span> /api/update
-        </div>
-        <div class="api-item">
-            <span class="method post">POST</span> /api/delete
-        </div>
-        <div class="api-item">
-            <span class="method post">POST</span> /api/restore
-        </div>
-        <div class="api-item">
-            <span class="method post">POST</span> /api/recover-account
-        </div>
-        <div class="api-item">
-            <span class="method post">POST</span> /api/reactive-request
-        </div>
-        <div class="api-item">
-            <span class="method post">POST</span> /api/forgot-password
-        </div>
-        <div class="api-item">
-            <span class="method post">POST</span> /api/change-password
-        </div>
-        <div class="api-item">
-            <span class="method get">GET</span> /api/session-user
-        </div>
-    </div>
-
-    <!-- 스니펫 기본 기능 -->
-    <div class="section">
-        <h2>📝 스니펫 기본 기능 <span class="developer">담당: 기본팀</span></h2>
-        <div class="links">
-            <a href="/snippets" class="link-item">
-                <span class="icon">📋</span> 스니펫 목록
-            </a>
-            <a href="/snippets/new" class="link-item">
-                <span class="icon">➕</span> 스니펫 등록
-            </a>
-        </div>
-    </div>
-
-    <!-- 북마크 기능 -->
-    <div class="section">
-        <h2>⭐ 북마크 기능 <span class="developer">담당: 북마크팀</span></h2>
-        <div class="links">
-            <a href="/bookmark" class="link-item">
-                <span class="icon">📌</span> 내 북마크 목록
-            </a>
-            <a href="/bookmark/my-snippets" class="link-item">
-                <span class="icon">👤</span> 내가 작성한 스니펫
-            </a>
-        </div>
-    </div>
-
-    <!-- 색상 관리 -->
-    <div class="section">
-        <h2>🎨 색상 관리 <span class="developer">담당: 색상팀</span></h2>
-        <div class="links">
-            <a href="/color/all-colors" class="link-item hidden" >
-                <span class="icon">🎨</span> 전체 색상 목록
-            </a>
-            <a href="/color/user/1" class="link-item">
-                <span class="icon">👤</span> 사용자별 색상 (userId: 1)
-            </a>
-            <a href="/color/init-session" class="link-item hidden">
-                <span class="icon">🔧</span> 세션 초기화 (테스트용)
-            </a>
-            <a href="/switch-user/2" class="link-item hidden" >
-                <span class="icon">🔄</span> 사용자 전환 (userId: 2)
-            </a>
-            <a href="/color/check-session" class="link-item hidden" >
-                <span class="icon">🔍</span> 세션 정보 확인
-            </a>
-        </div>
-    </div>
-
-    <!-- 태그 관리 -->
-    <div class="section">
-        <h2>🏷️ 태그 관리 <span class="developer">담당: 태그팀</span></h2>
-        <div class="links">
-            <a href="/tags/manager" class="link-item">
-                <span class="icon">🏷️</span> 태그 관리 페이지
-            </a>
-            <a href="/tags/snippet-tag" class="link-item">
-                <span class="icon">🔗</span> 스니펫-태그 연결 관리
-            </a>
-            <a href="/tag/init-session" class="link-item hidden" >
-                <span class="icon">🔧</span> 태그 세션 초기화
-            </a>
-            <a href="/tag/switch-user/2" class="link-item hidden" >
-                <span class="icon">🔄</span> 태그 사용자 전환
-            </a>
-        </div>
-    </div>
-
-    <!-- 좋아요 기능 -->
-    <div class="section">
-        <h2>❤️ 좋아요 기능 <span class="developer">담당: 좋아요팀</span></h2>
-        <div class="links">
-            <a href="/likePage?snippetId=1" class="link-item">
-                <span class="icon">❤️</span> 좋아요 페이지 (snippetId: 1)
-            </a>
-            <a href="/popular-snippets" class="link-item">
-                <span class="icon">🔥</span> 인기 스니펫 목록
-            </a>
-            <a href="/snippet/1" class="link-item">
-                <span class="icon">📄</span> 스니펫 상세 (좋아요 포함)
-            </a>
-        </div>
-    </div>
-
-    <!-- 스니펫 확장 기능 -->
-    <div class="section">
-        <h2>🔧 스니펫 확장 기능 (REST API) <span class="developer">담당: 스니펫확장팀</span></h2>
-        <div class="links">
-            <a href="#" onclick="alert('이 기능은 REST API로만 제공됩니다.\n\nPOST /api/snippets - 스니펫 생성\nPATCH /api/snippets/{id} - 스니펫 수정\nDELETE /api/snippets/{id} - 스니펫 삭제\n\nPostman이나 API 테스트 도구를 사용해주세요.'); return false;" class="link-item">
-                <span class="icon">📡</span> API 테스트 안내
-            </a>
-            <a href="/api-test" class="link-item" onclick="if(!confirm('API 테스트 페이지가 없을 수 있습니다. 계속하시겠습니까?')) return false;">
-                <span class="icon">🧪</span> API 테스트 페이지 (있는 경우)
-            </a>
-        </div>
-        <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px; font-size: 0.9em;">
-            <strong>💡 참고:</strong> 이 기능은 REST API로만 제공되며, Spring Security 인증이 필요합니다.<br>
-            Postman Collection이나 Swagger UI가 있다면 활용하세요.
-        </div>
+        <strong>🔒 인증 정보</strong><br>
+        이 프로젝트는 Spring Security를 사용합니다. 대부분의 기능에 로그인이 필요합니다.<br>
+        <strong>테스트 계정:</strong> 회원가입 후 이메일 인증을 완료하세요.
     </div>
 
     <!-- 사용자 인증 및 관리 -->
@@ -283,7 +176,7 @@
         <h2>👤 사용자 인증/관리 <span class="developer">담당: 인증팀</span></h2>
         <div class="links">
             <a href="/" class="link-item" style="background: #e3f2fd;">
-                <span class="icon">🏠</span> 메인 페이지 (로그인 상태 확인)
+                <span class="icon">🏠</span> 메인 페이지
             </a>
             <a href="/login" class="link-item">
                 <span class="icon">🔐</span> 로그인
@@ -313,27 +206,162 @@
                 <span class="icon">♻️</span> 계정 복구 (샘플)
             </a>
         </div>
+        <div class="security-notice">
+            <strong>🔒 Spring Security 적용:</strong> CustomUserDetails를 통한 인증 관리<br>
+            @AuthenticationPrincipal을 통해 로그인 사용자 정보 획득
+        </div>
     </div>
 
-    <!-- 추가 페이지들 -->
+    <!-- 스니펫 기본 기능 -->
     <div class="section">
-        <h2>🔧 기타 페이지 <span class="developer">담당: 각 팀</span></h2>
+        <h2>📝 스니펫 기본 기능 <span class="developer">담당: 기본팀</span></h2>
         <div class="links">
-            <a href="/folders" class="link-item">
-                <span class="icon">📁</span> 폴더 관리
+            <a href="/snippets" class="link-item">
+                <span class="icon">📋</span> 스니펫 목록
             </a>
-            <a href="/snippet-tag-management" class="link-item">
-                <span class="icon">🏷️</span> 스니펫-태그 관리 (구버전)
+            <a href="/snippets/new" class="link-item">
+                <span class="icon">➕</span> 스니펫 등록
             </a>
-            <a href="/tag-manager" class="link-item">
-                <span class="icon">🏷️</span> 태그 매니저 (구버전)
+            <a href="/snippets/new?type=CODE" class="link-item">
+                <span class="icon">💻</span> 코드 스니펫 등록
             </a>
-            <a href="/snippet-viewer" class="link-item">
-                <span class="icon">👁️</span> 스니펫 뷰어
+            <a href="/snippets/new?type=TEXT" class="link-item">
+                <span class="icon">📝</span> 텍스트 스니펫 등록
             </a>
-            <a href="/main/switch-user/3" class="link-item">
-                <span class="icon">🔄</span> 메인 사용자 전환
+            <a href="/snippets/new?type=IMG" class="link-item">
+                <span class="icon">🖼️</span> 이미지 스니펫 등록
             </a>
+            <a href="/snippets?userId=1" class="link-item">
+                <span class="icon">👤</span> 사용자별 스니펫 (예: userId=1)
+            </a>
+        </div>
+    </div>
+
+    <!-- 북마크 기능 -->
+    <div class="section">
+        <h2>⭐ 북마크 기능 <span class="developer">담당: 북마크팀</span></h2>
+        <div class="links">
+            <a href="/bookmark" class="link-item">
+                <span class="icon">📌</span> 내 북마크 목록
+            </a>
+            <a href="/bookmark/my-snippets" class="link-item">
+                <span class="icon">👤</span> 내가 작성한 스니펫 (북마크 상태 포함)
+            </a>
+            <a href="/bookmark/snippet/1" class="link-item">
+                <span class="icon">📄</span> 북마크된 스니펫 상세보기 (예: ID=1)
+            </a>
+        </div>
+        <div class="security-notice">
+            <strong>🔒 인증 필요:</strong> CustomUserDetails를 통한 사용자 식별<br>
+            북마크 소유권 확인 및 권한 체크 적용
+        </div>
+    </div>
+
+    <!-- 색상 관리 -->
+    <div class="section">
+        <h2>🎨 색상 관리 <span class="developer">담당: 색상팀</span></h2>
+        <div class="links">
+            <a href="/color/all-colors" class="link-item">
+                <span class="icon">🎨</span> 전체 색상 목록
+            </a>
+            <a href="/color/my-colors" class="link-item">
+                <span class="icon">👤</span> 내 색상 관리
+            </a>
+            <a href="/color/user/1" class="link-item">
+                <span class="icon">👥</span> 사용자별 색상 보기 (예: userId=1)
+            </a>
+            <a href="/color/check-session" class="link-item">
+                <span class="icon">🔍</span> 세션 정보 확인
+            </a>
+            <a href="/color/session-info" class="link-item">
+                <span class="icon">ℹ️</span> 현재 사용자 정보
+            </a>
+        </div>
+        <div class="security-notice">
+            <strong>🔒 인증 필요:</strong> 색상 등록/수정/삭제는 로그인 필수<br>
+            requireLogin() 메서드로 인증 상태 확인
+        </div>
+    </div>
+
+    <!-- 태그 관리 -->
+    <div class="section">
+        <h2>🏷️ 태그 관리 <span class="developer">담당: 태그팀</span></h2>
+        <div class="links">
+            <a href="/tags/manager" class="link-item">
+                <span class="icon">🏷️</span> 태그 관리 페이지
+            </a>
+            <a href="/tags/snippet-tag" class="link-item">
+                <span class="icon">🔗</span> 스니펫-태그 연결 관리
+            </a>
+        </div>
+        <div class="security-notice">
+            <strong>🔒 인증 필요:</strong> 태그 생성/수정/삭제는 소유자만 가능<br>
+            태그 소유권 확인 및 권한 체크 적용
+        </div>
+    </div>
+
+    <!-- 좋아요 기능 -->
+    <div class="section">
+        <h2>❤️ 좋아요 기능 <span class="developer">담당: 좋아요팀</span></h2>
+        <div class="links">
+            <a href="/popular-snippets" class="link-item">
+                <span class="icon">🔥</span> 인기 스니펫 목록
+            </a>
+            <a href="/popular-snippets?type=CODE" class="link-item">
+                <span class="icon">💻</span> 인기 코드 스니펫
+            </a>
+            <a href="/popular-snippets?minLikes=5" class="link-item">
+                <span class="icon">⭐</span> 좋아요 5개 이상 스니펫
+            </a>
+            <a href="/popular-snippets?searchMode=db" class="link-item">
+                <span class="icon">🔍</span> DB 검색 모드
+            </a>
+            <a href="/snippet/1" class="link-item">
+                <span class="icon">📄</span> 스니펫 상세 (좋아요 포함, 예: ID=1)
+            </a>
+            <a href="/likePage?snippetId=1" class="link-item">
+                <span class="icon">❤️</span> 좋아요 테스트 페이지 (예: ID=1)
+            </a>
+        </div>
+        <div class="security-notice">
+            <strong>🔒 부분 인증:</strong> 좋아요 조회는 비로그인 가능, 좋아요 추가/제거는 로그인 필수
+        </div>
+    </div>
+
+    <!-- 스니펫 확장 기능 -->
+    <div class="section">
+        <h2>🔧 스니펫 확장 기능 (REST API) <span class="developer">담당: 스니펫확장팀</span></h2>
+        <div class="links">
+            <a href="#" onclick="alert('이 기능은 REST API로만 제공됩니다.\n\nPOST /api/snippets - 스니펫 생성\nPATCH /api/snippets/{id} - 스니펫 수정\nDELETE /api/snippets/{id} - 스니펫 삭제\nGET /api/snippets/color - 사용자 색상 조회\n\nPostman이나 API 테스트 도구를 사용해주세요.'); return false;" class="link-item">
+                <span class="icon">📡</span> API 테스트 안내
+            </a>
+        </div>
+        <div class="security-notice">
+            <strong>🔒 인증 필수:</strong> 모든 API 엔드포인트에 Spring Security 인증 필요<br>
+            AuthenticationCredentialsNotFoundException 예외 처리 적용
+        </div>
+    </div>
+
+
+    <!-- 세션 테스트 (개발용) -->
+    <div class="section">
+        <h2>🧪 개발/테스트용 기능 <span class="developer">개발팀</span></h2>
+        <div class="links">
+            <a href="/init-session" class="link-item">
+                <span class="icon">🔧</span> 세션 초기화 (색상용)
+            </a>
+            <a href="/switch-user/2" class="link-item">
+                <span class="icon">🔄</span> 사용자 전환 (색상용)
+            </a>
+            <a href="/tag/init-session" class="link-item">
+                <span class="icon">🔧</span> 태그 세션 초기화
+            </a>
+            <a href="/tag/switch-user/2" class="link-item">
+                <span class="icon">🔄</span> 태그 사용자 전환
+            </a>
+        </div>
+        <div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 5px; font-size: 0.9em;">
+            <strong>⚠️ 주의:</strong> 이 기능들은 개발/테스트 목적으로만 사용하세요. 운영환경에서는 제거해야 합니다.
         </div>
     </div>
 
@@ -341,7 +369,39 @@
     <div class="section api-section">
         <h2>🔌 API 엔드포인트 <span class="developer">REST API</span></h2>
 
-        <h3 style="margin: 15px 0 10px 0; font-size: 1.1em;">스니펫 확장 API (인증 필요)</h3>
+        <h3 style="margin: 15px 0 10px 0; font-size: 1.1em;">사용자 인증 API</h3>
+        <div class="api-item">
+            <span class="method post">POST</span> /api/register <small style="color: #666;">(회원가입)</small>
+        </div>
+        <div class="api-item">
+            <span class="method post">POST</span> /api/verify-code <small style="color: #666;">(이메일 인증)</small>
+        </div>
+        <div class="api-item">
+            <span class="method put">PUT</span> /api/update <small style="color: #666;">(정보 수정)</small>
+        </div>
+        <div class="api-item">
+            <span class="method post">POST</span> /api/delete <small style="color: #666;">(계정 삭제)</small>
+        </div>
+        <div class="api-item">
+            <span class="method post">POST</span> /api/restore <small style="color: #666;">(계정 복구)</small>
+        </div>
+        <div class="api-item">
+            <span class="method post">POST</span> /api/recover-account <small style="color: #666;">(계정 복구 요청)</small>
+        </div>
+        <div class="api-item">
+            <span class="method post">POST</span> /api/reactive-request <small style="color: #666;">(재활성화 요청)</small>
+        </div>
+        <div class="api-item">
+            <span class="method post">POST</span> /api/forgot-password <small style="color: #666;">(비밀번호 찾기)</small>
+        </div>
+        <div class="api-item">
+            <span class="method post">POST</span> /api/change-password <small style="color: #666;">(비밀번호 변경)</small>
+        </div>
+        <div class="api-item">
+            <span class="method get">GET</span> /api/session-user <small style="color: #666;">(세션 사용자 정보)</small>
+        </div>
+
+        <h3 style="margin: 15px 0 10px 0; font-size: 1.1em;">스니펫 확장 API (🔒 인증 필요)</h3>
         <div class="api-item">
             <span class="method post">POST</span> /api/snippets <small style="color: #666;">(스니펫 생성)</small>
         </div>
@@ -351,87 +411,99 @@
         <div class="api-item">
             <span class="method delete">DELETE</span> /api/snippets/{id} <small style="color: #666;">(스니펫 삭제)</small>
         </div>
+        <div class="api-item">
+            <span class="method get">GET</span> /api/snippets/color <small style="color: #666;">(사용자 색상 조회)</small>
+        </div>
 
         <h3 style="margin: 15px 0 10px 0; font-size: 1.1em;">스니펫 기본 API</h3>
         <div class="api-item">
             <span class="method get">GET</span> /api/snippet <small style="color: #666;">(전체 조회)</small>
         </div>
 
-        <h3 style="margin: 15px 0 10px 0; font-size: 1.1em;">북마크 API</h3>
+        <h3 style="margin: 15px 0 10px 0; font-size: 1.1em;">북마크 API (🔒 세션 기반 인증)</h3>
         <div class="api-item">
-            <span class="method post">POST</span> /api/bookmarks/toggle
+            <span class="method post">POST</span> /api/bookmarks/toggle <small style="color: #666;">(북마크 토글)</small>
         </div>
         <div class="api-item">
-            <span class="method post">POST</span> /api/bookmarks/add
+            <span class="method post">POST</span> /api/bookmarks/add <small style="color: #666;">(북마크 추가)</small>
         </div>
         <div class="api-item">
-            <span class="method delete">DELETE</span> /api/bookmarks/remove
+            <span class="method delete">DELETE</span> /api/bookmarks/remove <small style="color: #666;">(북마크 제거)</small>
         </div>
         <div class="api-item">
-            <span class="method get">GET</span> /api/bookmarks/check?snippetId={id}
-        </div>
-
-        <h3 style="margin: 15px 0 10px 0; font-size: 1.1em;">태그 API</h3>
-        <div class="api-item">
-            <span class="method get">GET</span> /api/tag
-        </div>
-        <div class="api-item">
-            <span class="method post">POST</span> /api/tag
-        </div>
-        <div class="api-item">
-            <span class="method get">GET</span> /api/tag/name/{name}
-        </div>
-        <div class="api-item">
-            <span class="method get">GET</span> /api/tag/snippets/{snippetId}
-        </div>
-        <div class="api-item">
-            <span class="method post">POST</span> /api/tag/snippet/{snippetId}/tags/{tagId}
-        </div>
-        <div class="api-item">
-            <span class="method delete">DELETE</span> /api/tag/snippets/{snippetId}/tags/{tagId}
-        </div>
-        <div class="api-item">
-            <span class="method get">GET</span> /api/tags/search?query={query}
-        </div>
-        <div class="api-item">
-            <span class="method get">GET</span> /api/tags/all
+            <span class="method get">GET</span> /api/bookmarks/check <small style="color: #666;">(북마크 상태 확인)</small>
         </div>
 
-        <h3 style="margin: 15px 0 10px 0; font-size: 1.1em;">좋아요 API</h3>
+        <h3 style="margin: 15px 0 10px 0; font-size: 1.1em;">태그 API (🔒 인증 필요)</h3>
         <div class="api-item">
-            <span class="method post">POST</span> /api/likes/add
+            <span class="method get">GET</span> /api/tag/my-tags <small style="color: #666;">(내 태그 조회)</small>
         </div>
         <div class="api-item">
-            <span class="method post">POST</span> /api/likes/remove
+            <span class="method get">GET</span> /api/tag/user/{userId} <small style="color: #666;">(사용자별 태그)</small>
         </div>
         <div class="api-item">
-            <span class="method get">GET</span> /api/likes/count?snippetId={id}
+            <span class="method get">GET</span> /api/tag/user/{userId}/name/{name} <small style="color: #666;">(태그명으로 조회)</small>
         </div>
         <div class="api-item">
-            <span class="method get">GET</span> /api/likes/user
+            <span class="method post">POST</span> /api/tag <small style="color: #666;">(태그 생성)</small>
         </div>
         <div class="api-item">
-            <span class="method get">GET</span> /api/likes/status?snippetId={id}
+            <span class="method get">GET</span> /api/tag/snippet/{snippetId} <small style="color: #666;">(스니펫별 태그)</small>
+        </div>
+        <div class="api-item">
+            <span class="method post">POST</span> /api/tag/snippet/{snippetId}/tag/{tagId} <small style="color: #666;">(태그 연결)</small>
+        </div>
+        <div class="api-item">
+            <span class="method delete">DELETE</span> /api/tag/snippet/{snippetId}/tag/{tagId} <small style="color: #666;">(태그 연결 해제)</small>
+        </div>
+        <div class="api-item">
+            <span class="method delete">DELETE</span> /api/tag/{tagId} <small style="color: #666;">(태그 삭제)</small>
+        </div>
+        <div class="api-item">
+            <span class="method get">GET</span> /api/tag/{tagId}/snippets <small style="color: #666;">(태그별 스니펫)</small>
+        </div>
+        <div class="api-item">
+            <span class="method get">GET</span> /api/tags/search <small style="color: #666;">(태그 검색 - 자동완성)</small>
+        </div>
+        <div class="api-item">
+            <span class="method get">GET</span> /api/tags/all <small style="color: #666;">(모든 태그)</small>
         </div>
 
-        <h3 style="margin: 15px 0 10px 0; font-size: 1.1em;">스니펫 API</h3>
+        <h3 style="margin: 15px 0 10px 0; font-size: 1.1em;">좋아요 API (🔒 부분 인증)</h3>
         <div class="api-item">
-            <span class="method get">GET</span> /api/snippet
+            <span class="method post">POST</span> /api/likes/add <small style="color: #666;">(좋아요 추가)</small>
         </div>
         <div class="api-item">
-            <span class="method post">POST</span> /api/snippets
+            <span class="method post">POST</span> /api/likes/remove <small style="color: #666;">(좋아요 취소)</small>
         </div>
         <div class="api-item">
-            <span class="method patch">PATCH</span> /api/snippets/{id}
+            <span class="method get">GET</span> /api/likes/count <small style="color: #666;">(좋아요 수 조회)</small>
         </div>
         <div class="api-item">
-            <span class="method delete">DELETE</span> /api/snippets/{id}
+            <span class="method get">GET</span> /api/likes/user <small style="color: #666;">(사용자 좋아요 목록)</small>
+        </div>
+        <div class="api-item">
+            <span class="method get">GET</span> /api/likes/status <small style="color: #666;">(좋아요 상태 확인)</small>
         </div>
 
-        <h3 style="margin: 15px 0 10px 0; font-size: 1.1em;">색상 API</h3>
+        <h3 style="margin: 15px 0 10px 0; font-size: 1.1em;">기타 API</h3>
         <div class="api-item">
-            <span class="method get">GET</span> /color/session-info
+            <span class="method get">GET</span> /color/session-info <small style="color: #666;">(세션 정보)</small>
         </div>
+        <div class="api-item">
+            <span class="method get">GET</span> /color/check-session <small style="color: #666;">(세션 확인)</small>
+        </div>
+    </div>
+
+    <div style="margin-top: 30px; padding: 20px; background: #e8f5e8; border: 1px solid #c3e6c3; border-radius: 8px;">
+        <h3 style="color: #2d5a2d; margin-bottom: 10px;">🔒 Spring Security 인증 정보</h3>
+        <ul style="color: #2d5a2d; line-height: 1.6;">
+            <li><strong>인증 방식:</strong> CustomUserDetails 기반 Spring Security</li>
+            <li><strong>인증 필요 기능:</strong> 스니펫 CRUD, 북마크, 태그 관리, 색상 관리, 좋아요 추가/제거</li>
+            <li><strong>권한 확인:</strong> requireLogin() 메서드로 사용자 인증 상태 체크</li>
+            <li><strong>소유권 확인:</strong> 각 리소스는 생성자만 수정/삭제 가능</li>
+            <li><strong>예외 처리:</strong> AuthenticationCredentialsNotFoundException, ResponseStatusException 등</li>
+        </ul>
     </div>
 </div>
 </body>

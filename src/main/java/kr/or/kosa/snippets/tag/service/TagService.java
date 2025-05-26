@@ -47,9 +47,8 @@ public class TagService {
             throw new IllegalArgumentException("이미 존재하는 태그입니다: " + name);
         }
 
-        TagItem tag = new TagItem(userId, name);
-        int result = tagMapper.insertTag(userId, name);
-
+        TagItem newTag = new TagItem(userId, name);
+        int result = tagMapper.insertTag(newTag);
         if (result > 0) {
             // 생성된 태그 정보 반환 (auto-generated key 포함)
             return tagMapper.selectTagByUserIdAndName(userId, name);

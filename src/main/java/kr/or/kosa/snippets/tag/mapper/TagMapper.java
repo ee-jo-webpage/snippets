@@ -27,7 +27,7 @@ public interface TagMapper {
     // 사용자별 태그 생성 (user_id 포함)
     @Insert("INSERT INTO tags (user_id, name) VALUES (#{userId}, #{name})")
     @Options(useGeneratedKeys = true, keyProperty = "tagId")
-    int insertTag(@Param("userId") Long userId, @Param("name") String name);
+    int insertTag(TagItem tagItem);
 
     // 특정 스니펫의 태그 조회
     @Select("SELECT t.* FROM tags t INNER JOIN snippet_tags st ON t.tag_id = st.tag_id WHERE st.snippet_id = #{snippetId}")

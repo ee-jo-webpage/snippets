@@ -4,6 +4,7 @@ import java.beans.PropertyEditorSupport;
 import java.io.IOException;
 import java.util.List;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.WebDataBinder;
@@ -16,10 +17,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
+
 import kr.or.kosa.snippets.basic.model.SnippetTypeBasic;
 import kr.or.kosa.snippets.basic.model.Snippets;
 import kr.or.kosa.snippets.basic.service.S3Service;
 import kr.or.kosa.snippets.basic.service.SnippetService;
+import kr.or.kosa.snippets.user.service.CustomUserDetails;
 
 @Controller
 @RequestMapping("/snippets")
@@ -47,21 +52,50 @@ public class SnippetController {
 
     @GetMapping
     public String getAllSnippets(
-            @RequestParam(value = "userId", required = false) Long userId,
+            @AuthenticationPrincipal CustomUserDetails details,
+            @RequestParam(value = "page", defaultValue = "1") int page,
             Model model) {
 
-        List<Snippets> list;
-        if (userId != null) {
-            list = snippetService.getUserSnippets(userId);
-            model.addAttribute("filterUserId", userId);
-        } else {
-            list = snippetService.getAllSnippets();
+        // 1) 로그인 정보 확인
+        if (details == null || details.getUserId() == null) {
+            return "redirect:/login";
         }
 
+        Long userId = details.getUserId();
+        int pageSize = 30;
+
+        // 2) 페이징 시작
+        PageHelper.startPage(page, pageSize);
+
+        // 3) 해당 유저 스니펫만 조회
+        List<Snippets> list = snippetService.getUserSnippets(userId);
+        model.addAttribute("filterUserId", userId);
+
+        // 4) 페이지 정보 생성
+        PageInfo<Snippets> pageInfo = new PageInfo<>(list);
+
+        // 5) 페이지 그룹 계산 (1~10, 11~20 …)
+        int pageGroupSize = 10;
+        int currentPage  = pageInfo.getPageNum();
+        int totalPages   = pageInfo.getPages();
+        int startPage    = ((currentPage - 1) / pageGroupSize) * pageGroupSize + 1;
+        int endPage      = Math.min(startPage + pageGroupSize - 1, totalPages);
+
+        // 6) 뷰로 전달
         model.addAttribute("snippets", list);
+        model.addAttribute("pageInfo", pageInfo);
+        model.addAttribute("pageGroupSize", pageGroupSize);
+        model.addAttribute("startPage", startPage);
+        model.addAttribute("endPage", endPage);
+
         return "basic/snippets/snippetsList";
     }
 
+
+
+
+    
+    
     @GetMapping("/{id}")
     public String getById(@PathVariable("id") Long id, Model model) {
         SnippetTypeBasic type = snippetService.getSnippetTypeById(id);

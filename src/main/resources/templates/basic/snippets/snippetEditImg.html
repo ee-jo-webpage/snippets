@@ -13,10 +13,7 @@
 	      <th>User ID</th>
 	      <td><input type="text" th:value="${snippet.userId}" readonly="readonly" /></td>
 	  </tr>
-	  <tr>
-	      <th>Folder ID</th>
-	      <td><input type="text" th:value="${snippet.folderId}" readonly="readonly" /></td>
-	  </tr>
+	  
 	  <tr>
 	      <th>Color ID</th>
 	      <td><input type="text" th:field="*{colorId}" /></td>
@@ -66,16 +63,7 @@
 	      <th>Image File</th>
 	      <td><input type="file" th:field="*{imageFile}" name="imageFile" accept="image/*" /></td>
 	  </tr>
-	  <tr>
-	      <th>Language</th>
-	      <td>
-	          <select th:field="*{language}">
-	              <option value="JAVA" th:selected="${snippet.language == 'JAVA'}">JAVA</option>
-	              <option value="PYTHON" th:selected="${snippet.language == 'PYTHON'}">PYTHON</option>
-	              <option value="C" th:selected="${snippet.language == 'C'}">C</option>
-	          </select>
-	      </td>
-	  </tr>
+	  
     </table>
     <button type="submit">수정</button>
   </form>

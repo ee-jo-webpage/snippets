@@ -41,8 +41,9 @@ dependencies {
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'com.mysql:mysql-connector-j'
     annotationProcessor 'org.projectlombok:lombok'
-
-
+	
+	// 페이징 처리용 PageHelper (MyBatis)
+	implementation 'com.github.pagehelper:pagehelper-spring-boot-starter:1.4.6'
     //p6spy
     implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.0'
     // 검정확인

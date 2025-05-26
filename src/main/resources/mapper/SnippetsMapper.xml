@@ -27,12 +27,12 @@
 
   <!-- 전체 조회 -->
   <select id="getAllSnippets" resultMap="SnippetsResultMap">
-    SELECT * FROM snippets
+    SELECT * FROM snippets ORDER BY snippet_id DESC
   </select>
   
   
   <select id="getUserSnippets" resultMap="SnippetsResultMap">
-  	SELECT * FROM snippets WHERE user_id = #{userId}
+  	SELECT * FROM snippets WHERE user_id = #{userId} ORDER BY snippet_id DESC
   </select>
 
   <!-- 상세 조회 -->

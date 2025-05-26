@@ -31,10 +31,10 @@
     <tr th:if="${snippet.type.name() == 'IMG'}">
         <th>Image</th>
         <td>
-            <!-- 이미지가 있으면 화면에 표시 -->
-            <img th:src="@{${snippet.imageUrl}}" alt="Snippet Image" th:if="${snippet.imageUrl != null}" />
-            <!-- Alt 텍스트가 있으면 화면에 표시 -->
-            <p th:text="${snippet.altText}" th:if="${snippet.altText != null}"></p>
+            <!-- 절대 URL로 S3 이미지를 직접 바인딩 -->
+            <img th:if="${snippet.imageUrl != null}" th:src="${snippet.imageUrl}" alt="Snippet Image"/>
+            <!-- Alt 텍스트 표시 -->
+            <p th:if="${snippet.altText != null}" th:text="${snippet.altText}"></p>
         </td>
     </tr>
 </table>

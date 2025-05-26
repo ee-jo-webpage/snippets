@@ -8,6 +8,14 @@
 
 <body>
    <h1>Snippets List</h1>
+	
+   <form th:action="@{/snippets}" method="get" style="margin-bottom:1rem;">
+     <input type="text" name="userId"
+            placeholder="User ID로 검색"
+            th:value="${filterUserId}" />
+     <button type="submit">검색</button>
+     <a th:if="${filterUserId != null}" th:href="@{/snippets}">전체 보기</a>
+   </form>
 
    <table border="1">
       <thead>

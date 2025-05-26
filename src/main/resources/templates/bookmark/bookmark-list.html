@@ -78,16 +78,16 @@
             </div>
 
             <!-- 코드 타입 미리보기 -->
-            <div th:if="${bookmark.type?.name() == 'CODE' and bookmark.codeContent}" class="snippet-content">
+            <div th:if="${bookmark.type?.name() == 'CODE'}" class="snippet-content">
                 <strong>코드:</strong>
-                <pre th:text="${#strings.abbreviate(bookmark.codeContent, 150)}">코드 내용</pre>
+                <pre th:text="${#strings.abbreviate(bookmark.Content, 150)}">코드 내용</pre>
                 <span th:if="${bookmark.language}" class="meta-item" th:text="'언어: ' + ${bookmark.language}">언어</span>
             </div>
 
             <!-- 텍스트 타입 미리보기 -->
-            <div th:if="${bookmark.type?.name() == 'TEXT' and bookmark.textContent}" class="snippet-content">
+            <div th:if="${bookmark.type?.name() == 'TEXT'}" class="snippet-content">
                 <strong>텍스트:</strong>
-                <p th:text="${#strings.abbreviate(bookmark.textContent, 200)}">텍스트 내용</p>
+                <p th:text="${#strings.abbreviate(bookmark.Content, 200)}">텍스트 내용</p>
             </div>
 
             <!-- 이미지 타입 미리보기 -->

@@ -92,4 +92,24 @@ button:hover {
         opacity: 1;
         transform: translateY(0);
     }
+
+}
+
+.input-wrapper {
+    position: relative;
+}
+
+.input-wrapper input {
+    width: 100%;
+    padding-right: 40px;
+    box-sizing: border-box;
+}
+
+.toggle-password {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #888;
 }

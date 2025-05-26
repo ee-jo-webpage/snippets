@@ -29,6 +29,11 @@
   <select id="getAllSnippets" resultMap="SnippetsResultMap">
     SELECT * FROM snippets
   </select>
+  
+  
+  <select id="getUserSnippets" resultMap="SnippetsResultMap">
+  	SELECT * FROM snippets WHERE user_id = #{userId}
+  </select>
 
   <!-- 상세 조회 -->
   <select id="getSnippetsById" resultMap="SnippetsResultMap">

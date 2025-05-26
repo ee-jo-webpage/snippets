@@ -15,6 +15,11 @@ public interface SnippetsMapper {
 
     // 상세보기
     Snippets getSnippetsById(@Param("snippetId") Long snippetId, @Param("type") SnippetTypeBasic type);
+    
+    
+    // 특정 유저의 게시글만 보기
+    List<Snippets> getUserSnippets(Long userId);
+    
 
 
     // 기본 스니펫 등록 (snippets 테이블)

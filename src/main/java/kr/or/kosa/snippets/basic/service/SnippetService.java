@@ -21,6 +21,12 @@ public class SnippetService {
     public List<Snippets> getAllSnippets() {
         return snippetsMapper.getAllSnippets();
     }
+    
+    
+    public List<Snippets> getUserSnippets(Long userId) {
+    	return snippetsMapper.getUserSnippets(userId);
+    }
+    
 
     public Snippets getSnippetsById(Long snippetId, SnippetTypeBasic type) {
         Snippets snippet = snippetsMapper.getSnippetsById(snippetId, type);
@@ -101,6 +107,8 @@ public class SnippetService {
         System.out.println("Updating IMG imageUrl and altText...");
         snippetsMapper.updateSnippetImage(snippet);  // 여기서 updateSnippetImage 메소드 호출
     }
+    
+  
 
  
 }

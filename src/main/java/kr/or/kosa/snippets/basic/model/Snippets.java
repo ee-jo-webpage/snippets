@@ -23,7 +23,7 @@ public class Snippets {
    private int visibility;
    
 
-   private String Content;    
+   private String content;    
    private String language;    
    private String imageUrl;    
    private String altText;

@@ -70,4 +70,6 @@ public interface ColorMapper {
 //     * 기본 색상 중에서 해당 hex_code의 색상을 조회
 //     */
 //    Color getDefaultColorByHexCode(String hexCode);
+
+
 }

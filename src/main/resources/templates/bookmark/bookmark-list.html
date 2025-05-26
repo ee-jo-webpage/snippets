@@ -9,6 +9,7 @@
 </head>
 <body>
 <div class="container">
+
     <div class="header">
         <h1>📚 내 북마크</h1>
         <div class="bookmark-count" th:text="|총 ${count}개의 북마크|">총 0개의 북마크</div>
@@ -103,7 +104,70 @@
     </div>
 </div>
 
-<script th:inline="javascript"></script>
-<script th:src="@{/bookmark/js/bookmark-list.js}"></script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    // 북마크 제거 함수
+    function removeBookmark(snippetId) {
+        if (!confirm('정말로 이 북마크를 제거하시겠습니까?')) {
+            return;
+        }
+
+        // POST 방식으로 북마크 제거 요청
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/bookmark/remove/' + snippetId;
+
+        // CSRF 토큰이 있다면 추가
+        const csrfToken = document.querySelector('meta[name="_csrf"]');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]');
+
+        if (csrfToken && csrfHeader) {
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_csrf';
+            csrfInput.value = csrfToken.getAttribute('content');
+            form.appendChild(csrfInput);
+        }
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    // 검색 및 필터링 기능
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('bookmarkSearchInput');
+        const typeFilter = document.getElementById('bookmarkTypeFilter');
+        const bookmarksContainer = document.getElementById('bookmarksContainer');
+
+        if (searchInput && typeFilter && bookmarksContainer) {
+            function filterBookmarks() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const selectedType = typeFilter.value;
+                const bookmarkCards = bookmarksContainer.querySelectorAll('.bookmark-card');
+
+                bookmarkCards.forEach(card => {
+                    const memo = card.getAttribute('data-memo') || '';
+                    const type = card.getAttribute('data-type') || '';
+                    const snippetId = card.querySelector('.snippet-id').textContent;
+
+                    const matchesSearch = memo.toLowerCase().includes(searchTerm) ||
+                        snippetId.toLowerCase().includes(searchTerm);
+                    const matchesType = !selectedType || type === selectedType;
+
+                    if (matchesSearch && matchesType) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            }
+
+            searchInput.addEventListener('input', filterBookmarks);
+            typeFilter.addEventListener('change', filterBookmarks);
+        }
+    });
+    /*]]>*/
+</script>
+<!--<script th:src="@{/bookmark/js/bookmark-list.js}"></script>-->
 </body>
 </html>

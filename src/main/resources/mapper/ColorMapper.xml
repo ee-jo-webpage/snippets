@@ -15,11 +15,11 @@
         FROM snippet_colors
     </select>
 
-    <!-- 기본 색상 조회 (user_id가 NULL인 색상) -->
+    <!-- 기본 색상 조회 (user_id가 0인 색상) -->
     <select id="getDefaultColors" resultMap="colorMap">
         SELECT color_id, user_id, name, hex_code
         FROM snippet_colors
-        WHERE user_id IS NULL
+        WHERE user_id = 0
     </select>
 
     <!-- 사용자별 색상 조회 -->
@@ -33,8 +33,8 @@
     <select id="getAllAvailableColorsByUserId" resultMap="colorMap">
         SELECT color_id, user_id, name, hex_code
         FROM snippet_colors
-        WHERE user_id IS NULL OR user_id = #{userId}
-        ORDER BY user_id IS NULL DESC, name ASC
+        WHERE user_id = 0 OR user_id = #{userId}
+        ORDER BY user_id = 0 DESC, name ASC
     </select>
 
     <!-- color_id로 색상 조회 -->
@@ -55,7 +55,7 @@
     <select id="isDefaultColor" parameterType="String" resultType="boolean">
         SELECT COUNT(*) > 0
         FROM snippet_colors
-        WHERE hex_code = #{hexCode} AND user_id IS NULL
+        WHERE hex_code = #{hexCode} AND user_id = 0
     </select>
 
     <!-- 색상 입력 (color_id는 AUTO_INCREMENT로 자동 생성) -->

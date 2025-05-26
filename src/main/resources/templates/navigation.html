@@ -131,6 +131,10 @@
             margin-right: 5px;
             vertical-align: middle;
         }
+
+        .hidden {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
@@ -204,19 +208,19 @@
     <div class="section">
         <h2>🎨 색상 관리 <span class="developer">담당: 색상팀</span></h2>
         <div class="links">
-            <a href="/color/all-colors" class="link-item">
+            <a href="/color/all-colors" class="link-item hidden" >
                 <span class="icon">🎨</span> 전체 색상 목록
             </a>
             <a href="/color/user/1" class="link-item">
                 <span class="icon">👤</span> 사용자별 색상 (userId: 1)
             </a>
-            <a href="/color/init-session" class="link-item">
+            <a href="/color/init-session" class="link-item hidden">
                 <span class="icon">🔧</span> 세션 초기화 (테스트용)
             </a>
-            <a href="/switch-user/2" class="link-item">
+            <a href="/switch-user/2" class="link-item hidden" >
                 <span class="icon">🔄</span> 사용자 전환 (userId: 2)
             </a>
-            <a href="/color/check-session" class="link-item">
+            <a href="/color/check-session" class="link-item hidden" >
                 <span class="icon">🔍</span> 세션 정보 확인
             </a>
         </div>
@@ -232,10 +236,10 @@
             <a href="/tags/snippet-tag" class="link-item">
                 <span class="icon">🔗</span> 스니펫-태그 연결 관리
             </a>
-            <a href="/tag/init-session" class="link-item">
+            <a href="/tag/init-session" class="link-item hidden" >
                 <span class="icon">🔧</span> 태그 세션 초기화
             </a>
-            <a href="/tag/switch-user/2" class="link-item">
+            <a href="/tag/switch-user/2" class="link-item hidden" >
                 <span class="icon">🔄</span> 태그 사용자 전환
             </a>
         </div>

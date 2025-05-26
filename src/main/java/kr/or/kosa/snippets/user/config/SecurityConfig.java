@@ -14,6 +14,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -24,7 +25,7 @@ public class SecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
-    private final IpBlockFilter  ipBlockFilter;
+    private final IpBlockFilter ipBlockFilter;
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
@@ -33,7 +34,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable())
+        http.csrf(csrf -> csrf.ignoringRequestMatchers("/api/**", "/community/upload-image"))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/user/css/**",
@@ -45,6 +46,7 @@ public class SecurityConfig {
                         .requestMatchers("/loginproc").hasRole("USER") // ROLE_OAUTH2 막기
                         .requestMatchers("/changePassword").hasRole("USER") // ROLE_OAUTH2 막기
                         .requestMatchers("/login", "/api/register", "/api/verify-code", "/api/forgot-password").anonymous()
+                        .requestMatchers("/api/board/**", "/api/community/**", "/community/upload-image", "/community/debug/**").permitAll()
                         .anyRequest().permitAll()
                 )
                 .addFilterBefore(ipBlockFilter, UsernamePasswordAuthenticationFilter.class)
@@ -57,6 +59,8 @@ public class SecurityConfig {
                         .failureHandler(customAuthFailureHandler)
                         .permitAll()
                 )
+
+
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login")
                         .userInfoEndpoint(userInfo -> userInfo
@@ -64,8 +68,15 @@ public class SecurityConfig {
                         )
                         .successHandler(customAuthSuccessHandler)
                 )
+                .logout(logout -> logout
+                        .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET"))
+                        .logoutSuccessUrl("/")
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
+                        .permitAll()
+                );
 
-                .logout(logout -> logout.logoutSuccessUrl("/"));
+
 
         return http.build();
     }

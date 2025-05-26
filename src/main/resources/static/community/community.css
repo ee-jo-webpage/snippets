@@ -1,0 +1,143 @@
+/* 게시판 공통 스타일 */
+body {
+    background-color: #f8f9fa;
+    color: #333;
+}
+
+.card {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border: none;
+}
+
+/* 게시글 목록 스타일 */
+.table thead th {
+    font-weight: 600;
+    color: #555;
+}
+
+.table tbody tr:hover {
+    background-color: #f1f5f9;
+}
+
+.table a {
+    color: #333;
+    text-decoration: none;
+}
+
+.table a:hover {
+    color: #0d6efd;
+}
+
+/* 게시글 상세 스타일 */
+.post-content {
+    min-height: 300px;
+    line-height: 1.7;
+}
+
+.post-content img {
+    max-width: 100%;
+    height: auto;
+}
+
+.post-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+}
+
+.post-content table th,
+.post-content table td {
+    border: 1px solid #dee2e6;
+    padding: 0.5rem;
+}
+
+/* 댓글 스타일 */
+.comment {
+    border-bottom: 1px solid #eee;
+    padding: 15px 0;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.comment-content {
+    line-height: 1.6;
+}
+
+.comment-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+.replies {
+    margin-left: 30px;
+    padding-left: 15px;
+    border-left: 2px solid #eee;
+}
+
+.btn-like, .btn-dislike, .btn-reply, .btn-edit, .btn-delete {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #6c757d;
+    padding: 0;
+    margin-right: 15px;
+    font-size: 0.9rem;
+}
+
+.btn-like:hover, .btn-reply:hover, .btn-edit:hover {
+    color: #0d6efd;
+}
+
+.btn-dislike:hover, .btn-delete:hover {
+    color: #dc3545;
+}
+
+.btn-like.active {
+    color: #198754;
+}
+
+.btn-dislike.active {
+    color: #dc3545;
+}
+
+/* Summernote 에디터 스타일 수정 */
+.note-editor .dropdown-toggle::after {
+    display: none;
+}
+
+.note-editor.note-frame {
+    border-color: #dee2e6;
+}
+
+.note-editor .note-toolbar {
+    background-color: #f8f9fa;
+}
+
+/* 페이지네이션 스타일 */
+.pagination .page-item.active .page-link {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.pagination .page-link {
+    color: #0d6efd;
+}
+
+.pagination .page-link:focus {
+    box-shadow: none;
+}
+
+/* 폼 스타일 */
+.form-label {
+    font-weight: 500;
+}
+
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}

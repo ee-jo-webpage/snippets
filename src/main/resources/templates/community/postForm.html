@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게시글 작성</title>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Summernote -->
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/lang/summernote-ko-KR.min.js"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Custom CSS (인라인으로 포함) -->
+    <style>
+        /* 게시판 공통 스타일 */
+        body {
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        .card {
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+
+        /* Summernote 에디터 스타일 수정 */
+        .note-editor .dropdown-toggle::after {
+            display: none;
+        }
+
+        .note-editor.note-frame {
+            border-color: #dee2e6;
+        }
+
+        .note-editor .note-toolbar {
+            background-color: #f8f9fa;
+        }
+
+        /* 폼 스타일 */
+        .form-label {
+            font-weight: 500;
+        }
+
+        .form-control:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        }
+
+        /* 자동저장 상태 */
+        .auto-save-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 0.875rem;
+            z-index: 1000;
+            display: none;
+        }
+
+        .auto-save-status.saving {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .auto-save-status.error {
+            background: #dc3545;
+        }
+
+        /* 임시저장 관련 스타일 */
+        .draft-item {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: white;
+            transition: box-shadow 0.2s ease;
+        }
+
+        .draft-item:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .draft-meta {
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+
+        /* 기능 버튼 */
+        .feature-btn {
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            margin: 0.25rem;
+            transition: all 0.3s ease;
+        }
+
+        .feature-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 모달 스타일 */
+        .modal-content {
+            border: none;
+            border-radius: 15px;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0;
+        }
+
+        /* 파일 업로드 스타일 */
+        .file-upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            transition: border-color 0.3s ease;
+        }
+
+        .file-upload-area:hover {
+            border-color: #0d6efd;
+        }
+
+        .file-upload-area.dragover {
+            border-color: #0d6efd;
+            background-color: #e3f2fd;
+        }
+    </style>
+</head>
+<body>
+<!-- 자동저장 상태 표시 -->
+<div id="autoSaveStatus" class="auto-save-status">
+    <i class="fas fa-save me-2"></i>
+    <span id="autoSaveText">자동저장됨</span>
+</div>
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            <i class="fas fa-edit me-2"></i>
+            게시글 작성
+        </h1>
+        <div>
+            <a href="/community" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-home me-1"></i>
+                메인으로
+            </a>
+            <button type="button" id="draftListBtn" class="btn btn-outline-info">
+                <i class="fas fa-save me-1"></i>
+                임시저장 목록
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-9">
+            <div class="card">
+                <div class="card-body">
+                    <form id="postForm" th:action="@{/community/post/new}" method="post" enctype="multipart/form-data">
+                        <input type="hidden" id="draftId" name="draftId" value="">
+
+                        <div class="mb-3">
+                            <label for="categoryId" class="form-label">
+                                <i class="fas fa-folder me-1"></i>
+                                카테고리 <span class="text-danger">*</span>
+                            </label>
+                            <select id="categoryId" name="categoryId" class="form-select" required>
+                                <option value="">카테고리를 선택하세요</option>
+                                <option th:each="category : ${categories}"
+                                        th:value="${category.categoryId}"
+                                        th:text="${category.name}"
+                                        th:selected="${param.categoryId != null && param.categoryId[0] == category.categoryId.toString()}"></option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="title" class="form-label">
+                                <i class="fas fa-heading me-1"></i>
+                                제목 <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" id="title" name="title" class="form-control"
+                                   placeholder="제목을 입력하세요" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="summernote" class="form-label">
+                                <i class="fas fa-align-left me-1"></i>
+                                내용 <span class="text-danger">*</span>
+                            </label>
+                            <textarea id="summernote" name="content"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="files" class="form-label">
+                                <i class="fas fa-paperclip me-1"></i>
+                                첨부파일
+                            </label>
+                            <div class="file-upload-area" id="fileUploadArea">
+                                <i class="fas fa-cloud-upload-alt fa-2x mb-2 text-muted"></i>
+                                <p class="mb-2">파일을 드래그하여 업로드하거나 클릭하여 선택하세요</p>
+                                <input type="file" id="files" name="files" multiple class="form-control"
+                                       accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.hwp,.txt">
+                                <small class="text-muted">최대 10MB, 여러 파일 선택 가능</small>
+                            </div>
+                            <div id="fileList" class="mt-2"></div>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" id="isNotice" name="isNotice" class="form-check-input" value="true">
+                            <label for="isNotice" class="form-check-label">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                공지사항으로 등록
+                            </label>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <button type="button" id="saveAsDraft" class="btn btn-outline-secondary feature-btn">
+                                    <i class="fas fa-save me-1"></i>
+                                    임시저장
+                                </button>
+                                <button type="button" id="previewBtn" class="btn btn-outline-info feature-btn">
+                                    <i class="fas fa-eye me-1"></i>
+                                    미리보기
+                                </button>
+                            </div>
+
+                            <div>
+                                <button type="button" class="btn btn-secondary me-2" onclick="confirmCancel()">
+                                    <i class="fas fa-times me-1"></i>
+                                    취소
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane me-1"></i>
+                                    등록
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- 사이드바 -->
+        <div class="col-lg-3">
+            <!-- 작성 도움말 -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-lightbulb me-1"></i>
+                        작성 도움말
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0 small">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-1"></i>
+                            30초마다 자동저장됩니다
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-1"></i>
+                            이미지는 드래그&드롭으로 업로드 가능
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-1"></i>
+                            Ctrl+Enter로 빠른 등록
+                        </li>
+                        <li class="mb-0">
+                            <i class="fas fa-check text-success me-1"></i>
+                            임시저장은 최대 10개까지 보관
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 최근 작성 글 -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-history me-1"></i>
+                        최근 작성글
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div id="recentPosts" class="small">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            로딩 중...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 임시저장 목록 모달 -->
+<div class="modal fade" id="draftListModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-save me-2"></i>
+                    임시저장 목록
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="max-height: 500px; overflow-y: auto;">
+                <div id="draftListContainer">
+                    <div class="text-center py-4">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        임시저장 목록을 불러오는 중...
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 미리보기 모달 -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-eye me-2"></i>
+                    미리보기
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="previewContent">
+                    <!-- 미리보기 내용이 여기에 표시됩니다 -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    $(document).ready(function() {
+        // Summernote 에디터 초기화
+        $('#summernote').summernote({
+            height: 400,
+            minHeight: null,
+            maxHeight: null,
+            focus: true,
+            lang: 'ko-KR',
+            placeholder: '내용을 입력하세요',
+            toolbar: [
+                ['style', ['style']],
+                ['font', ['bold', 'underline', 'clear']],
+                ['color', ['color']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['table', ['table']],
+                ['insert', ['link', 'picture', 'video']],
+                ['view', ['fullscreen', 'codeview', 'help']]
+            ],
+            callbacks: {
+                onImageUpload: function(files) {
+                    uploadSummernoteImage(files[0], this);
+                },
+                onChange: function(contents) {
+                    // 내용이 변경될 때마다 자동저장 타이머 재설정
+                    resetAutoSaveTimer();
+                }
+            }
+        });
+
+        // 파일 드래그 앤 드롭 설정
+        setupFileDragDrop();
+
+        // 자동저장 시작
+        startAutoSave();
+
+        // 최근 작성글 로드
+        loadRecentPosts();
+
+        // URL 파라미터에서 draftId 확인하여 불러오기
+        const urlParams = new URLSearchParams(window.location.search);
+        const draftId = urlParams.get('draftId');
+        if (draftId) {
+            loadDraft(draftId);
+        }
+
+        // 키보드 단축키 설정
+        setupKeyboardShortcuts();
+    });
+
+    // 자동저장 관련 변수
+    let autoSaveInterval;
+    let autoSaveTimeout;
+    let lastSavedContent = '';
+    let hasUnsavedChanges = false;
+
+    // 자동저장 시작
+    function startAutoSave() {
+        autoSaveInterval = setInterval(function() {
+            autoSaveDraft();
+        }, 30000); // 30초마다 자동저장
+    }
+
+    // 자동저장 타이머 재설정
+    function resetAutoSaveTimer() {
+        hasUnsavedChanges = true;
+        clearTimeout(autoSaveTimeout);
+        autoSaveTimeout = setTimeout(function() {
+            autoSaveDraft();
+        }, 5000); // 5초 후 자동저장
+    }
+
+    // 자동저장 실행
+    function autoSaveDraft() {
+        const content = $('#summernote').summernote('code');
+        const title = $('#title').val().trim();
+        const categoryId = $('#categoryId').val();
+
+        // 내용이 바뀌었고 제목이나 내용이 있을 때만 저장
+        if (hasUnsavedChanges && (title || content.trim() !== '<p><br></p>')) {
+            showAutoSaveStatus('saving');
+
+            $.ajax({
+                url: '/api/community/draft/auto-save',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    draftId: $('#draftId').val() || null,
+                    title: title,
+                    content: content,
+                    categoryId: categoryId || null
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        $('#draftId').val(response.draftId);
+                        lastSavedContent = content;
+                        hasUnsavedChanges = false;
+                        showAutoSaveStatus('saved');
+                    } else {
+                        showAutoSaveStatus('error');
+                    }
+                },
+                error: function() {
+                    showAutoSaveStatus('error');
+                }
+            });
+        }
+    }
+
+    // 자동저장 상태 표시
+    function showAutoSaveStatus(status) {
+        const statusDiv = $('#autoSaveStatus');
+        const textSpan = $('#autoSaveText');
+
+        statusDiv.removeClass('saving error').show();
+
+        switch(status) {
+            case 'saving':
+                statusDiv.addClass('saving');
+                textSpan.html('<i class="fas fa-spinner fa-spin me-2"></i>저장 중...');
+                break;
+            case 'saved':
+                textSpan.html('<i class="fas fa-check me-2"></i>자동저장됨 ' + new Date().toLocaleTimeString());
+                setTimeout(() => statusDiv.fadeOut(), 3000);
+                break;
+            case 'error':
+                statusDiv.addClass('error');
+                textSpan.html('<i class="fas fa-exclamation-triangle me-2"></i>저장 실패');
+                setTimeout(() => statusDiv.fadeOut(), 5000);
+                break;
+        }
+    }
+
+    // 수동 임시저장
+    $('#saveAsDraft').click(function() {
+        const content = $('#summernote').summernote('code');
+        const title = $('#title').val().trim();
+        const categoryId = $('#categoryId').val();
+
+        if (!title && content.trim() === '<p><br></p>') {
+            alert('제목이나 내용을 입력해주세요.');
+            return;
+        }
+
+        $.ajax({
+            url: '/api/community/draft/save',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                draftId: $('#draftId').val() || null,
+                title: title,
+                content: content,
+                categoryId: categoryId || null
+            }),
+            success: function(response) {
+                if (response.success) {
+                    $('#draftId').val(response.draftId);
+                    hasUnsavedChanges = false;
+                    showSuccessMessage('임시저장되었습니다.');
+                }
+            }
+        });
+    });
+
+    // 임시저장 목록 버튼
+    $('#draftListBtn').click(function() {
+        loadDraftList();
+        $('#draftListModal').modal('show');
+    });
+
+    // 미리보기 버튼
+    $('#previewBtn').click(function() {
+        showPreview();
+    });
+
+    // 임시저장 목록 불러오기
+    function loadDraftList() {
+        $.ajax({
+            url: '/api/community/draft/list',
+            type: 'GET',
+            success: function(response) {
+                renderDraftList(response.drafts);
+            },
+            error: function() {
+                $('#draftListContainer').html('<div class="text-center text-danger">임시저장 목록을 불러올 수 없습니다.</div>');
+            }
+        });
+    }
+
+    // 임시저장 목록 렌더링
+    function renderDraftList(drafts) {
+        let html = '';
+
+        if (drafts.length === 0) {
+            html = '<div class="text-center py-4 text-muted">임시저장된 글이 없습니다.</div>';
+        } else {
+            drafts.forEach(function(draft) {
+                html += `
+                        <div class="draft-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-2">${draft.title || '(제목 없음)'}</h6>
+                                    <p class="text-muted mb-2">${truncateHtml(draft.content, 150)}</p>
+                                    <div class="draft-meta">
+                                        <i class="fas fa-clock me-1"></i>
+                                        최종 수정: ${formatDate(draft.updatedAt)}
+                                    </div>
+                                </div>
+                                <div class="ms-3">
+                                    <button class="btn btn-sm btn-primary me-2" onclick="loadDraft(${draft.draftId})">
+                                        <i class="fas fa-edit me-1"></i>불러오기
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteDraft(${draft.draftId})">
+                                        <i class="fas fa-trash me-1"></i>삭제
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+            });
+        }
+
+        $('#draftListContainer').html(html);
+    }
+
+    // 임시저장 불러오기
+    function loadDraft(draftId) {
+        $.ajax({
+            url: `/api/community/draft/${draftId}`,
+            type: 'GET',
+            success: function(response) {
+                if (response.success) {
+                    const draft = response.draft;
+
+                    $('#draftId').val(draft.draftId);
+                    $('#title').val(draft.title);
+                    $('#categoryId').val(draft.categoryId);
+                    $('#summernote').summernote('code', draft.content);
+
+                    lastSavedContent = draft.content;
+                    hasUnsavedChanges = false;
+
+                    $('#draftListModal').modal('hide');
+                    showSuccessMessage('임시저장된 글을 불러왔습니다.');
+                }
+            }
+        });
+    }
+
+    // 임시저장 삭제
+    function deleteDraft(draftId) {
+        if (confirm('정말 삭제하시겠습니까?')) {
+            $.ajax({
+                url: `/api/community/draft/${draftId}`,
+                type: 'DELETE',
+                success: function(response) {
+                    if (response.success) {
+                        loadDraftList();
+                        showSuccessMessage('임시저장된 글이 삭제되었습니다.');
+                    }
+                }
+            });
+        }
+    }
+
+    // 미리보기 표시
+    function showPreview() {
+        const title = $('#title').val().trim();
+        const content = $('#summernote').summernote('code');
+        const categoryName = $('#categoryId option:selected').text();
+
+        if (!title && content.trim() === '<p><br></p>') {
+            alert('제목이나 내용을 입력해주세요.');
+            return;
+        }
+
+        const previewHtml = `
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge bg-secondary me-2">${categoryName}</span>
+                                <h2 class="d-inline">${title || '(제목 없음)'}</h2>
+                            </div>
+                        </div>
+                        <div class="text-muted small mt-2">
+                            <i class="fas fa-user me-1"></i>
+                            작성자 |
+                            <i class="fas fa-calendar me-1"></i>
+                            ${new Date().toLocaleString()}
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="post-content" style="min-height: 300px; line-height: 1.7;">
+                            ${content}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+        $('#previewContent').html(previewHtml);
+        $('#previewModal').modal('show');
+    }
+
+    // 파일 드래그 앤 드롭 설정
+    function setupFileDragDrop() {
+        const uploadArea = $('#fileUploadArea');
+
+        uploadArea.on('dragover', function(e) {
+            e.preventDefault();
+            $(this).addClass('dragover');
+        });
+
+        uploadArea.on('dragleave', function(e) {
+            e.preventDefault();
+            $(this).removeClass('dragover');
+        });
+
+        uploadArea.on('drop', function(e) {
+            e.preventDefault();
+            $(this).removeClass('dragover');
+
+            const files = e.originalEvent.dataTransfer.files;
+            $('#files')[0].files = files;
+            updateFileList();
+        });
+
+        $('#files').change(function() {
+            updateFileList();
+        });
+    }
+
+    // 파일 목록 업데이트
+    function updateFileList() {
+        const files = $('#files')[0].files;
+        let html = '';
+
+        if (files.length > 0) {
+            html += '<div class="mt-2"><strong>선택된 파일:</strong></div>';
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const size = (file.size / 1024).toFixed(1);
+                html += `
+                        <div class="d-flex justify-content-between align-items-center py-1">
+                            <span><i class="fas fa-file me-1"></i>${file.name}</span>
+                            <small class="text-muted">${size} KB</small>
+                        </div>
+                    `;
+            }
+        }
+
+        $('#fileList').html(html);
+    }
+
+    // Summernote 이미지 업로드
+    function uploadSummernoteImage(file, editor) {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        $.ajax({
+            url: '/community/upload-image',
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function(data) {
+                $(editor).summernote('insertImage', data.imageUrl);
+            },
+            error: function() {
+                alert('이미지 업로드에 실패했습니다.');
+            }
+        });
+    }
+
+    // 최근 작성글 로드 (모의 데이터)
+    function loadRecentPosts() {
+        const mockPosts = [
+            { title: "이전 작성글 1", date: "2024-01-15" },
+            { title: "이전 작성글 2", date: "2024-01-14" },
+            { title: "이전 작성글 3", date: "2024-01-13" }
+        ];
+
+        let html = '';
+        mockPosts.forEach(post => {
+            html += `
+                    <div class="mb-2 pb-2 border-bottom">
+                        <div class="fw-bold">${post.title}</div>
+                        <small class="text-muted">${post.date}</small>
+                    </div>
+                `;
+        });
+
+        $('#recentPosts').html(html);
+    }
+
+    // 키보드 단축키 설정
+    function setupKeyboardShortcuts() {
+        $(document).keydown(function(e) {
+            // Ctrl + Enter: 게시글 등록
+            if (e.ctrlKey && e.which === 13) {
+                e.preventDefault();
+                $('#postForm').submit();
+            }
+            // Ctrl + S: 임시저장
+            if (e.ctrlKey && e.which === 83) {
+                e.preventDefault();
+                $('#saveAsDraft').click();
+            }
+        });
+    }
+
+    // 폼 제출 시 처리
+    $('#postForm').on('submit', function(e) {
+        const title = $('#title').val().trim();
+        const content = $('#summernote').summernote('code');
+
+        if (!title) {
+            alert('제목을 입력해주세요.');
+            e.preventDefault();
+            return;
+        }
+
+        if (content.trim() === '<p><br></p>' || !content.trim()) {
+            alert('내용을 입력해주세요.');
+            e.preventDefault();
+            return;
+        }
+
+        // 자동저장 중단
+        clearInterval(autoSaveInterval);
+        clearTimeout(autoSaveTimeout);
+
+        // 임시저장 삭제
+        const draftId = $('#draftId').val();
+        if (draftId) {
+            $.ajax({
+                url: `/api/community/draft/${draftId}`,
+                type: 'DELETE',
+                async: false
+            });
+        }
+    });
+
+    // 취소 확인
+    function confirmCancel() {
+        if (hasUnsavedChanges) {
+            if (confirm('작성 중인 내용이 있습니다. 정말 나가시겠습니까?')) {
+                window.location.href = '/community';
+            }
+        } else {
+            window.location.href = '/community';
+        }
+    }
+
+    // 페이지 떠날 때 확인
+    window.addEventListener('beforeunload', function(e) {
+        if (hasUnsavedChanges) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+
+    // 유틸리티 함수들
+    function formatDate(dateString) {
+        return new Date(dateString).toLocaleString();
+    }
+
+    function truncateHtml(html, length) {
+        const div = document.createElement('div');
+        div.innerHTML = html;
+        const text = div.textContent || div.innerText || '';
+        return text.length > length ? text.substring(0, length) + '...' : text;
+    }
+
+    function showSuccessMessage(message) {
+        const alertDiv = $(`
+                <div class="alert alert-success alert-dismissible fade show position-fixed"
+                     style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+                    <i class="fas fa-check-circle me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `);
+        $('body').append(alertDiv);
+        setTimeout(() => alertDiv.alert('close'), 3000);
+    }
+</script>
+</body>
+</html>

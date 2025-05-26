@@ -3,6 +3,7 @@ package kr.or.kosa.snippets.community.mapper;
 import kr.or.kosa.snippets.community.model.Comment;
 import kr.or.kosa.snippets.community.model.CommentLike;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -20,7 +21,7 @@ public interface CommentMapper {
     //좋아요/싫어요 관련
     void insertCommentLike(CommentLike commentLike);
     void updateCommentLike(CommentLike commentLike);
-    void deleteCommentLike(Integer commentLikeId);
+    void deleteCommentLike(@Param("commentId") Integer commentId, @Param("userId") Long userId);
     CommentLike getCommentLike(Integer commentId, Long userId);
     Integer getLikeCount(Integer commentId, boolean isLike);
 }

@@ -119,9 +119,54 @@ public class BoardService {
     }
 
 
+    /**
+     * 게시글의 첨부파일 목록 조회
+     */
+    public List<PostAttachment> getAttachmentsByPostId(Integer postId) {
+        return attachmentMapper.getAttachmentsByPostId(postId);
+    }
 
+    /**
+     * 첨부파일 상세 조회
+     */
+    public PostAttachment getAttachmentById(Integer attachmentId) {
+        return attachmentMapper.getAttachmentById(attachmentId);
+    }
 
+    /**
+     * 첨부파일 삭제
+     */
+    public void deleteAttachment(Integer attachmentId) {
+        attachmentMapper.deleteAttachment(attachmentId);
+    }
 
+    /**
+     * 임시저장 상세 조회
+     */
+    public PostDraft getDraftById(Integer draftId) {
+        return postMapper.getDraftById(draftId);
+    }
+
+    /**
+     * 임시저장
+     */
+    public Integer saveDraft(PostDraft draft) {
+        if (draft.getDraftId() == null) {
+            // 새로 생성
+            postMapper.insertDraft(draft);
+        } else {
+            // 기존 것 업데이트
+            postMapper.updateDraft(draft);
+        }
+        return draft.getDraftId();
+    }
+
+    /**
+     * 임시저장 삭제
+     */
+    public void deleteDraft(Integer draftId) {
+        postMapper.deleteDraft(draftId);
+    }
 
 
 

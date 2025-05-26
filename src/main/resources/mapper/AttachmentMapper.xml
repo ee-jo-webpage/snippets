@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.kosa.snippets.community.mapper.AttachmentMapper">
+
+    <resultMap id="AttachmentResultMap" type="kr.or.kosa.snippets.community.model.PostAttachment">
+        <id property="attachmentId" column="attachment_id"/>
+        <result property="postId" column="post_id"/>
+        <result property="filename" column="filename"/>
+        <result property="filePath" column="file_path"/>
+        <result property="fileType" column="file_type"/>
+        <result property="fileSize" column="file_size"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <!-- 게시글의 첨부파일 목록 조회 -->
+    <select id="getAttachmentsByPostId" parameterType="Integer" resultMap="AttachmentResultMap">
+        SELECT attachment_id, post_id, filename, file_path, file_type, file_size, created_at
+        FROM post_attachments
+        WHERE post_id = #{postId}
+        ORDER BY created_at ASC
+    </select>
+
+    <!-- 첨부파일 상세 조회 -->
+    <select id="getAttachmentById" parameterType="Integer" resultMap="AttachmentResultMap">
+        SELECT attachment_id, post_id, filename, file_path, file_type, file_size, created_at
+        FROM post_attachments
+        WHERE attachment_id = #{attachmentId}
+    </select>
+
+    <!-- 첨부파일 등록 -->
+    <insert id="insertAttachment" parameterType="kr.or.kosa.snippets.community.model.PostAttachment"
+            useGeneratedKeys="true" keyProperty="attachmentId">
+        INSERT INTO post_attachments (post_id, filename, file_path, file_type, file_size, created_at)
+        VALUES (#{postId}, #{filename}, #{filePath}, #{fileType}, #{fileSize}, NOW())
+    </insert>
+
+    <!-- 첨부파일 삭제 -->
+    <delete id="deleteAttachment" parameterType="Integer">
+        DELETE FROM post_attachments WHERE attachment_id = #{attachmentId}
+    </delete>
+</mapper>

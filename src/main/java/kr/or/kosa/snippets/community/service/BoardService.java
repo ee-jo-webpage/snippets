@@ -69,7 +69,7 @@ public class BoardService {
 
         return post.getPostId();
     }
-
+/*
     public void updatePost(Post post, MultipartFile[] files) throws IOException {
         postMapper.updatePost(post);
 
@@ -80,6 +80,42 @@ public class BoardService {
                 }
             }
         }
+    }*/
+
+    //업로드 디버그용
+    public void updatePost(Post post, MultipartFile[] files) throws IOException {
+        System.out.println("=== BoardService.updatePost 시작 ===");
+        System.out.println("업데이트할 Post: " + post.toString());
+
+        try {
+            // 실제 업데이트 실행
+            int updateCount = postMapper.updatePost(post);
+            System.out.println("업데이트된 행 개수: " + updateCount);
+
+            if (updateCount == 0) {
+                System.out.println("❌ 업데이트된 행이 없습니다!");
+            } else {
+                System.out.println("✅ 업데이트 성공!");
+            }
+
+        } catch (Exception e) {
+            System.out.println("❌ 업데이트 오류: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
+
+        // 파일 처리 (있다면)
+        if(files != null && files.length > 0) {
+            System.out.println("파일 처리 시작...");
+            for (MultipartFile file : files) {
+                if (!file.isEmpty()) {
+                    saveAttachment(post.getPostId(), file);
+                }
+            }
+            System.out.println("파일 처리 완료");
+        }
+
+        System.out.println("=== BoardService.updatePost 완료 ===");
     }
 
     public void deletePost(Integer postId) {
@@ -167,6 +203,7 @@ public class BoardService {
     public void deleteDraft(Integer draftId) {
         postMapper.deleteDraft(draftId);
     }
+
 
 
 

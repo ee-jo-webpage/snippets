@@ -95,6 +95,39 @@ public class BoardController {
         }
     }
 
+    // 게시글 작성 폼
+    @GetMapping("/post/new")
+    public String newPostForm(Model model,
+                              @AuthenticationPrincipal CustomUserDetails userDetails) {
+        // 디버깅용 로그 추가
+        System.out.println("=== 새 게시글 폼 접근 ===");
+        if (userDetails != null) {
+            System.out.println("현재 사용자 ID: " + userDetails.getUserId());
+            System.out.println("현재 사용자 타입: " + userDetails.getUserId().getClass().getSimpleName());
+            System.out.println("현재 사용자 닉네임: " + userDetails.getNickname());
+            System.out.println("현재 사용자 이메일: " + userDetails.getUsername());
+        } else {
+            System.out.println("로그인되지 않음");
+            return "redirect:/login?message=loginRequired";
+        }
+
+        try {
+            List<BoardCategory> categories = boardService.getAllCategories();
+            System.out.println("카테고리 개수: " + categories.size());
+
+            model.addAttribute("categories", categories);
+            model.addAttribute("post", new Post());
+            model.addAttribute("currentUserNickname", userDetails.getNickname());
+
+            return "community/postForm";
+        } catch (Exception e) {
+            System.out.println("ERROR: " + e.getMessage());
+            e.printStackTrace();
+            model.addAttribute("error", "게시글 작성 폼을 불러올 수 없습니다.");
+            return "redirect:/community";
+        }
+    }
+
     // BoardController.java - addPost 메서드 수정
     @PostMapping("/post/new")
     public String addPost(@ModelAttribute Post post,
@@ -137,9 +170,9 @@ public class BoardController {
                 return "redirect:/community/post/new?error=category";
             }
 
-            // 사용자 ID 설정
+            // 사용자 ID 설정 - ✅ .intValue() 제거
             if (userId != null) {
-                post.setUserId(userId.intValue());
+                post.setUserId(userId);  // Long → Long 직접 설정
                 System.out.println("Post에 설정된 사용자 ID: " + post.getUserId());
             } else {
                 System.out.println("ERROR: 사용자 ID가 null");
@@ -187,7 +220,6 @@ public class BoardController {
         }
     }
 
-
     // 게시글 수정 폼
     @GetMapping("/post/{postId}/edit")
     public String editPostForm(@PathVariable Integer postId,
@@ -205,8 +237,8 @@ public class BoardController {
             }
 
             Long currentUserId = getCurrentUserId(userDetails);
-            // 작성자 또는 관리자만 수정 가능
-            if (!post.getUserId().equals(currentUserId.intValue()) && !isAdmin(userDetails)) {
+            // 작성자 또는 관리자만 수정 가능 - ✅ .intValue() 제거
+            if (!post.getUserId().equals(currentUserId) && !isAdmin(userDetails)) {
                 return "redirect:/community/post/" + postId + "?error=permission";
             }
 
@@ -217,13 +249,14 @@ public class BoardController {
             model.addAttribute("categories", categories);
             model.addAttribute("attachments", attachments);
 
-            return "community/postEditForm";
+            return "community/postEdit";
         } catch (Exception e) {
             return "redirect:/community";
         }
     }
 
     // 게시글 수정 처리
+    /*
     @PostMapping("/post/{postId}/edit")
     public String updatePost(@PathVariable Integer postId,
                              @ModelAttribute Post post,
@@ -238,19 +271,91 @@ public class BoardController {
             Long currentUserId = getCurrentUserId(userDetails);
             Post existingPost = boardService.getPostById(postId);
 
+            // 권한 체크 - ✅ .intValue() 제거
             if (existingPost == null ||
-                    (!existingPost.getUserId().equals(currentUserId.intValue()) && !isAdmin(userDetails))) {
+                    (!existingPost.getUserId().equals(currentUserId) && !isAdmin(userDetails))) {
                 return "redirect:/community/post/" + postId + "?error=permission";
             }
 
             post.setPostId(postId);
-            post.setUserId(currentUserId.intValue());
+            post.setUserId(currentUserId);
             boardService.updatePost(post, files);
             return "redirect:/community/post/" + postId + "?success=updated";
 
         } catch (IOException e) {
             return "redirect:/community/post/" + postId + "/edit?error=file";
         } catch (Exception e) {
+            return "redirect:/community/post/" + postId + "/edit?error=save";
+        }
+    }
+    */
+
+    @PostMapping("/post/{postId}/edit")
+    public String updatePost(@PathVariable Integer postId,
+                             @ModelAttribute Post post,
+                             @RequestParam(value = "files", required = false) MultipartFile[] files,
+                             @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+
+        // 여기서 userId 설정하는 부분 확인
+        Long currentUserId = getCurrentUserId(userDetails);
+
+        // 이 부분이 제대로 실행되고 있는지 확인
+        post.setUserId(currentUserId);
+
+        System.out.println("userId 설정 후: " + post.getUserId()); // 이 로그 추가
+
+
+        System.out.println("=== 게시글 수정 디버깅 ===");
+        System.out.println("Post ID: " + postId);
+        System.out.println("제목: " + post.getTitle());
+        System.out.println("내용: " + post.getContent());
+        System.out.println("카테고리 ID: " + post.getCategoryId());
+        System.out.println("공지사항: " + post.isNotice());
+
+        // 추가 디버깅: 모든 파라미터 확인
+        System.out.println("=== Post 객체 전체 ===");
+        System.out.println("Post 객체: " + post.toString());
+
+        try {
+            currentUserId = getCurrentUserId(userDetails);
+            Post existingPost = boardService.getPostById(postId);
+            System.out.println("기존 게시글 조회 완료: " + existingPost);
+
+            if (existingPost == null) {
+                System.out.println("❌ 게시글이 존재하지 않음");
+                return "redirect:/community/post/" + postId + "?error=permission";
+            }
+
+            Long existingUserId = existingPost.getUserId(); // Long 타입으로 받기
+            Long currentUserIdLong = currentUserId;         // Long 그대로 사용
+
+            System.out.println("권한 체크: 기존 userId=" + existingUserId + ", 현재 userId=" + currentUserIdLong);
+            System.out.println("userId 같은가? " + existingUserId.equals(currentUserIdLong));
+
+            boolean isOwner = existingUserId.equals(currentUserIdLong);
+            boolean isAdminUser = isAdmin(userDetails);
+
+            System.out.println("소유자인가? " + isOwner);
+            System.out.println("관리자인가? " + isAdminUser);
+
+            if (!isOwner && !isAdminUser) {
+                System.out.println("❌ 권한 없음");
+                return "redirect:/community/post/" + postId + "?error=permission";
+            }
+
+            System.out.println("✅ 권한 체크 통과");
+            System.out.println("boardService.updatePost() 호출 직전");
+
+            boardService.updatePost(post, files);
+            System.out.println("boardService.updatePost() 호출 완료");
+
+            System.out.println("수정 완료!");
+            return "redirect:/community/post/" + postId + "?success=updated";
+
+        } catch (Exception e) {
+            System.out.println("수정 오류: " + e.getMessage());
+            e.printStackTrace();
             return "redirect:/community/post/" + postId + "/edit?error=save";
         }
     }
@@ -271,7 +376,8 @@ public class BoardController {
             }
 
             Long currentUserId = getCurrentUserId(userDetails);
-            if (!post.getUserId().equals(currentUserId.intValue()) && !isAdmin(userDetails)) {
+            // 권한 체크 - ✅ .intValue() 제거
+            if (!post.getUserId().equals(currentUserId) && !isAdmin(userDetails)) {
                 return "redirect:/community/post/" + postId + "?error=permission";
             }
 
@@ -388,6 +494,30 @@ public class BoardController {
 
         } catch (IOException e) {
             result.put("error", "파일 업로드 중 오류가 발생했습니다.");
+        }
+
+        return result;
+    }
+
+    /**
+     * 현재 로그인된 사용자 정보 확인용 (디버깅용)
+     */
+    @GetMapping("/debug/user")
+    @ResponseBody
+    public Map<String, Object> getCurrentUserDebug(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        Map<String, Object> result = new HashMap<>();
+
+        if (userDetails != null) {
+            result.put("success", true);
+            result.put("userId", userDetails.getUserId());
+            result.put("nickname", userDetails.getNickname());
+            result.put("email", userDetails.getUsername()); // 이메일
+            result.put("authorities", userDetails.getAuthorities().toString());
+            result.put("userIdType", userDetails.getUserId().getClass().getSimpleName());
+        } else {
+            result.put("success", false);
+            result.put("error", "로그인되지 않음");
+            result.put("message", "로그인이 필요합니다.");
         }
 
         return result;

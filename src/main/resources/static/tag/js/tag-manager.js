@@ -155,8 +155,8 @@ $(document).ready(function () {
             url: '/api/tag/search',
             method: 'GET',
             data: {
-                query: keyword,
-                userId: currentUserId
+                query: keyword
+                // userId: currentUserId 제거
             },
             success: function (tags) {
                 showAutocomplete(tags);
@@ -202,8 +202,8 @@ $(document).ready(function () {
             method: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({
-                name: tagName,
-                userId: currentUserId
+                name: tagName
+                // userId: currentUserId 제거
             }),
             success: function (tag) {
                 addToSelected(tag);
@@ -253,11 +253,8 @@ $(document).ready(function () {
 
     function loadAllTags() {
         $.ajax({
-            url: '/api/tag',
+            url: '/api/tag/my-tags',
             method: 'GET',
-            data: {
-                userId: currentUserId
-            },
             success: function (tags) {
                 allTags = tags;
                 displayAllTags(tags);
@@ -277,9 +274,22 @@ $(document).ready(function () {
             return;
         }
         tags.forEach(tag => {
-            container.append($('<span>').addClass('tag-badge').text(tag.name).data('id', tag.tagId));
+            const tagBadge = $('<span>')
+                .addClass('tag-badge')
+                .data('id', tag.tagId)
+                .html(tag.name + ' <span class="tag-delete-inline" data-tag-id="' + tag.tagId + '" data-tag-name="' + tag.name + '">×</span>');
+
+            container.append(tagBadge);
         });
     }
+
+    // 인라인 삭제 버튼 클릭 이벤트
+    $(document).on('click', '.tag-delete-inline', function(e) {
+        e.stopPropagation();
+        const tagId = $(this).data('tag-id');
+        const tagName = $(this).data('tag-name');
+        showDeleteModal(tagId, tagName);
+    });
 
     function loadSnippets(tagId, tagName) {
         console.log('Loading snippets for tagId:', tagId, 'tagName:', tagName);
@@ -424,3 +434,84 @@ async function loadSessionData() {
         document.getElementById('serverSessionData').textContent = '오류 발생';
     }
 }
+
+function displayAllTags(tags) {
+    const container = $('#allTags');
+    container.empty();
+    if (tags.length === 0) {
+        container.html('<div class="empty-message">등록된 태그가 없습니다</div>');
+        return;
+    }
+    tags.forEach(tag => {
+        const tagContainer = $('<div>').addClass('tag-badge-container');
+        const tagBadge = $('<span>')
+            .addClass('tag-badge')
+            .text(tag.name)
+            .data('id', tag.tagId);
+
+        const deleteBtn = $('<button>')
+            .addClass('tag-delete-btn')
+            .html('&times;')
+            .data('tag-id', tag.tagId)
+            .data('tag-name', tag.name)
+            .on('click', function(e) {
+                e.stopPropagation();
+                showDeleteModal(tag.tagId, tag.name);
+            });
+
+        tagContainer.append(tagBadge).append(deleteBtn);
+        container.append(tagContainer);
+    });
+}
+
+// 삭제 모달 표시
+function showDeleteModal(tagId, tagName) {
+    $('#deleteTagName').text(tagName);
+    $('#deleteModal').show();
+
+    // 확인 버튼에 이벤트 바인딩
+    $('#confirmDelete').off('click').on('click', function() {
+        deleteTag(tagId, tagName);
+        $('#deleteModal').hide();
+    });
+}
+
+// 태그 삭제 함수
+function deleteTag(tagId, tagName) {
+    $.ajax({
+        url: '/api/tag/' + tagId,
+        method: 'DELETE',
+        success: function() {
+            showAlert('"' + tagName + '" 태그가 삭제되었습니다.', 'success');
+            // 확실히 함수가 존재하는지 체크
+            if (typeof loadAllTags === 'function') {
+                loadAllTags();
+            } else {
+                console.error('loadAllTags 함수를 찾을 수 없습니다');
+                // 페이지 새로고침으로 대체
+                location.reload();
+            }
+        },
+        error: function(xhr) {
+            if (xhr.status === 403) {
+                showAlert('태그 삭제 권한이 없습니다.', 'error');
+            } else {
+                showAlert('태그 삭제 중 오류가 발생했습니다.', 'error');
+            }
+        }
+    });
+}
+
+// 모달 닫기 이벤트
+$(document).ready(function() {
+    $('#cancelDelete, .modal-close').on('click', function() {
+        $('#deleteModal').hide();
+    });
+
+    // 모달 외부 클릭시 닫기
+    $('#deleteModal').on('click', function(e) {
+        if (e.target === this) {
+            $(this).hide();
+        }
+    });
+});

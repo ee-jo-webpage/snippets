@@ -1,6 +1,7 @@
 package kr.or.kosa.snippets.tag.controller;
 
 import jakarta.servlet.http.HttpSession;
+import kr.or.kosa.snippets.basic.model.Snippets;
 import kr.or.kosa.snippets.basic.service.SnippetService;
 import kr.or.kosa.snippets.tag.model.TagItem;
 import kr.or.kosa.snippets.tag.service.TagService;
@@ -201,5 +202,23 @@ public class TagController {
             response.put("error", "태그 삭제에 실패했습니다. 권한을 확인해주세요");
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
+    }
+
+    // 특정 태그의 스니펫 조회
+    @GetMapping("/{tagId}/snippets")
+    public ResponseEntity<List<Snippets>> getSnippetsByTagId(@PathVariable Long tagId,
+                                                             @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long userId = requireLogin(userDetails);
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        // 태그 소유권 확인
+        if (!tagService.isTagOwnedByUser(tagId, userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        List<Snippets> snippets = tagService.getSnippetsByTagId(tagId);
+        return ResponseEntity.ok(snippets != null ? snippets : new ArrayList<>());
     }
 }

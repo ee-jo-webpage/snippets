@@ -55,7 +55,7 @@
     <!-- 전체 태그 목록 영역 -->
     <div class="card">
         <div class="card-title">전체 태그 목록</div>
-        <div class="help-message">💡 태그를 클릭하면 해당 태그를 가진 스니펫 목록을 볼 수 있습니다.</div>
+        <div class="help-message">💡 태그를 클릭하면 해당 태그를 가진 스니펫 목록을 볼 수 있습니다. ❌를 클릭하면 태그를 삭제할 수 있습니다.</div>
         <div id="allTags" class="tag-list">
             <div class="loading-text">태그를 불러오는 중...</div>
         </div>
@@ -65,6 +65,24 @@
     <div id="snippetsSection" class="card snippets-section">
         <div class="card-title" id="snippetsTitle">📝 스니펫 목록</div>
         <div id="snippetsGrid" class="snippets-grid"></div>
+    </div>
+</div>
+
+<!-- 태그 삭제 확인 모달 -->
+<div id="deleteModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>태그 삭제 확인</h3>
+            <span class="modal-close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p><strong>"<span id="deleteTagName"></span>"</strong> 태그를 삭제하시겠습니까?</p>
+            <p class="warning-text">⚠️ 이 태그와 연결된 모든 스니펫에서도 태그가 제거됩니다.</p>
+        </div>
+        <div class="modal-footer">
+            <button id="confirmDelete" class="btn btn-danger">삭제</button>
+            <button id="cancelDelete" class="btn btn-secondary">취소</button>
+        </div>
     </div>
 </div>
 

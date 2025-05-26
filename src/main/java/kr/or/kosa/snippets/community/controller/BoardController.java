@@ -51,6 +51,25 @@ public class BoardController {
         }
     }
 
+
+    // 전체 게시글 목록
+    @GetMapping("/posts/all")
+    public String allPostsList(Model model) {
+        try {
+            List<Post> allPosts = boardService.getAllPosts();
+            List<BoardCategory> categories = boardService.getAllCategories();
+
+            model.addAttribute("posts", allPosts);
+            model.addAttribute("categories", categories);
+            model.addAttribute("pageTitle", "전체 게시글");
+            model.addAttribute("showAllPosts", true);
+
+            return "community/allPostsList";
+        } catch (Exception e) {
+            model.addAttribute("error", "게시글 목록을 불러올 수 없습니다.");
+            return "redirect:/community";
+        }
+    }
     // 게시글 목록
     @GetMapping("/category/{categoryId}")
     public String postList(@PathVariable Integer categoryId, Model model) {

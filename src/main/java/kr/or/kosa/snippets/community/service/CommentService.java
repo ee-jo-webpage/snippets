@@ -65,7 +65,7 @@ public class CommentService {
         if (comment.getParentId() == null) {
             // 게시글에 대한 댓글
             Post post = postMapper.getPostById(comment.getPostId());
-            notificationService.createCommentNotification(comment, comment.getPostId(), post.getUserId().longValue());
+            notificationService.createCommentNotification(comment, comment.getPostId(), post.getUserId()); // .longValue() 제거
         } else {
             // 댓글에 대한 답글
             Comment parentComment = commentMapper.getCommentById(comment.getParentId());

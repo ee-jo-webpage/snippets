@@ -25,10 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Controller
 @RequestMapping("/community")
@@ -92,23 +89,54 @@ public class BoardController {
                              @AuthenticationPrincipal CustomUserDetails userDetails,
                              Model model) {
         try {
+            System.out.println("=== 게시글 상세 조회 시작 ===");
+            System.out.println("요청된 게시글 ID: " + postId);
+
             Post post = boardService.getPostById(postId);
             if (post == null) {
+                System.out.println("❌ 게시글을 찾을 수 없음: " + postId);
                 return "redirect:/community";
             }
 
-            // CustomUserDetails에서 사용자 ID 추출
-            Long currentUserId = getCurrentUserId(userDetails);
-            List<PostAttachment> attachments = boardService.getAttachmentsByPostId(postId);
+            System.out.println("✅ 게시글 조회 성공: " + post.getTitle());
 
+            // 현재 사용자 정보
+            Long currentUserId = null;
+            boolean isLoggedIn = false;
+            String currentUserNickname = null;
+
+            if (userDetails != null) {
+                currentUserId = userDetails.getUserId();
+                isLoggedIn = true;
+                currentUserNickname = userDetails.getNickname();
+                System.out.println("현재 사용자 ID: " + currentUserId);
+            } else {
+                System.out.println("비로그인 사용자");
+            }
+
+            // 첨부파일 조회 (안전하게 처리)
+            List<PostAttachment> attachments = null;
+            try {
+                attachments = boardService.getAttachmentsByPostId(postId);
+                System.out.println("첨부파일 개수: " + (attachments != null ? attachments.size() : 0));
+            } catch (Exception e) {
+                System.out.println("첨부파일 조회 실패: " + e.getMessage());
+                attachments = new ArrayList<>(); // 빈 리스트로 초기화
+            }
+
+            // 모델에 데이터 추가
             model.addAttribute("post", post);
-            model.addAttribute("attachments", attachments);
+            model.addAttribute("attachments", attachments != null ? attachments : new ArrayList<>());
             model.addAttribute("currentUserId", currentUserId);
-            model.addAttribute("isLoggedIn", userDetails != null);
-            model.addAttribute("currentUserNickname", userDetails != null ? userDetails.getNickname() : null);
+            model.addAttribute("isLoggedIn", isLoggedIn);
+            model.addAttribute("currentUserNickname", currentUserNickname);
 
+            System.out.println("=== 모델 데이터 설정 완료 ===");
             return "community/postDetail";
+
         } catch (Exception e) {
+            System.out.println("❌ 게시글 상세 조회 오류: " + e.getMessage());
+            e.printStackTrace();
             model.addAttribute("error", "게시글을 불러올 수 없습니다.");
             return "redirect:/community";
         }

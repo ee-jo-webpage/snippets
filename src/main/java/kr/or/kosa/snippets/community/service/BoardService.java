@@ -135,14 +135,21 @@ public class BoardService {
 
         PostAttachment attachment = new PostAttachment();
         attachment.setPostId(postId);
+        // setFilename → setFileName으로 수정
         attachment.setFileName(originalFilename);
         attachment.setFilePath("/uploads/board/" + storedFilename);
         attachment.setFileType(file.getContentType());
         attachment.setFileSize(file.getSize());
 
-        attachmentMapper.insertAttachment(attachment);
+        System.out.println("첨부파일 저장 시도:");
+        System.out.println("- 파일명: " + attachment.getFileName());
+        System.out.println("- 경로: " + attachment.getFilePath());
+        System.out.println("- 크기: " + attachment.getFileSize());
 
+        attachmentMapper.insertAttachment(attachment);
+        System.out.println("첨부파일 저장 완료!");
     }
+
 
     //검색 기능
     public List<Post> searchPosts(String keyword, String searchType, Integer categoryId, LocalDateTime startDate, LocalDateTime endDate) {

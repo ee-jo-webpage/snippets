@@ -12,10 +12,22 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Summernote -->
+    <!-- 기본 Summernote -->
     <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/lang/summernote-ko-KR.min.js"></script>
+
+    <!-- 추가 플러그인들 (선택사항) -->
+    <!-- 이모지 플러그인 -->
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/plugin/summernote-ext-emoji.js"></script>
+
+    <!-- 특수문자 플러그인 -->
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/plugin/summernote-ext-specialchars.js"></script>
+
+    <!-- 수식 입력 플러그인 (MathJax) -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -33,17 +45,222 @@
             border: none;
         }
 
-        /* Summernote 에디터 스타일 수정 */
-        .note-editor .dropdown-toggle::after {
-            display: none;
-        }
 
-        .note-editor.note-frame {
-            border-color: #dee2e6;
-        }
+        /* 기존 Summernote 스타일들... */
+         .note-editor {
+             border: 1px solid #dee2e6;
+         }
 
-        .note-editor .note-toolbar {
+        .note-toolbar {
             background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            padding: 0.5rem;
+        }
+
+        /* 드롭다운 스타일들... (기존과 동일) */
+        .note-dropdown-menu {
+            display: none;
+            position: absolute;
+            z-index: 1050;
+            background-color: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            padding: 0.5rem 0;
+            margin: 0.125rem 0 0;
+            max-height: 300px;
+            overflow-y: auto;
+            min-width: 120px;
+        }
+
+        .note-dropdown-menu.show {
+            display: block;
+        }
+
+        /* 🔥 모달 다이얼로그 닫기 버튼 수정 */
+        .note-modal {
+            z-index: 2050 !important;
+            position: fixed !important;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .note-modal-content {
+            background-color: #fff;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            margin: 2rem;
+        }
+
+        /* 모달 헤더 */
+        .note-modal-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #f8f9fa;
+            border-radius: 0.5rem 0.5rem 0 0;
+        }
+
+        .note-modal-title {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: #212529;
+        }
+
+        /* 🔥 닫기 버튼 스타일 개선 */
+        .note-modal-header .close,
+        .note-modal-header .btn-close,
+        .note-modal-header button[data-dismiss="modal"],
+        .note-modal-header button[aria-label="Close"] {
+            background: transparent !important;
+            border: none !important;
+            font-size: 1.5rem !important;
+            font-weight: bold !important;
+            color: #6c757d !important;
+            cursor: pointer !important;
+            padding: 0.25rem !important;
+            margin: 0 !important;
+            width: 2rem !important;
+            height: 2rem !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border-radius: 0.25rem !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .note-modal-header .close:hover,
+        .note-modal-header .btn-close:hover,
+        .note-modal-header button[data-dismiss="modal"]:hover,
+        .note-modal-header button[aria-label="Close"]:hover {
+            background-color: #e9ecef !important;
+            color: #212529 !important;
+            transform: scale(1.1) !important;
+        }
+
+        /* 닫기 버튼 내용 (×) */
+        .note-modal-header .close::before,
+        .note-modal-header button[data-dismiss="modal"]::before,
+        .note-modal-header button[aria-label="Close"]::before {
+            content: "×" !important;
+            font-size: 1.5rem !important;
+            line-height: 1 !important;
+        }
+
+        /* 모달 바디 */
+        .note-modal-body {
+            padding: 1.5rem;
+        }
+
+        /* 모달 푸터 */
+        .note-modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            background-color: #f8f9fa;
+            border-radius: 0 0 0.5rem 0.5rem;
+        }
+
+        /* 링크 다이얼로그 특별 처리 */
+        .note-link-dialog .note-modal-content,
+        .note-image-dialog .note-modal-content,
+        .note-video-dialog .note-modal-content {
+            min-width: 400px;
+        }
+
+        /* 폼 컨트롤 스타일 */
+        .note-modal .form-control {
+            display: block;
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            font-size: 1rem;
+            font-weight: 400;
+            line-height: 1.5;
+            color: #212529;
+            background-color: #fff;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+
+        .note-modal .form-control:focus {
+            color: #212529;
+            background-color: #fff;
+            border-color: #86b7fe;
+            outline: 0;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+
+        /* 모달 버튼 스타일 */
+        .note-modal .btn {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            font-weight: 400;
+            line-height: 1.5;
+            color: #212529;
+            text-align: center;
+            text-decoration: none;
+            vertical-align: middle;
+            cursor: pointer;
+            user-select: none;
+            background-color: transparent;
+            border: 1px solid transparent;
+            border-radius: 0.25rem;
+            transition: all 0.15s ease-in-out;
+        }
+
+        .note-modal .btn-primary {
+            color: #fff;
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+
+        .note-modal .btn-primary:hover {
+            background-color: #0b5ed7;
+            border-color: #0a58ca;
+        }
+
+        .note-modal .btn-secondary {
+            color: #fff;
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+
+        .note-modal .btn-secondary:hover {
+            background-color: #5c636a;
+            border-color: #565e64;
+        }
+
+        /* 반응형 모달 */
+        @media (max-width: 576px) {
+            .note-modal-content {
+                margin: 1rem;
+                width: calc(100% - 2rem);
+                min-width: unset;
+            }
+
+            .note-modal-header,
+            .note-modal-body,
+            .note-modal-footer {
+                padding: 1rem;
+            }
         }
 
         /* 폼 스타일 */
@@ -140,6 +357,8 @@
             border-color: #0d6efd;
             background-color: #e3f2fd;
         }
+
+
     </style>
 </head>
 <body>
@@ -359,8 +578,22 @@
 </div>
 
 <script th:inline="javascript">
+    // 자동저장 관련 변수
+    let autoSaveInterval;
+    let autoSaveTimeout;
+    let lastSavedContent = '';
+    let hasUnsavedChanges = false;
+
+    // beforeunload 핸들러를 별도 함수로 분리
+    function beforeUnloadHandler(e) {
+        if (hasUnsavedChanges) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    }
+
     $(document).ready(function() {
-        // Summernote 에디터 초기화
+        // 🔥 드롭다운 문제 해결된 Summernote 설정
         $('#summernote').summernote({
             height: 400,
             minHeight: null,
@@ -368,25 +601,310 @@
             focus: true,
             lang: 'ko-KR',
             placeholder: '내용을 입력하세요',
+
+            // Bootstrap 5 호환 toolbar 설정
             toolbar: [
                 ['style', ['style']],
-                ['font', ['bold', 'underline', 'clear']],
-                ['color', ['color']],
+                ['font', ['bold', 'italic', 'underline', 'strikethrough', 'clear']],
+                ['fontname', ['fontname']],
+                ['fontsize', ['fontsize']],
+                ['color', ['forecolor', 'backcolor']],
                 ['para', ['ul', 'ol', 'paragraph']],
                 ['table', ['table']],
                 ['insert', ['link', 'picture', 'video']],
                 ['view', ['fullscreen', 'codeview', 'help']]
             ],
+
+            // 폰트 설정
+            fontNames: [
+                'Arial', 'Arial Black', 'Comic Sans MS', 'Courier New',
+                'Helvetica Neue', 'Helvetica', 'Impact', 'Lucida Grande',
+                'Tahoma', 'Times New Roman', 'Verdana',
+                '나눔고딕', '나눔명조', '맑은 고딕', '돋움', '굴림', '바탕', '궁서'
+            ],
+
+            // 폰트 크기 설정
+            fontSizes: ['8', '9', '10', '11', '12', '14', '16', '18', '20', '22', '24', '28', '30', '36', '48', '64', '72'],
+
+            // 색상 팔레트 설정
+            colors: [
+                ['#000000', '#424242', '#636363', '#9C9C94', '#CEC6CE', '#EFEFEF', '#F7F3F7', '#FFFFFF'],
+                ['#FF0000', '#FF9C00', '#FFFF00', '#00FF00', '#00FFFF', '#0000FF', '#9C00FF', '#FF00FF'],
+                ['#F7C6CE', '#FFE7CE', '#FFEFC6', '#D6EFD6', '#CEDEE7', '#CEE7F7', '#D6D6E7', '#E7D6DE'],
+                ['#E79C9C', '#FFC69C', '#FFE79C', '#B5D6A5', '#A5C6CE', '#9CC6EF', '#B5A5D6', '#D6A5BD'],
+                ['#E76363', '#F7AD6B', '#FFD663', '#94BD7B', '#73A5AD', '#6BADDE', '#8C7BC6', '#C67BA5'],
+                ['#CE0000', '#E79439', '#EFC631', '#6BA54A', '#4A7B8C', '#3984C6', '#634AA5', '#A54A7B'],
+                ['#9C0000', '#B56308', '#BD9400', '#397B21', '#104A5A', '#085294', '#311873', '#731842'],
+                ['#630000', '#7B3900', '#846300', '#295218', '#083139', '#003163', '#21104A', '#4A1031']
+            ],
+
+            // 스타일 태그 설정
+            styleTags: [
+                'p',
+                { title: '제목 1', tag: 'h1', className: '', value: 'h1' },
+                { title: '제목 2', tag: 'h2', className: '', value: 'h2' },
+                { title: '제목 3', tag: 'h3', className: '', value: 'h3' },
+                { title: '제목 4', tag: 'h4', className: '', value: 'h4' },
+                { title: '제목 5', tag: 'h5', className: '', value: 'h5' },
+                { title: '제목 6', tag: 'h6', className: '', value: 'h6' },
+                { title: '인용문', tag: 'blockquote', className: 'blockquote', value: 'blockquote' },
+                { title: '코드', tag: 'pre', className: '', value: 'pre' }
+            ],
+
+            // 콜백 함수들
             callbacks: {
                 onImageUpload: function(files) {
                     uploadSummernoteImage(files[0], this);
                 },
                 onChange: function(contents) {
-                    // 내용이 변경될 때마다 자동저장 타이머 재설정
-                    resetAutoSaveTimer();
+                    // 자동저장 타이머 재설정
+                    if (typeof resetAutoSaveTimer === 'function') {
+                        resetAutoSaveTimer();
+                    }
+                },
+                onInit: function() {
+                    console.log('Summernote 초기화 완료');
+
+                    // 🔥 드롭다운 초기 상태 설정 + 모달 다이얼로그 닫기 기능 추가
+                    setTimeout(function() {
+                        setupDropdownBehavior();
+                        setupModalDialogs(); // 🔥 이 한 줄만 추가!
+                    }, 300);
                 }
-            }
+            },
+
+            // 테이블 설정
+            table: {
+                className: 'table table-bordered'
+            },
+
+            // 링크 설정
+            link: {
+                rel: 'nofollow',
+                target: '_blank'
+            },
+
+            // 이미지 설정
+            image: {
+                resizeEnabled: true,
+                disableResizeEditor: false
+            },
+
+            // 추가 설정들
+            disableDragAndDrop: false,
+            shortcuts: true,
+            tabsize: 2,
+            lineHeights: ['0.2', '0.3', '0.4', '0.5', '0.6', '0.8', '1.0', '1.2', '1.4', '1.5', '2.0', '3.0']
         });
+
+        // 🔥 개선된 드롭다운 동작 설정
+        function setupDropdownBehavior() {
+            console.log('드롭다운 동작 설정 시작');
+
+            // 기본적으로 모든 드롭다운 숨기기
+            $('.note-dropdown-menu').each(function() {
+                $(this).removeClass('show').hide();
+            });
+
+            // 드롭다운이 있는 버튼들만 처리 (기본 기능 버튼은 건드리지 않음)
+            $('.note-fontname .note-btn, .note-fontsize .note-btn, .note-color .note-btn, .note-para .note-btn, .note-table .note-btn, .note-style .note-btn').off('click.custom').on('click.custom', function(e) {
+                const $this = $(this);
+                const $dropdown = $this.siblings('.note-dropdown-menu').first();
+
+                if ($dropdown.length > 0) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    console.log('드롭다운 버튼 클릭:', $this.attr('class'));
+
+                    // 다른 모든 드롭다운 숨기기
+                    $('.note-dropdown-menu').not($dropdown).removeClass('show').hide();
+
+                    // 현재 드롭다운 토글
+                    if ($dropdown.is(':visible')) {
+                        $dropdown.removeClass('show').hide();
+                    } else {
+                        $dropdown.addClass('show').show();
+                    }
+                }
+            });
+
+            // 드롭다운 메뉴 아이템 클릭 시 처리
+            $('.note-dropdown-menu').off('click.custom').on('click.custom', function(e) {
+                const $target = $(e.target);
+
+                // 실제 드롭다운 아이템을 클릭한 경우
+                if ($target.hasClass('note-dropdown-item') || $target.closest('.note-dropdown-item').length > 0) {
+                    console.log('드롭다운 아이템 선택됨');
+
+                    // 선택 후 드롭다운 닫기
+                    setTimeout(() => {
+                        $(this).removeClass('show').hide();
+                    }, 100);
+                }
+            });
+
+            // 문서 클릭 시 드롭다운 닫기 (에디터 영역 제외)
+            $(document).off('click.summernote').on('click.summernote', function(e) {
+                if (!$(e.target).closest('.note-editor').length) {
+                    $('.note-dropdown-menu').removeClass('show').hide();
+                }
+            });
+
+            // 색상 선택 시 특별 처리
+            $('.note-color-palette').off('click.custom').on('click.custom', '.note-color-btn', function(e) {
+                console.log('색상 선택됨');
+                setTimeout(() => {
+                    $('.note-dropdown-menu').removeClass('show').hide();
+                }, 150);
+            });
+        }
+
+// 🔥 수정된 모달 다이얼로그 설정 함수 (자동으로 열리지 않게)
+        function setupModalDialogs() {
+            console.log('모달 다이얼로그 설정 시작');
+
+            // 기존에 열려있는 모든 모달 강제로 숨기기
+            $('.note-modal, [class*="note-"][class*="-dialog"]').each(function() {
+                $(this).hide().remove();
+            });
+            $('.modal-backdrop, .note-modal-backdrop').remove();
+
+            // 모달이 실제로 생성될 때만 처리하도록 이벤트 위임 사용
+            $(document).off('click.summernote-modal').on('click.summernote-modal', '.note-btn', function(e) {
+                const $btn = $(this);
+
+                // 링크, 이미지, 동영상 버튼인지 확인
+                if ($btn.hasClass('note-btn-link') ||
+                    $btn.hasClass('note-btn-picture') ||
+                    $btn.hasClass('note-btn-video') ||
+                    $btn.closest('.note-insert').length > 0) {
+
+                    console.log('모달 버튼 클릭됨:', $btn.attr('class'));
+
+                    // 잠시 후 생성될 모달에 대해 닫기 기능 설정
+                    setTimeout(function() {
+                        setupModalCloseHandlers();
+                    }, 100);
+                }
+            });
+
+            // MutationObserver를 사용해서 새로 생성되는 모달만 감지
+            if (window.MutationObserver) {
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        mutation.addedNodes.forEach(function(node) {
+                            if (node.nodeType === 1) { // Element 노드만
+                                const $node = $(node);
+
+                                // 새로 추가된 노드가 모달이거나 모달을 포함하는 경우
+                                if ($node.hasClass('note-modal') ||
+                                    $node.find('.note-modal').length > 0 ||
+                                    $node.attr('class') && $node.attr('class').includes('note-') &&
+                                    $node.attr('class').includes('-dialog')) {
+
+                                    console.log('새로운 모달이 생성됨');
+                                    setTimeout(function() {
+                                        setupModalCloseHandlers();
+                                    }, 50);
+                                }
+                            }
+                        });
+                    });
+                });
+
+                // body의 변화를 관찰
+                observer.observe(document.body, {
+                    childList: true,
+                    subtree: true
+                });
+            }
+        }
+
+// 모달 닫기 핸들러 설정 (실제로 열린 모달에만 적용)
+        function setupModalCloseHandlers() {
+            $('.note-modal:visible, [class*="note-"][class*="-dialog"]:visible').each(function() {
+                const $modal = $(this);
+
+                // 이미 처리된 모달은 건너뛰기
+                if ($modal.data('close-handler-set')) return;
+                $modal.data('close-handler-set', true);
+
+                console.log('보이는 모달에 닫기 핸들러 설정:', $modal.attr('class'));
+
+                // 닫기 버튼들 찾기 및 이벤트 설정
+                const closeSelectors = [
+                    '.close',
+                    '.btn-close',
+                    'button[data-dismiss="modal"]',
+                    'button[aria-label="Close"]',
+                    '.note-modal-header button:last-child',  // 헤더의 마지막 버튼 (보통 닫기 버튼)
+                    'button[title="Close"]'
+                ];
+
+                closeSelectors.forEach(function(selector) {
+                    $modal.find(selector).off('click.modal-close').on('click.modal-close', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('닫기 버튼 클릭됨:', selector);
+                        closeModal($modal);
+                    });
+                });
+
+                // ESC 키로 닫기
+                $modal.off('keydown.modal-close').on('keydown.modal-close', function(e) {
+                    if (e.key === 'Escape' || e.keyCode === 27) {
+                        e.preventDefault();
+                        console.log('ESC 키로 모달 닫기');
+                        closeModal($modal);
+                    }
+                });
+
+                // 모달 배경 클릭으로 닫기
+                $modal.off('click.modal-close').on('click.modal-close', function(e) {
+                    if (e.target === this || $(e.target).hasClass('note-modal')) {
+                        console.log('배경 클릭으로 모달 닫기');
+                        closeModal($modal);
+                    }
+                });
+
+                // 모달에 포커스 설정 (ESC 키 동작을 위해)
+                $modal.attr('tabindex', '-1').focus();
+            });
+        }
+
+// 🔥 개선된 모달 닫기 함수
+        function closeModal($modal) {
+            console.log('모달 닫기 실행');
+
+            try {
+                // Summernote 모달 닫기
+                if ($modal.hasClass('note-modal') || $modal.attr('class').includes('note-')) {
+                    $modal.fadeOut(150, function() {
+                        $modal.remove();
+                    });
+                } else {
+                    // 일반 모달 닫기
+                    $modal.hide();
+                }
+
+                // 모달 배경 제거
+                $('.modal-backdrop, .note-modal-backdrop').remove();
+
+                // body 스크롤 복원
+                $('body').removeClass('modal-open').css('overflow', '');
+
+                console.log('모달 닫기 완료');
+
+            } catch (error) {
+                console.log('모달 닫기 오류:', error);
+                // 오류 발생 시 강제 제거
+                $modal.remove();
+                $('.modal-backdrop, .note-modal-backdrop').remove();
+                $('body').removeClass('modal-open').css('overflow', '');
+            }
+        }
+
 
         // 파일 드래그 앤 드롭 설정
         setupFileDragDrop();
@@ -406,13 +924,16 @@
 
         // 키보드 단축키 설정
         setupKeyboardShortcuts();
-    });
 
-    // 자동저장 관련 변수
-    let autoSaveInterval;
-    let autoSaveTimeout;
-    let lastSavedContent = '';
-    let hasUnsavedChanges = false;
+        // 제목이나 내용 변경 시 hasUnsavedChanges 설정
+        $('#title').on('input', function() {
+            hasUnsavedChanges = true;
+        });
+
+        $('#categoryId').on('change', function() {
+            hasUnsavedChanges = true;
+        });
+    });
 
     // 자동저장 시작
     function startAutoSave() {
@@ -533,7 +1054,7 @@
         showPreview();
     });
 
-    // 임시저장 목록 불러오기
+    // 나머지 함수들 (기존과 동일)
     function loadDraftList() {
         $.ajax({
             url: '/api/community/draft/list',
@@ -547,43 +1068,39 @@
         });
     }
 
-    // 임시저장 목록 렌더링
     function renderDraftList(drafts) {
         let html = '';
-
         if (drafts.length === 0) {
             html = '<div class="text-center py-4 text-muted">임시저장된 글이 없습니다.</div>';
         } else {
             drafts.forEach(function(draft) {
                 html += `
-                        <div class="draft-item">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div class="flex-grow-1">
-                                    <h6 class="mb-2">${draft.title || '(제목 없음)'}</h6>
-                                    <p class="text-muted mb-2">${truncateHtml(draft.content, 150)}</p>
-                                    <div class="draft-meta">
-                                        <i class="fas fa-clock me-1"></i>
-                                        최종 수정: ${formatDate(draft.updatedAt)}
-                                    </div>
-                                </div>
-                                <div class="ms-3">
-                                    <button class="btn btn-sm btn-primary me-2" onclick="loadDraft(${draft.draftId})">
-                                        <i class="fas fa-edit me-1"></i>불러오기
-                                    </button>
-                                    <button class="btn btn-sm btn-danger" onclick="deleteDraft(${draft.draftId})">
-                                        <i class="fas fa-trash me-1"></i>삭제
-                                    </button>
+                    <div class="draft-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-2">${draft.title || '(제목 없음)'}</h6>
+                                <p class="text-muted mb-2">${truncateHtml(draft.content, 150)}</p>
+                                <div class="draft-meta">
+                                    <i class="fas fa-clock me-1"></i>
+                                    최종 수정: ${formatDate(draft.updatedAt)}
                                 </div>
                             </div>
+                            <div class="ms-3">
+                                <button class="btn btn-sm btn-primary me-2" onclick="loadDraft(${draft.draftId})">
+                                    <i class="fas fa-edit me-1"></i>불러오기
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteDraft(${draft.draftId})">
+                                    <i class="fas fa-trash me-1"></i>삭제
+                                </button>
+                            </div>
                         </div>
-                    `;
+                    </div>
+                `;
             });
         }
-
         $('#draftListContainer').html(html);
     }
 
-    // 임시저장 불러오기
     function loadDraft(draftId) {
         $.ajax({
             url: `/api/community/draft/${draftId}`,
@@ -591,15 +1108,12 @@
             success: function(response) {
                 if (response.success) {
                     const draft = response.draft;
-
                     $('#draftId').val(draft.draftId);
                     $('#title').val(draft.title);
                     $('#categoryId').val(draft.categoryId);
                     $('#summernote').summernote('code', draft.content);
-
                     lastSavedContent = draft.content;
                     hasUnsavedChanges = false;
-
                     $('#draftListModal').modal('hide');
                     showSuccessMessage('임시저장된 글을 불러왔습니다.');
                 }
@@ -607,7 +1121,6 @@
         });
     }
 
-    // 임시저장 삭제
     function deleteDraft(draftId) {
         if (confirm('정말 삭제하시겠습니까?')) {
             $.ajax({
@@ -623,7 +1136,6 @@
         }
     }
 
-    // 미리보기 표시
     function showPreview() {
         const title = $('#title').val().trim();
         const content = $('#summernote').summernote('code');
@@ -635,84 +1147,74 @@
         }
 
         const previewHtml = `
-                <div class="card">
-                    <div class="card-header bg-light">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="badge bg-secondary me-2">${categoryName}</span>
-                                <h2 class="d-inline">${title || '(제목 없음)'}</h2>
-                            </div>
-                        </div>
-                        <div class="text-muted small mt-2">
-                            <i class="fas fa-user me-1"></i>
-                            작성자 |
-                            <i class="fas fa-calendar me-1"></i>
-                            ${new Date().toLocaleString()}
+            <div class="card">
+                <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-secondary me-2">${categoryName}</span>
+                            <h2 class="d-inline">${title || '(제목 없음)'}</h2>
                         </div>
                     </div>
-                    <div class="card-body">
-                        <div class="post-content" style="min-height: 300px; line-height: 1.7;">
-                            ${content}
-                        </div>
+                    <div class="text-muted small mt-2">
+                        <i class="fas fa-user me-1"></i>
+                        작성자 |
+                        <i class="fas fa-calendar me-1"></i>
+                        ${new Date().toLocaleString()}
                     </div>
                 </div>
-            `;
-
+                <div class="card-body">
+                    <div class="post-content" style="min-height: 300px; line-height: 1.7;">
+                        ${content}
+                    </div>
+                </div>
+            </div>
+        `;
         $('#previewContent').html(previewHtml);
         $('#previewModal').modal('show');
     }
 
-    // 파일 드래그 앤 드롭 설정
     function setupFileDragDrop() {
         const uploadArea = $('#fileUploadArea');
-
         uploadArea.on('dragover', function(e) {
             e.preventDefault();
             $(this).addClass('dragover');
         });
-
         uploadArea.on('dragleave', function(e) {
             e.preventDefault();
             $(this).removeClass('dragover');
         });
-
         uploadArea.on('drop', function(e) {
             e.preventDefault();
             $(this).removeClass('dragover');
-
             const files = e.originalEvent.dataTransfer.files;
             $('#files')[0].files = files;
             updateFileList();
         });
-
         $('#files').change(function() {
             updateFileList();
         });
     }
 
-    // 파일 목록 업데이트
     function updateFileList() {
         const files = $('#files')[0].files;
         let html = '';
-
         if (files.length > 0) {
             html += '<div class="mt-2"><strong>선택된 파일:</strong></div>';
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
                 const size = (file.size / 1024).toFixed(1);
                 html += `
-                        <div class="d-flex justify-content-between align-items-center py-1">
-                            <span><i class="fas fa-file me-1"></i>${file.name}</span>
-                            <small class="text-muted">${size} KB</small>
-                        </div>
-                    `;
+                    <div class="d-flex justify-content-between align-items-center py-1">
+                        <span><i class="fas fa-file me-1"></i>${file.name}</span>
+                        <small class="text-muted">${size} KB</small>
+                    </div>
+                `;
             }
         }
-
         $('#fileList').html(html);
     }
 
-    // Summernote 이미지 업로드
+    // 🔥 수정된 이미지 업로드 함수
     function uploadSummernoteImage(file, editor) {
         const formData = new FormData();
         formData.append('file', file);
@@ -724,7 +1226,11 @@
             contentType: false,
             processData: false,
             success: function(data) {
-                $(editor).summernote('insertImage', data.imageUrl);
+                if (data.imageUrl) {
+                    $(editor).summernote('insertImage', data.imageUrl);
+                } else {
+                    alert('이미지 업로드에 실패했습니다.');
+                }
             },
             error: function() {
                 alert('이미지 업로드에 실패했습니다.');
@@ -732,36 +1238,30 @@
         });
     }
 
-    // 최근 작성글 로드 (모의 데이터)
     function loadRecentPosts() {
         const mockPosts = [
             { title: "이전 작성글 1", date: "2024-01-15" },
             { title: "이전 작성글 2", date: "2024-01-14" },
             { title: "이전 작성글 3", date: "2024-01-13" }
         ];
-
         let html = '';
         mockPosts.forEach(post => {
             html += `
-                    <div class="mb-2 pb-2 border-bottom">
-                        <div class="fw-bold">${post.title}</div>
-                        <small class="text-muted">${post.date}</small>
-                    </div>
-                `;
+                <div class="mb-2 pb-2 border-bottom">
+                    <div class="fw-bold">${post.title}</div>
+                    <small class="text-muted">${post.date}</small>
+                </div>
+            `;
         });
-
         $('#recentPosts').html(html);
     }
 
-    // 키보드 단축키 설정
     function setupKeyboardShortcuts() {
         $(document).keydown(function(e) {
-            // Ctrl + Enter: 게시글 등록
             if (e.ctrlKey && e.which === 13) {
                 e.preventDefault();
                 $('#postForm').submit();
             }
-            // Ctrl + S: 임시저장
             if (e.ctrlKey && e.which === 83) {
                 e.preventDefault();
                 $('#saveAsDraft').click();
@@ -786,11 +1286,16 @@
             return;
         }
 
-        // 자동저장 중단
+        if (!confirm('게시글을 등록하시겠습니까?')) {
+            e.preventDefault();
+            return;
+        }
+
+        hasUnsavedChanges = false;
+        window.removeEventListener('beforeunload', beforeUnloadHandler);
         clearInterval(autoSaveInterval);
         clearTimeout(autoSaveTimeout);
 
-        // 임시저장 삭제
         const draftId = $('#draftId').val();
         if (draftId) {
             $.ajax({
@@ -801,10 +1306,11 @@
         }
     });
 
-    // 취소 확인
     function confirmCancel() {
         if (hasUnsavedChanges) {
             if (confirm('작성 중인 내용이 있습니다. 정말 나가시겠습니까?')) {
+                hasUnsavedChanges = false;
+                window.removeEventListener('beforeunload', beforeUnloadHandler);
                 window.location.href = '/community';
             }
         } else {
@@ -812,15 +1318,8 @@
         }
     }
 
-    // 페이지 떠날 때 확인
-    window.addEventListener('beforeunload', function(e) {
-        if (hasUnsavedChanges) {
-            e.preventDefault();
-            e.returnValue = '';
-        }
-    });
+    window.addEventListener('beforeunload', beforeUnloadHandler);
 
-    // 유틸리티 함수들
     function formatDate(dateString) {
         return new Date(dateString).toLocaleString();
     }
@@ -834,13 +1333,13 @@
 
     function showSuccessMessage(message) {
         const alertDiv = $(`
-                <div class="alert alert-success alert-dismissible fade show position-fixed"
-                     style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
-                    <i class="fas fa-check-circle me-2"></i>
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            `);
+            <div class="alert alert-success alert-dismissible fade show position-fixed"
+                 style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+                <i class="fas fa-check-circle me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `);
         $('body').append(alertDiv);
         setTimeout(() => alertDiv.alert('close'), 3000);
     }

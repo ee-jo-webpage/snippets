@@ -85,20 +85,3 @@ h1 {
 .button:hover {
     background-color: #0056b3;
 }
-
-.google-button {
-    background-color: white;
-    color: #444;
-    border: 1px solid #ccc;
-}
-
-.google-button:hover {
-    background-color: #f1f1f1;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.google-button img {
-    width: 18px;
-    height: 18px;
-    object-fit: contain;
-}

@@ -19,6 +19,6 @@ public class pageController {
             String nickname = userService.getNicknameByEmail(email);
             model.addAttribute("nickname", nickname);
         }
-        return "index";
+        return "main";
     }
 }

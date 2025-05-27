@@ -113,3 +113,44 @@ button:hover {
     cursor: pointer;
     color: #888;
 }
+
+
+.button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+
+    font-size: 1rem;
+    padding: 0.75rem 1.5rem;
+    text-decoration: none;
+
+    box-sizing: border-box;
+    transition: background-color 0.3s ease;
+}
+
+.button:hover {
+    background-color: #0056b3;
+}
+.google-button {
+    width: 100%;
+    background-color: white;
+    color: #444;
+    border: 1px solid #ccc;
+}
+
+.google-button:hover {
+    background-color: #f1f1f1;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.google-button img {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+}

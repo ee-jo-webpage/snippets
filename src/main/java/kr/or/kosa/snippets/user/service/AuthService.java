@@ -9,13 +9,25 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-
+/**
+ * 사용자 인증 관련 서비스
+ * - 회원가입
+ * - 이메일 인증 코드 전송 및 확인
+ */
 @Service
 @RequiredArgsConstructor
 public class AuthService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final MailService mailService;
+
+    /**
+     * 회원가입 처리
+     * - 이메일 중복 / 탈퇴 / 미인증 상태 확인
+     * - 비밀번호 확인 일치 여부 검사
+     * - DB에 유저 등록 (enabled=false)
+     * - 이메일 인증 코드 생성 및 발송
+     */
     @Transactional
     public void register(UserDTO dto) {
         if (userMapper.existsByEmailAndDisabledAndDeleted(dto.getEmail())) {
@@ -49,7 +61,10 @@ public class AuthService {
         mailService.saveVerificationCode(user.getEmail(), code, 10);
         mailService.sendVerificationCode(user.getEmail(), code);
     }
-
+    /**
+     * 이메일 인증 코드 재전송
+     * - 이미 인증된 경우 예외
+     */
     @Transactional
     public void resendVerificationCode(String email) {
         Users user = userMapper.findByEmail(email);
@@ -61,7 +76,11 @@ public class AuthService {
         mailService.sendVerificationCode(email, code);
     }
 
-
+    /**
+     * 이메일 인증 코드 확인
+     * - 입력된 코드와 저장된 코드 비교
+     * - 성공 시 사용자 활성화 처리
+     */
     @Transactional
     public void verifyEmailCode(String email, String inputCode) {
         if (!mailService.verifyCode(email, inputCode)) {

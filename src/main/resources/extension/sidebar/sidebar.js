@@ -36,6 +36,7 @@ function renderHighlights(highlights, lastAddedId = null) {
     highlights.forEach((h) => {
         const card = document.createElement("div");
         card.className = "snippet-card";
+
         card.dataset.snippetId = h.snippetId;
         card.style.backgroundColor = colorMap[h.colorId] || "#FFFF88";
 
@@ -46,6 +47,13 @@ function renderHighlights(highlights, lastAddedId = null) {
         // ▶ 스니펫 내용 미리보기 or 썸네일
         const contentDiv = document.createElement("div");
         contentDiv.className = "snippet-content";
+
+        contentDiv.style.cursor = "pointer";
+        contentDiv.addEventListener("click", () => {
+            console.log("스니펫 클릭됨:", h.serverId); // 디버깅용
+            window.open(`http://localhost:8090/snippets/${h.serverId}`, "_blank");
+        });
+
 
         if (h.type === "IMG" && h.imageUrl) {
             // 이미지 스니펫일 경우 썸네일 이미지로 표시

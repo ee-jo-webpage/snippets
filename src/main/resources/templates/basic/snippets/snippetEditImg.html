@@ -8,62 +8,73 @@
   <h1>이미지 수정</h1>
   <form th:action="@{/snippets/edit/{snippetId}(snippetId=${snippet.snippetId})}" th:object="${snippet}" method="post" enctype="multipart/form-data">
     <table>
-       User ID - 읽기 전용 
-	  <tr>
-	      <th>User ID</th>
-	      <td><input type="text" th:value="${snippet.userId}" readonly="readonly" /></td>
-	  </tr>
-	  
-	  <tr>
-	      <th>Color ID</th>
-	      <td><input type="text" th:field="*{colorId}" /></td>
-	  </tr>
-	  <tr>
-	      <th>Source URL</th>
-	      <td><input type="text" th:value="${snippet.sourceUrl}" readonly="readonly" /></td>
-	  </tr>
-	  <tr>
-	      <th>Type</th>
-	      <td><input type="text" th:value="${snippet.type}" readonly="readonly" /></td>
-	  </tr>
-	  <tr>
-	      <th>Memo</th>
-	      <td><textarea th:field="*{memo}" rows="4"></textarea></td>
-	  </tr>
-	  <tr>
-	      <th>Created At</th>
-	      <td><input type="text" th:value="${snippet.createdAt}" readonly="readonly" /></td>
-	  </tr>
-	  <tr>
-	      <th>Updated At</th>
-	      <td><input type="text" th:value="${snippet.updatedAt}" readonly="readonly" /></td>
-	  </tr>
-	  <tr>
-	      <th>Like Count</th>
-	      <td><input type="number" th:value="${snippet.likeCount}" readonly="readonly" /></td>
-	  </tr>
-	  <tr>
-	      <th>Visibility</th>
-	      <td>
-	          <select th:field="*{visibility}">
-	              <option value="1" th:selected="${snippet.visibility == 1}">Visible</option>
-	              <option value="0" th:selected="${snippet.visibility == 0}">Hidden</option>
-	          </select>
-	      </td>
-	  </tr>
-	  <tr>
-	      <th>Img URL</th>
-	      <td><input type="text" th:value="${snippet.imageUrl}" readonly="readonly" /></td>
-	  </tr>
-	  <tr>
-	      <th>Alt Text</th>
-	      <td><input type="text" th:field="*{altText}" /></td>
-	  </tr>
-	  <tr>
-	      <th>Image File</th>
-	      <td><input type="file" th:field="*{imageFile}" name="imageFile" accept="image/*" /></td>
-	  </tr>
-	  
+      <!-- User ID - 읽기 전용 -->
+      <tr>
+          <th>User ID</th>
+          <td><input type="text" th:value="${snippet.userId}" readonly="readonly" /></td>
+      </tr>
+
+      <!-- Color 선택 - 드롭다운 -->
+      <tr>
+        <th>Color</th>
+        <td>
+          <select th:field="*{colorId}" required>
+            <option value="" disabled>-- 색상 선택 --</option>
+            <option th:each="color : ${colors}"
+                    th:value="${color.colorId}"
+                    th:text="${color.name}"
+                    th:style="'background-color:' + ${color.hexCode}">
+            </option>
+          </select>
+        </td>
+      </tr>
+
+      <tr>
+          <th>Source URL</th>
+          <td><input type="text" th:value="${snippet.sourceUrl}" readonly="readonly" /></td>
+      </tr>
+      <tr>
+          <th>Type</th>
+          <td><input type="text" th:value="${snippet.type}" readonly="readonly" /></td>
+      </tr>
+      <tr>
+          <th>Memo</th>
+          <td><textarea th:field="*{memo}" rows="4"></textarea></td>
+      </tr>
+      <tr>
+          <th>Created At</th>
+          <td><input type="text" th:value="${snippet.createdAt}" readonly="readonly" /></td>
+      </tr>
+      <tr>
+          <th>Updated At</th>
+          <td><input type="text" th:value="${snippet.updatedAt}" readonly="readonly" /></td>
+      </tr>
+      <tr>
+          <th>Like Count</th>
+          <td><input type="number" th:value="${snippet.likeCount}" readonly="readonly" /></td>
+      </tr>
+      <tr>
+          <th>Visibility</th>
+          <td>
+              <select th:field="*{visibility}">
+                  <option value="1" th:selected="${snippet.visibility == 1}">Visible</option>
+                  <option value="0" th:selected="${snippet.visibility == 0}">Hidden</option>
+              </select>
+          </td>
+      </tr>
+      <tr>
+          <th>Img URL</th>
+          <td><input type="text" th:value="${snippet.imageUrl}" readonly="readonly" /></td>
+      </tr>
+      <tr>
+          <th>Alt Text</th>
+          <td><input type="text" th:field="*{altText}" /></td>
+      </tr>
+      <tr>
+          <th>Image File</th>
+          <td><input type="file" th:field="*{imageFile}" name="imageFile" accept="image/*" /></td>
+      </tr>
+
     </table>
     <button type="submit">수정</button>
   </form>

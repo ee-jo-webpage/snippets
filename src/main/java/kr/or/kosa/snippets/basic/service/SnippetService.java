@@ -22,7 +22,7 @@ public class SnippetService {
         return snippetsMapper.getAllSnippets();
     }
     
-    
+    //userId로 상세조회
     public List<Snippets> getUserSnippets(Long userId) {
     	return snippetsMapper.getUserSnippets(userId);
     }

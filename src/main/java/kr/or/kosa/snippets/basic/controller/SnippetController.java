@@ -24,6 +24,8 @@ import kr.or.kosa.snippets.basic.model.SnippetTypeBasic;
 import kr.or.kosa.snippets.basic.model.Snippets;
 import kr.or.kosa.snippets.basic.service.S3Service;
 import kr.or.kosa.snippets.basic.service.SnippetService;
+import kr.or.kosa.snippets.color.model.Color;
+import kr.or.kosa.snippets.color.service.ColorService;
 import kr.or.kosa.snippets.user.service.CustomUserDetails;
 
 @Controller
@@ -32,12 +34,14 @@ public class SnippetController {
 
     private final SnippetService snippetService;
     private final S3Service s3Service;
+    private final ColorService colorService;
 
     public SnippetController(
             SnippetService snippetService,
-            S3Service s3Service) {
+            S3Service s3Service, ColorService colorService) {
         this.snippetService = snippetService;
         this.s3Service     = s3Service;
+		this.colorService = colorService;
     }
 
     @InitBinder
@@ -96,13 +100,13 @@ public class SnippetController {
 
     
     
-    @GetMapping("/{id}")
-    public String getById(@PathVariable("id") Long id, Model model) {
-        SnippetTypeBasic type = snippetService.getSnippetTypeById(id);
+    @GetMapping("/{snippetId}")
+    public String getById(@PathVariable("snippetId") Long snippetId, Model model) {
+        SnippetTypeBasic type = snippetService.getSnippetTypeById(snippetId);
         if (type == null) {
             return "error/404";
         }
-        Snippets snippet = snippetService.getSnippetsById(id, type);
+        Snippets snippet = snippetService.getSnippetsById(snippetId, type);
         if (snippet == null) {
             return "error/404";
         }
@@ -113,54 +117,79 @@ public class SnippetController {
     @GetMapping("/new")
     public String showAddForm(
             @RequestParam(value = "type", required = false) SnippetTypeBasic type,
-            Model model) {
+            Model model,
+            @AuthenticationPrincipal CustomUserDetails details) {
+
         model.addAttribute("snippet", new Snippets());
-        if (type == null) {
-            return "basic/snippets/snippetAddSelect";
+        // type 파라미터가 있으면 (CODE/TEXT/IMG 선택 후)
+        if (type != null) {
+            // ① 사용자 기본+커스텀 컬러 조회
+            Long userId = details.getUserId();
+            List<Color> colors = colorService.getAllAvailableColorsByUserId(userId);
+            model.addAttribute("colors", colors);
+            // ② 타입별 뷰로 이동
+            switch (type) {
+                case CODE: return "basic/snippets/snippetAddCode";
+                case TEXT: return "basic/snippets/snippetAddText";
+                case IMG:  return "basic/snippets/snippetAddImg";
+            }
         }
-        switch (type) {
-            case CODE: return "basic/snippets/snippetAddCode";
-            case TEXT: return "basic/snippets/snippetAddText";
-            case IMG:  return "basic/snippets/snippetAddImg";
-            default:   return "error/404";
-        }
+        // 처음엔 타입 선택 페이지
+        return "basic/snippets/snippetAddSelect";
     }
 
     @PostMapping("/new")
     public String addSnippet(
+            @AuthenticationPrincipal CustomUserDetails details,  // ① 로그인 정보 주입
             @ModelAttribute Snippets snippet,
             @RequestParam("type") String type,
             @RequestParam(value = "imageFile", required = false) MultipartFile imageFile
     ) throws IOException {
+        
+        // ② 로그인 체크 (만약 비로그인 허용 안 하면 생략 가능)
+        if (details == null || details.getUserId() == null) {
+            return "redirect:/login";
+        }
+        
+        // ③ 스니펫에 userId 세팅
+        snippet.setUserId(details.getUserId());
         snippet.setType(SnippetTypeBasic.valueOf(type));
+        
+        // ④ 이미지 파일 처리
         if (imageFile != null && !imageFile.isEmpty()) {
             String s3Url = s3Service.uploadFile(imageFile);
             snippet.setImageUrl(s3Url);
         }
+        
+        // ⑤ 삽입 호출 (이제 mapper에 #{userId}가 전달됩니다)
         snippetService.insertSnippets(snippet);
         return "redirect:/snippets";
     }
 
+
     @GetMapping("/edit/{snippetId}")
-    public String showEditForm(@PathVariable(value="snippetId") Long snippetId, Model model) {
+    public String showEditForm(
+            @PathVariable("snippetId") Long snippetId,
+            Model model,
+            @AuthenticationPrincipal CustomUserDetails details) {
+
         SnippetTypeBasic type = snippetService.getSnippetTypeById(snippetId);
-        if (type == null) {
-            return "error/404";
-        }
         Snippets snippet = snippetService.getSnippetsById(snippetId, type);
-        if (snippet == null) {
-            return "error/404";
-        }
         model.addAttribute("snippet", snippet);
-        if (SnippetTypeBasic.CODE.equals(type)) {
+
+        Long userId = details.getUserId();
+        List<Color> colors = colorService.getAllAvailableColorsByUserId(userId);
+        model.addAttribute("colors", colors);
+
+        if (type == SnippetTypeBasic.CODE) {
             return "basic/snippets/snippetEditCode";
-        } else if (SnippetTypeBasic.TEXT.equals(type)) {
+        } else if (type == SnippetTypeBasic.TEXT) {
             return "basic/snippets/snippetEditText";
-        } else if (SnippetTypeBasic.IMG.equals(type)) {
+        } else {
             return "basic/snippets/snippetEditImg";
         }
-        return "error/404";
     }
+
 
     @PostMapping("/edit/{snippetId}")
     public String updateSnippet(
@@ -177,6 +206,7 @@ public class SnippetController {
             return "error/404";
         }
         existingSnippet.setSourceUrl(snippet.getSourceUrl());
+        existingSnippet.setColorId(snippet.getColorId());
         existingSnippet.setMemo(snippet.getMemo());
         existingSnippet.setVisibility(snippet.getVisibility());
         existingSnippet.setLikeCount(snippet.getLikeCount());
@@ -201,12 +231,15 @@ public class SnippetController {
         } else if (SnippetTypeBasic.IMG.equals(type)) {
             snippetService.updateSnippetImage(existingSnippet);
         }
+        
+        System.out.println("폼에서 넘어온 colorId = " + snippet.getColorId());
+        
         return "redirect:/snippets/" + snippetId;
     }
 
-    @PostMapping("/delete/{id}")
-    public String deleteSnippet(@PathVariable Long id) {
-        snippetService.deleteSnippets(id);
+    @PostMapping("/delete/{snippetId}")
+    public String deleteSnippet(@PathVariable(value="snippetId") Long snippetId) {
+        snippetService.deleteSnippets(snippetId);
         return "redirect:/snippets";
     }
 }

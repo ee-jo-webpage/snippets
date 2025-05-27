@@ -28,6 +28,10 @@ public class Snippets {
    private String imageUrl;    
    private String altText;
    
+   private String name;
+   private String hexCode;
+   
+   
    private MultipartFile imageFile;
    
    public MultipartFile getImageFile() {

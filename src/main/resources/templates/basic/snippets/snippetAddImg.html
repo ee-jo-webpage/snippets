@@ -10,6 +10,20 @@
         method="post" enctype="multipart/form-data">
     <input type="hidden" name="type" value="IMG"/>
     <table>
+		<tr>
+		  <th>Color</th>
+		  <td>
+		    <select th:field="*{colorId}" required>
+		      <option value="" disabled>-- 색상 선택 --</option>
+		      <option th:each="color : ${colors}"
+		              th:value="${color.colorId}"
+		              th:text="${color.name}"
+		              th:style="'background-color:' + ${color.hexCode}">
+		      </option>
+		    </select>
+		  </td>
+		</tr>
+
       <tr><th>Source URL</th>
           <td><input type="text" th:field="*{sourceUrl}" /></td></tr>
       <tr><th>Memo</th>

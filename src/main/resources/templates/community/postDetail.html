@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${post.title} + ' - 게시글 상세'"></title>
+    <title>게시글 상세</title>
 
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -15,317 +15,123 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-    <!-- Custom CSS (인라인으로 포함하여 경로 문제 해결) -->
     <style>
-        /* 게시판 공통 스타일 */
         body {
             background-color: #f8f9fa;
-            color: #333;
         }
-
         .card {
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             border: none;
         }
-
-        /* 게시글 목록 스타일 */
-        .table thead th {
-            font-weight: 600;
-            color: #555;
-        }
-
-        .table tbody tr:hover {
-            background-color: #f1f5f9;
-        }
-
-        .table a {
-            color: #333;
-            text-decoration: none;
-        }
-
-        .table a:hover {
-            color: #0d6efd;
-        }
-
-        /* 게시글 상세 스타일 */
         .post-content {
             min-height: 300px;
             line-height: 1.7;
         }
-
         .post-content img {
             max-width: 100%;
             height: auto;
+            margin: 1rem 0;
         }
-
-        .post-content table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 1rem;
-        }
-
-        .post-content table th,
-        .post-content table td {
-            border: 1px solid #dee2e6;
-            padding: 0.5rem;
-        }
-
-        /* 댓글 스타일 */
-        .comment {
-            border-bottom: 1px solid #eee;
-            padding: 15px 0;
-            transition: background-color 0.2s ease;
-        }
-
-        .comment:hover {
-            background-color: #f8f9fa;
-        }
-
-        .comment-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-
-        .comment-content {
-            line-height: 1.6;
-            margin-bottom: 10px;
-        }
-
-        .comment-actions {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
-        }
-
-        .replies {
-            margin-left: 30px;
-            padding-left: 15px;
-            border-left: 3px solid #dee2e6;
-            margin-top: 10px;
-        }
-
-        .btn-like, .btn-dislike, .btn-reply, .btn-edit, .btn-delete {
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: #6c757d;
-            padding: 5px 10px;
-            margin-right: 10px;
-            font-size: 0.9rem;
-            border-radius: 4px;
-            transition: all 0.2s ease;
-        }
-
-        .btn-like:hover, .btn-reply:hover, .btn-edit:hover {
-            color: #0d6efd;
-            background-color: #e3f2fd;
-        }
-
-        .btn-dislike:hover, .btn-delete:hover {
-            color: #dc3545;
-            background-color: #ffebee;
-        }
-
-        .btn-like.active {
-            color: #198754;
-            background-color: #d4edda;
-        }
-
-        .btn-dislike.active {
-            color: #dc3545;
-            background-color: #f8d7da;
-        }
-
-        .like-buttons {
-            display: flex;
-            align-items: center;
-        }
-
-        /* 폼 스타일 */
-        .form-label {
-            font-weight: 500;
-        }
-
-        .form-control:focus {
-            border-color: #0d6efd;
-            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-        }
-
-        /* 첨부파일 스타일 */
-        .attachment-list {
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            padding: 1rem;
-        }
-
         .attachment-item {
-            display: flex;
-            align-items: center;
-            padding: 0.5rem 0;
-            border-bottom: 1px solid #dee2e6;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            cursor: pointer;
         }
-
-        .attachment-item:last-child {
-            border-bottom: none;
-        }
-
-        .attachment-icon {
-            margin-right: 0.5rem;
-            color: #6c757d;
-        }
-
-        /* 반응형 */
-        @media (max-width: 768px) {
-            .replies {
-                margin-left: 15px;
-                padding-left: 10px;
-            }
-
-            .comment-actions {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .like-buttons {
-                justify-content: flex-start;
-            }
+        .attachment-item:hover {
+            background: #f8f9fa;
         }
     </style>
 </head>
 <body>
 <div class="container mt-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>
-            <i class="fas fa-file-alt me-2"></i>
-            게시글 상세
-        </h1>
-        <a th:href="@{/community/category/{categoryId}(categoryId=${post.categoryId})}" class="btn btn-outline-secondary">
-            <i class="fas fa-list me-1"></i>
-            목록으로
-        </a>
+        <h1>게시글 상세</h1>
+        <a th:href="@{/community}" class="btn btn-outline-secondary">목록으로</a>
     </div>
 
     <!-- 게시글 상세 -->
     <div class="card mb-4">
         <div class="card-header bg-light">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <span class="badge bg-secondary me-2" th:text="${post.categoryName}"></span>
-                    <h2 class="d-inline" th:text="${post.title}"></h2>
-                    <span class="badge bg-danger ms-2" th:if="${post.isNotice}">
-                        <i class="fas fa-exclamation me-1"></i>공지
-                    </span>
-                </div>
-            </div>
+            <h2 th:text="${post.title}">게시글 제목</h2>
             <div class="text-muted small mt-2">
-                <i class="fas fa-user me-1"></i>
-                <span th:text="${post.nickname}"></span> |
-                <i class="fas fa-calendar me-1"></i>
-                <span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}"></span> |
-                <i class="fas fa-eye me-1"></i>
-                조회수: <span th:text="${post.viewCount}"></span>
+                작성자: <span th:text="${post.nickname}">작성자</span> |
+                작성일: <span th:text="${post.createdAt}">작성일</span> |
+                조회수: <span th:text="${post.viewCount}">0</span>
             </div>
         </div>
         <div class="card-body">
-            <div class="post-content" th:utext="${post.content}"></div>
+            <div class="post-content" th:utext="${post.content}">게시글 내용</div>
 
-            <!-- 첨부파일 목록 -->
-            <div class="mt-4" th:if="${not #lists.isEmpty(attachments)}">
-                <h5>
-                    <i class="fas fa-paperclip me-2"></i>
-                    첨부파일
-                </h5>
-                <div class="attachment-list">
-                    <div class="attachment-item" th:each="attachment : ${attachments}">
-                        <i class="fas fa-download attachment-icon"></i>
-                        <a th:href="@{/community/attachment/{attachmentId}(attachmentId=${attachment.attachmentId})}"
-                           th:text="${attachment.fileName}"
-                           class="text-decoration-none"></a>
-                        <span class="text-muted ms-2"
-                              th:text="'(' + ${#numbers.formatDecimal(attachment.fileSize / 1024, 0, 'COMMA', 2, 'POINT')} + ' KB)'"></span>
+            <!-- 첨부파일 목록 (가장 간단한 버전) -->
+            <div th:if="${attachments != null and !attachments.empty}" class="mt-4">
+                <h5>첨부파일</h5>
+                <div class="border rounded p-3">
+                    <div th:each="attachment : ${attachments}" class="attachment-item"
+                         th:onclick="|downloadFile('${attachment.attachmentId}', '${attachment.fileName}')|">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-file me-2"></i>
+                            <div>
+                                <div th:text="${attachment.fileName}">파일명</div>
+                                <small class="text-muted" th:text="${attachment.fileSize} + ' bytes'">파일크기</small>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="card-footer">
-            <div class="d-flex justify-content-end">
-                <!-- 작성자만 보이는 버튼 -->
-                <th:block th:if="${post.userId == currentUserId}">
-                    <a th:href="@{/community/post/{postId}/edit(postId=${post.postId})}"
-                       class="btn btn-outline-primary me-2">
-                        <i class="fas fa-edit me-1"></i>
-                        수정
-                    </a>
-                    <button type="button" class="btn btn-outline-danger" onclick="deletePost()">
-                        <i class="fas fa-trash me-1"></i>
-                        삭제
-                    </button>
-                </th:block>
-            </div>
+
+        <!-- 수정/삭제 버튼 -->
+        <div class="card-footer" th:if="${post.userId == currentUserId}">
+            <a th:href="@{/community/post/{id}/edit(id=${post.postId})}" class="btn btn-outline-primary">수정</a>
+            <button type="button" class="btn btn-outline-danger" onclick="deletePost()">삭제</button>
         </div>
     </div>
 
     <!-- 댓글 영역 -->
     <div class="card">
-        <div class="card-header bg-light">
-            <h5 class="mb-0">
-                <i class="fas fa-comments me-2"></i>
-                댓글 <span class="badge bg-primary" th:text="${post.commentCount}"></span>
-            </h5>
+        <div class="card-header">
+            <h5>댓글</h5>
         </div>
         <div class="card-body">
             <!-- 댓글 작성 폼 -->
-            <div class="mb-4">
-                <div class="d-flex align-items-start">
-                    <div class="flex-grow-1">
-                        <textarea id="commentContent" class="form-control mb-2" rows="3"
-                                  placeholder="댓글을 작성하세요"></textarea>
-                        <div class="d-flex justify-content-end">
-                            <button id="addComment" class="btn btn-primary">
-                                <i class="fas fa-paper-plane me-1"></i>
-                                등록
-                            </button>
-                        </div>
-                    </div>
+            <div class="mb-4" th:if="${isLoggedIn}">
+                <textarea id="commentContent" class="form-control mb-2" rows="3" placeholder="댓글을 작성하세요"></textarea>
+                <button id="addComment" class="btn btn-primary">댓글 등록</button>
+            </div>
+
+            <div class="mb-4" th:unless="${isLoggedIn}">
+                <div class="alert alert-info">
+                    댓글을 작성하려면 <a href="/login">로그인</a>이 필요합니다.
                 </div>
             </div>
 
             <!-- 댓글 목록 -->
             <div id="commentList">
-                <!-- JavaScript로 댓글 로드 -->
                 <div class="text-center py-4">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    댓글을 불러오는 중...
+                    <i class="fas fa-spinner fa-spin"></i> 댓글을 불러오는 중...
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- 삭제 폼 (히든) -->
-<form id="deleteForm" th:action="@{/community/post/{postId}/delete(postId=${post.postId})}" method="post"></form>
+<!-- 삭제 폼 -->
+<form id="deleteForm" th:action="@{/community/post/{id}/delete(id=${post.postId})}" method="post" style="display:none;"></form>
 
-<!-- 댓글 스크립트 -->
 <script th:inline="javascript">
     const postId = [[${post.postId}]];
     const currentUserId = [[${currentUserId}]];
+    const isLoggedIn = [[${isLoggedIn}]];
 
     $(document).ready(function() {
-        // 댓글 목록 로드
         loadComments();
 
-        // 게시글 삭제 함수
-        window.deletePost = function() {
-            if (confirm('정말 삭제하시겠습니까?')) {
-                $('#deleteForm').submit();
-            }
-        };
-
-        // 댓글 등록 버튼 클릭
+        // 댓글 등록
         $('#addComment').click(function() {
             const content = $('#commentContent').val().trim();
-
             if (!content) {
                 alert('댓글 내용을 입력해주세요.');
                 return;
@@ -343,36 +149,40 @@
                     if (response.success) {
                         $('#commentContent').val('');
                         loadComments();
-                        showSuccessMessage('댓글이 등록되었습니다.');
-                    } else {
-                        showErrorMessage('댓글 등록에 실패했습니다.');
+                        alert('댓글이 등록되었습니다.');
                     }
                 },
                 error: function() {
-                    showErrorMessage('댓글 등록 중 오류가 발생했습니다.');
+                    alert('댓글 등록 중 오류가 발생했습니다.');
                 }
             });
         });
-
-        // Enter 키로 댓글 등록
-        $('#commentContent').keypress(function(e) {
-            if (e.which === 13 && !e.shiftKey) {
-                e.preventDefault();
-                $('#addComment').click();
-            }
-        });
     });
+
+    // 게시글 삭제
+    function deletePost() {
+        if (confirm('정말 삭제하시겠습니까?')) {
+            $('#deleteForm').submit();
+        }
+    }
+
+    // 파일 다운로드
+    function downloadFile(attachmentId, fileName) {
+        if (confirm(fileName + ' 파일을 다운로드하시겠습니까?')) {
+            window.location.href = '/community/attachment/' + attachmentId;
+        }
+    }
 
     // 댓글 목록 불러오기
     function loadComments() {
         $.ajax({
-            url: `/api/board/comments/${postId}`,
+            url: '/api/board/comments/' + postId,
             type: 'GET',
             success: function(response) {
-                renderComments(response.comments);
+                renderComments(response.comments || []);
             },
             error: function() {
-                $('#commentList').html('<div class="text-center text-danger py-4">댓글을 불러올 수 없습니다.</div>');
+                $('#commentList').html('<div class="text-center text-danger">댓글을 불러올 수 없습니다.</div>');
             }
         });
     }
@@ -380,259 +190,20 @@
     // 댓글 렌더링
     function renderComments(comments) {
         let html = '';
-
         if (comments.length === 0) {
             html = '<div class="text-center py-4 text-muted">첫 번째 댓글을 작성해보세요!</div>';
         } else {
             comments.forEach(function(comment) {
-                // 부모 댓글만 처리
                 if (!comment.parentId) {
-                    html += renderComment(comment);
-
-                    // 대댓글 처리
-                    if (comment.childComments && comment.childComments.length > 0) {
-                        html += '<div class="replies">';
-                        comment.childComments.forEach(function(reply) {
-                            html += renderComment(reply);
-                        });
-                        html += '</div>';
-                    }
+                    html += '<div class="border-bottom py-3">';
+                    html += '<div class="fw-bold">' + comment.nickname + '</div>';
+                    html += '<div class="mt-1">' + comment.content + '</div>';
+                    html += '<small class="text-muted">' + new Date(comment.createdAt).toLocaleString() + '</small>';
+                    html += '</div>';
                 }
             });
         }
-
         $('#commentList').html(html);
-    }
-
-    // 개별 댓글 렌더링
-    function renderComment(comment) {
-        const isOwner = comment.userId == currentUserId;
-        const isUpdated = comment.updatedAt && comment.updatedAt !== comment.createdAt;
-
-        return `
-            <div class="comment" data-id="${comment.commentId}">
-                <div class="comment-header">
-                    <div>
-                        <span class="fw-bold">
-                            <i class="fas fa-user-circle me-1"></i>
-                            ${comment.nickname}
-                        </span>
-                        ${isUpdated ? '<small class="text-muted ms-2">(수정됨)</small>' : ''}
-                    </div>
-                    <span class="text-muted small">
-                        <i class="fas fa-clock me-1"></i>
-                        ${formatDate(comment.createdAt)}
-                    </span>
-                </div>
-                <div class="comment-content">
-                    ${comment.content}
-                </div>
-                <div class="comment-actions">
-                    <div class="action-buttons">
-                        <button class="btn-reply" data-comment-id="${comment.commentId}">
-                            <i class="fas fa-reply me-1"></i>답글
-                        </button>
-                        ${isOwner ? `
-                            <button class="btn-edit" data-comment-id="${comment.commentId}">
-                                <i class="fas fa-edit me-1"></i>수정
-                            </button>
-                            <button class="btn-delete" data-comment-id="${comment.commentId}">
-                                <i class="fas fa-trash me-1"></i>삭제
-                            </button>
-                        ` : ''}
-                    </div>
-                    <div class="like-buttons">
-                        <button class="btn-like ${comment.isLiked ? 'active' : ''}" data-comment-id="${comment.commentId}">
-                            <i class="fas fa-thumbs-up me-1"></i>
-                            <span>${comment.likeCount || 0}</span>
-                        </button>
-                        <button class="btn-dislike ${comment.isDisliked ? 'active' : ''}" data-comment-id="${comment.commentId}">
-                            <i class="fas fa-thumbs-down me-1"></i>
-                            <span>${comment.dislikeCount || 0}</span>
-                        </button>
-                    </div>
-                </div>
-                <div class="reply-form mt-3" style="display:none;">
-                    <textarea class="form-control mb-2" rows="2" placeholder="답글을 입력하세요"></textarea>
-                    <div class="d-flex justify-content-end">
-                        <button class="btn btn-sm btn-primary submit-reply me-2">
-                            <i class="fas fa-paper-plane me-1"></i>등록
-                        </button>
-                        <button class="btn btn-sm btn-secondary cancel-reply">취소</button>
-                    </div>
-                </div>
-                <div class="edit-form mt-3" style="display:none;">
-                    <textarea class="form-control mb-2" rows="2">${comment.content}</textarea>
-                    <div class="d-flex justify-content-end">
-                        <button class="btn btn-sm btn-primary submit-edit me-2">
-                            <i class="fas fa-save me-1"></i>수정
-                        </button>
-                        <button class="btn btn-sm btn-secondary cancel-edit">취소</button>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    // 이벤트 핸들러들
-    $(document).on('click', '.btn-reply', function() {
-        const commentDiv = $(this).closest('.comment');
-        commentDiv.find('.reply-form').toggle();
-        commentDiv.find('.edit-form').hide();
-    });
-
-    $(document).on('click', '.cancel-reply', function() {
-        $(this).closest('.reply-form').hide();
-    });
-
-    $(document).on('click', '.btn-edit', function() {
-        const commentDiv = $(this).closest('.comment');
-        commentDiv.find('.edit-form').toggle();
-        commentDiv.find('.reply-form').hide();
-    });
-
-    $(document).on('click', '.cancel-edit', function() {
-        $(this).closest('.edit-form').hide();
-    });
-
-    $(document).on('click', '.submit-reply', function() {
-        const commentDiv = $(this).closest('.comment');
-        const parentId = commentDiv.data('id');
-        const content = commentDiv.find('.reply-form textarea').val().trim();
-
-        if (!content) {
-            alert('답글 내용을 입력해주세요.');
-            return;
-        }
-
-        $.ajax({
-            url: '/api/board/comment/add',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({
-                postId: postId,
-                parentId: parentId,
-                content: content
-            }),
-            success: function(response) {
-                if (response.success) {
-                    commentDiv.find('.reply-form textarea').val('');
-                    commentDiv.find('.reply-form').hide();
-                    loadComments();
-                    showSuccessMessage('답글이 등록되었습니다.');
-                }
-            }
-        });
-    });
-
-    $(document).on('click', '.submit-edit', function() {
-        const commentDiv = $(this).closest('.comment');
-        const commentId = commentDiv.data('id');
-        const content = commentDiv.find('.edit-form textarea').val().trim();
-
-        if (!content) {
-            alert('댓글 내용을 입력해주세요.');
-            return;
-        }
-
-        $.ajax({
-            url: '/api/board/comment/update',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({
-                commentId: commentId,
-                content: content
-            }),
-            success: function(response) {
-                if (response.success) {
-                    commentDiv.find('.edit-form').hide();
-                    loadComments();
-                    showSuccessMessage('댓글이 수정되었습니다.');
-                }
-            }
-        });
-    });
-
-    $(document).on('click', '.btn-delete', function() {
-        if (confirm('정말 삭제하시겠습니까?')) {
-            const commentDiv = $(this).closest('.comment');
-            const commentId = commentDiv.data('id');
-
-            $.ajax({
-                url: `/api/board/comment/delete/${commentId}`,
-                type: 'POST',
-                success: function(response) {
-                    if (response.success) {
-                        loadComments();
-                        showSuccessMessage('댓글이 삭제되었습니다.');
-                    }
-                }
-            });
-        }
-    });
-
-    $(document).on('click', '.btn-like', function() {
-        const commentId = $(this).data('comment-id');
-        toggleLike(commentId, true);
-    });
-
-    $(document).on('click', '.btn-dislike', function() {
-        const commentId = $(this).data('comment-id');
-        toggleLike(commentId, false);
-    });
-
-    function toggleLike(commentId, isLike) {
-        $.ajax({
-            url: '/api/board/comment/like',
-            type: 'POST',
-            data: {
-                commentId: commentId,
-                isLike: isLike
-            },
-            success: function(response) {
-                if (response.success) {
-                    loadComments();
-                }
-            }
-        });
-    }
-
-    // 유틸리티 함수들
-    function formatDate(dateString) {
-        const date = new Date(dateString);
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        return `${year}-${month}-${day} ${hours}:${minutes}`;
-    }
-
-    function showSuccessMessage(message) {
-        // Bootstrap toast나 alert로 메시지 표시
-        const alertDiv = $(`
-            <div class="alert alert-success alert-dismissible fade show position-fixed"
-                 style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
-                <i class="fas fa-check-circle me-2"></i>
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        `);
-        $('body').append(alertDiv);
-        setTimeout(() => alertDiv.alert('close'), 3000);
-    }
-
-    function showErrorMessage(message) {
-        const alertDiv = $(`
-            <div class="alert alert-danger alert-dismissible fade show position-fixed"
-                 style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
-                <i class="fas fa-exclamation-circle me-2"></i>
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        `);
-        $('body').append(alertDiv);
-        setTimeout(() => alertDiv.alert('close'), 3000);
     }
 </script>
 </body>

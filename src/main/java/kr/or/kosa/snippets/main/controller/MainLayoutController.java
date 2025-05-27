@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @Slf4j
 @Controller
-@RequestMapping("/main")
+@RequestMapping("/app")
 @RequiredArgsConstructor
 public class MainLayoutController {
 

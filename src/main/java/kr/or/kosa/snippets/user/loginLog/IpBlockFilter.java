@@ -28,10 +28,6 @@ public class IpBlockFilter extends GenericFilterBean {
         HttpServletRequest req = (HttpServletRequest) request;
         String ip = req.getRemoteAddr();
 
-        // 여기 로그 넣기 (조건문 바로 위)
-        log.info("IP: {}, URI: {}, method: {}", ip, req.getRequestURI(), req.getMethod());
-        log.info("차단 여부: {}", loginAttemptService.isBlocked(ip));
-
         if ("/loginproc".equals(req.getRequestURI())
                 && "POST".equalsIgnoreCase(req.getMethod())
                 && loginAttemptService.isBlocked(ip)) {

@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
 
+/**
+ * 이메일 발송 및 인증/복구 관련 Redis 저장소 관리 서비스
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -19,6 +22,11 @@ public class MailService {
 
 
     // HTML 메일 공통 메서드
+
+    /**
+     * HTML 형식의 이메일 전송
+     * - 인증 코드, 복구 링크, 임시 비밀번호 등 공통 메일 전송에 사용
+     */
     public void sendHtmlMail(String to, String subject, String htmlContent) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -33,7 +41,9 @@ public class MailService {
         }
     }
 
-    //  인증 코드 메일
+    /**
+     * 이메일 인증 코드 전송 메일
+     */
     public void sendVerificationCode(String to, String code) {
         String subject = "[App] 이메일 인증 코드 안내";
         String content = String.format("""
@@ -44,6 +54,11 @@ public class MailService {
         sendHtmlMail(to, subject, content);
     }
 
+    /**
+     * 이메일 인증 코드를 Redis에 저장
+     * - key: email 기반
+     * - value: 인증 코드
+     */
     public void saveVerificationCode(String email, String code, long timeoutInMinutes) {
         redisTemplate.opsForValue().set(getKey(email), code, timeoutInMinutes, TimeUnit.MINUTES);
     }
@@ -52,16 +67,26 @@ public class MailService {
         return "email_code:" + email;
     }
 
+    /**
+     * 이메일 인증 코드 확인
+     * - 입력 코드와 Redis에 저장된 코드 비교
+     */
     public boolean verifyCode(String email, String inputCode) {
         String savedCode = redisTemplate.opsForValue().get(getKey(email));
         return inputCode != null && inputCode.equals(savedCode);
     }
 
+    /**
+     * 인증 코드 삭제
+     */
     public void deleteCode(String email) {
         redisTemplate.delete(getKey(email));
     }
 
-
+    /**
+     * 계정 복구 토큰 저장 (Redis)
+     * - 사용자가 링크를 통해 복구 요청할 수 있도록 토큰 저장
+     */
     public void saveRecoveryToken(String email, String token, long timeoutInMinutes) {
         String key = "recover:" + email;
         redisTemplate.opsForValue().set(key, token, timeoutInMinutes, TimeUnit.MINUTES);
@@ -96,6 +121,10 @@ public class MailService {
                 """, link);
         sendHtmlMail(to, subject, content);
     }
+
+    /**
+     * 복구 토큰 검증
+     */
     public boolean verifyRecoveryToken(String email, String token) {
         String key = "recover:" + email;
         String saved = redisTemplate.opsForValue().get(key);
@@ -105,14 +134,18 @@ public class MailService {
     public void deleteRecoveryToken(String email) {
         redisTemplate.delete("recover:" + email);
     }
-    // 임시 비밀번호 메일
+
+    /**
+     * 임시 비밀번호 메일 전송
+     * - 비밀번호 찾기 기능 등에서 사용
+     */
     public void sendTemporaryPassword(String to, String tempPassword) {
         String subject = "[App] 임시 비밀번호 안내";
         String content = String.format("""
-            <h1>임시 비밀번호 발급</h1>
-            <p>아래 비밀번호로 로그인 후 반드시 변경해주세요.</p>
-            <h2 style='color:red;'>%s</h2>
-            """, tempPassword);
+                <h1>임시 비밀번호 발급</h1>
+                <p>아래 비밀번호로 로그인 후 반드시 변경해주세요.</p>
+                <h2 style='color:red;'>%s</h2>
+                """, tempPassword);
         sendHtmlMail(to, subject, content);
     }
 

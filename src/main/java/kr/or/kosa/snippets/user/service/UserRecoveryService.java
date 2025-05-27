@@ -42,12 +42,15 @@ public class UserRecoveryService {
     }
 
     /**
-     * 비활성화 계정 활성화
+     * 비활성화된 사용자 계정 복구
+     * - DB에서 deleted_at을 null로 바꾸고 enabled를 true로 변경
+     * - 사용자가 복구 가능한 상태가 아니면 예외 발생
      */
     @Transactional
     public void recoverAccount(String email) {
         Users user = userMapper.findByEmail(email);
-        // 이메일이 null 이거나 isEnabled 가 1이거나 ,
+
+        // 복구 불가능한 상황: 존재하지 않거나, 이미 활성화 상태이거나, deletedAt이 null인 경우
         if (user == null || user.isEnabled() || user.getDeletedAt() == null) {
             throw new IllegalArgumentException("복구할 수 없는 계정입니다.");
         }
@@ -65,15 +68,27 @@ public class UserRecoveryService {
     }
 
     // 비활성화 계정 찾기
+    /**
+     * DB에서 deletedAt != null인 유저 중 email 일치하는 계정 찾기
+     * - 주로 복구 가능한 계정인지 확인할 때 사용
+     */
     public Users findDeletedUserByEmail(String email) {
         return userMapper.findDeletedUser(email);
     }
-
+    /**
+     * 복구 시도
+     * - userMapper.restoreUser는 DB에서 enable을 true로, deletedAt을 null로 바꾸는 쿼리
+     * - 복구 성공 여부를 boolean으로 반환
+     */
     public boolean restoreUser(String email) {
         return userMapper.restoreUser(email) > 0;
     }
 
-
+    /**
+     * 임시 비밀번호를 생성하여 이메일로 전송
+     * - LOCAL 로그인 사용자만 가능
+     * - 기존 비밀번호는 임시값으로 덮어씀
+     */
     @Transactional
     public void sendTemporaryPassword(String email) {
         Users user = userMapper.findByEmail(email);

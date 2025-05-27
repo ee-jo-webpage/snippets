@@ -33,7 +33,8 @@ public class BookmarkController {
     // private 헬퍼 메서드
     private Long requireLogin(CustomUserDetails userDetails) {
         if (userDetails == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다");
+            log.warn("사용자 인증 정보가 없습니다.");
+            return null;
         }
         return userDetails.getUserId();
     }
@@ -61,8 +62,8 @@ public class BookmarkController {
     public String getBookmarkedSnippetDetail(@PathVariable Long snippetId,
                                              @AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
 
-//        Long currentId = requireLogin(userDetails);
-        Long currentId = userDetails.getUserId();
+        Long currentId = requireLogin(userDetails);
+//        Long currentId = userDetails.getUserId();
 
         // 북마크된 스니펫인지 확인
         if (!bookmarkService.isBookmarked(currentId, snippetId)) {
@@ -85,8 +86,8 @@ public class BookmarkController {
                                          @AuthenticationPrincipal CustomUserDetails userDetails,
                                          RedirectAttributes redirectAttributes) {
 
-//        Long currentId = requireLogin(userDetails);
-        Long currentId = userDetails.getUserId();
+        Long currentId = requireLogin(userDetails);
+//        Long currentId = userDetails.getUserId();
 
         try {
             bookmarkService.removeBookmark(currentId, snippetId);

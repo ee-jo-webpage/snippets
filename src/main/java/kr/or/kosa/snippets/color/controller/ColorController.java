@@ -30,7 +30,8 @@ public class ColorController {
     // private 헬퍼 메서드
     private Long requireLogin(CustomUserDetails userDetails) {
         if (userDetails == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다");
+            log.warn("사용자 인증 정보가 없습니다.");
+            return null;
         }
         return userDetails.getUserId();
     }

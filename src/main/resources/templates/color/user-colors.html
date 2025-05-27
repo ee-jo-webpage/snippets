@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${isMyColors} ? '내 색상 모음' : '사용자 ' + ${userId} + '의 색상'">색상 페이지</title>
     <link th:href="@{/color/css/user-colors.css}" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
 <div class="container">
-    <!-- 세션 정보 확인 패널 추가 -->
+    <!-- 세션 정보 확인 패널 -->
     <div class="session-panel">
         <button class="session-toggle-btn" onclick="toggleSessionInfo()">
             🔍 세션 정보 확인
@@ -36,58 +37,74 @@
     <div class="header">
         <h1 th:text="${isMyColors ? '내 색상 모음' : '사용자 ' + userId + '의 색상'}">색상 모음</h1>
         <div class="navigation">
-<!--            <a th:if="${!isMyColors}" th:href="@{/color/user/{id}(id=${currentUserId})}">내 색상</a>-->
             <a th:href="@{/color/user/{id}(id=${currentUserId})}">사용 가능한 색상</a>
-
             <button class="add-color-btn" onclick="openAddModal()">
                 🎨 새 색상 추가
             </button>
         </div>
     </div>
 
-    <div th:if="${not #lists.isEmpty(colorList)}" class="color-grid">
-        <div th:each="color, status : ${colorList}" class="color-card" th:style="'animation-delay: ' + ${status.index * 0.1} + 's;'">
-            <!-- 소유자 표시 -->
-            <div th:if="${color.userId != null}" class="owner-badge"
-                 th:text="${color.userId == currentUserId ? '내 색상' : '사용자 ' + color.userId}">
-                색상 소유자
-            </div>
+    <!-- 로그인 안내 메시지 추가 -->
+    <div th:if="${currentUserId == null}" class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        로그인이 필요한 서비스입니다. <a href="/login" class="alert-link">로그인하기</a>
+    </div>
 
+    <!-- 색상 목록 (로그인된 경우에만 표시) -->
+    <div th:if="${currentUserId != null}">
+        <div th:if="${not #lists.isEmpty(colorList)}" class="color-grid">
+            <div th:each="color, status : ${colorList}" class="color-card" th:style="'animation-delay: ' + ${status.index * 0.1} + 's;'">
+                <!-- 소유자 표시 -->
+                <div th:if="${color.userId != null}" class="owner-badge"
+                     th:text="${color.userId == currentUserId ? '내 색상' : '사용자 ' + color.userId}">
+                    색상 소유자
+                </div>
 
-            <div class="color-preview" th:style="'background-color: ' + ${color.hexCode} + ';'">
-                <div class="color-hex-overlay" th:text="${color.hexCode}">#FFFFFF</div>
-            </div>
-            <div class="color-info">
-                <div class="color-name" th:text="${color.colorId}">색상 ID</div>
-                <div class="color-name" th:text="${color.name}">색상 이름</div>
-                <div class="color-hex" th:text="${color.hexCode}">#FFFFFF</div>
+                <div class="color-preview" th:style="'background-color: ' + ${color.hexCode} + ';'">
+                    <div class="color-hex-overlay" th:text="${color.hexCode}">#FFFFFF</div>
+                </div>
+                <div class="color-info">
+                    <div class="color-name" th:text="${color.colorId}">색상 ID</div>
+                    <div class="color-name" th:text="${color.name}">색상 이름</div>
+                    <div class="color-hex" th:text="${color.hexCode}">#FFFFFF</div>
 
-                <!-- 수정/삭제 버튼 (내 색상일 때만 표시) -->
-                <div th:if="${color.userId == currentUserId or (isMyColors and color.userId != null)}" class="color-actions">
-                    <button class="btn btn-edit"
-                            onclick="openEditModal(this)"
-                            th:data-color-id="${color.colorId}"
-                            th:data-name="${color.name}"
-                            th:data-hex-code="${color.hexCode}">
-                        ✏️ 수정
-                    </button>
-                    <button class="btn btn-delete"
-                            onclick="deleteColor(this)"
-                            th:data-color-id="${color.colorId}"
-                            th:data-name="${color.name}">
-                        🗑️ 삭제
-                    </button>
+                    <!-- 수정/삭제 버튼 (내 색상일 때만 표시) -->
+                    <div th:if="${color.userId == currentUserId or (isMyColors and color.userId != null)}" class="color-actions">
+                        <button class="btn btn-edit"
+                                onclick="openEditModal(this)"
+                                th:data-color-id="${color.colorId}"
+                                th:data-name="${color.name}"
+                                th:data-hex-code="${color.hexCode}">
+                            ✏️ 수정
+                        </button>
+                        <button class="btn btn-delete"
+                                onclick="deleteColor(this)"
+                                th:data-color-id="${color.colorId}"
+                                th:data-name="${color.name}">
+                            🗑️ 삭제
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
+
+        <div th:if="${#lists.isEmpty(colorList)}" class="empty-state">
+            <div class="emoji">🎨</div>
+            <p>등록된 색상이 없습니다.</p>
+            <button th:if="${isMyColors}" class="add-color-btn" onclick="openAddModal()" style="margin-top: 20px;">
+                🎨 첫 번째 색상 추가하기
+            </button>
+        </div>
     </div>
 
-    <div th:if="${#lists.isEmpty(colorList)}" class="empty-state">
-        <div class="emoji">🎨</div>
-        <p>등록된 색상이 없습니다.</p>
-        <button th:if="${isMyColors}" class="add-color-btn" onclick="openAddModal()" style="margin-top: 20px;">
-            🎨 첫 번째 색상 추가하기
-        </button>
+    <!-- 로그인하지 않은 경우 빈 상태 메시지 -->
+    <div th:if="${currentUserId == null}" class="empty-state">
+        <div class="emoji">🔒</div>
+        <h3>로그인이 필요합니다</h3>
+        <p>색상을 관리하려면 먼저 로그인해주세요.</p>
+        <a href="/login" class="btn btn-primary" style="margin-top: 20px;">
+            <i class="fas fa-sign-in-alt"></i> 로그인하기
+        </a>
     </div>
 </div>
 
@@ -254,8 +271,14 @@
         }, 3000);
     }
 
-    // 색상 추가 모달 관련 함수들
+    // 로그인하지 않은 사용자의 모달 접근 차단
     function openAddModal() {
+        const currentUserId = /*[[${currentUserId}]]*/ null;
+        if (!currentUserId) {
+            alert('로그인이 필요한 기능입니다.');
+            return;
+        }
+
         // 폼 초기화
         document.getElementById('addColorForm').reset();
         document.getElementById('addHexCode').value = '#FF0000';
@@ -303,6 +326,12 @@
 
     // 색상 수정 모달 관련 함수들 (기존 코드)
     function openEditModal(buttonElement) {
+        const currentUserId = /*[[${currentUserId}]]*/ null;
+        if (!currentUserId) {
+            alert('로그인이 필요한 기능입니다.');
+            return;
+        }
+
         const colorId = buttonElement.getAttribute('data-color-id');
         const name = buttonElement.getAttribute('data-name');
         const hexCode = buttonElement.getAttribute('data-hex-code');
@@ -370,6 +399,12 @@
 
     // 색상 삭제
     function deleteColor(buttonElement) {
+        const currentUserId = /*[[${currentUserId}]]*/ null;
+        if (!currentUserId) {
+            alert('로그인이 필요한 기능입니다.');
+            return;
+        }
+
         const colorId = buttonElement.getAttribute('data-color-id');
         const name = buttonElement.getAttribute('data-name');
 

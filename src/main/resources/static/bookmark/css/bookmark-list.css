@@ -270,3 +270,9 @@ body {
         font-size: 2rem;
     }
 }
+
+
+.empty-state .emoji {
+    font-size: 4rem;
+    margin-bottom: 20px;
+}

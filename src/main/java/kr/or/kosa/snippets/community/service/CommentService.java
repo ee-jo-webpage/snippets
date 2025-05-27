@@ -9,7 +9,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Transactional
@@ -20,38 +23,69 @@ public class CommentService {
     private final NotificationService notificationService;
 
     public List<Comment> getCommentsByPostId(Integer postId, Long currentUserId) {
-        List<Comment> comments = commentMapper.getCommentsByPostId(postId);
+        // 모든 댓글을 한 번에 가져오기
+        List<Comment> allComments = commentMapper.getCommentsByPostId(postId);
 
-        // 현재 사용자의 좋아요 상태 설정
-        for (Comment comment : comments) {
-            if (currentUserId != null) {
-                CommentLike like = commentMapper.getCommentLike(comment.getCommentId(), currentUserId);
-                if (like != null) {
-                    comment.setIsLiked(like.isLike());
-                    comment.setIsDisliked(!like.isLike());
-                }
-            }
+        // 계층 구조로 변환
+        return buildCommentTree(allComments, currentUserId);
+    }
 
-            // 대댓글이 없는 부모 댓글인 경우 대댓글 목록 조회
+    /**
+     * 댓글 리스트를 트리 구조로 변환
+     */
+    private List<Comment> buildCommentTree(List<Comment> allComments, Long currentUserId) {
+        // parentId별로 그룹화
+        Map<Integer, List<Comment>> commentsByParent = new HashMap<>();
+        List<Comment> rootComments = new ArrayList<>();
+
+        for (Comment comment : allComments) {
+            // 좋아요 상태 설정
+            setLikeStatus(comment, currentUserId);
+
             if (comment.getParentId() == null) {
-                List<Comment> childComments = commentMapper.getChildComments(comment.getCommentId());
-
-                // 대댓글의 좋아요 상태 설정
-                for (Comment childComment : childComments) {
-                    if (currentUserId != null) {
-                        CommentLike childLike = commentMapper.getCommentLike(childComment.getCommentId(), currentUserId);
-                        if (childLike != null) {
-                            childComment.setIsLiked(childLike.isLike());
-                            childComment.setIsDisliked(!childLike.isLike());
-                        }
-                    }
-                }
-
-                comment.setChildComments(childComments);
+                rootComments.add(comment);
+            } else {
+                commentsByParent.computeIfAbsent(comment.getParentId(), k -> new ArrayList<>())
+                        .add(comment);
             }
         }
 
-        return comments;
+        // 각 댓글에 대해 재귀적으로 자식 댓글 설정
+        for (Comment rootComment : rootComments) {
+            setChildComments(rootComment, commentsByParent);
+        }
+
+        return rootComments;
+    }
+
+    /**
+     * 재귀적으로 자식 댓글 설정
+     */
+    private void setChildComments(Comment parent, Map<Integer, List<Comment>> commentsByParent) {
+        List<Comment> children = commentsByParent.get(parent.getCommentId());
+        if (children != null) {
+            parent.setChildComments(children);
+            // 각 자식에 대해서도 재귀적으로 처리
+            for (Comment child : children) {
+                setChildComments(child, commentsByParent);
+            }
+        }
+    }
+
+    /**
+     * 좋아요 상태 설정
+     */
+    private void setLikeStatus(Comment comment, Long currentUserId) {
+        if (currentUserId != null) {
+            CommentLike like = commentMapper.getCommentLike(comment.getCommentId(), currentUserId);
+            if (like != null) {
+                comment.setIsLiked(like.isLike());
+                comment.setIsDisliked(!like.isLike());
+            } else {
+                comment.setIsLiked(false);
+                comment.setIsDisliked(false);
+            }
+        }
     }
 
     public Comment getCommentById(Integer commentId) {
@@ -65,9 +99,9 @@ public class CommentService {
         if (comment.getParentId() == null) {
             // 게시글에 대한 댓글
             Post post = postMapper.getPostById(comment.getPostId());
-            notificationService.createCommentNotification(comment, comment.getPostId(), post.getUserId()); // .longValue() 제거
+            notificationService.createCommentNotification(comment, comment.getPostId(), post.getUserId());
         } else {
-            // 댓글에 대한 답글
+            // 댓글에 대한 답글 (모든 레벨의 대댓글 포함)
             Comment parentComment = commentMapper.getCommentById(comment.getParentId());
             notificationService.createReplyNotification(comment, comment.getParentId(), parentComment.getUserId());
         }

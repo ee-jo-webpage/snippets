@@ -25,7 +25,7 @@
         <result property="createdAt" column="created_at"/>
     </resultMap>
 
-    <!-- 게시글의 댓글 목록 조회 -->
+    <!-- 게시글의 모든 댓글 조회 (계층 구조를 위해 모든 댓글을 한 번에 가져옴) -->
     <select id="getCommentsByPostId" parameterType="Integer" resultMap="CommentResultMap">
         SELECT c.comment_id, c.post_id, c.user_id, c.content, c.parent_id,
                c.created_at, c.updated_at, u.nickname,
@@ -33,8 +33,11 @@
                (SELECT COUNT(*) FROM comment_likes cl WHERE cl.comment_id = c.comment_id AND cl.is_like = 0) as dislike_count
         FROM comments c
                  JOIN users u ON c.user_id = u.user_id
-        WHERE c.post_id = #{postId} AND c.parent_id IS NULL
-        ORDER BY c.created_at ASC
+        WHERE c.post_id = #{postId}
+        ORDER BY
+            CASE WHEN c.parent_id IS NULL THEN c.comment_id ELSE c.parent_id END ASC,
+            c.parent_id ASC,
+            c.created_at ASC
     </select>
 
     <!-- 댓글 상세 조회 -->
@@ -66,7 +69,7 @@
         DELETE FROM comments WHERE comment_id = #{commentId}
     </delete>
 
-    <!-- 대댓글 조회 -->
+    <!-- 특정 부모의 자식 댓글들 조회 (기존 메서드는 유지하되 사용하지 않음) -->
     <select id="getChildComments" parameterType="Integer" resultMap="CommentResultMap">
         SELECT c.comment_id, c.post_id, c.user_id, c.content, c.parent_id,
                c.created_at, c.updated_at, u.nickname,

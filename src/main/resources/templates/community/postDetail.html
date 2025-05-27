@@ -307,11 +307,16 @@
 <form id="deleteForm" th:action="@{/community/post/{postId}/delete(postId=${post.postId})}" method="post"></form>
 
 <!-- 댓글 스크립트 -->
+<!-- postDetail.html의 <script> 부분을 이것으로 교체하세요 -->
 <script th:inline="javascript">
-    const postId = [[${post.postId}]];
-    const currentUserId = [[${currentUserId}]];
+    /*<![CDATA[*/
+    var postId = /*[[${post.postId}]]*/ 1;
+    var currentUserId = /*[[${currentUserId}]]*/ null;
 
     $(document).ready(function() {
+        // 추가 스타일 주입
+        addInfiniteCommentStyles();
+
         // 댓글 목록 로드
         loadComments();
 
@@ -324,7 +329,7 @@
 
         // 댓글 등록 버튼 클릭
         $('#addComment').click(function() {
-            const content = $('#commentContent').val().trim();
+            var content = $('#commentContent').val().trim();
 
             if (!content) {
                 alert('댓글 내용을 입력해주세요.');
@@ -363,10 +368,81 @@
         });
     });
 
+    // 무한 댓글을 위한 스타일 추가
+    function addInfiniteCommentStyles() {
+        var additionalStyles = '<style>' +
+            '/* 깊이별 댓글 스타일 */' +
+            '.comment {' +
+            'border-bottom: 1px solid #eee;' +
+            'padding: 15px 0;' +
+            'transition: background-color 0.2s ease;' +
+            'position: relative;' +
+            '}' +
+            '.comment:hover {' +
+            'background-color: #f8f9fa;' +
+            '}' +
+            '/* 깊이가 있는 댓글의 경우 */' +
+            '.comment[style*="margin-left"] {' +
+            'margin-top: 10px;' +
+            'margin-bottom: 10px;' +
+            'border-radius: 8px;' +
+            'background-color: #f8f9fa;' +
+            'padding: 10px;' +
+            'border-left: 3px solid #dee2e6;' +
+            '}' +
+            '.comment[style*="margin-left"]:hover {' +
+            'background-color: #e9ecef;' +
+            'border-left-color: #6c757d;' +
+            '}' +
+            '/* 답글 깊이별 색상 구분 */' +
+            '.comment[style*="margin-left: 30px"] { border-left-color: #007bff; background-color: #f8f9ff; }' +
+            '.comment[style*="margin-left: 60px"] { border-left-color: #28a745; background-color: #f8fff8; }' +
+            '.comment[style*="margin-left: 90px"] { border-left-color: #ffc107; background-color: #fffdf8; }' +
+            '.comment[style*="margin-left: 120px"] { border-left-color: #dc3545; background-color: #fff8f8; }' +
+            '.comment[style*="margin-left: 150px"] { border-left-color: #6f42c1; background-color: #fbf8ff; }' +
+            '/* 최대 깊이 도달 시 스타일 */' +
+            '.max-depth-reached {' +
+            'background-color: #fff3cd !important;' +
+            'border: 1px solid #ffeaa7 !important;' +
+            'border-radius: 8px;' +
+            '}' +
+            '.max-depth-warning {' +
+            'font-size: 0.8em;' +
+            'color: #856404;' +
+            'margin-top: 5px;' +
+            'font-style: italic;' +
+            'background-color: #fff3cd;' +
+            'padding: 5px;' +
+            'border-radius: 4px;' +
+            '}' +
+            '/* 답글 표시 */' +
+            '.reply-indicator {' +
+            'background-color: #007bff;' +
+            'color: white;' +
+            'font-size: 0.7em;' +
+            'padding: 2px 6px;' +
+            'border-radius: 10px;' +
+            'margin-left: 5px;' +
+            '}' +
+            '/* 반응형 처리 */' +
+            '@media (max-width: 768px) {' +
+            '.comment[style*="margin-left"] {' +
+            'margin-left: 10px !important;' +
+            'padding: 8px;' +
+            '}' +
+            '.reply-indicator {' +
+            'font-size: 0.6em;' +
+            'padding: 1px 4px;' +
+            '}' +
+            '}' +
+            '</style>';
+        $('head').append(additionalStyles);
+    }
+
     // 댓글 목록 불러오기
     function loadComments() {
         $.ajax({
-            url: `/api/board/comments/${postId}`,
+            url: '/api/board/comments/' + postId,
             type: 'GET',
             success: function(response) {
                 renderComments(response.comments);
@@ -377,108 +453,136 @@
         });
     }
 
-    // 댓글 렌더링
+    // 댓글 렌더링 (재귀적으로 처리)
     function renderComments(comments) {
-        let html = '';
+        var html = '';
 
         if (comments.length === 0) {
             html = '<div class="text-center py-4 text-muted">첫 번째 댓글을 작성해보세요!</div>';
         } else {
-            comments.forEach(function(comment) {
-                // 부모 댓글만 처리
-                if (!comment.parentId) {
-                    html += renderComment(comment);
-
-                    // 대댓글 처리
-                    if (comment.childComments && comment.childComments.length > 0) {
-                        html += '<div class="replies">';
-                        comment.childComments.forEach(function(reply) {
-                            html += renderComment(reply);
-                        });
-                        html += '</div>';
-                    }
-                }
-            });
+            for (var i = 0; i < comments.length; i++) {
+                html += renderCommentWithChildren(comments[i], 0);
+            }
         }
 
         $('#commentList').html(html);
     }
 
-    // 개별 댓글 렌더링
-    function renderComment(comment) {
-        const isOwner = comment.userId == currentUserId;
-        const isUpdated = comment.updatedAt && comment.updatedAt !== comment.createdAt;
+    // 개별 댓글과 그 하위 댓글들을 재귀적으로 렌더링
+    function renderCommentWithChildren(comment, depth) {
+        var isOwner = comment.userId == currentUserId;
+        var isUpdated = comment.updatedAt && comment.updatedAt !== comment.createdAt;
+        var marginLeft = depth * 30; // 깊이마다 30px씩 들여쓰기
+        var maxDepth = 10; // 최대 깊이 제한
+        var isMaxDepth = depth >= maxDepth;
 
-        return `
-            <div class="comment" data-id="${comment.commentId}">
-                <div class="comment-header">
-                    <div>
-                        <span class="fw-bold">
-                            <i class="fas fa-user-circle me-1"></i>
-                            ${comment.nickname}
-                        </span>
-                        ${isUpdated ? '<small class="text-muted ms-2">(수정됨)</small>' : ''}
-                    </div>
-                    <span class="text-muted small">
-                        <i class="fas fa-clock me-1"></i>
-                        ${formatDate(comment.createdAt)}
-                    </span>
-                </div>
-                <div class="comment-content">
-                    ${comment.content}
-                </div>
-                <div class="comment-actions">
-                    <div class="action-buttons">
-                        <button class="btn-reply" data-comment-id="${comment.commentId}">
-                            <i class="fas fa-reply me-1"></i>답글
-                        </button>
-                        ${isOwner ? `
-                            <button class="btn-edit" data-comment-id="${comment.commentId}">
-                                <i class="fas fa-edit me-1"></i>수정
-                            </button>
-                            <button class="btn-delete" data-comment-id="${comment.commentId}">
-                                <i class="fas fa-trash me-1"></i>삭제
-                            </button>
-                        ` : ''}
-                    </div>
-                    <div class="like-buttons">
-                        <button class="btn-like ${comment.isLiked ? 'active' : ''}" data-comment-id="${comment.commentId}">
-                            <i class="fas fa-thumbs-up me-1"></i>
-                            <span>${comment.likeCount || 0}</span>
-                        </button>
-                        <button class="btn-dislike ${comment.isDisliked ? 'active' : ''}" data-comment-id="${comment.commentId}">
-                            <i class="fas fa-thumbs-down me-1"></i>
-                            <span>${comment.dislikeCount || 0}</span>
-                        </button>
-                    </div>
-                </div>
-                <div class="reply-form mt-3" style="display:none;">
-                    <textarea class="form-control mb-2" rows="2" placeholder="답글을 입력하세요"></textarea>
-                    <div class="d-flex justify-content-end">
-                        <button class="btn btn-sm btn-primary submit-reply me-2">
-                            <i class="fas fa-paper-plane me-1"></i>등록
-                        </button>
-                        <button class="btn btn-sm btn-secondary cancel-reply">취소</button>
-                    </div>
-                </div>
-                <div class="edit-form mt-3" style="display:none;">
-                    <textarea class="form-control mb-2" rows="2">${comment.content}</textarea>
-                    <div class="d-flex justify-content-end">
-                        <button class="btn btn-sm btn-primary submit-edit me-2">
-                            <i class="fas fa-save me-1"></i>수정
-                        </button>
-                        <button class="btn btn-sm btn-secondary cancel-edit">취소</button>
-                    </div>
-                </div>
-            </div>
-        `;
+        var html = '<div class="comment ' + (isMaxDepth ? 'max-depth-reached' : '') + '" ' +
+            'data-id="' + comment.commentId + '" ' +
+            'data-depth="' + depth + '" ' +
+            'style="margin-left: ' + marginLeft + 'px;">' +
+            '<div class="comment-header">' +
+            '<div>' +
+            '<span class="fw-bold">' +
+            '<i class="fas fa-user-circle me-1"></i>' +
+            comment.nickname +
+            '</span>';
+
+        if (depth > 0) {
+            html += '<span class="reply-indicator">답글</span>';
+        }
+
+        if (isUpdated) {
+            html += '<small class="text-muted ms-2">(수정됨)</small>';
+        }
+
+        if (depth > 0) {
+            html += '<small class="text-muted ms-2">(깊이: ' + depth + ')</small>';
+        }
+
+        html += '</div>' +
+            '<span class="text-muted small">' +
+            '<i class="fas fa-clock me-1"></i>' +
+            formatDate(comment.createdAt) +
+            '</span>' +
+            '</div>' +
+            '<div class="comment-content">' +
+            comment.content +
+            '</div>' +
+            '<div class="comment-actions">' +
+            '<div class="action-buttons">';
+
+        if (!isMaxDepth) {
+            html += '<button class="btn-reply" data-comment-id="' + comment.commentId + '">' +
+                '<i class="fas fa-reply me-1"></i>답글' +
+                '</button>';
+        }
+
+        if (isOwner) {
+            html += '<button class="btn-edit" data-comment-id="' + comment.commentId + '">' +
+                '<i class="fas fa-edit me-1"></i>수정' +
+                '</button>' +
+                '<button class="btn-delete" data-comment-id="' + comment.commentId + '">' +
+                '<i class="fas fa-trash me-1"></i>삭제' +
+                '</button>';
+        }
+
+        html += '</div>' +
+            '<div class="like-buttons">' +
+            '<button class="btn-like ' + (comment.isLiked ? 'active' : '') + '" data-comment-id="' + comment.commentId + '">' +
+            '<i class="fas fa-thumbs-up me-1"></i>' +
+            '<span>' + (comment.likeCount || 0) + '</span>' +
+            '</button>' +
+            '<button class="btn-dislike ' + (comment.isDisliked ? 'active' : '') + '" data-comment-id="' + comment.commentId + '">' +
+            '<i class="fas fa-thumbs-down me-1"></i>' +
+            '<span>' + (comment.dislikeCount || 0) + '</span>' +
+            '</button>' +
+            '</div>' +
+            '</div>' +
+            '<div class="reply-form mt-3" style="display:none;">' +
+            '<textarea class="form-control mb-2" rows="2" placeholder="답글을 입력하세요"></textarea>' +
+            '<div class="d-flex justify-content-end">' +
+            '<button class="btn btn-sm btn-primary submit-reply me-2">' +
+            '<i class="fas fa-paper-plane me-1"></i>등록' +
+            '</button>' +
+            '<button class="btn btn-sm btn-secondary cancel-reply">취소</button>' +
+            '</div>' +
+            '</div>' +
+            '<div class="edit-form mt-3" style="display:none;">' +
+            '<textarea class="form-control mb-2" rows="2">' + comment.content + '</textarea>' +
+            '<div class="d-flex justify-content-end">' +
+            '<button class="btn btn-sm btn-primary submit-edit me-2">' +
+            '<i class="fas fa-save me-1"></i>수정' +
+            '</button>' +
+            '<button class="btn btn-sm btn-secondary cancel-edit">취소</button>' +
+            '</div>' +
+            '</div>';
+
+        if (isMaxDepth) {
+            html += '<div class="max-depth-warning">' +
+                '<i class="fas fa-info-circle me-1"></i>최대 답글 깊이에 도달했습니다. 더 이상 답글을 작성할 수 없습니다.' +
+                '</div>';
+        }
+
+        html += '</div>';
+
+        // 하위 댓글들도 재귀적으로 렌더링
+        if (comment.childComments && comment.childComments.length > 0) {
+            for (var i = 0; i < comment.childComments.length; i++) {
+                html += renderCommentWithChildren(comment.childComments[i], depth + 1);
+            }
+        }
+
+        return html;
     }
 
     // 이벤트 핸들러들
     $(document).on('click', '.btn-reply', function() {
-        const commentDiv = $(this).closest('.comment');
+        var commentDiv = $(this).closest('.comment');
         commentDiv.find('.reply-form').toggle();
         commentDiv.find('.edit-form').hide();
+
+        // 다른 열린 답글 폼들 닫기
+        $('.reply-form').not(commentDiv.find('.reply-form')).hide();
     });
 
     $(document).on('click', '.cancel-reply', function() {
@@ -486,9 +590,12 @@
     });
 
     $(document).on('click', '.btn-edit', function() {
-        const commentDiv = $(this).closest('.comment');
+        var commentDiv = $(this).closest('.comment');
         commentDiv.find('.edit-form').toggle();
         commentDiv.find('.reply-form').hide();
+
+        // 다른 열린 수정 폼들 닫기
+        $('.edit-form').not(commentDiv.find('.edit-form')).hide();
     });
 
     $(document).on('click', '.cancel-edit', function() {
@@ -496,12 +603,19 @@
     });
 
     $(document).on('click', '.submit-reply', function() {
-        const commentDiv = $(this).closest('.comment');
-        const parentId = commentDiv.data('id');
-        const content = commentDiv.find('.reply-form textarea').val().trim();
+        var commentDiv = $(this).closest('.comment');
+        var parentId = commentDiv.data('id');
+        var content = commentDiv.find('.reply-form textarea').val().trim();
+        var currentDepth = commentDiv.data('depth');
 
         if (!content) {
             alert('답글 내용을 입력해주세요.');
+            return;
+        }
+
+        // 최대 깊이 체크
+        if (currentDepth >= 10) {
+            alert('최대 답글 깊이에 도달했습니다.');
             return;
         }
 
@@ -521,14 +635,17 @@
                     loadComments();
                     showSuccessMessage('답글이 등록되었습니다.');
                 }
+            },
+            error: function() {
+                showErrorMessage('답글 등록 중 오류가 발생했습니다.');
             }
         });
     });
 
     $(document).on('click', '.submit-edit', function() {
-        const commentDiv = $(this).closest('.comment');
-        const commentId = commentDiv.data('id');
-        const content = commentDiv.find('.edit-form textarea').val().trim();
+        var commentDiv = $(this).closest('.comment');
+        var commentId = commentDiv.data('id');
+        var content = commentDiv.find('.edit-form textarea').val().trim();
 
         if (!content) {
             alert('댓글 내용을 입력해주세요.');
@@ -549,35 +666,41 @@
                     loadComments();
                     showSuccessMessage('댓글이 수정되었습니다.');
                 }
+            },
+            error: function() {
+                showErrorMessage('댓글 수정 중 오류가 발생했습니다.');
             }
         });
     });
 
     $(document).on('click', '.btn-delete', function() {
         if (confirm('정말 삭제하시겠습니까?')) {
-            const commentDiv = $(this).closest('.comment');
-            const commentId = commentDiv.data('id');
+            var commentDiv = $(this).closest('.comment');
+            var commentId = commentDiv.data('id');
 
             $.ajax({
-                url: `/api/board/comment/delete/${commentId}`,
+                url: '/api/board/comment/delete/' + commentId,
                 type: 'POST',
                 success: function(response) {
                     if (response.success) {
                         loadComments();
                         showSuccessMessage('댓글이 삭제되었습니다.');
                     }
+                },
+                error: function() {
+                    showErrorMessage('댓글 삭제 중 오류가 발생했습니다.');
                 }
             });
         }
     });
 
     $(document).on('click', '.btn-like', function() {
-        const commentId = $(this).data('comment-id');
+        var commentId = $(this).data('comment-id');
         toggleLike(commentId, true);
     });
 
     $(document).on('click', '.btn-dislike', function() {
-        const commentId = $(this).data('comment-id');
+        var commentId = $(this).data('comment-id');
         toggleLike(commentId, false);
     });
 
@@ -593,47 +716,50 @@
                 if (response.success) {
                     loadComments();
                 }
+            },
+            error: function() {
+                showErrorMessage('좋아요 처리 중 오류가 발생했습니다.');
             }
         });
     }
 
     // 유틸리티 함수들
     function formatDate(dateString) {
-        const date = new Date(dateString);
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        return `${year}-${month}-${day} ${hours}:${minutes}`;
+        var date = new Date(dateString);
+        var year = date.getFullYear();
+        var month = String(date.getMonth() + 1).padStart(2, '0');
+        var day = String(date.getDate()).padStart(2, '0');
+        var hours = String(date.getHours()).padStart(2, '0');
+        var minutes = String(date.getMinutes()).padStart(2, '0');
+        return year + '-' + month + '-' + day + ' ' + hours + ':' + minutes;
     }
 
     function showSuccessMessage(message) {
-        // Bootstrap toast나 alert로 메시지 표시
-        const alertDiv = $(`
-            <div class="alert alert-success alert-dismissible fade show position-fixed"
-                 style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
-                <i class="fas fa-check-circle me-2"></i>
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        `);
+        var alertDiv = $('<div class="alert alert-success alert-dismissible fade show position-fixed" ' +
+            'style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">' +
+            '<i class="fas fa-check-circle me-2"></i>' +
+            message +
+            '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+            '</div>');
         $('body').append(alertDiv);
-        setTimeout(() => alertDiv.alert('close'), 3000);
+        setTimeout(function() {
+            alertDiv.alert('close');
+        }, 3000);
     }
 
     function showErrorMessage(message) {
-        const alertDiv = $(`
-            <div class="alert alert-danger alert-dismissible fade show position-fixed"
-                 style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
-                <i class="fas fa-exclamation-circle me-2"></i>
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        `);
+        var alertDiv = $('<div class="alert alert-danger alert-dismissible fade show position-fixed" ' +
+            'style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">' +
+            '<i class="fas fa-exclamation-circle me-2"></i>' +
+            message +
+            '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+            '</div>');
         $('body').append(alertDiv);
-        setTimeout(() => alertDiv.alert('close'), 3000);
+        setTimeout(function() {
+            alertDiv.alert('close');
+        }, 3000);
     }
+    /*]]>*/
 </script>
 </body>
 </html>

@@ -10,7 +10,7 @@
 </head>
 <body>
 <div class="container">
-    <!-- 헤더 (user-colors와 동일한 구조) -->
+    <!-- 헤더 -->
     <div class="header">
         <h1>📚 내 북마크</h1>
         <div class="navigation">
@@ -46,14 +46,12 @@
                  class="bookmark-card"
                  th:data-type="${bookmark.type?.name()}"
                  th:data-memo="${bookmark.memo}"
+                 th:data-content="${bookmark.content}"
                  th:style="'animation-delay: ' + ${stat.index * 0.1} + 's;'">
 
                 <div class="snippet-id" th:text="'#' + ${bookmark.snippetId}">ID</div>
 
                 <div class="bookmark-header">
-                    <h3 class="bookmark-title" th:text="${bookmark.memo ?: '제목 없음'}">
-                        북마크 제목
-                    </h3>
                     <div class="bookmark-actions">
                         <a th:href="@{/snippets/{id}(id=${bookmark.snippetId})}" class="btn btn-view">
                             👁️ 보기
@@ -70,37 +68,42 @@
                           th:classappend="${bookmark.type?.name() == 'CODE' ? 'type-code' : (bookmark.type?.name() == 'TEXT' ? 'type-text' : 'type-img')}"
                           th:text="${bookmark.type?.name() ?: '타입 없음'}">타입</span>
                     <span class="meta-item" th:text="'생성일: ' + ${#dates.format(bookmark.createdAt, 'yyyy-MM-dd')}">생성일</span>
+                    <span class="meta-item" th:if="${bookmark.language}" th:text="'언어: ' + ${bookmark.language}">언어</span>
                     <span class="meta-item" th:if="${bookmark.sourceUrl}" th:text="'출처 있음'">출처</span>
                 </div>
 
-                <!-- 타입별 콘텐츠 미리보기 -->
-                <div class="snippet-content" th:if="${bookmark.memo}">
-                    <div th:text="${#strings.abbreviate(bookmark.memo, 200)}">
-                        스니펫 내용이 여기에 표시됩니다...
+                <!-- 스니펫 콘텐츠 미리보기 (메인 콘텐츠) -->
+                <div class="snippet-content">
+                    <!-- 코드 타입 -->
+                    <div th:if="${bookmark.type?.name() == 'CODE'}" class="code-preview">
+                        <pre th:text="${#strings.abbreviate(bookmark.content, 300)}">코드 내용</pre>
+                    </div>
+
+                    <!-- 텍스트 타입 -->
+                    <div th:if="${bookmark.type?.name() == 'TEXT'}" class="text-preview">
+                        <p th:text="${#strings.abbreviate(bookmark.content, 250)}">텍스트 내용</p>
+                    </div>
+
+                    <!-- 이미지 타입 -->
+                    <div th:if="${bookmark.type?.name() == 'IMG'}" class="image-preview">
+                        <img th:if="${bookmark.imageUrl}"
+                             th:src="${bookmark.imageUrl}"
+                             th:alt="${bookmark.altText}"
+                             class="preview-image">
+                        <p th:if="${bookmark.altText}" class="image-alt" th:text="${bookmark.altText}">이미지 설명</p>
+                        <div th:if="${bookmark.content}" class="image-content" th:text="${#strings.abbreviate(bookmark.content, 150)}">추가 내용</div>
+                    </div>
+
+                    <!-- 타입이 없거나 일반적인 경우 -->
+                    <div th:if="${bookmark.type == null or bookmark.type?.name() == null}" class="general-preview">
+                        <p th:text="${#strings.abbreviate(bookmark.content ?: '내용 없음', 250)}">일반 내용</p>
                     </div>
                 </div>
 
-                <!-- 코드 타입 미리보기 -->
-                <div th:if="${bookmark.type?.name() == 'CODE'}" class="snippet-content">
-                    <strong>코드:</strong>
-                    <pre th:text="${#strings.abbreviate(bookmark.Content, 150)}">코드 내용</pre>
-                    <span th:if="${bookmark.language}" class="meta-item" th:text="'언어: ' + ${bookmark.language}">언어</span>
-                </div>
-
-                <!-- 텍스트 타입 미리보기 -->
-                <div th:if="${bookmark.type?.name() == 'TEXT'}" class="snippet-content">
-                    <strong>텍스트:</strong>
-                    <p th:text="${#strings.abbreviate(bookmark.Content, 200)}">텍스트 내용</p>
-                </div>
-
-                <!-- 이미지 타입 미리보기 -->
-                <div th:if="${bookmark.type?.name() == 'IMG'}" class="snippet-content">
-                    <strong>이미지:</strong>
-                    <img th:if="${bookmark.imageUrl}"
-                         th:src="${bookmark.imageUrl}"
-                         th:alt="${bookmark.altText}"
-                         style="max-width: 200px; max-height: 150px; border-radius: 4px;">
-                    <p th:if="${bookmark.altText}" th:text="${bookmark.altText}">이미지 설명</p>
+                <!-- 메모가 있고 콘텐츠와 다른 경우에만 표시 -->
+                <div th:if="${#strings.length(bookmark.memo ?: '') > 0 and bookmark.memo != bookmark.content}" class="snippet-memo">
+                    <strong>메모:</strong>
+                    <span th:text="${#strings.abbreviate(bookmark.memo, 100)}">메모 내용</span>
                 </div>
             </div>
         </div>
@@ -128,37 +131,13 @@
 </div>
 
 <script th:inline="javascript">
-    // 세션 정보 토글 함수 (user-colors와 동일)
-    function toggleSessionInfo() {
-        const sessionInfo = document.getElementById('sessionInfo');
-        if (sessionInfo.style.display === 'none' || sessionInfo.style.display === '') {
-            sessionInfo.style.display = 'block';
-            loadSessionData();
-        } else {
-            sessionInfo.style.display = 'none';
-        }
-    }
+    // 서버에서 전달된 데이터
+    const userId = /*[[${userId}]]*/ null;
 
-    // 세션 데이터 로드 함수
-    async function loadSessionData() {
-        try {
-            const cookies = document.cookie.split(';');
-            let sessionId = '쿠키에서 세션ID를 찾을 수 없음';
+    console.log('현재 사용자 ID:', userId);
+    console.log('북마크 개수:', /*[[${count}]]*/ 0);
 
-            for (let cookie of cookies) {
-                const [name, value] = cookie.trim().split('=');
-                if (name === 'JSESSIONID' || name === 'connect.sid') {
-                    sessionId = value;
-                    break;
-                }
-            }
-            document.getElementById('sessionId').textContent = sessionId;
-        } catch (error) {
-            console.error('세션 정보 로드 중 오류:', error);
-        }
-    }
-
-    // 알림 메시지 표시 (user-colors와 동일)
+    // 알림 메시지 표시
     /*[# th:if="${message != null}"]*/
     showAlert(/*[[${message}]]*/ '메시지', 'success');
     /*[/]*/
@@ -182,14 +161,22 @@
 
     // 북마크 제거 함수
     function removeBookmark(snippetId) {
+        if (!userId) {
+            alert('로그인이 필요합니다.');
+            return;
+        }
+
         if (!confirm('정말로 이 북마크를 제거하시겠습니까?')) {
             return;
         }
+
+        console.log('북마크 제거 시도:', snippetId);
 
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = '/bookmark/remove/' + snippetId;
 
+        // CSRF 토큰 처리
         const csrfToken = document.querySelector('meta[name="_csrf"]');
         const csrfHeader = document.querySelector('meta[name="_csrf_header"]');
 
@@ -207,6 +194,11 @@
 
     // 검색 및 필터링 기능
     document.addEventListener('DOMContentLoaded', function() {
+        if (!userId) {
+            console.log('로그인하지 않은 사용자 - 검색 기능 비활성화');
+            return;
+        }
+
         const searchInput = document.getElementById('bookmarkSearchInput');
         const typeFilter = document.getElementById('bookmarkTypeFilter');
         const bookmarksContainer = document.getElementById('bookmarksContainer');
@@ -217,21 +209,44 @@
                 const selectedType = typeFilter.value;
                 const bookmarkCards = bookmarksContainer.querySelectorAll('.bookmark-card');
 
-                bookmarkCards.forEach(card => {
-                    const memo = card.getAttribute('data-memo') || '';
-                    const type = card.getAttribute('data-type') || '';
-                    const snippetId = card.querySelector('.snippet-id').textContent;
+                let visibleCount = 0;
 
-                    const matchesSearch = memo.toLowerCase().includes(searchTerm) ||
-                        snippetId.toLowerCase().includes(searchTerm);
+                bookmarkCards.forEach(card => {
+                    const memo = (card.getAttribute('data-memo') || '').toLowerCase();
+                    const content = (card.getAttribute('data-content') || '').toLowerCase();
+                    const type = card.getAttribute('data-type') || '';
+                    const snippetId = card.querySelector('.snippet-id').textContent.toLowerCase();
+
+                    const matchesSearch = !searchTerm ||
+                        memo.includes(searchTerm) ||
+                        content.includes(searchTerm) ||
+                        snippetId.includes(searchTerm);
                     const matchesType = !selectedType || type === selectedType;
 
                     if (matchesSearch && matchesType) {
                         card.style.display = 'block';
+                        visibleCount++;
                     } else {
                         card.style.display = 'none';
                     }
                 });
+
+                // 검색 결과 없음 메시지 처리
+                const existingNoResults = document.getElementById('bookmarkNoResults');
+                if (existingNoResults) {
+                    existingNoResults.remove();
+                }
+
+                if (visibleCount === 0 && bookmarkCards.length > 0) {
+                    const noResultsDiv = document.createElement('div');
+                    noResultsDiv.id = 'bookmarkNoResults';
+                    noResultsDiv.className = 'empty-state';
+                    noResultsDiv.innerHTML =
+                        '<div class="emoji">🔍</div>' +
+                        '<h3>검색 결과가 없습니다</h3>' +
+                        '<p>다른 검색어나 필터를 시도해보세요.</p>';
+                    bookmarksContainer.appendChild(noResultsDiv);
+                }
             }
 
             searchInput.addEventListener('input', filterBookmarks);

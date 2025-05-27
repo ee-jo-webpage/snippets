@@ -35,6 +35,15 @@ function validateField(fieldName) {
     const message = validators[fieldName](field.value);
     const errorSpan = document.getElementById(`${fieldName}Error`);
     errorSpan.innerText = message;
+
+    if (message) {
+        errorSpan.classList.add("show");  // 👈 에러 있으면 보이게
+        field.style.borderColor = 'var(--error-color)';
+    } else {
+        errorSpan.classList.remove("show"); // 👈 에러 없으면 숨기기
+        field.style.borderColor = 'var(--border-focus)';
+    }
+
     return message === "";
 }
 
@@ -110,7 +119,9 @@ form.addEventListener('submit', async function (e) {
                 for (let field in errors) {
                     const msg = errors[field];
                     const span = document.getElementById(`${field}Error`);
-                    if (span) span.innerText = msg;
+                    if (span){ span.innerText = msg;
+                        span.classList.add("show");
+                    }
 
                     if (msg.includes("탈퇴 처리된")) {
                         await Swal.fire({

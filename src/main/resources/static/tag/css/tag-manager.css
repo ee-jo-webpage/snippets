@@ -180,78 +180,127 @@ body {
     box-shadow: 0 6px 20px rgba(86, 171, 47, 0.4);
 }
 
-/* 태그 그리드 */
+/* 태그 버튼 컨테이너 */
 .tags-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
     padding: 20px 0;
+    max-height: 200px; /* 높이 대폭 축소 */
+    overflow-y: auto;
 }
 
+/* 태그 버튼 스타일 */
 .tag-card {
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
-    transition: all 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #374151;
+    padding: 10px 16px;
+    border-radius: 25px;
+    border: 2px solid #e5e7eb;
     cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    font-weight: 600;
+    white-space: nowrap;
+    height: auto;
+    min-height: auto;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .tag-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(31, 38, 135, 0.15);
+    background: rgba(255, 255, 255, 1);
+    border-color: #3b82f6;
+    color: #1e40af;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);
 }
 
 .tag-card.active {
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-    border-color: rgba(102, 126, 234, 0.5);
+    background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+    color: white;
+    border-color: #2563eb;
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
 }
 
-.tag-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 16px;
+.tag-card.active:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
 }
 
+/* 태그 이름과 스니펫 개수를 함께 표시 */
 .tag-name {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: #2d3748;
+    font-size: inherit;
+    font-weight: inherit;
+    color: inherit;
     margin: 0;
+    line-height: 1;
 }
 
-.tag-actions {
-    display: flex;
-    gap: 8px;
+.tag-snippet-count {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    margin: 0;
+    padding: 3px 8px;
+    background: rgba(107, 114, 128, 0.1);
+    border-radius: 12px;
+    min-width: 20px;
+    text-align: center;
+    border: 1px solid rgba(107, 114, 128, 0.2);
+}
+
+.tag-card.active .tag-snippet-count {
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
 .tag-delete-btn {
     background: rgba(239, 68, 68, 0.1);
     color: #dc2626;
     border: 1px solid rgba(239, 68, 68, 0.3);
-    padding: 8px;
-    border-radius: 8px;
+    padding: 3px;
+    border-radius: 50%;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
+    font-size: 0.8rem;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    font-weight: bold;
 }
 
 .tag-delete-btn:hover {
     background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #b91c1c;
     transform: scale(1.1);
 }
 
-.tag-snippet-count {
-    color: #64748b;
-    font-size: 0.95rem;
-    margin-bottom: 12px;
+.tag-card.active .tag-delete-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.4);
 }
 
+.tag-card.active .tag-delete-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.6);
+    color: #fecaca;
+}
+
+/* 사용하지 않는 스타일 제거 */
+.tag-header,
+.tag-actions,
 .tag-preview {
-    font-size: 0.9rem;
-    color: #64748b;
-    line-height: 1.5;
+    display: none;
 }
 
 /* 스니펫 섹션 */
@@ -545,6 +594,25 @@ body {
     justify-content: flex-end;
 }
 
+/* 태그 그리드 스크롤바 스타일링 */
+.tags-grid::-webkit-scrollbar {
+    width: 6px;
+}
+
+.tags-grid::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+}
+
+.tags-grid::-webkit-scrollbar-thumb {
+    background: rgba(102, 126, 234, 0.3);
+    border-radius: 3px;
+}
+
+.tags-grid::-webkit-scrollbar-thumb:hover {
+    background: rgba(102, 126, 234, 0.5);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .container {
@@ -565,6 +633,7 @@ body {
 
     .tags-grid {
         grid-template-columns: 1fr;
+        max-height: 300px; /* 모바일에서 더 작게 */
     }
 
     .snippets-grid {

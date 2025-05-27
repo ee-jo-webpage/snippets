@@ -72,6 +72,17 @@ public class UserRestController {
         }
     }
 
+    @PostMapping("/resend-code")
+    public ResponseEntity<?> resendCode(@RequestBody Map<String, String> payload) {
+        try {
+            String email = payload.get("email");
+            authService.resendVerificationCode(email);
+            return ResponseEntity.ok(Map.of("message", "인증 코드가 재전송되었습니다."));
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
 
     @PutMapping("/update")
     public ResponseEntity<?> updateUser(@Valid @RequestBody UserUpdateDTO dto, BindingResult result, Principal principal) {

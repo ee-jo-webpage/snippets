@@ -1,0 +1,178 @@
+/* 스니펫 상세보기 모달 스타일 */
+
+.snippet-modal {
+    z-index: 2100; /* 다른 모달보다 높게 */
+}
+
+.snippet-modal-content {
+    max-width: 1400px; /* 더 넓게 */
+    width: 90%; /* 화면 대부분 사용 */
+    max-height: 70vh; /* 세로는 더 짧게 */
+    overflow-y: auto;
+}
+
+.snippet-modal-body {
+    max-height: 55vh; /* 더 짧게 */
+    overflow-y: auto;
+    display: flex; /* 플렉스 레이아웃으로 가로 배치 */
+    gap: 20px;
+    padding: 20px 24px; /* 상하 패딩 줄이고 좌우 패딩 늘림 */
+}
+
+/* 스니펫 상세 메타 정보 - 왼쪽에 배치 */
+.snippet-detail-meta {
+    background: #f8fafc;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    flex-shrink: 0; /* 크기 고정 */
+    width: 280px; /* 고정 너비 */
+    height: fit-content;
+    margin-bottom: 0; /* 하단 마진 제거 */
+}
+
+.meta-row {
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.meta-row:last-child {
+    margin-bottom: 0;
+}
+
+.meta-row strong {
+    color: #2d3748;
+    font-weight: 600;
+    display: inline-block;
+    min-width: 70px;
+}
+
+.color-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.color-box {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    display: inline-block;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* 스니펫 상세 콘텐츠 - 오른쪽에 배치 */
+.snippet-detail-content {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-grow: 1; /* 남은 공간 모두 사용 */
+    height: fit-content;
+    min-height: 200px;
+}
+
+.code-block {
+    background: #1a202c !important;
+    color: #e2e8f0 !important;
+    padding: 20px !important; /* 패딩 줄임 */
+    margin: 0 !important;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
+    font-size: 0.9rem !important;
+    line-height: 1.5 !important; /* 라인 높이 줄임 */
+    overflow-x: auto !important;
+    white-space: pre-wrap !important;
+    word-break: break-all !important;
+    max-height: 45vh; /* 최대 높이 제한 */
+    overflow-y: auto; /* 세로 스크롤 */
+}
+
+.text-content {
+    padding: 20px; /* 패딩 줄임 */
+    font-size: 0.95rem;
+    line-height: 1.6; /* 라인 높이 줄임 */
+    color: #2d3748;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 45vh; /* 최대 높이 제한 */
+    overflow-y: auto; /* 세로 스크롤 */
+}
+
+/* 상세보기 모달의 언어 배지 */
+.snippet-detail-content .language-badge {
+    background: #2196F3;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: block;
+    text-align: center;
+    margin: 0;
+}
+
+/* 모달 스크롤바 스타일링 */
+.snippet-modal-content::-webkit-scrollbar,
+.snippet-modal-body::-webkit-scrollbar,
+.code-block::-webkit-scrollbar,
+.text-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.snippet-modal-content::-webkit-scrollbar-track,
+.snippet-modal-body::-webkit-scrollbar-track,
+.code-block::-webkit-scrollbar-track,
+.text-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.snippet-modal-content::-webkit-scrollbar-thumb,
+.snippet-modal-body::-webkit-scrollbar-thumb,
+.code-block::-webkit-scrollbar-thumb,
+.text-content::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.snippet-modal-content::-webkit-scrollbar-thumb:hover,
+.snippet-modal-body::-webkit-scrollbar-thumb:hover,
+.code-block::-webkit-scrollbar-thumb:hover,
+.text-content::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+    .snippet-modal-content {
+        max-width: 95vw;
+        width: 95%;
+        max-height: 70vh; /* 모바일에서는 세로로 더 길게 */
+        margin: 10px;
+    }
+
+    .snippet-modal-body {
+        flex-direction: column; /* 모바일에서는 세로 배치 */
+        max-height: 60vh;
+        gap: 16px;
+    }
+
+    .snippet-detail-meta {
+        width: 100%; /* 모바일에서는 전체 너비 */
+        margin-bottom: 16px;
+    }
+
+    .code-block {
+        padding: 12px !important;
+        font-size: 0.85rem !important;
+        max-height: 200px; /* 모바일에서는 높이 제한 */
+    }
+
+    .text-content {
+        padding: 12px;
+        font-size: 0.9rem;
+        max-height: 200px; /* 모바일에서는 높이 제한 */
+    }
+}

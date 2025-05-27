@@ -1,0 +1,198 @@
+/* 스니펫 카드 전용 스타일 */
+
+/* 스니펫 그리드 */
+.snippets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 20px;
+    padding: 20px 0;
+}
+
+/* 북마크 카드 스타일을 스니펫에 적용 */
+.snippet-card.bookmark-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: fit-content;
+    cursor: pointer;
+    padding-top: 20px; /* 스니펫 ID 없으므로 기본 패딩 */
+}
+
+.snippet-card.bookmark-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(31, 38, 135, 0.15);
+}
+
+.snippet-card.bookmark-card.has-color {
+    background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.95) 100%);
+}
+
+/* 색상 인디케이터 - 상단 우측 */
+.color-indicator {
+    position: absolute !important;
+    top: 12px !important;
+    right: 12px !important;
+    padding: 6px 10px !important;
+    border-radius: 12px !important;
+    font-size: 0.7rem !important;
+    font-weight: bold !important;
+    color: white !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3) !important;
+    min-width: 50px !important;
+    text-align: center !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
+    z-index: 999 !important;
+    display: block !important;
+    visibility: visible !important;
+}
+
+.color-name {
+    display: block !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 80px !important;
+}
+
+/* 북마크 제목 스타일 */
+.bookmark-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 12px;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+/* 스니펫 메타 정보 */
+.snippet-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.meta-item {
+    background: rgba(107, 114, 128, 0.1);
+    color: #4a5568;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.meta-item.type-code {
+    background: rgba(16, 185, 129, 0.1);
+    color: #047857;
+}
+
+.meta-item.type-text {
+    background: rgba(59, 130, 246, 0.1);
+    color: #1e40af;
+}
+
+.meta-item.type-img {
+    background: rgba(245, 158, 11, 0.1);
+    color: #92400e;
+}
+
+/* 스니펫 콘텐츠 미리보기 */
+.snippet-content-preview {
+    background: #f8fafc;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #4a5568;
+    line-height: 1.5;
+    margin-bottom: 8px;
+    border-left: 3px solid #667eea;
+    max-height: 60px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.more-indicator {
+    text-align: center;
+    color: #667eea;
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 8px 0;
+    border-top: 1px solid #e2e8f0;
+    margin-top: auto;
+    transition: color 0.2s ease;
+}
+
+.snippet-card:hover .more-indicator {
+    color: #4c51bf;
+}
+
+/* 언어 배지 */
+.language-badge {
+    background: #2196F3;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+    display: inline-block;
+}
+
+/* 색상별 카드 배경 효과 */
+.snippet-card.bookmark-card.has-color::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--snippet-color);
+    border-radius: 16px 16px 0 0;
+}
+
+/* Animation */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.snippet-card.bookmark-card {
+    animation: fadeInUp 0.5s ease-out;
+    animation-fill-mode: both;
+}
+
+/* Responsive 디자인 */
+@media (max-width: 1200px) {
+    .snippets-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .snippets-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .snippet-content-preview {
+        padding: 12px;
+    }
+
+    .color-indicator {
+        right: 8px;
+        font-size: 0.65rem;
+        padding: 3px 6px;
+    }
+}

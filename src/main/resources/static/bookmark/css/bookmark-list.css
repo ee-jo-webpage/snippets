@@ -140,6 +140,9 @@ body {
     display: flex;
     flex-direction: column;
     height: fit-content;
+    cursor: pointer;
+    /* 상단 공간 확보 */
+    padding-top: 45px;
 }
 
 .bookmark-card:hover {
@@ -147,24 +150,105 @@ body {
     box-shadow: 0 12px 40px rgba(31, 38, 135, 0.15);
 }
 
-/* 스니펫 ID */
+.bookmark-card.has-color {
+    background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.95) 100%);
+}
+
+/* 스니펫 ID - 왼쪽 상단으로 이동 */
+.snippet-id-left {
+    position: absolute !important;
+    top: 12px !important;
+    left: 12px !important;
+    background: rgba(0, 0, 0, 0.85) !important;
+    color: white !important;
+    padding: 6px 10px !important;
+    border-radius: 8px !important;
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    font-family: 'Monaco', 'Menlo', monospace !important;
+    z-index: 1000 !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+    display: block !important;
+    visibility: visible !important;
+}
+
+/* 기존 snippet-id 스타일 완전히 제거 */
 .snippet-id {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    background: rgba(102, 126, 234, 0.1);
-    color: #4c51bf;
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    font-family: 'Monaco', monospace;
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* 색상 인디케이터 - 상단 중앙 */
+.color-indicator {
+    position: absolute !important;
+    top: 12px !important;
+    right: 50px !important; /* 삭제 버튼 공간 더 확보 */
+    padding: 6px 10px !important;
+    border-radius: 12px !important;
+    font-size: 0.7rem !important;
+    font-weight: bold !important;
+    color: white !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3) !important;
+    min-width: 50px !important;
+    text-align: center !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
+    z-index: 999 !important;
+    display: block !important;
+    visibility: visible !important;
+}
+
+.color-name {
+    display: block !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 80px !important;
+}
+
+/* 작은 삭제 버튼 - 우상단 모서리 */
+.btn-delete-small {
+    position: absolute !important;
+    top: 10px !important;
+    right: 10px !important;
+    width: 28px !important;
+    height: 28px !important;
+    border: none !important;
+    background: rgba(255, 59, 48, 0.9) !important;
+    color: white !important;
+    border-radius: 50% !important;
+    font-size: 14px !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s ease !important;
+    z-index: 1001 !important;
+    line-height: 1 !important;
+    box-shadow: 0 2px 6px rgba(255, 59, 48, 0.3) !important;
+    visibility: visible !important;
+}
+
+.btn-delete-small:hover {
+    background: rgba(255, 59, 48, 1) !important;
+    transform: scale(1.15) !important;
+    box-shadow: 0 4px 12px rgba(255, 59, 48, 0.4) !important;
+}
+
+/* X 문자가 확실히 보이도록 */
+.btn-delete-small::before {
+    content: '✕' !important;
+    font-size: 12px !important;
+    font-weight: 900 !important;
+    display: block !important;
 }
 
 /* 북마크 헤더 */
 .bookmark-header {
     margin-bottom: 16px;
-    margin-top: 8px; /* 스니펫 ID 공간 확보 */
+    margin-top: 0; /* 카드 패딩으로 공간 확보했으므로 제거 */
+    min-height: 0;
+    position: relative; /* 추가 */
 }
 
 .bookmark-title {
@@ -177,10 +261,21 @@ body {
 }
 
 .bookmark-actions {
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
-    margin-top: 12px;
+    display: none; /* 기존 액션 버튼들 숨김 */
+}
+
+/* 스니펫 콘텐츠 링크 */
+.snippet-content-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    flex-grow: 1;
+    margin-top: 0; /* 카드 패딩으로 공간 확보했으므로 제거 */
+}
+
+.snippet-content-link:hover {
+    text-decoration: none;
+    color: inherit;
 }
 
 /* 스니펫 메타 정보 */
@@ -239,14 +334,70 @@ body {
     font-family: 'Monaco', monospace;
 }
 
-.snippet-content img {
+.snippet-content img,
+.preview-image {
     max-width: 100%;
     height: auto;
+    max-height: 200px;
     border-radius: 8px;
     margin-top: 8px;
+    object-fit: cover;
 }
 
-/* 버튼 스타일 */
+/* 언어 배지 */
+.language-badge {
+    background: #2196F3;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+    display: inline-block;
+}
+
+/* 이미지 관련 스타일 */
+.image-container {
+    position: relative;
+    margin-bottom: 8px;
+}
+
+.image-error {
+    padding: 20px;
+    text-align: center;
+    background: #f5f5f5;
+    border-radius: 8px;
+    color: #666;
+}
+
+/* 스니펫 메모 */
+.snippet-memo {
+    background: rgba(59, 130, 246, 0.05);
+    border-left: 3px solid #3b82f6;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 12px;
+    font-size: 0.9rem;
+    color: #4a5568;
+}
+
+/* 스니펫 출처 */
+.snippet-source {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #e2e8f0;
+    font-size: 0.9rem;
+}
+
+.snippet-source a {
+    color: #2196F3;
+    text-decoration: none;
+}
+
+.snippet-source a:hover {
+    text-decoration: underline;
+}
+
+/* 기존 버튼 스타일 유지 */
 .btn {
     padding: 8px 16px;
     border: none;
@@ -259,28 +410,6 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-}
-
-.btn-view {
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    color: white;
-    box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
-}
-
-.btn-view:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4);
-}
-
-.btn-delete {
-    background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%);
-    color: white;
-    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
-}
-
-.btn-delete:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
 }
 
 .btn-primary {
@@ -301,7 +430,7 @@ body {
     background: rgba(255, 255, 255, 0.95);
     border-radius: 20px;
     margin-top: 40px;
-    grid-column: 1 / -1; /* 전체 너비 차지 */
+    grid-column: 1 / -1;
 }
 
 .empty-state p {
@@ -379,6 +508,80 @@ body {
     font-size: 16px;
 }
 
+/* 메인 컨텐츠가 사이드바와 겹치지 않도록 조정 */
+.main-content .container {
+    max-width: none;
+    padding: 20px;
+}
+
+/* 색상별 카드 배경 효과 */
+.bookmark-card.has-color::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--snippet-color);
+    border-radius: 16px 16px 0 0;
+}
+
+/* 삭제 버튼 클릭 시 이벤트 전파 방지 */
+.btn-delete-small {
+    pointer-events: auto;
+}
+
+.bookmark-card .snippet-content-link {
+    pointer-events: auto;
+}
+
+/* 코드 미리보기 스타일 */
+.code-preview pre {
+    background: #1a202c;
+    color: #e2e8f0;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    overflow-x: auto;
+    margin: 0;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+/* 텍스트 미리보기 스타일 */
+.text-preview p {
+    margin: 0;
+    color: #4a5568;
+    line-height: 1.6;
+}
+
+/* 이미지 미리보기 스타일 */
+.image-preview {
+    text-align: center;
+}
+
+.image-alt {
+    font-style: italic;
+    color: #6b7280;
+    margin-top: 8px;
+    font-size: 0.85rem;
+}
+
+.image-content {
+    color: #4a5568;
+    margin-top: 8px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* 일반 미리보기 스타일 */
+.general-preview p {
+    margin: 0;
+    color: #4a5568;
+    line-height: 1.6;
+}
+
 /* Responsive 디자인 */
 @media (max-width: 1200px) {
     .bookmarks-grid {
@@ -409,11 +612,6 @@ body {
         gap: 15px;
     }
 
-    .bookmark-actions {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
     .navigation {
         flex-direction: column;
         gap: 10px;
@@ -421,6 +619,19 @@ body {
 
     .snippet-content {
         padding: 12px;
+    }
+
+    /* 모바일에서 버튼 크기 조정 */
+    .btn-delete-small {
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+    }
+
+    .color-indicator {
+        right: 40px;
+        font-size: 0.65rem;
+        padding: 3px 6px;
     }
 }
 

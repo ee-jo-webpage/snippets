@@ -212,112 +212,9 @@
         </div>
     </div>
 
-    <!-- 스니펫 기본 기능 -->
-    <div class="section">
-        <h2>📝 스니펫 기본 기능 <span class="developer">담당: 기본팀</span></h2>
-        <div class="links">
-            <a href="/snippets" class="link-item">
-                <span class="icon">📋</span> 스니펫 목록
-            </a>
-            <a href="/snippets/new" class="link-item">
-                <span class="icon">➕</span> 스니펫 등록
-            </a>
-        </div>
-    </div>
-
-    <!-- 북마크 기능 -->
-    <div class="section">
-        <h2>⭐ 북마크 기능 <span class="developer">담당: 북마크팀</span></h2>
-        <div class="links">
-            <a href="/bookmark" class="link-item">
-                <span class="icon">📌</span> 내 북마크 목록
-            </a>
-            <a href="/bookmark/my-snippets" class="link-item">
-                <span class="icon">👤</span> 내가 작성한 스니펫
-            </a>
-        </div>
-    </div>
-
-    <!-- 색상 관리 -->
-    <div class="section">
-        <h2>🎨 색상 관리 <span class="developer">담당: 색상팀</span></h2>
-        <div class="links">
-            <a href="/color/all-colors" class="link-item hidden">
-                <span class="icon">🎨</span> 전체 색상 목록
-            </a>
-<!--            <button onclick="goToMyColors()" class="link-item">-->
-<!--                <span class="icon">👤</span> <span id="colorLinkText">내 색상 관리</span>-->
-<!--            </button>-->
-            <a href="/color/my-colors" class="link-item">
-                <span class="icon">🌈</span> 내 색상
-            </a>
-            <a href="/color/init-session" class="link-item hidden">
-                <span class="icon">🔧</span> 세션 초기화 (테스트용)
-            </a>
-            <button onclick="switchUser(2)" class="link-item hidden">
-                <span class="icon">🔄</span> 사용자 전환 (userId: 2)
-            </button>
-            <a href="/color/check-session" class="link-item hidden">
-                <span class="icon">🔍</span> 세션 정보 확인
-            </a>
-        </div>
-    </div>
-
-    <!-- 태그 관리 -->
-    <div class="section">
-        <h2>🏷️ 태그 관리 <span class="developer">담당: 태그팀</span></h2>
-        <div class="links">
-            <a href="/tags/manager" class="link-item">
-                <span class="icon">🏷️</span> 태그 관리 페이지
-            </a>
-            <a href="/tags/snippet-tag" class="link-item">
-                <span class="icon">🔗</span> 스니펫-태그 연결 관리
-            </a>
-            <a href="/tag/init-session" class="link-item hidden">
-                <span class="icon">🔧</span> 태그 세션 초기화
-            </a>
-            <a href="/tag/switch-user/2" class="link-item hidden">
-                <span class="icon">🔄</span> 태그 사용자 전환
-            </a>
-        </div>
-    </div>
-
-    <!-- 좋아요 기능 -->
-    <div class="section">
-        <h2>❤️ 좋아요 기능 <span class="developer">담당: 좋아요팀</span></h2>
-        <div class="links">
-            <a href="/likePage?snippetId=1" class="link-item">
-                <span class="icon">❤️</span> 좋아요 페이지 (snippetId: 1)
-            </a>
-            <a href="/popular-snippets" class="link-item">
-                <span class="icon">🔥</span> 인기 스니펫 목록
-            </a>
-            <a href="/snippet/1" class="link-item">
-                <span class="icon">📄</span> 스니펫 상세 (좋아요 포함)
-            </a>
-        </div>
-    </div>
-
-    <!-- 스니펫 확장 기능 -->
-    <div class="section">
-        <h2>🔧 스니펫 확장 기능 (REST API) <span class="developer">담당: 스니펫확장팀</span></h2>
-        <div class="links">
-            <a href="#" onclick="alert('이 기능은 REST API로만 제공됩니다.\n\nPOST /api/snippets - 스니펫 생성\nPATCH /api/snippets/{id} - 스니펫 수정\nDELETE /api/snippets/{id} - 스니펫 삭제\n\nPostman이나 API 테스트 도구를 사용해주세요.'); return false;" class="link-item">
-                <span class="icon">📡</span> API 테스트 안내
-            </a>
-            <a href="/api-test" class="link-item" onclick="if(!confirm('API 테스트 페이지가 없을 수 있습니다. 계속하시겠습니까?')) return false;">
-                <span class="icon">🧪</span> API 테스트 페이지 (있는 경우)
-            </a>
-        </div>
-        <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px; font-size: 0.9em;">
-            <strong>💡 참고:</strong> 이 기능은 REST API로만 제공되며, Spring Security 인증이 필요합니다.<br>
-            Postman Collection이나 Swagger UI가 있다면 활용하세요.
-        </div>
-    </div>
-
     <!-- 사용자 인증 및 관리 -->
     <div class="section">
-        <h2>👤 사용자 인증/관리 <span class="developer">담당: 인증팀</span></h2>
+        <h2>👤 사용자 인증/관리 <span class="developer">담당: 김현우</span></h2>
         <div class="links">
             <a href="/" class="link-item" style="background: #e3f2fd;">
                 <span class="icon">🏠</span> 메인 페이지 (로그인 상태 확인)
@@ -351,6 +248,105 @@
             </a>
         </div>
     </div>
+
+    <!-- 스니펫 기본 기능 -->
+    <div class="section">
+        <h2>📝 스니펫 기본 기능 <span class="developer">담당: 최승준</span></h2>
+        <div class="links">
+            <a href="/snippets" class="link-item">
+                <span class="icon">📋</span> 스니펫 목록
+            </a>
+            <a href="/snippets/new" class="link-item">
+                <span class="icon">➕</span> 스니펫 등록
+            </a>
+        </div>
+    </div>
+
+    <!-- 북마크 기능 -->
+    <div class="section">
+        <h2>⭐ 북마크 기능 <span class="developer">담당: 우민지</span></h2>
+        <div class="links">
+            <a href="/bookmark" class="link-item">
+                <span class="icon">📌</span> 내 북마크 목록
+            </a>
+            <a href="/bookmark/my-snippets" class="link-item">
+                <span class="icon">👤</span> 내가 작성한 스니펫
+            </a>
+        </div>
+    </div>
+
+    <!-- 색상 관리 -->
+    <div class="section">
+        <h2>🎨 색상 관리 <span class="developer">담당: 우민지</span></h2>
+        <div class="links">
+            <a href="/color/all-colors" class="link-item hidden">
+                <span class="icon">🎨</span> 전체 색상 목록
+            </a>
+<!--            <button onclick="goToMyColors()" class="link-item">-->
+<!--                <span class="icon">👤</span> <span id="colorLinkText">내 색상 관리</span>-->
+<!--            </button>-->
+            <a href="/color/my-colors" class="link-item">
+                <span class="icon">🌈</span> 내 색상
+            </a>
+            <a href="/color/init-session" class="link-item hidden">
+                <span class="icon">🔧</span> 세션 초기화 (테스트용)
+            </a>
+            <button onclick="switchUser(2)" class="link-item hidden">
+                <span class="icon">🔄</span> 사용자 전환 (userId: 2)
+            </button>
+            <a href="/color/check-session" class="link-item hidden">
+                <span class="icon">🔍</span> 세션 정보 확인
+            </a>
+        </div>
+    </div>
+
+    <!-- 태그 관리 -->
+    <div class="section">
+        <h2>🏷️ 태그 관리 <span class="developer">담당: 우민지</span></h2>
+        <div class="links">
+            <a href="/tags/manager" class="link-item">
+                <span class="icon">🏷️</span> 태그 관리 페이지
+            </a>
+            <a href="/tags/snippet-tag" class="link-item">
+                <span class="icon">🔗</span> 스니펫-태그 연결 관리
+            </a>
+            <a href="/tag/init-session" class="link-item hidden">
+                <span class="icon">🔧</span> 태그 세션 초기화
+            </a>
+            <a href="/tag/switch-user/2" class="link-item hidden">
+                <span class="icon">🔄</span> 태그 사용자 전환
+            </a>
+        </div>
+    </div>
+
+    <!-- 좋아요 기능 -->
+    <div class="section">
+        <h2>❤️ 좋아요 기능 <span class="developer">담당: 임소희</span></h2>
+        <div class="links">
+            <a href="/popular-snippets" class="link-item">
+                <span class="icon">🔥</span> 인기 스니펫 목록
+            </a>
+        </div>
+    </div>
+
+    <!-- 스니펫 확장 기능 -->
+    <div class="section">
+        <h2>🔧 스니펫 확장 기능 (REST API) <span class="developer">담당: 김성민</span></h2>
+        <div class="links">
+            <a href="#" onclick="alert('이 기능은 REST API로만 제공됩니다.\n\nPOST /api/snippets - 스니펫 생성\nPATCH /api/snippets/{id} - 스니펫 수정\nDELETE /api/snippets/{id} - 스니펫 삭제\n\nPostman이나 API 테스트 도구를 사용해주세요.'); return false;" class="link-item">
+                <span class="icon">📡</span> API 테스트 안내
+            </a>
+            <a href="/api-test" class="link-item" onclick="if(!confirm('API 테스트 페이지가 없을 수 있습니다. 계속하시겠습니까?')) return false;">
+                <span class="icon">🧪</span> API 테스트 페이지 (있는 경우)
+            </a>
+        </div>
+        <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px; font-size: 0.9em;">
+            <strong>💡 참고:</strong> 이 기능은 REST API로만 제공되며, Spring Security 인증이 필요합니다.<br>
+            Postman Collection이나 Swagger UI가 있다면 활용하세요.
+        </div>
+    </div>
+
+
 
     <!-- 추가 페이지들 -->
     <div class="section">

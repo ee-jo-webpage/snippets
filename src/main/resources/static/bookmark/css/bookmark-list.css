@@ -1,272 +1,442 @@
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    line-height: 1.6;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+* {
     margin: 0;
-    padding: 20px;
-    background-color: #f5f7fa;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+    color: #333;
 }
 
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    overflow: hidden;
+    padding: 20px;
 }
 
+/* Header */
 .header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 2rem;
-    text-align: center;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+    margin-bottom: 30px;
 }
 
 .header h1 {
-    margin: 0;
     font-size: 2.5rem;
-    font-weight: 600;
+    font-weight: 700;
+    color: #2d3748;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Navigation */
+.navigation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.navigation a {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 24px;
+    text-decoration: none;
+    border-radius: 25px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.navigation a:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
 
 .bookmark-count {
-    margin-top: 0.5rem;
-    font-size: 1.1rem;
-    opacity: 0.9;
-}
-
-/* 알림 메시지 스타일 추가 */
-.alert {
-    padding: 1rem 1.5rem;
-    margin: 1rem 2rem;
-    border-radius: 8px;
+    background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 25px;
     font-weight: 500;
+    box-shadow: 0 4px 15px rgba(86, 171, 47, 0.3);
 }
 
-.alert-success {
-    background-color: #d4edda;
-    border: 1px solid #c3e6cb;
-    color: #155724;
-}
-
-.alert-error {
-    background-color: #f8d7da;
-    border: 1px solid #f5c6cb;
-    color: #721c24;
-}
-
+/* 검색 섹션 */
 .search-section {
-    padding: 1.5rem 2rem;
-    border-bottom: 1px solid #eee;
-    background: #f8f9fa;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+    margin-bottom: 30px;
 }
 
 .search-bar {
     display: flex;
-    gap: 1rem;
+    gap: 15px;
     align-items: center;
     flex-wrap: wrap;
 }
 
 .search-input {
     flex: 1;
-    min-width: 250px;
-    padding: 0.75rem 1rem;
-    border: 2px solid #e1e5e9;
-    border-radius: 8px;
-    font-size: 1rem;
-    transition: border-color 0.3s ease;
+    min-width: 300px;
+    padding: 12px 20px;
+    border: 2px solid #e2e8f0;
+    border-radius: 25px;
+    font-size: 16px;
+    transition: border-color 0.2s;
 }
 
 .search-input:focus {
     outline: none;
     border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .filter-select {
-    padding: 0.75rem 1rem;
-    border: 2px solid #e1e5e9;
-    border-radius: 8px;
+    padding: 12px 20px;
+    border: 2px solid #e2e8f0;
+    border-radius: 25px;
+    font-size: 16px;
     background: white;
-    min-width: 120px;
+    cursor: pointer;
+    transition: border-color 0.2s;
 }
 
+.filter-select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* 북마크 그리드 - 3열 레이아웃 */
 .bookmarks-grid {
-    padding: 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 20px;
+    padding: 20px 0;
 }
 
+/* 북마크 카드 */
 .bookmark-card {
-    border: 1px solid #e1e5e9;
-    border-radius: 12px;
-    padding: 1.5rem;
-    background: white;
-    margin-bottom: 1.5rem;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
     transition: all 0.3s ease;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: fit-content;
 }
 
 .bookmark-card:hover {
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    transform: translateY(-2px);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(31, 38, 135, 0.15);
 }
 
+/* 스니펫 ID */
+.snippet-id {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(102, 126, 234, 0.1);
+    color: #4c51bf;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-family: 'Monaco', monospace;
+}
+
+/* 북마크 헤더 */
 .bookmark-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1rem;
+    margin-bottom: 16px;
+    margin-top: 8px; /* 스니펫 ID 공간 확보 */
 }
 
 .bookmark-title {
-    font-size: 1.4rem;
-    font-weight: 600;
+    font-size: 1.2rem;
+    font-weight: 700;
     color: #2d3748;
-    margin: 0;
-    flex: 1;
-    margin-right: 1rem;
+    margin-bottom: 12px;
+    line-height: 1.4;
+    word-break: break-word;
 }
 
 .bookmark-actions {
     display: flex;
-    gap: 0.5rem;
-    flex-shrink: 0;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 12px;
 }
 
-.btn {
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.875rem;
-    font-weight: 500;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    transition: all 0.2s ease;
-}
-
-.btn-view {
-    background: #4299e1;
-    color: white;
-}
-
-.btn-view:hover {
-    background: #3182ce;
-    color: white;
-    text-decoration: none;
-}
-
-.btn-remove {
-    background: #f56565;
-    color: white;
-}
-
-.btn-remove:hover {
-    background: #e53e3e;
-}
-
+/* 스니펫 메타 정보 */
 .snippet-meta {
     display: flex;
-    gap: 1rem;
-    margin-bottom: 1rem;
     flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
 }
 
 .meta-item {
-    background: #edf2f7;
-    padding: 0.4rem 0.8rem;
-    border-radius: 20px;
-    font-size: 0.875rem;
+    background: rgba(107, 114, 128, 0.1);
     color: #4a5568;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.8rem;
     font-weight: 500;
 }
 
 .meta-item.type-code {
-    background: #bee3f8;
-    color: #2b6cb0;
+    background: rgba(16, 185, 129, 0.1);
+    color: #047857;
 }
 
 .meta-item.type-text {
-    background: #c6f6d5;
-    color: #2f855a;
+    background: rgba(59, 130, 246, 0.1);
+    color: #1e40af;
 }
 
 .meta-item.type-img {
-    background: #fed7d7;
-    color: #c53030;
+    background: rgba(245, 158, 11, 0.1);
+    color: #92400e;
 }
 
+/* 스니펫 콘텐츠 */
 .snippet-content {
-    background: #f7fafc;
-    padding: 1rem;
-    border-radius: 8px;
-    border-left: 4px solid #667eea;
-    margin-bottom: 1rem;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    font-size: 0.875rem;
-    line-height: 1.5;
-    color: #2d3748;
-}
-
-.snippet-id {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    background: #667eea;
-    color: white;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 500;
-}
-
-.bookmark-card {
-    position: relative;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 4rem 2rem;
-    color: #718096;
-}
-
-.empty-state h3 {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
+    background: #f8fafc;
+    padding: 16px;
+    border-radius: 12px;
+    font-size: 0.9rem;
     color: #4a5568;
+    line-height: 1.6;
+    margin-bottom: 16px;
+    border-left: 4px solid #667eea;
+    flex-grow: 1;
+}
+
+.snippet-content pre {
+    background: #1a202c;
+    color: #e2e8f0;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    overflow-x: auto;
+    margin-top: 8px;
+    font-family: 'Monaco', monospace;
+}
+
+.snippet-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin-top: 8px;
+}
+
+/* 버튼 스타일 */
+.btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-view {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+}
+
+.btn-view:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4);
+}
+
+.btn-delete {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+}
+
+.btn-delete:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
 }
 
 .btn-primary {
-    background: #667eea;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 0.75rem 1.5rem;
-    text-decoration: none;
-    border-radius: 8px;
-    font-weight: 500;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
 .btn-primary:hover {
-    background: #5a67d8;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    margin-top: 40px;
+    grid-column: 1 / -1; /* 전체 너비 차지 */
+}
+
+.empty-state p {
+    font-size: 1.1rem;
+    color: #666;
+    margin-bottom: 16px;
+}
+
+.empty-state .emoji {
+    font-size: 4rem;
+    margin-bottom: 20px;
+}
+
+.empty-state h3 {
+    margin-bottom: 12px;
+    color: #4a5568;
+    font-size: 1.5rem;
+}
+
+.empty-state .btn {
+    margin-top: 20px;
+}
+
+/* Alert Messages */
+.alert {
+    padding: 16px 24px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.alert-success {
+    background: rgba(34, 197, 94, 0.15);
+    color: #065f46;
+    border-color: rgba(34, 197, 94, 0.3);
+}
+
+.alert-error {
+    background: rgba(239, 68, 68, 0.15);
+    color: #991b1b;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.alert-warning {
+    background: rgba(245, 158, 11, 0.15);
+    color: #92400e;
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+.alert-link {
+    color: inherit;
+    text-decoration: underline;
+    font-weight: 600;
+}
+
+.alert-link:hover {
     text-decoration: none;
-    color: white;
+}
+
+/* 토스트 알림 */
+.alert.show {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 2000;
+    transform: translateX(0);
+}
+
+.fas {
+    font-size: 16px;
+}
+
+/* Responsive 디자인 */
+@media (max-width: 1200px) {
+    .bookmarks-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
 }
 
 @media (max-width: 768px) {
-    .search-bar {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .bookmark-header {
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    .bookmark-actions {
-        align-self: stretch;
+    .container {
+        padding: 15px;
     }
 
     .header h1 {
         font-size: 2rem;
     }
+
+    .search-bar {
+        flex-direction: column;
+    }
+
+    .search-input {
+        min-width: 100%;
+    }
+
+    .bookmarks-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .bookmark-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .navigation {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .snippet-content {
+        padding: 12px;
+    }
+}
+
+/* Animation */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.bookmark-card {
+    animation: fadeInUp 0.5s ease-out;
+    animation-fill-mode: both;
 }

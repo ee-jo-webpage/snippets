@@ -3,166 +3,164 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${isMyColors} ? '내 색상 모음' : '사용자 ' + ${userId} + '의 색상'">색상 페이지</title>
+    <title>스니펫 관리 사이트</title>
     <link th:href="@{/color/css/user-colors.css}" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link th:href="@{/my-snippet-page/css/my-snippet-page.css}" rel="stylesheet">
 </head>
 <body>
-<div class="container">
-        <div class="header">
-        <h1 th:text="${isMyColors ? '내 색상 모음' : '사용자 ' + userId + '의 색상'}">색상 모음</h1>
-        <div class="navigation">
-            <a th:href="@{/color/user/{id}(id=${currentUserId})}">사용 가능한 색상</a>
-            <button class="add-color-btn" onclick="openAddModal()">
-                🎨 새 색상 추가
-            </button>
-        </div>
-    </div>
+<div th:replace="fragments/header :: header"></div>
+<div th:replace="fragments/sidebar :: sidebar('snippets')"></div>
 
-    <!-- 로그인 안내 메시지 추가 -->
-    <div th:if="${currentUserId == null}" class="alert alert-warning">
-        <i class="fas fa-exclamation-triangle me-2"></i>
-        로그인이 필요한 서비스입니다. <a href="/login" class="alert-link">로그인하기</a>
-    </div>
+<!-- 메인 컨텐츠 영역 -->
+<main class="main-content">
+    <div class="container">
+        <div class="color-container">
+            <!-- 로그인 안내 메시지 추가 -->
+            <div th:if="${currentUserId == null}" class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                로그인이 필요한 서비스입니다. <a href="/login" class="alert-link">로그인하기</a>
+            </div>
 
-    <!-- 색상 목록 (로그인된 경우에만 표시) -->
-    <div th:if="${currentUserId != null}">
-        <div th:if="${not #lists.isEmpty(colorList)}" class="color-grid">
-            <div th:each="color, status : ${colorList}" class="color-card" th:style="'animation-delay: ' + ${status.index * 0.1} + 's;'">
-                <!-- 소유자 표시 -->
-                <div th:if="${color.userId != null}" class="owner-badge"
-                     th:text="${color.userId == currentUserId ? '내 색상' : '사용자 ' + color.userId}">
-                    색상 소유자
-                </div>
+            <!-- 색상 목록 (로그인된 경우에만 표시) -->
+            <div th:if="${currentUserId != null}">
+                <div th:if="${not #lists.isEmpty(colorList)}" class="color-grid">
+                    <div th:each="color, status : ${colorList}" class="color-card" th:style="'animation-delay: ' + ${status.index * 0.1} + 's;'">
+                        <!-- 소유자 표시 -->
+                        <div th:if="${color.userId != null}" class="owner-badge"
+                             th:text="${color.userId == currentUserId ? '내 색상' : '사용자 ' + color.userId}">
+                            색상 소유자
+                        </div>
 
-                <div class="color-preview" th:style="'background-color: ' + ${color.hexCode} + ';'">
-                    <div class="color-hex-overlay" th:text="${color.hexCode}">#FFFFFF</div>
-                </div>
-                <div class="color-info">
-                    <div class="color-name" th:text="${color.colorId}">색상 ID</div>
-                    <div class="color-name" th:text="${color.name}">색상 이름</div>
-                    <div class="color-hex" th:text="${color.hexCode}">#FFFFFF</div>
+                        <div class="color-preview" th:style="'background-color: ' + ${color.hexCode} + ';'">
+                            <div class="color-hex-overlay" th:text="${color.hexCode}">#FFFFFF</div>
+                        </div>
+                        <div class="color-info">
+                            <div class="color-name" th:text="${color.colorId}">색상 ID</div>
+                            <div class="color-name" th:text="${color.name}">색상 이름</div>
+                            <div class="color-hex" th:text="${color.hexCode}">#FFFFFF</div>
 
-                    <!-- 수정/삭제 버튼 (내 색상일 때만 표시) -->
-                    <div th:if="${color.userId == currentUserId or (isMyColors and color.userId != null)}" class="color-actions">
-                        <button class="btn btn-edit"
-                                onclick="openEditModal(this)"
-                                th:data-color-id="${color.colorId}"
-                                th:data-name="${color.name}"
-                                th:data-hex-code="${color.hexCode}">
-                            ✏️ 수정
-                        </button>
-                        <button class="btn btn-delete"
-                                onclick="deleteColor(this)"
-                                th:data-color-id="${color.colorId}"
-                                th:data-name="${color.name}">
-                            🗑️ 삭제
-                        </button>
+                            <!-- 수정/삭제 버튼 (내 색상일 때만 표시) -->
+                            <div th:if="${color.userId == currentUserId or (isMyColors and color.userId != null)}" class="color-actions">
+                                <button class="btn btn-edit"
+                                        onclick="openEditModal(this)"
+                                        th:data-color-id="${color.colorId}"
+                                        th:data-name="${color.name}"
+                                        th:data-hex-code="${color.hexCode}">
+                                    ✏️ 수정
+                                </button>
+                                <button class="btn btn-delete"
+                                        onclick="deleteColor(this)"
+                                        th:data-color-id="${color.colorId}"
+                                        th:data-name="${color.name}">
+                                    🗑️ 삭제
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                <div th:if="${#lists.isEmpty(colorList)}" class="empty-state">
+                    <div class="emoji">🎨</div>
+                    <p>등록된 색상이 없습니다.</p>
+                    <button th:if="${isMyColors}" class="add-color-btn" onclick="openAddModal()" style="margin-top: 20px;">
+                        🎨 첫 번째 색상 추가하기
+                    </button>
+                </div>
+            </div>
+
+            <!-- 로그인하지 않은 경우 빈 상태 메시지 -->
+            <div th:if="${currentUserId == null}" class="empty-state">
+                <div class="emoji">🔒</div>
+                <h3>로그인이 필요합니다</h3>
+                <p>색상을 관리하려면 먼저 로그인해주세요.</p>
+                <a href="/login" class="btn btn-primary" style="margin-top: 20px;">
+                    <i class="fas fa-sign-in-alt"></i> 로그인하기
+                </a>
             </div>
         </div>
-
-        <div th:if="${#lists.isEmpty(colorList)}" class="empty-state">
-            <div class="emoji">🎨</div>
-            <p>등록된 색상이 없습니다.</p>
-            <button th:if="${isMyColors}" class="add-color-btn" onclick="openAddModal()" style="margin-top: 20px;">
-                🎨 첫 번째 색상 추가하기
-            </button>
-        </div>
     </div>
-
-    <!-- 로그인하지 않은 경우 빈 상태 메시지 -->
-    <div th:if="${currentUserId == null}" class="empty-state">
-        <div class="emoji">🔒</div>
-        <h3>로그인이 필요합니다</h3>
-        <p>색상을 관리하려면 먼저 로그인해주세요.</p>
-        <a href="/login" class="btn btn-primary" style="margin-top: 20px;">
-            <i class="fas fa-sign-in-alt"></i> 로그인하기
-        </a>
-    </div>
-</div>
-
-<!-- 색상 추가 모달 -->
-<div id="addModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2 class="modal-title">새 색상 추가</h2>
-            <button class="close" onclick="closeAddModal()">&times;</button>
-        </div>
-        <form id="addColorForm" th:action="@{/color/add}" method="POST">
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="addColorName" class="form-label">색상 이름</label>
-                    <input type="text" id="addColorName" name="name" class="form-control" required placeholder="예: 새벽의 푸른색">
-                </div>
-                <div class="form-group">
-                    <label for="addHexCode" class="form-label">색상 코드</label>
-                    <div class="color-picker-container">
-                        <input type="text" id="addHexCode" name="hexCode" class="form-control"
-                               pattern="^#[0-9A-Fa-f]{6}$" required placeholder="#FF0000">
-                        <input type="color" id="addColorPicker" value="#FF0000" onchange="updateAddHexFromPicker()">
+    <!-- 색상 추가 모달 -->
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">새 색상 추가</h2>
+                <button class="close" onclick="closeAddModal()">&times;</button>
+            </div>
+            <form id="addColorForm" th:action="@{/color/add}" method="POST">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="addColorName" class="form-label">색상 이름</label>
+                        <input type="text" id="addColorName" name="name" class="form-control" required placeholder="예: 새벽의 푸른색">
                     </div>
-                    <small style="color: #666; margin-top: 5px; display: block;">
-                        색상 선택기를 사용하거나 직접 입력하세요 (예: #FF0000)
-                    </small>
-                </div>
-                <div class="color-preview-box" id="addColorPreview" style="background-color: #FF0000;">
-                    #FF0000
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-modal btn-secondary" onclick="closeAddModal()">
-                    취소
-                </button>
-                <button type="submit" class="btn-modal btn-primary">
-                    추가
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- 색상 수정 모달 -->
-<div id="editModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2 class="modal-title">색상 수정</h2>
-            <button class="close" onclick="closeModal()">&times;</button>
-        </div>
-        <form id="editColorForm" th:action="@{/color/update}" method="POST">
-            <input type="hidden" id="editColorId" name="colorId">
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="editColorName" class="form-label">색상 이름</label>
-                    <input type="text" id="editColorName" name="name" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label for="editHexCode" class="form-label">색상 코드</label>
-                    <div class="color-picker-container">
-                        <input type="text" id="editHexCode" name="hexCode" class="form-control"
-                               pattern="^#[0-9A-Fa-f]{6}$" required placeholder="#FF0000">
-                        <input type="color" id="editColorPicker" onchange="updateEditHexFromPicker()">
+                    <div class="form-group">
+                        <label for="addHexCode" class="form-label">색상 코드</label>
+                        <div class="color-picker-container">
+                            <input type="text" id="addHexCode" name="hexCode" class="form-control"
+                                   pattern="^#[0-9A-Fa-f]{6}$" required placeholder="#FF0000">
+                            <input type="color" id="addColorPicker" value="#FF0000" onchange="updateAddHexFromPicker()">
+                        </div>
+                        <small style="color: #666; margin-top: 5px; display: block;">
+                            색상 선택기를 사용하거나 직접 입력하세요 (예: #FF0000)
+                        </small>
                     </div>
-                    <small style="color: #666; margin-top: 5px; display: block;">
-                        색상 선택기를 사용하거나 직접 입력하세요 (예: #FF0000)
-                    </small>
+                    <div class="color-preview-box" id="addColorPreview" style="background-color: #FF0000;">
+                        #FF0000
+                    </div>
                 </div>
-                <div class="color-preview-box" id="editColorPreview" style="background-color: #FFFFFF;">
-                    미리보기
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal btn-secondary" onclick="closeAddModal()">
+                        취소
+                    </button>
+                    <button type="submit" class="btn-modal btn-primary">
+                        추가
+                    </button>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-modal btn-secondary" onclick="closeModal()">
-                    취소
-                </button>
-                <button type="submit" class="btn-modal btn-primary">
-                    저장
-                </button>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
-</div>
+
+    <!-- 색상 수정 모달 -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">색상 수정</h2>
+                <button class="close" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="editColorForm" th:action="@{/color/update}" method="POST">
+                <input type="hidden" id="editColorId" name="colorId">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="editColorName" class="form-label">색상 이름</label>
+                        <input type="text" id="editColorName" name="name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editHexCode" class="form-label">색상 코드</label>
+                        <div class="color-picker-container">
+                            <input type="text" id="editHexCode" name="hexCode" class="form-control"
+                                   pattern="^#[0-9A-Fa-f]{6}$" required placeholder="#FF0000">
+                            <input type="color" id="editColorPicker" onchange="updateEditHexFromPicker()">
+                        </div>
+                        <small style="color: #666; margin-top: 5px; display: block;">
+                            색상 선택기를 사용하거나 직접 입력하세요 (예: #FF0000)
+                        </small>
+                    </div>
+                    <div class="color-preview-box" id="editColorPreview" style="background-color: #FFFFFF;">
+                        미리보기
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal btn-secondary" onclick="closeModal()">
+                        취소
+                    </button>
+                    <button type="submit" class="btn-modal btn-primary">
+                        저장
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</main>
 
 <script th:inline="javascript">
     // 세션 정보 토글 함수

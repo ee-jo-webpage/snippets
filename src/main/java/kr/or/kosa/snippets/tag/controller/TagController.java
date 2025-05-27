@@ -52,6 +52,24 @@ public class TagController {
         return ResponseEntity.ok(tags != null ? tags : new ArrayList<>());
     }
 
+    // 태그 검색 API 추가
+    @GetMapping("/search")
+    public ResponseEntity<List<TagItem>> searchTags(@RequestParam("query") String keyword,
+                                                    @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long userId = requireLogin(userDetails);
+
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return ResponseEntity.ok(new ArrayList<>());
+        }
+
+        List<TagItem> tags = tagService.searchTagsByKeyword(userId, keyword.trim());
+        return ResponseEntity.ok(tags != null ? tags : new ArrayList<>());
+    }
+
     // 사용자 Id로 모든 태그 조회
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<TagItem>> getTagsByUserId(@PathVariable("userId") Long userId) {

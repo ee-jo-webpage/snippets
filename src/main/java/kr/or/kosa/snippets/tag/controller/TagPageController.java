@@ -40,8 +40,11 @@ public class TagPageController {
         Long userId = requireLogin(userDetails);
         log.info("태그 관리 페이지 접근 - 사용자 ID: {}", userId);
 
-        model.addAttribute("currentUserId", userId);
-        return "tag/tag-manager";
+        // HTML에서 사용하는 변수명에 맞춰 설정
+        model.addAttribute("currentUserId", userId);  // 기존 변수
+        model.addAttribute("userId", userId);         // HTML에서 체크하는 변수 추가
+
+        return "tag/temp-tag-manager";
     }
 
     /**
@@ -56,9 +59,9 @@ public class TagPageController {
 
             if (currentId == null) {
                 // 로그인되지 않은 경우 빈 데이터로 설정
-                model.addAttribute("snippetList", new ArrayList<>());  // snippets -> snippetList로 변경
+                model.addAttribute("snippetList", new ArrayList<>());
                 model.addAttribute("tags", new ArrayList<>());
-                model.addAttribute("userId", null);
+                model.addAttribute("userId", null);  // 중요: HTML에서 체크하는 변수
                 model.addAttribute("error", "로그인이 필요합니다.");
                 return "tag/snippet-tags";
             }
@@ -72,15 +75,15 @@ public class TagPageController {
             log.info("사용자 {}가 만든 태그 수: {}", currentId, myTags != null ? myTags.size() : 0);
 
             // null 체크 및 기본값 설정
-            model.addAttribute("snippetList", mySnippets != null ? mySnippets : new ArrayList<>());  // snippets -> snippetList로 변경
+            model.addAttribute("snippetList", mySnippets != null ? mySnippets : new ArrayList<>());
             model.addAttribute("tags", myTags != null ? myTags : new ArrayList<>());
-            model.addAttribute("userId", currentId);
+            model.addAttribute("userId", currentId);  // 중요: HTML에서 체크하는 변수
 
         } catch (Exception e) {
             log.error("스니펫/태그 조회 중 오류 발생", e);
-            model.addAttribute("snippetList", new ArrayList<>());  // snippets -> snippetList로 변경
+            model.addAttribute("snippetList", new ArrayList<>());
             model.addAttribute("tags", new ArrayList<>());
-            model.addAttribute("userId", null);
+            model.addAttribute("userId", null);  // 중요: HTML에서 체크하는 변수
             model.addAttribute("error", "데이터를 불러오는 중 오류가 발생했습니다: " + e.getMessage());
         }
 

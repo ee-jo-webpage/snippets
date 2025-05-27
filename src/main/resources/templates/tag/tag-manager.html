@@ -3,59 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <title>태그 관리</title>
-    <link th:href="@{/tag/css/tag-manager.css}" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link th:href="@{/tag/css/tag-manager.css}" rel="stylesheet">
 </head>
 <body>
 <div class="container">
-    <!-- 세션 정보 확인 패널 -->
-    <div class="session-panel">
-        <a th:href="@{/tag/init-session}" class="btn btn-warning">
-            🔑 세션 초기화 (임시 로그인)
-        </a>
-        <button class="session-toggle-btn" onclick="toggleSessionInfo()">
-            🔍 세션 정보 확인
-        </button>
-        <div id="sessionInfo" class="session-info">
-            <div class="session-item">
-                <span class="session-key">현재 사용자 ID:</span>
-                <span class="session-value" th:text="${currentUserId != null ? currentUserId : '없음'}">없음</span>
-            </div>
-            <div class="session-item">
-                <span class="session-key">세션 ID:</span>
-                <span class="session-value" id="sessionId">로딩 중...</span>
-            </div>
-            <div class="session-item">
-                <span class="session-key">서버 세션 데이터:</span>
-                <span class="session-value" id="serverSessionData">로딩 중...</span>
-            </div>
+
+    <!-- 헤더 (user-colors와 동일한 구조) -->
+    <div class="header">
+        <h1>🏷️ 태그 관리</h1>
+        <div class="navigation">
+            <a th:href="@{/tags/snippet-tag}">스니펫 태그 관리</a>
+            <div class="tag-count" id="tagCount">총 0개의 태그</div>
         </div>
     </div>
 
-    <h1>🏷️ 태그 관리</h1>
+    <!-- 알림 메시지 표시 영역 -->
+    <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
 
-    <!-- 태그 추가 영역 -->
-    <div class="card">
-        <div class="card-title">태그 추가</div>
-        <div class="help-message">💡 태그 이름을 입력하고 엔터를 눌러 새 태그를 생성하거나 기존 태그를 선택하세요.</div>
-        <div class="tag-input-wrapper">
-            <input type="text" id="tagInput" class="tag-input-field" placeholder="태그 이름을 입력하세요...">
-            <div id="autocomplete" class="autocomplete-dropdown"></div>
+    <!-- 태그 관리 기능들 (로그인된 경우에만 표시) -->
+    <div th:if="${userId != null}">
+        <!-- 검색/추가 섹션 -->
+        <div class="search-section">
+            <div class="search-bar">
+                <input type="text"
+                       id="tagSearchInput"
+                       class="search-input"
+                       placeholder="태그 검색 또는 새 태그 추가...">
+                <button id="addTagBtn" class="add-tag-btn">
+                    <i class="fas fa-plus"></i> 태그 추가
+                </button>
+            </div>
         </div>
-    </div>
 
-    <!-- 전체 태그 목록 영역 -->
-    <div class="card">
-        <div class="card-title">전체 태그 목록</div>
-        <div class="help-message">💡 태그를 클릭하면 해당 태그를 가진 스니펫 목록을 볼 수 있습니다. ❌를 클릭하면 태그를 삭제할 수 있습니다.</div>
-        <div id="allTags" class="tag-list">
+        <!-- 태그 목록 -->
+        <div class="tags-grid" id="tagsContainer">
             <div class="loading-text">태그를 불러오는 중...</div>
         </div>
+
+        <!-- 태그가 없는 경우 -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <div class="emoji">🏷️</div>
+            <p>아직 생성한 태그가 없습니다</p>
+            <p>새로운 태그를 만들어서 스니펫을 체계적으로 관리해보세요!</p>
+            <button class="btn btn-primary" onclick="document.getElementById('tagSearchInput').focus()">
+                <i class="fas fa-plus"></i> 첫 태그 만들기
+            </button>
+        </div>
     </div>
 
-    <!-- 스니펫 목록 영역 -->
-    <div id="snippetsSection" class="card snippets-section">
-        <div class="card-title" id="snippetsTitle">📝 스니펫 목록</div>
+    <!-- 로그인하지 않은 경우 빈 상태 메시지 (user-colors와 동일) -->
+    <div th:if="${userId == null}" class="empty-state">
+        <div class="emoji">🔒</div>
+        <h3>로그인이 필요합니다</h3>
+        <p>태그를 관리하려면 먼저 로그인해주세요.</p>
+        <a href="/login" class="btn btn-primary">
+            <i class="fas fa-sign-in-alt"></i> 로그인하기
+        </a>
+    </div>
+
+    <!-- 선택된 태그의 스니펫 목록 -->
+    <div id="snippetsSection" class="snippets-section" style="display: none;">
+        <div class="section-header">
+            <h2 id="snippetsTitle">📝 스니펫 목록</h2>
+            <button id="closeSnippetsBtn" class="btn btn-secondary">
+                <i class="fas fa-times"></i> 닫기
+            </button>
+        </div>
         <div id="snippetsGrid" class="snippets-grid"></div>
     </div>
 </div>
@@ -78,10 +95,62 @@
     </div>
 </div>
 
-<!-- 현재 사용자 ID를 자바스크립트 변수로 전달 -->
 <script th:inline="javascript">
+    // 세션 정보 토글 함수 (user-colors와 동일)
+    function toggleSessionInfo() {
+        const sessionInfo = document.getElementById('sessionInfo');
+        if (sessionInfo.style.display === 'none' || sessionInfo.style.display === '') {
+            sessionInfo.style.display = 'block';
+            loadSessionData();
+        } else {
+            sessionInfo.style.display = 'none';
+        }
+    }
+
+    // 세션 데이터 로드 함수
+    async function loadSessionData() {
+        try {
+            const cookies = document.cookie.split(';');
+            let sessionId = '쿠키에서 세션ID를 찾을 수 없음';
+
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'JSESSIONID' || name === 'connect.sid') {
+                    sessionId = value;
+                    break;
+                }
+            }
+            document.getElementById('sessionId').textContent = sessionId;
+        } catch (error) {
+            console.error('세션 정보 로드 중 오류:', error);
+        }
+    }
+
+    // 알림 메시지 표시 (user-colors와 동일)
+    /*[# th:if="${message != null}"]*/
+    showAlert(/*[[${message}]]*/ '메시지', 'success');
+    /*[/]*/
+
+    /*[# th:if="${error != null}"]*/
+    showAlert(/*[[${error}]]*/ '오류', 'error');
+    /*[/]*/
+
+    function showAlert(message, type) {
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type}`;
+        alert.textContent = message;
+        document.body.appendChild(alert);
+
+        setTimeout(() => alert.classList.add('show'), 100);
+        setTimeout(() => {
+            alert.classList.remove('show');
+            setTimeout(() => alert.remove(), 300);
+        }, 3000);
+    }
+
     // 서버에서 전달된 모델 데이터
     const currentUserId = /*[[${currentUserId}]]*/ null;
+    const userId = /*[[${userId}]]*/ null;
     const message = /*[[${message}]]*/ null;
     const error = /*[[${error}]]*/ null;
 </script>
@@ -89,4 +158,3 @@
 <!-- JavaScript 파일 가져오기 -->
 <script th:src="@{/tag/js/tag-manager.js}"></script>
 </body>
-</html>

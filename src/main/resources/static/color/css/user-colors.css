@@ -135,31 +135,31 @@ body {
     box-shadow: 0 6px 20px rgba(86, 171, 47, 0.4);
 }
 
-/* Color Grid */
+/* Color Grid - 크기 축소 */
 .color-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
-    padding: 20px 0;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); /* 300px -> 220px로 축소 */
+    gap: 15px; /* 20px -> 15px로 축소 */
+    padding: 15px 0; /* 20px -> 15px로 축소 */
 }
 
 .color-card {
     background: rgba(255, 255, 255, 0.95);
-    border-radius: 16px;
+    border-radius: 12px; /* 16px -> 12px로 축소 */
     overflow: hidden;
-    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+    box-shadow: 0 4px 20px rgba(31, 38, 135, 0.08); /* 그림자 축소 */
     transition: all 0.3s ease;
     border: 1px solid rgba(255, 255, 255, 0.2);
     position: relative;
 }
 
 .color-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(31, 38, 135, 0.15);
+    transform: translateY(-4px); /* -8px -> -4px로 축소 */
+    box-shadow: 0 12px 30px rgba(31, 38, 135, 0.12); /* 그림자 축소 */
 }
 
 .color-preview {
-    height: 120px;
+    height: 80px; /* 120px -> 80px로 축소 */
     position: relative;
     overflow: hidden;
     display: flex;
@@ -183,90 +183,90 @@ body {
     z-index: 1;
     color: white;
     font-weight: 600;
-    font-size: 1.1rem;
+    font-size: 0.9rem; /* 1.1rem -> 0.9rem로 축소 */
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
     background: rgba(0, 0, 0, 0.2);
-    padding: 8px 16px;
-    border-radius: 20px;
+    padding: 6px 12px; /* 8px 16px -> 6px 12px로 축소 */
+    border-radius: 16px; /* 20px -> 16px로 축소 */
     backdrop-filter: blur(5px);
 }
 
 .color-info {
-    padding: 24px;
+    padding: 16px; /* 24px -> 16px로 축소 */
 }
 
 .color-name {
-    font-size: 1.25rem;
+    font-size: 1.1rem; /* 1.25rem -> 1.1rem로 축소 */
     font-weight: 600;
     color: #2d3748;
-    margin-bottom: 8px;
+    margin-bottom: 6px; /* 8px -> 6px로 축소 */
 }
 
 .color-hex {
-    font-size: 1rem;
+    font-size: 0.9rem; /* 1rem -> 0.9rem로 축소 */
     color: #718096;
     font-family: 'Monaco', monospace;
     background: #f7fafc;
-    padding: 8px 12px;
-    border-radius: 8px;
+    padding: 6px 10px; /* 8px 12px -> 6px 10px로 축소 */
+    border-radius: 6px; /* 8px -> 6px로 축소 */
     display: inline-block;
-    margin-bottom: 16px;
+    margin-bottom: 12px; /* 16px -> 12px로 축소 */
 }
 
-/* Action Buttons */
+/* Action Buttons - 크기 축소 */
 .color-actions {
     display: flex;
-    gap: 8px;
+    gap: 6px; /* 8px -> 6px로 축소 */
     justify-content: flex-end;
-    margin-top: 16px;
+    margin-top: 12px; /* 16px -> 12px로 축소 */
 }
 
 .btn {
-    padding: 8px 16px;
+    padding: 6px 12px; /* 8px 16px -> 6px 12px로 축소 */
     border: none;
-    border-radius: 20px;
+    border-radius: 16px; /* 20px -> 16px로 축소 */
     cursor: pointer;
     font-weight: 500;
-    font-size: 0.9rem;
+    font-size: 0.8rem; /* 0.9rem -> 0.8rem로 축소 */
     transition: all 0.3s ease;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px; /* 6px -> 4px로 축소 */
 }
 
 .btn-edit {
     background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
     color: white;
-    box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+    box-shadow: 0 2px 10px rgba(79, 172, 254, 0.3); /* 그림자 축소 */
 }
 
 .btn-edit:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4);
+    transform: translateY(-1px); /* -2px -> -1px로 축소 */
+    box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4); /* 그림자 축소 */
 }
 
 .btn-delete {
     background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%);
     color: white;
-    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+    box-shadow: 0 2px 10px rgba(255, 107, 107, 0.3); /* 그림자 축소 */
 }
 
 .btn-delete:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+    transform: translateY(-1px); /* -2px -> -1px로 축소 */
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4); /* 그림자 축소 */
 }
 
-/* Owner Badge */
+/* Owner Badge - 크기 축소 */
 .owner-badge {
     position: absolute;
-    top: 12px;
-    right: 12px;
+    top: 8px; /* 12px -> 8px로 축소 */
+    right: 8px; /* 12px -> 8px로 축소 */
     background: rgba(0, 0, 0, 0.7);
     color: white;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.8rem;
+    padding: 4px 8px; /* 6px 12px -> 4px 8px로 축소 */
+    border-radius: 12px; /* 20px -> 12px로 축소 */
+    font-size: 0.7rem; /* 0.8rem -> 0.7rem로 축소 */
     font-weight: 500;
     backdrop-filter: blur(5px);
 }
@@ -481,24 +481,33 @@ body {
     background: linear-gradient(135deg, #d00000 0%, #ffcdd2 100%);
 }
 
-/* Responsive */
+/* Responsive - 모바일에서 더 작게 */
 @media (max-width: 768px) {
     .header h1 {
         font-size: 2rem;
     }
 
     .color-grid {
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 15px;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); /* 모바일에서 더 작게 */
+        gap: 12px;
     }
 
     .color-actions {
         flex-direction: column;
         align-items: stretch;
+        gap: 4px;
     }
 
     .session-panel {
         padding: 10px;
+    }
+
+    .color-preview {
+        height: 60px; /* 모바일에서 더 작게 */
+    }
+
+    .color-info {
+        padding: 12px;
     }
 }
 

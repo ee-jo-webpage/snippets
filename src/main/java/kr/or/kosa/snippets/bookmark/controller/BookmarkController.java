@@ -56,7 +56,7 @@ public class BookmarkController {
             model.addAttribute("bookmarks", new ArrayList<>());
             model.addAttribute("count", 0);
             log.warn("로그인하지 않은 사용자의 북마크 페이지 접근");
-            return "bookmark/bookmark-list";
+            return "bookmark/temp-bookmark-list";
         }
 
         try {
@@ -78,7 +78,7 @@ public class BookmarkController {
             model.addAttribute("count", 0);
         }
 
-        return "bookmark/bookmark-list";
+        return "bookmark/temp-bookmark-list";
     }
 
     //북마크된 스니펫 상세보기 (추가)

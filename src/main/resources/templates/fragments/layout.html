@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} ?: '스니펫 관리 사이트'">스니펫 관리 사이트</title>
+    <link th:href="@{/my-snippet-page/css/my-snippet-page.css}" rel="stylesheet">
+</head>
+<body>
+<!-- 헤더 포함 -->
+<div th:replace="fragments/header :: header"></div>
+
+<!-- 사이드바 포함 -->
+<div th:replace="fragments/sidebar :: sidebar(${activeMenu ?: ''})"></div>
+
+<!-- 메인 컨텐츠 영역 - 각 페이지에서 오버라이드 -->
+<main class="main-content">
+    <!-- 기본 컨텐츠 -->
+    <div class="welcome-card">
+        <h1 class="welcome-title">환영합니다! 🎉</h1>
+        <p class="welcome-text">코드 스니펫을 효율적으로 관리하고 공유할 수 있는 공간입니다.</p>
+
+        <div class="feature-grid" th:if="${features}">
+            <div class="feature-card" th:each="feature : ${features}">
+                <div class="feature-icon" th:text="${feature.icon}">📝</div>
+                <div class="feature-title" th:text="${feature.title}">스니펫 관리</div>
+                <div class="feature-desc" th:text="${feature.description}">설명</div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- 공통 스타일 -->
+<style>
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .user-nickname {
+        color: #333;
+        font-weight: 500;
+        font-size: 14px;
+    }
+
+    .user-nickname::after {
+        content: "님";
+        margin-left: 2px;
+    }
+
+    .logout-btn {
+        background-color: #ff6b6b;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 14px;
+        transition: background-color 0.3s;
+    }
+
+    .logout-btn:hover {
+        background-color: #ff5252;
+    }
+</style>
+</body>
+</html>

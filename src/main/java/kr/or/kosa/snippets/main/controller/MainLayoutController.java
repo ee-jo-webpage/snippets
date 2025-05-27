@@ -48,6 +48,6 @@ public class MainLayoutController {
 //            loadDefaultStats(model);
         }
 
-        return "my-snippet-page/my-snippet-page";
+        return "fragments/layout";
     }
 }

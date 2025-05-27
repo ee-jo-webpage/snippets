@@ -44,7 +44,7 @@ public class TagPageController {
         model.addAttribute("currentUserId", userId);  // 기존 변수
         model.addAttribute("userId", userId);         // HTML에서 체크하는 변수 추가
 
-        return "tag/tag-manager";
+        return "tag/temp-tag-manager";
     }
 
     /**

@@ -4,6 +4,7 @@ import jakarta.persistence.EntityNotFoundException;
 import kr.or.kosa.snippets.snippetExt.exception.DuplicateSnippetException;
 import kr.or.kosa.snippets.snippetExt.mapper.SnippetExtMapper;
 import kr.or.kosa.snippets.snippetExt.model.ColorExt;
+import kr.or.kosa.snippets.snippetExt.model.PopSnippets;
 import kr.or.kosa.snippets.snippetExt.model.SnippetExtCreate;
 import kr.or.kosa.snippets.snippetExt.model.SnippetExtUpdate;
 import lombok.RequiredArgsConstructor;
@@ -111,5 +112,9 @@ public class SnippetExtService {
     public List<ColorExt> getColorsByUserId(Long userId) {
         List<ColorExt> colorList = snippetExtMapper.findColorsByUserId(userId);
         return colorList;
+    }
+
+    public List<PopSnippets> getTop3PopularSnippets() {
+        return snippetExtMapper.selectTop3PopularSnippets();
     }
 }

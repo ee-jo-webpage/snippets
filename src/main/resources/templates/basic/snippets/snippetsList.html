@@ -4,25 +4,23 @@
 <head>
    <meta charset="UTF-8">
    <title>Snippets List</title>
+   <style>
+     .pagination { display: flex; list-style: none; padding: 0; margin: 1rem 0; }
+     .pagination li { margin: 0 0.3rem; }
+     .pagination li.disabled a { pointer-events: none; color: gray; }
+     .pagination li.active a { font-weight: bold; }
+   </style>
 </head>
 
 <body>
    <h1>Snippets List</h1>
-	
-   <form th:action="@{/snippets}" method="get" style="margin-bottom:1rem;">
-     <input type="text" name="userId"
-            placeholder="User ID로 검색"
-            th:value="${filterUserId}" />
-     <button type="submit">검색</button>
-     <a th:if="${filterUserId != null}" th:href="@{/snippets}">전체 보기</a>
-   </form>
 
    <table border="1">
       <thead>
          <tr>
             <th>Snippet ID</th>
             <th>User ID</th>
-            <th>Folder ID</th>
+           
             <th>Color ID</th>
             <th>Source URL</th>
             <th>Type</th>
@@ -31,21 +29,19 @@
             <th>Updated At</th>
             <th>Like Count</th>
             <th>Visibility</th>
+            <th>Actions</th>
          </tr>
       </thead>
       <tbody>
-         <!-- Snippets 리스트를 반복하여 출력 -->
          <tr th:each="snippet : ${snippets}">
-
             <td th:text="${snippet.snippetId}"></td>
             <td th:text="${snippet.userId}"></td>
-            <td th:text="${snippet.folderId}"></td>
             <td th:text="${snippet.colorId}"></td>
             <td th:text="${snippet.sourceUrl}"></td>
             <td th:text="${snippet.type}"></td>
             <td th:text="${snippet.memo}"></td>
-            <td th:text="${snippet.createdAt}"></td>
-            <td th:text="${snippet.updatedAt}"></td>
+            <td th:text="${#dates.format(snippet.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
+            <td th:text="${#dates.format(snippet.updatedAt, 'yyyy-MM-dd HH:mm')}"></td>
             <td th:text="${snippet.likeCount}"></td>
             <td th:text="${snippet.visibility}"></td>
             <td>
@@ -55,11 +51,26 @@
       </tbody>
    </table>
    
+   <!-- 페이징 내비게이션 -->
+   <nav>
+     <ul class="pagination">
+       <li th:classappend="${startPage > pageGroupSize} ? '' : 'disabled'">
+         <a th:href="@{/snippets(page=${startPage - pageGroupSize})}">이전</a>
+       </li>
+       <li th:each="i : ${#numbers.sequence(startPage, endPage)}"
+           th:classappend="${i == pageInfo.pageNum} ? 'active' : ''">
+         <a th:href="@{/snippets(page=${i})}" th:text="${i}">1</a>
+       </li>
+       <li th:classappend="${endPage < pageInfo.pages} ? '' : 'disabled'">
+         <a th:href="@{/snippets(page=${endPage + 1})}">다음</a>
+       </li>
+     </ul>
+   </nav>
+   
    <a href="/snippets/new">
       <button>스니펫 추가</button>
    </a>
    
-   <!-- 페이지 내비게이션 또는 다른 링크 추가 가능 -->
    <a href="/">Go to Home</a>
 </body>
 

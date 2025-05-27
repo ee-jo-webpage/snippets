@@ -2,30 +2,41 @@
 <html lang="ko">
 <head>
 	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>이메일 인증</title>
-	<link rel="stylesheet" href="/user/css/common/form-common.css">
 	<link rel="stylesheet" href="/user/css/verify.css">
-
 </head>
 <body>
+<div class="verify-container">
+	<form id="verifyForm">
+		<div class="header">
+			<h1>이메일 인증</h1>
+			<p>전송된 인증 코드를 입력해주세요</p>
+			<div class="email-display" id="emailDisplay"></div>
+		</div>
 
-<form id="verifyForm">
-	<h1>이메일 인증</h1>
+		<input type="hidden" name="email" id="email">
 
-	<input type="hidden" name="email" id="email">
+		<div class="form-group">
+			<label for="codeInput">인증 코드</label>
+			<div class="input-wrapper">
+				<input type="text" name="code" id="codeInput" placeholder="6자리 코드 입력" maxlength="6" required>
+			</div>
+		</div>
 
-	<label>
-		인증 코드:
-		<input type="text" name="code" required>
-	</label>
+		<div class="button-group">
+			<button type="submit" class="btn btn-primary" id="verifyBtn">
+				인증하기
+			</button>
+			<button type="button" class="btn btn-secondary" id="resendBtn">
+				인증 코드 재전송
+			</button>
+		</div>
 
-	<button type="submit">인증하기</button>
-	<button type="button" id="resendBtn">인증 코드 재전송</button>
-
-	<div id="result"></div>
-</form>
-
-
+		<div id="result" class="result"></div>
+		<div id="timer" class="timer"></div>
+	</form>
+</div>
 
 <script src="/user/js/verify.js"></script>
 </body>

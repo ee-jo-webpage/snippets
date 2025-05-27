@@ -39,9 +39,13 @@
             border: 1px solid #dee2e6;
             border-radius: 8px;
             cursor: pointer;
+            transition: all 0.2s ease;
         }
         .attachment-item:hover {
             background: #f8f9fa;
+            border-color: #0d6efd;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
@@ -53,24 +57,26 @@
     </div>
 
     <!-- 게시글 상세 -->
-    <div class="card mb-4">
+    <div class="card mb-4" th:if="${post != null}">
         <div class="card-header bg-light">
             <h2 th:text="${post.title}">게시글 제목</h2>
             <div class="text-muted small mt-2">
                 작성자: <span th:text="${post.nickname}">작성자</span> |
-                작성일: <span th:text="${post.createdAt}">작성일</span> |
+                작성일: <span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">작성일</span> |
                 조회수: <span th:text="${post.viewCount}">0</span>
             </div>
         </div>
         <div class="card-body">
             <div class="post-content" th:utext="${post.content}">게시글 내용</div>
 
-            <!-- 첨부파일 목록 (가장 간단한 버전) -->
-            <div th:if="${attachments != null and !attachments.empty}" class="mt-4">
+            <!-- 첨부파일 목록 -->
+            <div th:if="${attachments != null and not #lists.isEmpty(attachments)}" class="mt-4">
                 <h5>첨부파일</h5>
                 <div class="border rounded p-3">
-                    <div th:each="attachment : ${attachments}" class="attachment-item"
-                         th:onclick="|downloadFile('${attachment.attachmentId}', '${attachment.fileName}')|">
+                    <div th:each="attachment : ${attachments}"
+                         class="attachment-item"
+                         th:data-attachment-id="${attachment.attachmentId}"
+                         th:data-file-name="${attachment.fileName}">
                         <div class="d-flex align-items-center">
                             <i class="fas fa-file me-2"></i>
                             <div>
@@ -84,14 +90,21 @@
         </div>
 
         <!-- 수정/삭제 버튼 -->
-        <div class="card-footer" th:if="${post.userId == currentUserId}">
+        <div class="card-footer" th:if="${currentUserId != null and post.userId == currentUserId}">
             <a th:href="@{/community/post/{id}/edit(id=${post.postId})}" class="btn btn-outline-primary">수정</a>
             <button type="button" class="btn btn-outline-danger" onclick="deletePost()">삭제</button>
         </div>
     </div>
 
+    <!-- 게시글이 없는 경우 -->
+    <div class="alert alert-warning" th:if="${post == null}">
+        <h4>게시글을 찾을 수 없습니다</h4>
+        <p>요청하신 게시글이 존재하지 않거나 삭제되었습니다.</p>
+        <a th:href="@{/community}" class="btn btn-primary">커뮤니티로 돌아가기</a>
+    </div>
+
     <!-- 댓글 영역 -->
-    <div class="card">
+    <div class="card" th:if="${post != null}">
         <div class="card-header">
             <h5>댓글</h5>
         </div>
@@ -119,44 +132,55 @@
 </div>
 
 <!-- 삭제 폼 -->
-<form id="deleteForm" th:action="@{/community/post/{id}/delete(id=${post.postId})}" method="post" style="display:none;"></form>
+<form id="deleteForm" th:if="${post != null}" th:action="@{/community/post/{id}/delete(id=${post.postId})}" method="post" style="display:none;"></form>
 
 <script th:inline="javascript">
-    const postId = [[${post.postId}]];
-    const currentUserId = [[${currentUserId}]];
-    const isLoggedIn = [[${isLoggedIn}]];
+    /*<![CDATA[*/
+    const postId = /*[[${post?.postId}]]*/ null;
+    const currentUserId = /*[[${currentUserId}]]*/ null;
+    const isLoggedIn = /*[[${isLoggedIn}]]*/ false;
+    /*]]>*/
 
     $(document).ready(function() {
-        loadComments();
+        if (postId) {
+            loadComments();
 
-        // 댓글 등록
-        $('#addComment').click(function() {
-            const content = $('#commentContent').val().trim();
-            if (!content) {
-                alert('댓글 내용을 입력해주세요.');
-                return;
-            }
-
-            $.ajax({
-                url: '/api/board/comment/add',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                    postId: postId,
-                    content: content
-                }),
-                success: function(response) {
-                    if (response.success) {
-                        $('#commentContent').val('');
-                        loadComments();
-                        alert('댓글이 등록되었습니다.');
-                    }
-                },
-                error: function() {
-                    alert('댓글 등록 중 오류가 발생했습니다.');
-                }
+            // 첨부파일 클릭 이벤트 처리
+            $('.attachment-item').on('click', function() {
+                const attachmentId = $(this).data('attachment-id');
+                const fileName = $(this).data('file-name');
+                downloadFile(attachmentId, fileName);
             });
-        });
+
+            // 댓글 등록
+            $('#addComment').click(function() {
+                const content = $('#commentContent').val().trim();
+                if (!content) {
+                    alert('댓글 내용을 입력해주세요.');
+                    return;
+                }
+
+                $.ajax({
+                    url: '/api/board/comment/add',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        postId: postId,
+                        content: content
+                    }),
+                    success: function(response) {
+                        if (response.success) {
+                            $('#commentContent').val('');
+                            loadComments();
+                            alert('댓글이 등록되었습니다.');
+                        }
+                    },
+                    error: function() {
+                        alert('댓글 등록 중 오류가 발생했습니다.');
+                    }
+                });
+            });
+        }
     });
 
     // 게시글 삭제
@@ -168,13 +192,28 @@
 
     // 파일 다운로드
     function downloadFile(attachmentId, fileName) {
+        console.log('다운로드 요청:', attachmentId, fileName);
+
         if (confirm(fileName + ' 파일을 다운로드하시겠습니까?')) {
-            window.location.href = '/community/attachment/' + attachmentId;
+            const downloadUrl = '/community/attachment/' + attachmentId;
+            console.log('다운로드 URL:', downloadUrl);
+
+            // 방법: a 태그를 이용한 다운로드 (가장 안전)
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = fileName; // 다운로드 파일명 지정
+            link.style.display = 'none';
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
     }
 
     // 댓글 목록 불러오기
     function loadComments() {
+        if (!postId) return;
+
         $.ajax({
             url: '/api/board/comments/' + postId,
             type: 'GET',

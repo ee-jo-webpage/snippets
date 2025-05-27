@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -343,16 +345,6 @@ public class BoardController {
                              @RequestParam(value = "files", required = false) MultipartFile[] files,
                              @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-
-        // 여기서 userId 설정하는 부분 확인
-        Long currentUserId = getCurrentUserId(userDetails);
-
-        // 이 부분이 제대로 실행되고 있는지 확인
-        post.setUserId(currentUserId);
-
-        System.out.println("userId 설정 후: " + post.getUserId()); // 이 로그 추가
-
-
         System.out.println("=== 게시글 수정 디버깅 ===");
         System.out.println("Post ID: " + postId);
         System.out.println("제목: " + post.getTitle());
@@ -360,29 +352,25 @@ public class BoardController {
         System.out.println("카테고리 ID: " + post.getCategoryId());
         System.out.println("공지사항: " + post.isNotice());
 
-        // 추가 디버깅: 모든 파라미터 확인
-        System.out.println("=== Post 객체 전체 ===");
-        System.out.println("Post 객체: " + post.toString());
+        // 로그인 체크
+        if (userDetails == null) {
+            return "redirect:/login?message=loginRequired";
+        }
 
         try {
-            currentUserId = getCurrentUserId(userDetails);
+            Long currentUserId = getCurrentUserId(userDetails);
             Post existingPost = boardService.getPostById(postId);
-            System.out.println("기존 게시글 조회 완료: " + existingPost);
 
             if (existingPost == null) {
                 System.out.println("❌ 게시글이 존재하지 않음");
                 return "redirect:/community/post/" + postId + "?error=permission";
             }
 
-            Long existingUserId = existingPost.getUserId(); // Long 타입으로 받기
-            Long currentUserIdLong = currentUserId;         // Long 그대로 사용
-
-            System.out.println("권한 체크: 기존 userId=" + existingUserId + ", 현재 userId=" + currentUserIdLong);
-            System.out.println("userId 같은가? " + existingUserId.equals(currentUserIdLong));
-
-            boolean isOwner = existingUserId.equals(currentUserIdLong);
+            // 권한 체크
+            boolean isOwner = existingPost.getUserId().equals(currentUserId);
             boolean isAdminUser = isAdmin(userDetails);
 
+            System.out.println("권한 체크: 기존 userId=" + existingPost.getUserId() + ", 현재 userId=" + currentUserId);
             System.out.println("소유자인가? " + isOwner);
             System.out.println("관리자인가? " + isAdminUser);
 
@@ -391,17 +379,19 @@ public class BoardController {
                 return "redirect:/community/post/" + postId + "?error=permission";
             }
 
-            System.out.println("✅ 권한 체크 통과");
-            System.out.println("boardService.updatePost() 호출 직전");
+            // 필수 정보 설정
+            post.setPostId(postId);
+            post.setUserId(currentUserId);
+
+            System.out.println("✅ 권한 체크 통과, 업데이트 시작");
 
             boardService.updatePost(post, files);
-            System.out.println("boardService.updatePost() 호출 완료");
 
-            System.out.println("수정 완료!");
+            System.out.println("✅ 수정 완료!");
             return "redirect:/community/post/" + postId + "?success=updated";
 
         } catch (Exception e) {
-            System.out.println("수정 오류: " + e.getMessage());
+            System.out.println("❌ 수정 오류: " + e.getMessage());
             e.printStackTrace();
             return "redirect:/community/post/" + postId + "/edit?error=save";
         }
@@ -463,6 +453,7 @@ public class BoardController {
         }
     }
 
+    /*
     // 첨부파일 다운로드
     @GetMapping("/attachment/{attachmentId}")
     public ResponseEntity<Resource> downloadAttachment(@PathVariable Integer attachmentId) {
@@ -484,6 +475,97 @@ public class BoardController {
                 return ResponseEntity.notFound().build();
             }
         } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }*/
+
+    // BoardController.java - 첨부파일 다운로드 메서드에 디버깅 추가
+
+    @GetMapping("/attachment/{attachmentId}")
+    public ResponseEntity<Resource> downloadAttachment(@PathVariable Integer attachmentId) {
+        System.out.println("=== 첨부파일 다운로드 요청 ===");
+        System.out.println("요청된 Attachment ID: " + attachmentId);
+
+        try {
+            // 1단계: 서비스 메서드 호출 전 로그
+            System.out.println("BoardService.getAttachmentById() 호출 시작...");
+
+            PostAttachment attachment = boardService.getAttachmentById(attachmentId);
+
+            // 2단계: 서비스 메서드 호출 후 결과 확인
+            System.out.println("BoardService.getAttachmentById() 호출 완료");
+
+            if (attachment == null) {
+                System.out.println("❌ 첨부파일을 찾을 수 없음 - ID: " + attachmentId);
+                return ResponseEntity.notFound().build();
+            }
+
+            // 3단계: 첨부파일 정보 출력
+            System.out.println("✅ 첨부파일 조회 성공:");
+            System.out.println("- ID: " + attachment.getAttachmentId());
+            System.out.println("- 파일명: " + attachment.getFileName());
+            System.out.println("- 파일 경로: " + attachment.getFilePath());
+            System.out.println("- 파일 타입: " + attachment.getFileType());
+            System.out.println("- 파일 크기: " + attachment.getFileSize());
+            System.out.println("- 게시글 ID: " + attachment.getPostId());
+
+            // 4단계: 파일 경로 처리
+            Path filePath;
+
+            // 상대 경로인지 절대 경로인지 확인
+            if (attachment.getFilePath().startsWith("/uploads/")) {
+                // 상대 경로인 경우 절대 경로로 변환
+                String fileName = attachment.getFilePath().substring(attachment.getFilePath().lastIndexOf("/") + 1);
+                filePath = Paths.get("uploads", "board", fileName).toAbsolutePath();
+                System.out.println("- 상대 경로에서 절대 경로로 변환");
+            } else {
+                // 이미 절대 경로인 경우
+                filePath = Paths.get(attachment.getFilePath());
+                System.out.println("- 절대 경로 사용");
+            }
+
+            System.out.println("- 최종 파일 경로: " + filePath.toAbsolutePath());
+            System.out.println("- 파일 존재 여부: " + Files.exists(filePath));
+
+            Resource resource = new UrlResource(filePath.toUri());
+
+            // 5단계: 파일 존재 및 읽기 가능 여부 확인
+            System.out.println("- 파일 존재 여부: " + resource.exists());
+            System.out.println("- 파일 읽기 가능: " + resource.isReadable());
+
+            if (resource.exists() && resource.isReadable()) {
+                System.out.println("✅ 파일 다운로드 시작");
+
+                // 한글 파일명 인코딩 처리
+                String encodedFileName;
+                try {
+                    encodedFileName = URLEncoder.encode(attachment.getFileName(), StandardCharsets.UTF_8.toString())
+                            .replaceAll("\\+", "%20");
+                } catch (Exception e) {
+                    encodedFileName = "download_file";
+                }
+
+                System.out.println("- 원본 파일명: " + attachment.getFileName());
+                System.out.println("- 인코딩된 파일명: " + encodedFileName);
+
+                return ResponseEntity.ok()
+                        // 강제 다운로드를 위한 헤더 설정
+                        .header(HttpHeaders.CONTENT_DISPOSITION,
+                                "attachment; filename=\"" + attachment.getFileName() + "\"; filename*=UTF-8''" + encodedFileName)
+                        .header(HttpHeaders.CONTENT_TYPE, "application/octet-stream") // 강제 다운로드
+                        .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(attachment.getFileSize()))
+                        .header("Cache-Control", "no-cache, no-store, must-revalidate")
+                        .header("Pragma", "no-cache")
+                        .header("Expires", "0")
+                        .body(resource);
+            } else {
+                System.out.println("❌ 파일이 존재하지 않거나 읽을 수 없음");
+                return ResponseEntity.notFound().build();
+            }
+
+        } catch (Exception e) {
+            System.out.println("❌ 첨부파일 다운로드 오류: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

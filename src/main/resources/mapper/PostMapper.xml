@@ -65,7 +65,7 @@
         SET category_id = #{categoryId},
             title = #{title},
             content = #{content},
-            is_notice = #{notice},
+            is_notice = #{isNotice},  <!-- #{notice} → #{isNotice}로 수정 -->
             updated_at = NOW()
         WHERE post_id = #{postId}
     </update>

@@ -2,76 +2,283 @@
 <html xmlns:th="http://www.thymeleaf.org">
 
 <head>
-   <meta charset="UTF-8">
-   <title>Snippets List</title>
-   <style>
-     .pagination { display: flex; list-style: none; padding: 0; margin: 1rem 0; }
-     .pagination li { margin: 0 0.3rem; }
-     .pagination li.disabled a { pointer-events: none; color: gray; }
-     .pagination li.active a { font-weight: bold; }
-   </style>
+<meta charset="UTF-8">
+<title>Snippets List</title>
+<style>
+.pagination { display: flex; list-style: none; padding: 0; margin: 1rem 0; }
+.pagination li { margin: 0 0.3rem; }
+.pagination li.disabled a { pointer-events: none; color: gray; }
+.pagination li.active a { font-weight: bold; }
+
+/* 모달 스타일 */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 10% auto;
+    padding: 0;
+    border: none;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease-out;
+    position: relative;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h1 {
+    margin: 0;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 1.5rem;
+    color: #333;
+}
+
+.close {
+    color: #999;
+    font-size: 2rem;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.close:hover,
+.close:focus {
+    color: #333;
+}
+
+.modal-body {
+    padding: 2rem;
+    font-family: 'Noto Sans KR', sans-serif;
+}
+
+/* 로딩 스피너 */
+.loading {
+    text-align: center;
+    padding: 2rem;
+}
+
+.spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #007bff;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.modal-body .box {
+    max-width: none;
+    margin: 0;
+}
+
+.modal-body label {
+    display: block;
+    margin: 0.75rem 0;
+    padding: 1rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.modal-body label:hover {
+    border-color: #007bff;
+    background-color: #f8f9ff;
+}
+
+.modal-body label.selected {
+    border-color: #007bff;
+    background-color: #e3f2fd;
+}
+
+.modal-body input[type="radio"] {
+    margin-right: 0.75rem;
+    transform: scale(1.2);
+}
+
+.modal-footer {
+    padding: 1rem 2rem 2rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.btn-primary:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background-color: transparent;
+    color: #6c757d;
+    border: 1px solid #6c757d;
+}
+
+.btn-secondary:hover {
+    background-color: #6c757d;
+    color: white;
+}
+</style>
 </head>
 
 <body>
-   <h1>Snippets List</h1>
+<h1>Snippets List</h1>
 
-   <table border="1">
-      <thead>
-         <tr>
-            <th>Snippet ID</th>
-            <th>User ID</th>
-           
-            <th>Color ID</th>
-            <th>Source URL</th>
-            <th>Type</th>
-            <th>Memo</th>
-            <th>Created At</th>
-            <th>Updated At</th>
-            <th>Like Count</th>
-            <th>Visibility</th>
-            <th>Actions</th>
-         </tr>
-      </thead>
-      <tbody>
-         <tr th:each="snippet : ${snippets}">
-            <td th:text="${snippet.snippetId}"></td>
-            <td th:text="${snippet.userId}"></td>
-            <td th:text="${snippet.colorId}"></td>
-            <td th:text="${snippet.sourceUrl}"></td>
-            <td th:text="${snippet.type}"></td>
-            <td th:text="${snippet.memo}"></td>
-            <td th:text="${#dates.format(snippet.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
-            <td th:text="${#dates.format(snippet.updatedAt, 'yyyy-MM-dd HH:mm')}"></td>
-            <td th:text="${snippet.likeCount}"></td>
-            <td th:text="${snippet.visibility}"></td>
-            <td>
-               <a th:href="@{/snippets/{id}(id=${snippet.snippetId})}">상세 보기</a>
-            </td>
-         </tr>
-      </tbody>
-   </table>
-   
-   <!-- 페이징 내비게이션 -->
-   <nav>
-     <ul class="pagination">
-       <li th:classappend="${startPage > pageGroupSize} ? '' : 'disabled'">
-         <a th:href="@{/snippets(page=${startPage - pageGroupSize})}">이전</a>
-       </li>
-       <li th:each="i : ${#numbers.sequence(startPage, endPage)}"
-           th:classappend="${i == pageInfo.pageNum} ? 'active' : ''">
-         <a th:href="@{/snippets(page=${i})}" th:text="${i}">1</a>
-       </li>
-       <li th:classappend="${endPage < pageInfo.pages} ? '' : 'disabled'">
-         <a th:href="@{/snippets(page=${endPage + 1})}">다음</a>
-       </li>
-     </ul>
-   </nav>
-   
-   <a href="/snippets/new">
-      <button>스니펫 추가</button>
-   </a>
-   
-   <a href="/">Go to Home</a>
+<table border="1">
+<thead>
+<tr>
+<th>Snippet ID</th><th>User ID</th><th>Color ID</th><th>Source URL</th>
+<th>Type</th><th>Memo</th><th>Created At</th><th>Updated At</th>
+<th>Like Count</th><th>Visibility</th><th>Actions</th>
+</tr>
+</thead>
+<tbody>
+<tr th:each="snippet : ${snippets}">
+<td th:text="${snippet.snippetId}"></td>
+<td th:text="${snippet.userId}"></td>
+<td th:text="${snippet.colorId}"></td>
+<td th:text="${snippet.sourceUrl}"></td>
+<td th:text="${snippet.type}"></td>
+<td th:text="${snippet.memo}"></td>
+<td th:text="${#dates.format(snippet.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
+<td th:text="${#dates.format(snippet.updatedAt, 'yyyy-MM-dd HH:mm')}"></td>
+<td th:text="${snippet.likeCount}"></td>
+<td th:text="${snippet.visibility}"></td>
+<td><a th:href="@{/snippets/{id}(id=${snippet.snippetId})}">상세 보기</a></td>
+</tr>
+</tbody>
+</table>
+
+<nav>
+<ul class="pagination">
+<li th:classappend="${startPage > pageGroupSize} ? '' : 'disabled'"><a th:href="@{/snippets(page=${startPage - pageGroupSize})}">이전</a></li>
+<li th:each="i : ${#numbers.sequence(startPage, endPage)}" th:classappend="${i == pageInfo.pageNum} ? 'active' : ''">
+<a th:href="@{/snippets(page=${i})}" th:text="${i}">1</a></li>
+<li th:classappend="${endPage < pageInfo.pages} ? '' : 'disabled'"><a th:href="@{/snippets(page=${endPage + 1})}">다음</a></li>
+</ul>
+</nav>
+
+<button id="openModalBtn" class="btn btn-primary">스니펫 추가</button>
+<a href="/">Go to Home</a>
+
+<div id="snippetModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1>스니펫 추가</h1>
+      <span class="close" data-bs-dismiss="modal">×</span>
+    </div>
+    <div class="modal-body" id="modalBody">
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>로딩 중...</p>
+      </div>
+    </div>
+    <div class="modal-footer" id="modalFooter" style="display: none;">
+      <button type="button" class="btn btn-secondary" id="cancelBtn">취소</button>
+      <button type="button" class="btn btn-primary" id="nextBtn">다음</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const modalEl   = document.getElementById('snippetModal');
+    const modal     = new bootstrap.Modal(modalEl);
+    const bodyDiv   = document.getElementById('modalBody');
+    const footerDiv = document.getElementById('modalFooter');
+    const openBtn   = document.getElementById('openModalBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const nextBtn   = document.getElementById('nextBtn');
+    let selectedType = null;
+
+    openBtn.addEventListener('click', e => {
+      e.preventDefault();
+      fetch('/snippets/new')
+        .then(res => res.text())
+        .then(html => {
+          bodyDiv.innerHTML       = html;
+          footerDiv.style.display = 'flex';
+          nextBtn.disabled        = true;
+          selectedType            = null;
+          bodyDiv.querySelectorAll('input[name="type"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+              selectedType    = radio.value;
+              nextBtn.disabled = false;
+            });
+          });
+          modal.show();
+        });
+    });
+
+    cancelBtn.addEventListener('click', () => modal.hide());
+
+    nextBtn.addEventListener('click', () => {
+      if (!selectedType) return;
+      fetch(`/snippets/new?type=${selectedType}`)
+        .then(res => res.text())
+        .then(html => {
+          bodyDiv.innerHTML       = html;
+          footerDiv.style.display = 'none';
+        });
+    });
+  });
+</script>
 </body>
-
 </html>

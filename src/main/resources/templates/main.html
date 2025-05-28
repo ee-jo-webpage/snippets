@@ -715,18 +715,31 @@
                 <li><a href="#features">기능</a></li>
                 <li><a href="#how-it-works">사용법</a></li>
                 <li><a href="#snippets">스니펫</a></li>
+
                 <!-- 로그인 상태일 때 -->
                 <li th:if="${nickname}" class="nickname">
                     <span th:text="'안녕하세요, ' + ${nickname} + '님'"></span>
                 </li>
-                <li th:if="${nickname}"><a href="/user/mypage" class="nav-cta">마이페이지</a></li>
+
+                <!-- 관리자일 경우 → 대시보드 -->
+                <li th:if="${nickname} and ${isAdmin}">
+                    <a href="/admin/ip-blocks" class="nav-cta">관리자 대시보드</a>
+                </li>
+
+                <!-- 일반 사용자일 경우 → 마이페이지 -->
+                <li th:if="${nickname} and ${!isAdmin}">
+                    <a href="/user/mypage" class="nav-cta">마이페이지</a>
+                </li>
+
                 <li th:if="${nickname}"><a href="/logout">로그아웃</a></li>
+
                 <!-- 비로그인 상태일 때 -->
                 <li th:unless="${nickname}"><a href="/login">로그인</a></li>
                 <li th:unless="${nickname}"><a href="/register" class="nav-cta">시작하기</a></li>
             </ul>
         </div>
     </header>
+
 
     <section class="hero">
         <div class="hero-container">

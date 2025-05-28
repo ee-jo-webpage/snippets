@@ -260,7 +260,7 @@
             <div class="snippet-meta-item">
                 <div class="snippet-meta-label">소유자</div>
                 <div>
-                    user_id = <span th:text="${snippet.userId}"></span>
+                    <span th:text="${ownerNickname}">nickname</span>
                     <span th:if="${snippet.userId == currentUserId}"> (내 스니펫)</span>
                 </div>
             </div>

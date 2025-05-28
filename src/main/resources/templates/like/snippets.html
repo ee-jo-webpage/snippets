@@ -187,7 +187,7 @@
                     <!-- 소유자 정보 -->
                     <div class="snippet-info">
                         <div class="snippet-owner">
-                            소유자: user_id = <span th:text="${snippet.userId}"></span>
+                            소유자: <span th:text="${nicknameMap.get(snippet.userId)}">nickname</span>
                             <span th:if="${snippet.userId == currentUserId}" class="owner-badge"> (내 스니펫)</span>
                         </div>
                     </div>

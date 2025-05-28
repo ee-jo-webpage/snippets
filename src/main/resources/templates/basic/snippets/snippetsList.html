@@ -1,9 +1,13 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-<meta charset="UTF-8">
-<title>Snippets List</title>
+    <meta charset="UTF-8">
+    <title>Snippets List</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link th:href="@{/bookmark/css/bookmark-list.css}" rel="stylesheet"> ---------------------------------
+    <link th:href="@{/my-snippet-page/css/my-snippet-page.css}" rel="stylesheet">
 <style>
 .pagination { display: flex; list-style: none; padding: 0; margin: 1rem 0; }
 .pagination li { margin: 0 0.3rem; }
@@ -182,6 +186,11 @@
 </head>
 
 <body>
+	<!-- 헤더 포함 -->
+	<div th:replace="fragments/header :: header"></div>
+
+	<!-- 사이드바 포함 -->
+	<div th:replace="fragments/sidebar :: sidebar('bookmarks')"></div>
 <h1>Snippets List</h1>
 
 <table border="1">

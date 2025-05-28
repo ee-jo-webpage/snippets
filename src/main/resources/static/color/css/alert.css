@@ -1,0 +1,61 @@
+/* 알림 메시지 스타일 */
+
+.alert {
+    padding: 16px 24px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.alert-success {
+    background: rgba(34, 197, 94, 0.15);
+    color: #065f46;
+    border-color: rgba(34, 197, 94, 0.3);
+}
+
+.alert-error {
+    background: rgba(239, 68, 68, 0.15);
+    color: #991b1b;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.alert-warning {
+    background: rgba(245, 158, 11, 0.15);
+    color: #92400e;
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+.alert-link {
+    color: inherit;
+    text-decoration: underline;
+    font-weight: 600;
+}
+
+.alert-link:hover {
+    text-decoration: none;
+}
+
+/* 고정 알림 (토스트) */
+.alert.fixed {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 2000;
+    transform: translateX(400px);
+    transition: all 0.3s ease;
+    margin-bottom: 0;
+}
+
+.alert.fixed.show {
+    transform: translateX(0);
+}
+
+.fas {
+    font-size: 16px;
+}
+

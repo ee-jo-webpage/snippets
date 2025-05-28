@@ -6,15 +6,31 @@
     <title>스니펫 관리 사이트</title>
     <link th:href="@{/color/css/user-colors.css}" rel="stylesheet">
     <link th:href="@{/my-snippet-page/css/my-snippet-page.css}" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
 <div th:replace="fragments/header :: header"></div>
-<div th:replace="fragments/sidebar :: sidebar('snippets')"></div>
+<div th:replace="fragments/sidebar :: sidebar('colors')"></div>
 
 <!-- 메인 컨텐츠 영역 -->
 <main class="main-content">
     <div class="container">
         <div class="color-container">
+            <!-- 색상 관리 네비게이션 -->
+            <div class="color-navigation" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                <h2 style="margin: 0; color: #333;">색상 관리</h2>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <a th:href="@{/color/user/{id}(id=${currentUserId})}"
+                       style="text-decoration: none; color: #6c757d; padding: 8px 16px; border-radius: 4px; background: white; border: 1px solid #dee2e6;">
+                        📋 사용 가능한 색상
+                    </a>
+                    <button class="add-color-btn" onclick="openAddModal()"
+                            style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
+                        🎨 새 색상 추가
+                    </button>
+                </div>
+            </div>
+
             <!-- 로그인 안내 메시지 추가 -->
             <div th:if="${currentUserId == null}" class="alert alert-warning">
                 <i class="fas fa-exclamation-triangle me-2"></i>

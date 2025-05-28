@@ -1,27 +1,36 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
+    <title>내 북마크</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>스니펫 관리 사이트</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link th:href="@{/bookmark/css/bookmark-list.css}" rel="stylesheet">
     <link th:href="@{/my-snippet-page/css/my-snippet-page.css}" rel="stylesheet">
 </head>
 <body>
-<div th:replace="fragments/header :: header"></div>
-<div th:replace="fragments/sidebar :: sidebar('snippets')"></div>
 
-<!-- 메인 컨텐츠 영역 -->
+<!-- 헤더 포함 -->
+<div th:replace="fragments/header :: header"></div>
+
+<!-- 사이드바 포함 -->
+<div th:replace="fragments/sidebar :: sidebar('bookmarks')"></div>
+
+<!-- 메인 컨텐츠를 사이드바가 있는 레이아웃에 맞게 조정 -->
 <main class="main-content">
     <div class="container">
-<!--        &lt;!&ndash; 헤더 &ndash;&gt;-->
-<!--        <div class="header">-->
-<!--            <h1>📚 내 북마크</h1>-->
-<!--            <div class="navigation">-->
-<!--                <a th:href="@{/snippets}">스니펫 둘러보기</a>-->
-<!--                <div class="bookmark-count" th:text="|총 ${count}개의 북마크|">총 0개의 북마크</div>-->
-<!--            </div>-->
-<!--        </div>-->
+        <!-- 북마크 관리 네비게이션 -->
+        <div class="bookmark-navigation" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+            <h2 style="margin: 0; color: #333;">📚 내 북마크</h2>
+            <div style="display: flex; gap: 15px; align-items: center;">
+                <a th:href="@{/snippets}"
+                   style="text-decoration: none; color: #6c757d; padding: 8px 16px; border-radius: 4px; background: white; border: 1px solid #dee2e6;">
+                    📋 스니펫 둘러보기
+                </a>
+                <div class="bookmark-count" th:text="|총 ${count}개의 북마크|" style="color: #6c757d; font-size: 14px;">총 0개의 북마크</div>
+            </div>
+        </div>
 
         <!-- 알림 메시지 표시 영역 -->
         <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
@@ -49,9 +58,18 @@
                 <div th:each="bookmark, stat : ${bookmarks}"
                      class="bookmark-card"
                      th:data-type="${bookmark.type?.name()}"
-                     th:data-memo="${bookmark.memo}"
-                     th:data-content="${bookmark.content}"
-                     th:style="'animation-delay: ' + ${stat.index * 0.1} + 's;'">
+                     th:data-memo="${bookmark.memo != null ? bookmark.memo : ''}"
+                     th:data-content="${bookmark.content != null ? bookmark.content : ''}"
+                     th:data-snippet-id="${bookmark.snippetId}"
+                     th:style="'animation-delay: ' + ${stat.index * 0.1} + 's;' + (${bookmark.hexCode != null} ? ' border-left: 5px solid ' + ${bookmark.hexCode} + ';' : '')"
+                     th:classappend="${bookmark.hexCode != null ? 'has-color' : ''}">
+
+                    <!-- 색상 표시 영역 추가 -->
+<!--                    <div th:if="${bookmark.hexCode != null and bookmark.name != null}"-->
+<!--                         class="color-indicator"-->
+<!--                         th:style="'background-color: ' + ${bookmark.hexCode}">-->
+<!--                        <span class="color-name" th:text="${bookmark.name}">색상명</span>-->
+<!--                    </div>-->
 
                     <div class="snippet-id" th:text="'#' + ${bookmark.snippetId}">ID</div>
 
@@ -68,47 +86,62 @@
                     </div>
 
                     <div class="snippet-meta">
-                    <span class="meta-item"
-                          th:classappend="${bookmark.type?.name() == 'CODE' ? 'type-code' : (bookmark.type?.name() == 'TEXT' ? 'type-text' : 'type-img')}"
-                          th:text="${bookmark.type?.name() ?: '타입 없음'}">타입</span>
+                        <span class="meta-item"
+                              th:classappend="${bookmark.type?.name() == 'CODE' ? 'type-code' : (bookmark.type?.name() == 'TEXT' ? 'type-text' : 'type-img')}"
+                              th:text="${bookmark.type?.name() != null ? bookmark.type.name() : 'Unknown'}">타입</span>
                         <span class="meta-item" th:text="'생성일: ' + ${#dates.format(bookmark.createdAt, 'yyyy-MM-dd')}">생성일</span>
                         <span class="meta-item" th:if="${bookmark.language}" th:text="'언어: ' + ${bookmark.language}">언어</span>
                         <span class="meta-item" th:if="${bookmark.sourceUrl}" th:text="'출처 있음'">출처</span>
                     </div>
 
-                    <!-- 스니펫 콘텐츠 미리보기 (메인 콘텐츠) -->
-                    <div class="snippet-content">
-                        <!-- 코드 타입 -->
-                        <div th:if="${bookmark.type?.name() == 'CODE'}" class="code-preview">
-                            <pre th:text="${#strings.abbreviate(bookmark.content, 300)}">코드 내용</pre>
-                        </div>
+                    <!-- 스니펫 콘텐츠 미리보기 (메인 콘텐츠) - 클릭 가능하게 수정 -->
+                    <a th:href="@{/snippets/{id}(id=${bookmark.snippetId})}" class="snippet-content-link">
+                        <div class="snippet-content">
+                            <!-- 코드 타입 -->
+                            <div th:if="${bookmark.type?.name() == 'CODE'}" class="code-preview">
+                                <div th:if="${bookmark.language}" class="language-badge" th:text="${bookmark.language}">언어</div>
+                                <pre th:text="${#strings.abbreviate(bookmark.content != null ? bookmark.content : 'No Code', 300)}">코드 내용</pre>
+                            </div>
 
-                        <!-- 텍스트 타입 -->
-                        <div th:if="${bookmark.type?.name() == 'TEXT'}" class="text-preview">
-                            <p th:text="${#strings.abbreviate(bookmark.content, 250)}">텍스트 내용</p>
-                        </div>
+                            <!-- 텍스트 타입 -->
+                            <div th:if="${bookmark.type?.name() == 'TEXT'}" class="text-preview">
+                                <p th:text="${#strings.abbreviate(bookmark.content != null ? bookmark.content : 'No Text', 250)}">텍스트 내용</p>
+                            </div>
 
-                        <!-- 이미지 타입 -->
-                        <div th:if="${bookmark.type?.name() == 'IMG'}" class="image-preview">
-                            <img th:if="${bookmark.imageUrl}"
-                                 th:src="${bookmark.imageUrl}"
-                                 th:alt="${bookmark.altText}"
-                                 class="preview-image">
-                            <p th:if="${bookmark.altText}" class="image-alt" th:text="${bookmark.altText}">이미지 설명</p>
-                            <div th:if="${bookmark.content}" class="image-content" th:text="${#strings.abbreviate(bookmark.content, 150)}">추가 내용</div>
-                        </div>
+                            <!-- 이미지 타입 -->
+                            <div th:if="${bookmark.type?.name() == 'IMG'}" class="image-preview">
+                                <div th:if="${bookmark.imageUrl}" class="image-container">
+                                    <img th:src="${bookmark.imageUrl}"
+                                         th:alt="${bookmark.altText != null ? bookmark.altText : 'Image'}"
+                                         class="preview-image"
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                    <div class="image-error" style="display: none;">🖼️ 이미지를 불러올 수 없습니다</div>
+                                </div>
+                                <p th:if="${bookmark.altText}" class="image-alt" th:text="${bookmark.altText}">이미지 설명</p>
+                                <div th:if="${bookmark.content and bookmark.content != bookmark.altText}"
+                                     class="image-content"
+                                     th:text="${#strings.abbreviate(bookmark.content, 150)}">추가 내용</div>
+                            </div>
 
-<!--                        &lt;!&ndash; 타입이 없거나 일반적인 경우 &ndash;&gt;-->
-<!--                        <div th:if="${bookmark.type == null or bookmark.type?.name() == null}" class="general-preview">-->
-<!--                            <p th:text="${#strings.abbreviate(bookmark.content ?: '내용 없음', 250)}">일반 내용</p>-->
-<!--                        </div>-->
-                    </div>
+                            <!-- 타입이 없거나 일반적인 경우 -->
+                            <div th:if="${bookmark.type == null}" class="general-preview">
+                                <p th:text="${#strings.abbreviate(bookmark.content != null ? bookmark.content : 'No Content', 250)}">일반 내용</p>
+                            </div>
+                        </div>
+                    </a>
 
                     <!-- 메모가 있고 콘텐츠와 다른 경우에만 표시 -->
-<!--                    <div th:if="${#strings.length(bookmark.memo ?: '') > 0 and bookmark.memo != bookmark.content}" class="snippet-memo">-->
-<!--                        <strong>메모:</strong>-->
-<!--                        <span th:text="${#strings.abbreviate(bookmark.memo, 100)}">메모 내용</span>-->
-<!--                    </div>-->
+                    <div th:if="${#strings.length(bookmark.memo != null ? bookmark.memo : '') > 0 and bookmark.memo != bookmark.content}" class="snippet-memo">
+                        <strong>📝 메모:</strong>
+                        <span th:text="${#strings.abbreviate(bookmark.memo, 100)}">메모 내용</span>
+                    </div>
+
+                    <!-- URL이 있는 경우 출처 링크 표시 -->
+                    <div th:if="${bookmark.sourceUrl}" class="snippet-source">
+                        <strong>🔗 출처:</strong>
+                        <a th:href="${bookmark.sourceUrl}" target="_blank" rel="noopener noreferrer"
+                           th:text="${#strings.abbreviate(bookmark.sourceUrl, 50)}">출처 URL</a>
+                    </div>
                 </div>
             </div>
 
@@ -134,6 +167,7 @@
         </div>
     </div>
 </main>
+
 <script th:inline="javascript">
     // 서버에서 전달된 데이터
     const userId = /*[[${userId}]]*/ null;
@@ -163,8 +197,14 @@
         }, 3000);
     }
 
-    // 북마크 제거 함수
-    function removeBookmark(snippetId) {
+    // 북마크 제거 함수 - 이벤트 전파 방지 추가
+    function removeBookmark(snippetId, event) {
+        // 이벤트 전파 방지 (카드 클릭 방지)
+        if (event) {
+            event.stopPropagation();
+            event.preventDefault();
+        }
+
         if (!userId) {
             alert('로그인이 필요합니다.');
             return;
@@ -196,7 +236,7 @@
         form.submit();
     }
 
-    // 검색 및 필터링 기능
+    // 검색 및 필터링 기능 개선
     document.addEventListener('DOMContentLoaded', function() {
         if (!userId) {
             console.log('로그인하지 않은 사용자 - 검색 기능 비활성화');
@@ -219,12 +259,12 @@
                     const memo = (card.getAttribute('data-memo') || '').toLowerCase();
                     const content = (card.getAttribute('data-content') || '').toLowerCase();
                     const type = card.getAttribute('data-type') || '';
-                    const snippetId = card.querySelector('.snippet-id').textContent.toLowerCase();
+                    const snippetId = card.getAttribute('data-snippet-id') || '';
 
                     const matchesSearch = !searchTerm ||
                         memo.includes(searchTerm) ||
                         content.includes(searchTerm) ||
-                        snippetId.includes(searchTerm);
+                        snippetId.toString().includes(searchTerm);
                     const matchesType = !selectedType || type === selectedType;
 
                     if (matchesSearch && matchesType) {
@@ -258,5 +298,116 @@
         }
     });
 </script>
+
+<style>
+    /* 추가 스타일링 */
+    .bookmark-card {
+        position: relative;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .bookmark-card.has-color {
+        background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.95) 100%);
+    }
+
+    .color-indicator {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.7em;
+        font-weight: bold;
+        color: white;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        min-width: 40px;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .color-name {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 60px;
+    }
+
+    .language-badge {
+        background: #2196F3;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.8em;
+        margin-bottom: 8px;
+        display: inline-block;
+    }
+
+    .color-info {
+        font-size: 0.8em;
+        font-weight: bold;
+    }
+
+    .image-container {
+        position: relative;
+        margin-bottom: 8px;
+    }
+
+    .preview-image {
+        max-width: 100%;
+        max-height: 200px;
+        border-radius: 8px;
+        object-fit: cover;
+    }
+
+    .image-error {
+        padding: 20px;
+        text-align: center;
+        background: #f5f5f5;
+        border-radius: 8px;
+        color: #666;
+    }
+
+    .snippet-source {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid #eee;
+        font-size: 0.9em;
+    }
+
+    .snippet-source a {
+        color: #2196F3;
+        text-decoration: none;
+    }
+
+    .snippet-source a:hover {
+        text-decoration: underline;
+    }
+
+    /* 메인 컨텐츠가 사이드바와 겹치지 않도록 조정 */
+    .main-content .container {
+        max-width: none;
+        padding: 20px;
+    }
+
+    /* 색상별 카드 배경 효과 */
+    .bookmark-card.has-color::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--snippet-color);
+        border-radius: 8px 8px 0 0;
+    }
+
+    /* 호버 효과 개선 */
+    .bookmark-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+</style>
+
 </body>
 </html>

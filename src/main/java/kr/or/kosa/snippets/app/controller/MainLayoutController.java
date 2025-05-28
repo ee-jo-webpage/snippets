@@ -1,4 +1,4 @@
-package kr.or.kosa.snippets.main.controller;
+package kr.or.kosa.snippets.app.controller;
 
 import jakarta.servlet.http.HttpSession;
 import kr.or.kosa.snippets.bookmark.service.BookmarkService;

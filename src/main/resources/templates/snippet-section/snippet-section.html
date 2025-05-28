@@ -1,0 +1,35 @@
+<!-- 스니펫 섹션 fragment -->
+<div th:fragment="snippetSection" class="snippets-section">
+    <div class="section-header">
+        <h2 id="snippetsTitle" th:text="'📝 ' + (${selectedTagName} != null ? '&quot;' + ${selectedTagName} + '&quot; 태그의 스니펫 목록' : '스니펫 목록')">📝 스니펫 목록</h2>
+        <button id="closeSnippetsBtn" class="btn btn-secondary">
+            <i class="fas fa-times"></i> 닫기
+        </button>
+    </div>
+    <div id="snippetsGrid" class="snippets-grid">
+        <!-- 스니펫 카드들이 JavaScript로 동적 생성됨 -->
+    </div>
+</div>
+
+<!-- 모달 fragment -->
+<div th:fragment="snippetModal" id="snippetDetailModal" class="modal" style="display: none;">
+    <div class="modal-content snippet-modal-content">
+        <div class="modal-header">
+            <h3>스니펫 상세보기</h3>
+            <span class="modal-close">&times;</span>
+        </div>
+        <div class="modal-body snippet-modal-body">
+            <div class="snippet-detail-meta">
+                <!-- 메타 정보가 JavaScript로 동적 생성됨 -->
+            </div>
+            <div class="snippet-detail-content">
+                <!-- 콘텐츠가 JavaScript로 동적 생성됨 -->
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary">
+                <i class="fas fa-times"></i> 닫기
+            </button>
+        </div>
+    </div>
+</div>

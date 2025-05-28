@@ -48,6 +48,9 @@ public class BookmarkController {
         Long currentId = requireLogin(userDetails);
         log.info("북마크 목록 조회 - 사용자 ID: {}", currentId);
 
+        // 사이드바 활성화를 위한 activeMenu 설정
+        model.addAttribute("activeMenu", "bookmarks");
+
         // 로그인 상태 확인을 위한 모델 속성 추가
         model.addAttribute("userId", currentId);
 
@@ -88,6 +91,9 @@ public class BookmarkController {
 
         Long currentId = requireLogin(userDetails);
         log.info("북마크된 스니펫 상세보기 - 사용자 ID: {}, 스니펫 ID: {}", currentId, snippetId);
+
+        // 사이드바 활성화를 위한 activeMenu 설정
+        model.addAttribute("activeMenu", "bookmarks");
 
         if (currentId == null) {
             log.warn("로그인하지 않은 사용자의 북마크 스니펫 상세보기 접근");
@@ -153,6 +159,9 @@ public class BookmarkController {
         Long currentId = requireLogin(userDetails);
         log.info("내가 작성한 스니펫 목록 조회 - 사용자 ID: {}", currentId);
 
+        // 사이드바 활성화를 위한 activeMenu 설정
+        model.addAttribute("activeMenu", "bookmarks");
+
         // 로그인 상태 확인을 위한 모델 속성 추가
         model.addAttribute("userId", currentId);
 
@@ -165,7 +174,7 @@ public class BookmarkController {
         }
 
         try {
-            // 내가 작성한 스니펫 조회
+            // SnippetService를 통해 내가 작성한 스니펫 조회 (완전한 정보 포함)
             List<Snippets> mySnippets = bookmarkService.getSnippetsByUserId(currentId);
             log.info("사용자 {}가 작성한 스니펫 수: {}", currentId, mySnippets != null ? mySnippets.size() : 0);
 
@@ -176,8 +185,9 @@ public class BookmarkController {
 
             // 디버깅을 위한 추가 로그
             if (!mySnippets.isEmpty()) {
-                log.info("첫 번째 스니펫 정보: ID={}, 메모={}",
+                log.info("첫 번째 스니펫 정보: ID={}, 타입={}, 메모={}",
                         mySnippets.get(0).getSnippetId(),
+                        mySnippets.get(0).getType(),
                         mySnippets.get(0).getMemo());
             }
 

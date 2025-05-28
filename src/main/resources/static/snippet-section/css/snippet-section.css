@@ -389,3 +389,78 @@ body {
         margin: 20px;
     }
 }
+
+/* 태그 섹션 스타일 */
+.snippet-tags-section {
+    margin-top: 20px;
+    padding: 16px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.snippet-tags-section h4 {
+    margin: 0 0 12px 0;
+    color: #2d3748;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.snippet-tags-display {
+    margin-bottom: 12px;
+    min-height: 32px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.tag-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #667eea;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.tag-badge .tag-remove {
+    cursor: pointer;
+    font-size: 0.7rem;
+    opacity: 0.8;
+    margin-left: 4px;
+}
+
+.tag-badge .tag-remove:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+}
+
+.snippet-tags-input {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.tag-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.tag-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
+.empty-tags {
+    color: #9ca3af;
+    font-style: italic;
+    padding: 8px;
+}

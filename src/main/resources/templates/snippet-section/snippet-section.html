@@ -20,10 +20,22 @@
         </div>
         <div class="modal-body snippet-modal-body">
             <div class="snippet-detail-meta">
-                <!-- 메타 정보가 JavaScript로 동적 생성됨 -->
+                <!-- 기존 메타 정보 -->
             </div>
             <div class="snippet-detail-content">
-                <!-- 콘텐츠가 JavaScript로 동적 생성됨 -->
+                <!-- 기존 콘텐츠 -->
+            </div>
+
+            <!-- 태그 섹션 추가 -->
+            <div class="snippet-tags-section">
+                <h4>태그</h4>
+                <div class="snippet-tags-display" id="snippetTagsDisplay">
+                    <!-- 태그 배지들이 여기에 동적으로 추가됨 -->
+                </div>
+                <div class="snippet-tags-input">
+                    <input type="text" id="tagInput" placeholder="태그 추가 (쉼표로 구분)" class="tag-input">
+                    <button id="addTagsBtn" class="btn btn-primary">태그 추가</button>
+                </div>
             </div>
         </div>
         <div class="modal-footer">

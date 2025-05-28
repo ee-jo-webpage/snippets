@@ -34,45 +34,33 @@ public class SnippetApiController {
         return details.getUserId();
     }
 
-    // 확장 프로그램 동기화 용 아직 미구현
-    // @GetMapping("/id/{clientRequestId}")
-    // public ResponseEntity<?> findSnippetIdByRequestId(@PathVariable String clientRequestId) {
-    //     Long snippetId = snippetExtService.findIdByClientRequestId(clientRequestId);
-    //
-    //     if (snippetId == null) {
-    //         // 아직 스케줄러에 의해 저장되지 않은 상태
-    //         return ResponseEntity.status(202).body(Map.of("message", "Not yet processed"));
-    //     }
-    //
-    //     return ResponseEntity.ok(Map.of("snippetId", snippetId));
-    // }
-
-    @PostMapping
-    public ResponseEntity<?> enqueueSnippet(
-        @RequestBody SnippetExtCreate snippet,
-        @AuthenticationPrincipal CustomUserDetails details
-    ) {
-        snippet.setUserId(requireLogin(details));
-
-        if (snippet.getClientRequestId() == null) {
-            snippet.setClientRequestId(UUID.randomUUID().toString());
-        }
-
-        snippetQueue.enqueue(snippet);  // 지금은 큐에 저장만
-
-        return ResponseEntity.ok(Map.of("snippetId", snippet.getClientRequestId()));
-    }
-
-    // 벌크 인서트로 전환 후 미사용
+    // 비동기식 벌크 insert
     // @PostMapping
-    // public ResponseEntity<?> save(
+    // public ResponseEntity<?> enqueueSnippet(
     //     @RequestBody SnippetExtCreate snippet,
     //     @AuthenticationPrincipal CustomUserDetails details
     // ) {
     //     snippet.setUserId(requireLogin(details));
-    //     Long snippetId = snippetExtService.save(snippet);
-    //     return ResponseEntity.ok(Map.of("snippetId", snippetId));
+    //
+    //     if (snippet.getClientRequestId() == null) {
+    //         snippet.setClientRequestId(UUID.randomUUID().toString());
+    //     }
+    //
+    //     snippetQueue.enqueue(snippet);  // 지금은 큐에 저장만
+    //
+    //     return ResponseEntity.ok(Map.of("snippetId", snippet.getClientRequestId()));
     // }
+
+    // 동기식 insert
+    @PostMapping
+    public ResponseEntity<?> save(
+        @RequestBody SnippetExtCreate snippet,
+        @AuthenticationPrincipal CustomUserDetails details
+    ) {
+        snippet.setUserId(requireLogin(details));
+        Long snippetId = snippetExtService.save(snippet);
+        return ResponseEntity.ok(Map.of("snippetId", snippetId));
+    }
 
     @PatchMapping("/{id}")
     public ResponseEntity<?> updateSnippet(

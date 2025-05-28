@@ -12,17 +12,17 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SnippetBulkInsertScheduler {
 
-    private final SnippetQueue snippetQueue;
-    private final SnippetExtService snippetExtService;
-
-    @Scheduled(fixedDelay = 60000) // 5분마다 실행
-    public void flushSnippets() {
-        if (snippetQueue.isEmpty()) return;
-
-        List<SnippetExtCreate> batch = snippetQueue.drainAll();
-        if (!batch.isEmpty()) {
-            snippetExtService.saveAll(batch);  //
-            System.out.println("[스케줄러] " + batch.size() + "건 bulk insert 완료");
-        }
-    }
+    // private final SnippetQueue snippetQueue;
+    // private final SnippetExtService snippetExtService;
+    //
+    // @Scheduled(fixedDelay = 60000) // 1분마다 실행
+    // public void flushSnippets() {
+    //     if (snippetQueue.isEmpty()) return;
+    //
+    //     List<SnippetExtCreate> batch = snippetQueue.drainAll();
+    //     if (!batch.isEmpty()) {
+    //         snippetExtService.saveAll(batch);
+    //         System.out.println("[스케줄러] " + batch.size() + "건 bulk insert 완료");
+    //     }
+    // }
 }

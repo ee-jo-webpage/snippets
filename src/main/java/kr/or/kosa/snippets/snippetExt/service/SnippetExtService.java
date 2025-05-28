@@ -7,7 +7,6 @@ import kr.or.kosa.snippets.snippetExt.model.*;
 import kr.or.kosa.snippets.snippetExt.type.SnippetType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,99 +20,96 @@ import java.util.stream.Collectors;
 public class SnippetExtService {
 
     private final SnippetExtMapper snippetExtMapper;
-    private final SqlSessionTemplate batch;
 
     // ================================================
     // public
     // ================================================
 
-    // @Transactional
-    // public Long save(SnippetExtCreate snippet) {
-    //     if (isDuplicate(snippet)) {
-    //         throw new DuplicateSnippetException("이미 동일한 스니펫이 존재합니다.");
-    //     }
-    //
-    //     validateSnippet(snippet);           // 유효성 검사
-    //     snippetExtMapper.insertSnippet(snippet); // 공통 삽입
-    //     insertDetailByType(snippet);        // 타입별 분기 삽입
-    //
-    //     return snippet.getSnippetId();
-    // }
-
     @Transactional
-    public void saveAll(List<SnippetExtCreate> snippets) {
-        log.warn("[1] 스니펫 저장 요청: 총 {}건", snippets == null ? 0 : snippets.size());
-        if (snippets == null || snippets.isEmpty()) return;
-
-        // 1. 유효성 검사 (userId, type, 내용 필수 여부 검사)
-        List<SnippetExtCreate> validSnippets = snippets.stream()
-            .filter(this::isValid)
-            .toList();
-
-        log.warn("[2] 유효성 통과 스니펫 수: {}", validSnippets.size());
-        if (validSnippets.isEmpty()) return;
-
-        try {
-            // 2. 메타 테이블 batch insert
-            SnippetExtMapper batchMapper = batch.getMapper(SnippetExtMapper.class);
-            for (SnippetExtCreate snippet : validSnippets) {
-                batchMapper.insertSnippet(snippet);
-            }
-            batch.flushStatements(); // 실제 insert 수행
-            log.warn("[3] insertSnippet 반복 후 flush 완료");
-
-            // 3. clientRequestId 기반으로 snippetId 매핑 조회
-            List<String> clientIds = validSnippets.stream()
-                .map(SnippetExtCreate::getClientRequestId)
-                .filter(Objects::nonNull)
-                .toList();
-
-            List<SnippetMapping> mappings = snippetExtMapper.findSnippetIdsByClientRequestIds(clientIds);
-
-            Map<String, Long> idMap = mappings.stream()
-                .collect(Collectors.toMap(SnippetMapping::getClientRequestId, SnippetMapping::getSnippetId));
-
-            log.warn("[4] 매핑된 snippetId 수: {}", idMap.size());
-            idMap.forEach((key, value) -> log.warn("🔑 매핑: {} → {}", key, value));
-
-            // 4. 매핑 실패 필터링 + snippetId 세팅
-            List<SnippetExtCreate> mappedSnippets = validSnippets.stream()
-                .filter(s -> {
-                    Long id = idMap.get(s.getClientRequestId());
-                    if (id == null) {
-                        log.error("❗ [5] snippetId 매핑 실패 → clientRequestId: {}", s.getClientRequestId());
-                        return false;
-                    }
-                    s.setSnippetId(id);
-                    return true;
-                })
-                .toList();
-
-            // 5. 타입별로 분기
-            List<SnippetExtCreate> texts = mappedSnippets.stream()
-                .filter(s -> SnippetType.TEXT.equals(s.getType()))
-                .toList();
-            List<SnippetExtCreate> codes = mappedSnippets.stream()
-                .filter(s -> SnippetType.CODE.equals(s.getType()))
-                .toList();
-            List<SnippetExtCreate> imgs = mappedSnippets.stream()
-                .filter(s -> SnippetType.IMG.equals(s.getType()))
-                .toList();
-
-            log.warn("[6] TEXT 타입 스니펫 수: {}", texts.size());
-            log.warn("[7] CODE 타입 스니펫 수: {}", codes.size());
-            log.warn("[8] IMG 타입 스니펫 수: {}", imgs.size());
-
-            // 6. 하위 테이블 일괄 insert
-            if (!texts.isEmpty()) snippetExtMapper.bulkInsertSnippetTexts(texts);
-            if (!codes.isEmpty()) snippetExtMapper.bulkInsertSnippetCodes(codes);
-            if (!imgs.isEmpty()) snippetExtMapper.bulkInsertSnippetImages(imgs);
-
-        } catch (org.springframework.dao.DuplicateKeyException e) {
-            // clientRequestId 중복 등록 방지
-            throw new DuplicateSnippetException("이미 등록된 clientRequestId가 포함되어 있습니다.");
+    public Long save(SnippetExtCreate snippet) {
+        if (isDuplicate(snippet)) {
+            throw new DuplicateSnippetException("이미 동일한 스니펫이 존재합니다.");
         }
+
+        validateSnippet(snippet);           // 유효성 검사
+        snippetExtMapper.insertSnippet(snippet); // 공통 삽입
+        insertDetailByType(snippet);        // 타입별 분기 삽입
+
+        return snippet.getSnippetId();
     }
+
+    // @Transactional
+    // public void saveAll(List<SnippetExtCreate> snippets) {
+    //     log.warn("[1] 스니펫 저장 요청: 총 {}건", snippets == null ? 0 : snippets.size());
+    //     if (snippets == null || snippets.isEmpty()) return;
+    //
+    //     // 1. 유효성 검사 (userId, type, 내용 필수 여부 검사)
+    //     List<SnippetExtCreate> validSnippets = snippets.stream()
+    //         .filter(this::isValid)
+    //         .toList();
+    //
+    //     log.warn("[2] 유효성 통과 스니펫 수: {}", validSnippets.size());
+    //     if (validSnippets.isEmpty()) return;
+    //
+    //     try {
+    //         // 2. 메타 테이블 batch insert
+    //         for (SnippetExtCreate snippet : validSnippets) {
+    //             snippetExtMapper.insertSnippet(snippet);
+    //         }
+    //         log.warn("[3] insertSnippet 반복 후 flush 완료");
+    //
+    //         // 3. clientRequestId 기반으로 snippetId 매핑 조회
+    //         List<String> clientIds = validSnippets.stream()
+    //             .map(SnippetExtCreate::getClientRequestId)
+    //             .filter(Objects::nonNull)
+    //             .toList();
+    //
+    //         List<SnippetMapping> mappings = snippetExtMapper.findSnippetIdsByClientRequestIds(clientIds);
+    //
+    //         Map<String, Long> idMap = mappings.stream()
+    //             .collect(Collectors.toMap(SnippetMapping::getClientRequestId, SnippetMapping::getSnippetId));
+    //
+    //         log.warn("[4] 매핑된 snippetId 수: {}", idMap.size());
+    //         idMap.forEach((key, value) -> log.warn("🔑 매핑: {} → {}", key, value));
+    //
+    //         // 4. 매핑 실패 필터링 + snippetId 세팅
+    //         List<SnippetExtCreate> mappedSnippets = validSnippets.stream()
+    //             .filter(s -> {
+    //                 Long id = idMap.get(s.getClientRequestId());
+    //                 if (id == null) {
+    //                     log.error("❗ [5] snippetId 매핑 실패 → clientRequestId: {}", s.getClientRequestId());
+    //                     return false;
+    //                 }
+    //                 s.setSnippetId(id);
+    //                 return true;
+    //             })
+    //             .toList();
+    //
+    //         // 5. 타입별로 분기
+    //         List<SnippetExtCreate> texts = mappedSnippets.stream()
+    //             .filter(s -> SnippetType.TEXT.equals(s.getType()))
+    //             .toList();
+    //         List<SnippetExtCreate> codes = mappedSnippets.stream()
+    //             .filter(s -> SnippetType.CODE.equals(s.getType()))
+    //             .toList();
+    //         List<SnippetExtCreate> imgs = mappedSnippets.stream()
+    //             .filter(s -> SnippetType.IMG.equals(s.getType()))
+    //             .toList();
+    //
+    //         log.warn("[6] TEXT 타입 스니펫 수: {}", texts.size());
+    //         log.warn("[7] CODE 타입 스니펫 수: {}", codes.size());
+    //         log.warn("[8] IMG 타입 스니펫 수: {}", imgs.size());
+    //
+    //         // 6. 하위 테이블 일괄 insert
+    //         if (!texts.isEmpty()) snippetExtMapper.bulkInsertSnippetTexts(texts);
+    //         if (!codes.isEmpty()) snippetExtMapper.bulkInsertSnippetCodes(codes);
+    //         if (!imgs.isEmpty()) snippetExtMapper.bulkInsertSnippetImages(imgs);
+    //
+    //     } catch (org.springframework.dao.DuplicateKeyException e) {
+    //         // clientRequestId 중복 등록 방지
+    //         throw new DuplicateSnippetException("이미 등록된 clientRequestId가 포함되어 있습니다.");
+    //     }
+    // }
 
     public void updateSnippet(SnippetExtUpdate snippetUpdate, Long requesterId) {
         Long ownerId = getOwnerIdOrThrow(snippetUpdate.getSnippetId());
@@ -134,11 +130,6 @@ public class SnippetExtService {
         return snippetExtMapper.findColorsByUserId(userId);
     }
 
-    // 중복검사 삭제로 인한 미사용
-    // public Long findIdByClientRequestId(String clientRequestId) {
-    //     return snippetExtMapper.findIdByClientRequestId(clientRequestId);
-    // }
-
     public List<PopSnippets> getTop3PopularSnippets() {
         return snippetExtMapper.selectTop3PopularSnippets();
     }
@@ -148,9 +139,9 @@ public class SnippetExtService {
     // ================================================
 
     // 동기식 insert - save
-    // private boolean isDuplicate(SnippetExtCreate snippet) {
-    //     return snippetExtMapper.countDuplicate(snippet) > 0;
-    // }
+    private boolean isDuplicate(SnippetExtCreate snippet) {
+        return snippetExtMapper.countDuplicate(snippet) > 0;
+    }
 
     // 동기식 insert - save
     private void validateSnippet(SnippetExtCreate snippet) {
@@ -170,13 +161,13 @@ public class SnippetExtService {
     }
 
     // 동기식 insert - save
-    // private void insertDetailByType(SnippetExtCreate snippet) {
-    //     switch (snippet.getType()) {
-    //         case TEXT -> snippetExtMapper.insertSnippetText(snippet);
-    //         case CODE -> snippetExtMapper.insertSnippetCode(snippet);
-    //         case IMG -> snippetExtMapper.insertSnippetImg(snippet);
-    //     }
-    // }
+    private void insertDetailByType(SnippetExtCreate snippet) {
+        switch (snippet.getType()) {
+            case TEXT -> snippetExtMapper.insertSnippetText(snippet);
+            case CODE -> snippetExtMapper.insertSnippetCode(snippet);
+            case IMG -> snippetExtMapper.insertSnippetImg(snippet);
+        }
+    }
 
     private Long getOwnerIdOrThrow(Long snippetId) {
         return snippetExtMapper.findUserIdBySnippetId(snippetId)

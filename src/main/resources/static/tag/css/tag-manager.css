@@ -630,20 +630,20 @@ body {
     min-height: 200px;
 }
 
-.code-block {
-    background: #1a202c !important;
-    color: #e2e8f0 !important;
-    padding: 20px !important; /* 패딩 줄임 */
-    margin: 0 !important;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
-    font-size: 0.9rem !important;
-    line-height: 1.5 !important; /* 라인 높이 줄임 */
-    overflow-x: auto !important;
-    white-space: pre-wrap !important;
-    word-break: break-all !important;
-    max-height: 45vh; /* 최대 높이 제한 */
-    overflow-y: auto; /* 세로 스크롤 */
-}
+/*.code-block {*/
+/*    background: #1a202c !important;*/
+/*    color: #e2e8f0 !important;*/
+/*    padding: 20px !important; !* 패딩 줄임 *!*/
+/*    margin: 0 !important;*/
+/*    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;*/
+/*    font-size: 0.9rem !important;*/
+/*    line-height: 1.5 !important; !* 라인 높이 줄임 *!*/
+/*    overflow-x: auto !important;*/
+/*    white-space: pre-wrap !important;*/
+/*    word-break: break-all !important;*/
+/*    max-height: 45vh; !* 최대 높이 제한 *!*/
+/*    overflow-y: auto; !* 세로 스크롤 *!*/
+/*}*/
 
 .text-content {
     padding: 20px; /* 패딩 줄임 */

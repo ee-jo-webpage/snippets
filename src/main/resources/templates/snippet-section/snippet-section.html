@@ -19,17 +19,49 @@
             <span class="modal-close">&times;</span>
         </div>
         <div class="modal-body snippet-modal-body">
-            <div class="snippet-detail-meta">
-                <!-- 메타 정보가 JavaScript로 동적 생성됨 -->
+            <!-- 상단: 메타 정보와 콘텐츠를 가로로 배치 -->
+            <div class="snippet-main-content">
+                <div class="snippet-left-panel">
+                    <div class="snippet-detail-meta">
+                        <!-- 기존 메타 정보 -->
+                    </div>
+                </div>
+                <div class="snippet-right-panel">
+                    <div class="snippet-detail-content">
+                        <!-- 기존 콘텐츠 -->
+                    </div>
+                </div>
             </div>
-            <div class="snippet-detail-content">
-                <!-- 콘텐츠가 JavaScript로 동적 생성됨 -->
+
+            <!-- 하단: 태그 섹션 -->
+            <div class="snippet-tags-section">
+                <h4>🏷️ 태그</h4>
+                <div class="snippet-tags-display" id="snippetTagsDisplay">
+                    <!-- 태그 배지들이 여기에 동적으로 추가됨 -->
+                </div>
+                <div class="snippet-tags-input">
+                    <input type="text" id="tagInput" placeholder="태그 추가 (쉼표로 구분)" class="tag-input">
+                    <button id="addTagsBtn" class="btn btn-primary">태그 추가</button>
+                </div>
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-secondary">
-                <i class="fas fa-times"></i> 닫기
-            </button>
+            <div class="modal-footer-left">
+                <button id="bookmarkToggleBtn" class="btn btn-bookmark">
+                    <i class="fas fa-bookmark"></i> <span class="bookmark-text">북마크</span>
+                </button>
+                <button id="editSnippetBtn" class="btn btn-warning">
+                    <i class="fas fa-edit"></i> 수정
+                </button>
+                <button id="deleteSnippetBtn" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> 삭제
+                </button>
+            </div>
+            <div class="modal-footer-right">
+                <button class="btn btn-secondary">
+                    <i class="fas fa-times"></i> 닫기
+                </button>
+            </div>
         </div>
     </div>
 </div>

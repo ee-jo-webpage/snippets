@@ -147,7 +147,7 @@ $(document).ready(function() {
         tags.forEach((tag, index) => {
             const card = createTagCard(tag);
             // 애니메이션 지연 효과
-            card.css('animation-delay', (index * 0.1) + 's');
+            card.css('animation-delay', (index * 0.01) + 's');
             container.append(card);
         });
     }
@@ -472,6 +472,20 @@ function displaySnippets(snippets) {
 function createSnippetCard(snippet) {
     const card = $('<div>').addClass('snippet-card bookmark-card');
 
+    // 올바른 스니펫 ID 설정
+    const snippetId = snippet.snippetId || snippet.id;
+    card.data('id', snippetId);
+    card.data('snippet-id', snippetId);
+
+    // 중요: 전체 스니펫 데이터를 저장
+    card.data('snippet', snippet);
+
+    console.log('스니펫 카드 생성:', {
+        snippetId: snippetId,
+        title: snippet.title || snippet.memo,
+        data: snippet
+    });
+
     // 색상이 있는 경우
     if (snippet.hexCode) {
         card.addClass('has-color');
@@ -537,4 +551,33 @@ function createSnippetCard(snippet) {
     card.data('snippet', snippet);
 
     return card;
+
+
+    // 전역 이벤트 리스너 추가 ($(document).ready 안에)
+    $(document).on('tagUpdated', function(event, data) {
+        console.log('태그 업데이트 이벤트 수신:', data);
+
+        if (data.action === 'added' || data.action === 'removed') {
+            // 해당 태그의 스니펫 개수 업데이트
+            updateTagSnippetCount(data.tagId);
+
+            // 전체 태그 목록 새로고침 (새 태그가 추가된 경우)
+            if (data.action === 'added' && data.isNewTag) {
+                loadAllTags();
+            }
+        }
+    });
+
+
+}
+
+
+
+// 특정 태그의 스니펫 개수만 업데이트하는 함수
+function updateTagSnippetCount(tagId) {
+    const tagCard = $(`.tag-card[data-id="${tagId}"]`);
+    if (tagCard.length > 0) {
+        const countElement = tagCard.find('.tag-snippet-count');
+        loadTagSnippetCount(tagId, countElement);
+    }
 }

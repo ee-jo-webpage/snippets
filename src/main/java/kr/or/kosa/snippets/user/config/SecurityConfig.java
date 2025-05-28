@@ -39,6 +39,7 @@ public class SecurityConfig {
                                 "/user/images/**"
                         ).permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/app").authenticated()
                         .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN", "OAUTH2")
                         .requestMatchers("/loginproc").hasRole("USER") // ROLE_OAUTH2 막기
                         .requestMatchers("/changePassword").hasRole("USER") // ROLE_OAUTH2 막기

@@ -14,6 +14,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -34,6 +36,32 @@ public class BookmarkRestController {
         Long userId = userDetails.getUserId();
         log.info("REST API 인증된 사용자 ID: {}", userId);
         return userId;
+    }
+
+    @GetMapping("/snippets")
+    public ResponseEntity<?> getBookmarkedSnippets(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        try {
+            Long userId = requireLogin(userDetails);
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("success", false, "message", "로그인이 필요합니다."));
+            }
+
+            log.info("북마크된 스니펫 목록 조회 - 사용자 ID: {}", userId);
+
+            List<Snippets> bookmarkList = bookmarkService.getAllBookmarkByUserId(userId);
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "snippets", bookmarkList != null ? bookmarkList : new ArrayList<>(),
+                    "count", bookmarkList != null ? bookmarkList.size() : 0
+            ));
+
+        } catch (Exception e) {
+            log.error("북마크된 스니펫 목록 조회 중 오류 발생", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", "북마크 목록 조회 중 오류가 발생했습니다."));
+        }
     }
 
     //북마크 토글 (추가/삭제)

@@ -28,9 +28,9 @@ public class SnippetExtService {
 
     @Transactional
     public Long save(SnippetExtCreate snippet) {
-        if (isDuplicate(snippet)) {
-            throw new DuplicateSnippetException("이미 동일한 스니펫이 존재합니다.");
-        }
+        // if (isDuplicate(snippet)) {
+        //     throw new DuplicateSnippetException("이미 동일한 스니펫이 존재합니다.");
+        // }
 
         validateSnippet(snippet);           // 유효성 검사
         snippetExtMapper.insertSnippet(snippet); // 공통 삽입

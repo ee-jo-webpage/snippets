@@ -28,9 +28,9 @@ public class UserCleanupScheduler {
      * - 매 5분마다 실행
      */
     @Transactional
-    @Scheduled(cron = "0 */5 * * * *") // 매 5분마다 0초에 실행
+    @Scheduled(fixedRate = 300000) // 5분마다 실행
     public void deleteExpiredUsers() {
-        log.info(" [비활성 계정 삭제] 실행");
+        log.info(" [비활성 계정 삭제] 실행" + LocalDateTime.now());
 
         LocalDateTime cutoff = LocalDateTime.now().minusMinutes(1); // 예시용: 1분 전
         List<Users> expiredUsers = userMapper.findAllByEnabledFalseAndDeletedAtBefore(cutoff);
@@ -65,7 +65,7 @@ public class UserCleanupScheduler {
      */
     @Scheduled(cron = "30 */5 * * * *") // 매 5분마다 30초에 실행
     public void deleteInactiveUnverifiedUsers() {
-        log.info(" [미인증 계정 정리] 시작");
+        log.info(" [미인증 계정 정리] 시작" + LocalDateTime.now());
 
         LocalDateTime cutoff = LocalDateTime.now().minusMinutes(1); // 1분 전 기준
         List<Users> users = userMapper.existsByEmailAndEnabledFalseBefore(cutoff);

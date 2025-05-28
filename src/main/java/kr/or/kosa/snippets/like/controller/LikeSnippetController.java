@@ -1,6 +1,7 @@
 package kr.or.kosa.snippets.like.controller;
 
 import kr.or.kosa.snippets.like.mapper.LikeSnippetMapper;
+import kr.or.kosa.snippets.like.mapper.SnippetContentMapper;
 import kr.or.kosa.snippets.like.model.Snippet;
 import kr.or.kosa.snippets.like.model.LikeTag;
 import kr.or.kosa.snippets.like.service.LikeService;
@@ -36,6 +37,9 @@ public class LikeSnippetController {
     @Autowired
     private LikeUserService likeUserService;  // 추가
 
+    @Autowired
+    private SnippetContentMapper snippetContentMapper;
+
     @GetMapping("/snippet/{id}")
     public String showSnippetDetail(@PathVariable("id") Integer snippetId,
                                     @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -60,13 +64,32 @@ public class LikeSnippetController {
         long actualLikeCount = likeService.getLikesCount(snippetId);
         snippet.setLikeCount((int) actualLikeCount);
 
-        // 소유자 nickname 조회 (추가)
+        // 소유자 nickname 조회
         String ownerNickname = likeUserService.getNicknameByUserId(snippet.getUserId());
+
+        // 스니펫 타입별 실제 content 조회 (추가)
+        Object snippetContent = null;
+        try {
+            switch (snippet.getType().toUpperCase()) {
+                case "CODE":
+                    snippetContent = snippetContentMapper.getSnippetCodeById(snippetId);
+                    break;
+                case "TEXT":
+                    snippetContent = snippetContentMapper.getSnippetTextById(snippetId);
+                    break;
+                case "IMG":
+                    snippetContent = snippetContentMapper.getSnippetImageById(snippetId);
+                    break;
+            }
+        } catch (Exception e) {
+            System.err.println("스니펫 content 조회 실패: " + e.getMessage());
+        }
 
         model.addAttribute("snippet", snippet);
         model.addAttribute("tags", likeTags);
         model.addAttribute("isLiked", isLiked);
-        model.addAttribute("ownerNickname", ownerNickname);  // 추가
+        model.addAttribute("ownerNickname", ownerNickname);
+        model.addAttribute("snippetContent", snippetContent);  // 추가
         model.addAttribute("currentUserId", userDetails != null ? userDetails.getUserId() : null);
         model.addAttribute("currentUserNickname", userDetails != null ? userDetails.getNickname() : null);
         model.addAttribute("isLoggedIn", userDetails != null);
@@ -140,6 +163,9 @@ public class LikeSnippetController {
                     .collect(Collectors.toList());
             Map<Integer, String> nicknameMap = likeUserService.getNicknamesByUserIds(userIds);
 
+            // 스니펫 content 미리보기 조회 (추가)
+            Map<Integer, String> contentPreviewMap = likeSnippetService.getSnippetContentPreviews(snippets);
+
             // 페이징 정보 계산
             int totalPages = (int) Math.ceil((double) totalSnippets / pageSize);
 
@@ -147,6 +173,7 @@ public class LikeSnippetController {
             model.addAttribute("snippets", snippets);
             model.addAttribute("likeStatusMap", likeStatusMap);
             model.addAttribute("nicknameMap", nicknameMap);  // 추가
+            model.addAttribute("contentPreviewMap", contentPreviewMap);  // 추가
             model.addAttribute("currentUserId", userDetails != null ? userDetails.getUserId() : null);
             model.addAttribute("currentUserNickname", userDetails != null ? userDetails.getNickname() : null);
             model.addAttribute("isLoggedIn", userDetails != null);
@@ -166,6 +193,7 @@ public class LikeSnippetController {
             e.printStackTrace();
 
             // 오류 발생 시 기본값 설정
+            model.addAttribute("contentPreviewMap", new HashMap<>());  // 추가
             model.addAttribute("snippets", new ArrayList<>());
             model.addAttribute("likeStatusMap", new HashMap<>());
             model.addAttribute("nicknameMap", new HashMap<>());  // 추가

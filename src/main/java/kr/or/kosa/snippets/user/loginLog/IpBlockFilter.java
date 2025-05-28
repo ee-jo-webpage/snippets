@@ -32,7 +32,6 @@ public class IpBlockFilter extends GenericFilterBean {
                 && "POST".equalsIgnoreCase(req.getMethod())
                 && loginAttemptService.isBlocked(ip)) {
 
-            log.warn("차단된 IP의 로그인 시도: {}", ip);
             HttpServletResponse res = (HttpServletResponse) response;
 
             String errorMessage = "보안 사유로 해당 IP에서의 접속이 차단되었습니다.";

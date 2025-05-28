@@ -63,9 +63,6 @@ public class CustomAuthFailureHandler implements AuthenticationFailureHandler {
         }else if (exception instanceof IpBlockException) {
             errorMessage = "보안 사유로 해당 IP에서의 접속이 차단되었습니다.";
         }
-
-
-        log.warn("로그인 실패 - 이메일: {}, IP: {}, 메시지: {}", email, ip, errorMessage);
         // 메시지를 인코딩하여 로그인 페이지로 리다이렉트
         response.sendRedirect("/login?error=" + URLEncoder.encode(errorMessage, StandardCharsets.UTF_8));
     }

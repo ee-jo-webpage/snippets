@@ -37,7 +37,6 @@ public class UserCleanupScheduler {
 
         for (Users user : expiredUsers) {
             if ("GOOGLE".equalsIgnoreCase(user.getLoginType())) {
-                log.info(" [구글 계정 revoke] 시도: {}", user.getEmail());
 
                 // accessToken은 없음 → revoke 실패 감수
                 try {
@@ -50,9 +49,6 @@ public class UserCleanupScheduler {
 
         if (!expiredUsers.isEmpty()) {
             userMapper.deleteAll(expiredUsers);
-            log.info(" {}명의 비활성 사용자 삭제 완료", expiredUsers.size());
-        } else {
-            log.info("삭제할 비활성 사용자가 없습니다.");
         }
     }
 
@@ -71,9 +67,6 @@ public class UserCleanupScheduler {
         List<Users> users = userMapper.existsByEmailAndEnabledFalseBefore(cutoff);
         if (!users.isEmpty()) {
             userMapper.deleteAll(users);
-            log.info(" [미인증 계정 정리] {}명 삭제 완료", users.size());
-        } else {
-            log.info(" [미인증 계정 정리] 삭제할 사용자 없음");
         }
     }
 }

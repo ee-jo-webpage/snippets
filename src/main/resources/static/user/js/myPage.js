@@ -14,8 +14,6 @@ function validateField(fieldName) {
     const message = validators[fieldName](field.value);
     if (errorSpan) {
         errorSpan.innerText = message;
-    } else {
-        console.warn("error span not found for", fieldName);
     }
     return message === "";
 }

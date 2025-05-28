@@ -100,15 +100,12 @@ form.addEventListener('submit', async function (e) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
-        console.log("✅ 서버 응답 수신됨", response);
         let result;
         try {
             result = await response.json();
         } catch (e) {
-            console.error(" JSON 파싱 실패", e);
             alert("서버 오류가 발생했습니다.");
             const text = await response.text();
-            console.error("서버 응답 텍스트:", text);
             setSubmitState(false);
             return;
         }

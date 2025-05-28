@@ -82,7 +82,6 @@ public class UserService {
         try {
             RestTemplate restTemplate = new RestTemplate();
             restTemplate.postForLocation(revokeUrl, null);
-            log.info(" 구글 accessToken 해제 성공: {}", accessToken);
         } catch (Exception e) {
             log.warn("️ 구글 accessToken 해제 실패: {}", e.getMessage());
         }

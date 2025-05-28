@@ -36,7 +36,6 @@ public class MailService {
             helper.setText(htmlContent, true);
             mailSender.send(message);
         } catch (Exception e) {
-            log.error("이메일 전송 실패", e);
             throw new RuntimeException("이메일 전송 중 오류 발생");
         }
     }

@@ -105,7 +105,7 @@
 
     <form th:action="@{/snippets/new}" th:object="${snippet}"
           method="post" enctype="multipart/form-data">
-      <input type="hidden" th:field="*{type}" value="IMG"/>
+	<input type="hidden" name="type" value="IMG"/>
       <div class="snippet-body">
         <div class="mb-3">
           <label for="colorId" class="form-label">Color</label>

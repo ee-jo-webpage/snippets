@@ -102,7 +102,6 @@
     100% { transform: rotate(360deg); }
 }
 
-/* 두 번째 페이지 스타일을 모달에 적용 */
 .modal-body .box {
     max-width: none;
     margin: 0;
@@ -184,17 +183,9 @@
 <table border="1">
 <thead>
 <tr>
-<th>Snippet ID</th>
-<th>User ID</th>
-<th>Color ID</th>
-<th>Source URL</th>
-<th>Type</th>
-<th>Memo</th>
-<th>Created At</th>
-<th>Updated At</th>
-<th>Like Count</th>
-<th>Visibility</th>
-<th>Actions</th>
+<th>Snippet ID</th><th>User ID</th><th>Color ID</th><th>Source URL</th>
+<th>Type</th><th>Memo</th><th>Created At</th><th>Updated At</th>
+<th>Like Count</th><th>Visibility</th><th>Actions</th>
 </tr>
 </thead>
 <tbody>
@@ -209,186 +200,85 @@
 <td th:text="${#dates.format(snippet.updatedAt, 'yyyy-MM-dd HH:mm')}"></td>
 <td th:text="${snippet.likeCount}"></td>
 <td th:text="${snippet.visibility}"></td>
-<td>
-<a th:href="@{/snippets/{id}(id=${snippet.snippetId})}">상세 보기</a>
-</td>
+<td><a th:href="@{/snippets/{id}(id=${snippet.snippetId})}">상세 보기</a></td>
 </tr>
 </tbody>
 </table>
 
-<!-- 페이징 내비게이션 -->
 <nav>
 <ul class="pagination">
-<li th:classappend="${startPage > pageGroupSize} ? '' : 'disabled'">
-<a th:href="@{/snippets(page=${startPage - pageGroupSize})}">이전</a>
-</li>
-<li th:each="i : ${#numbers.sequence(startPage, endPage)}"
-th:classappend="${i == pageInfo.pageNum} ? 'active' : ''">
-<a th:href="@{/snippets(page=${i})}" th:text="${i}">1</a>
-</li>
-<li th:classappend="${endPage < pageInfo.pages} ? '' : 'disabled'">
-<a th:href="@{/snippets(page=${endPage + 1})}">다음</a>
-</li>
+<li th:classappend="${startPage > pageGroupSize} ? '' : 'disabled'"><a th:href="@{/snippets(page=${startPage - pageGroupSize})}">이전</a></li>
+<li th:each="i : ${#numbers.sequence(startPage, endPage)}" th:classappend="${i == pageInfo.pageNum} ? 'active' : ''">
+<a th:href="@{/snippets(page=${i})}" th:text="${i}">1</a></li>
+<li th:classappend="${endPage < pageInfo.pages} ? '' : 'disabled'"><a th:href="@{/snippets(page=${endPage + 1})}">다음</a></li>
 </ul>
 </nav>
 
-<!-- 모달 트리거 버튼 -->
 <button id="openModalBtn" class="btn btn-primary">스니펫 추가</button>
-
 <a href="/">Go to Home</a>
 
-<!-- 모달 -->
 <div id="snippetModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h1>스니펫 추가</h1>
-            <span class="close">&times;</span>
-        </div>
-        <div class="modal-body" id="modalBody">
-            <!-- AJAX로 로드될 내용 -->
-            <div class="loading">
-                <div class="spinner"></div>
-                <p>로딩 중...</p>
-            </div>
-        </div>
-        <div class="modal-footer" id="modalFooter" style="display: none;">
-            <button type="button" class="btn btn-secondary" id="cancelBtn">취소</button>
-            <button type="button" class="btn btn-primary" id="nextBtn">다음</button>
-        </div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1>스니펫 추가</h1>
+      <span class="close" data-bs-dismiss="modal">×</span>
     </div>
+    <div class="modal-body" id="modalBody">
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>로딩 중...</p>
+      </div>
+    </div>
+    <div class="modal-footer" id="modalFooter" style="display: none;">
+      <button type="button" class="btn btn-secondary" id="cancelBtn">취소</button>
+      <button type="button" class="btn btn-primary" id="nextBtn">다음</button>
+    </div>
+  </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// 모달 요소들 가져오기
-const modal = document.getElementById('snippetModal');
-const openBtn = document.getElementById('openModalBtn');
-const closeBtn = document.querySelector('.close');
-const cancelBtn = document.getElementById('cancelBtn');
-const nextBtn = document.getElementById('nextBtn');
-const modalBody = document.getElementById('modalBody');
-const modalFooter = document.getElementById('modalFooter');
+  document.addEventListener('DOMContentLoaded', () => {
+    const modalEl   = document.getElementById('snippetModal');
+    const modal     = new bootstrap.Modal(modalEl);
+    const bodyDiv   = document.getElementById('modalBody');
+    const footerDiv = document.getElementById('modalFooter');
+    const openBtn   = document.getElementById('openModalBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const nextBtn   = document.getElementById('nextBtn');
+    let selectedType = null;
 
-// 모달 열기 및 AJAX로 내용 로드
-openBtn.addEventListener('click', function() {
-    modal.style.display = 'block';
-    document.body.style.overflow = 'hidden';
-    
-    // 로딩 상태로 초기화
-    modalBody.innerHTML = `
-        <div class="loading">
-            <div class="spinner"></div>
-            <p>로딩 중...</p>
-        </div>
-    `;
-    modalFooter.style.display = 'none';
-    
-    // AJAX로 두 번째 페이지 내용 가져오기
-    fetch('/snippets/new')
-        .then(response => response.text())
+    openBtn.addEventListener('click', e => {
+      e.preventDefault();
+      fetch('/snippets/new')
+        .then(res => res.text())
         .then(html => {
-            // HTML에서 필요한 부분만 추출
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const boxContent = doc.querySelector('.box');
-            
-            if (boxContent) {
-                // 폼 내용만 추출하여 모달에 삽입
-                const form = boxContent.querySelector('form');
-                if (form) {
-                    modalBody.innerHTML = `<div class="box">${form.outerHTML}</div>`;
-                    modalFooter.style.display = 'flex';
-                    setupModalForm();
-                }
-            }
-        })
-        .catch(error => {
-            console.error('Error loading content:', error);
-            modalBody.innerHTML = `
-                <div style="text-align: center; padding: 2rem; color: #dc3545;">
-                    <p>내용을 불러오는데 실패했습니다.</p>
-                    <button onclick="location.reload()" class="btn btn-secondary">새로고침</button>
-                </div>
-            `;
-        });
-});
-
-// 모달 폼 설정 함수
-function setupModalForm() {
-    const form = modalBody.querySelector('form');
-    const labels = modalBody.querySelectorAll('label');
-    const radioInputs = modalBody.querySelectorAll('input[type="radio"]');
-    
-    // 라디오 버튼 이벤트 설정
-    radioInputs.forEach(radio => {
-        radio.addEventListener('change', function() {
-            // 모든 라벨에서 selected 클래스 제거
-            labels.forEach(label => label.classList.remove('selected'));
-            
-            // 선택된 라벨에 selected 클래스 추가
-            const selectedLabel = this.closest('label');
-            if (selectedLabel) {
-                selectedLabel.classList.add('selected');
-            }
-            
-            // 다음 버튼 활성화
-            nextBtn.disabled = false;
+          bodyDiv.innerHTML       = html;
+          footerDiv.style.display = 'flex';
+          nextBtn.disabled        = true;
+          selectedType            = null;
+          bodyDiv.querySelectorAll('input[name="type"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+              selectedType    = radio.value;
+              nextBtn.disabled = false;
+            });
+          });
+          modal.show();
         });
     });
-    
-    // 라벨 클릭시 라디오 버튼 선택
-    labels.forEach(label => {
-        label.addEventListener('click', function() {
-            const radio = this.querySelector('input[type="radio"]');
-            if (radio) {
-                radio.checked = true;
-                radio.dispatchEvent(new Event('change'));
-            }
+
+    cancelBtn.addEventListener('click', () => modal.hide());
+
+    nextBtn.addEventListener('click', () => {
+      if (!selectedType) return;
+      fetch(`/snippets/new?type=${selectedType}`)
+        .then(res => res.text())
+        .then(html => {
+          bodyDiv.innerHTML       = html;
+          footerDiv.style.display = 'none';
         });
     });
-    
-    // 다음 버튼 클릭시 폼 제출
-    nextBtn.addEventListener('click', function() {
-        const selectedRadio = modalBody.querySelector('input[type="radio"]:checked');
-        if (selectedRadio) {
-            // 원래 폼의 action과 method 사용
-            const formAction = form.getAttribute('action');
-            const formMethod = form.getAttribute('method') || 'get';
-            
-            // 선택된 값으로 페이지 이동
-            const url = `${formAction}?type=${selectedRadio.value}`;
-            window.location.href = url;
-        }
-    });
-    
-    // 초기 상태에서 다음 버튼 비활성화
-    nextBtn.disabled = true;
-}
-
-// 모달 닫기 함수
-function closeModal() {
-    modal.style.display = 'none';
-    document.body.style.overflow = 'auto';
-    modalFooter.style.display = 'none';
-}
-
-// 모달 닫기 이벤트들
-closeBtn.addEventListener('click', closeModal);
-cancelBtn.addEventListener('click', closeModal);
-
-// 모달 외부 클릭시 닫기
-window.addEventListener('click', function(event) {
-    if (event.target === modal) {
-        closeModal();
-    }
-});
-
-// ESC 키로 모달 닫기
-document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape' && modal.style.display === 'block') {
-        closeModal();
-    }
-});
+  });
 </script>
-
 </body>
 </html>

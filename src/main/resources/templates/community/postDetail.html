@@ -39,9 +39,144 @@
             border: 1px solid #dee2e6;
             border-radius: 8px;
             cursor: pointer;
+            transition: all 0.2s ease;
         }
         .attachment-item:hover {
             background: #f8f9fa;
+            border-color: #0d6efd;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .comment-item {
+            border-left: 3px solid #e9ecef;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        /* 레벨별 들여쓰기와 색상 구분 - 새로 추가 */
+        .comment-item.level-0 { margin-left: 0px; border-left-color: #0d6efd; }
+        .comment-item.level-1 { margin-left: 20px; border-left-color: #20c997; }
+        .comment-item.level-2 { margin-left: 40px; border-left-color: #fd7e14; }
+        .comment-item.level-3 { margin-left: 60px; border-left-color: #dc3545; }
+        .comment-item.level-4 { margin-left: 80px; border-left-color: #6f42c1; }
+        .comment-item.level-5 { margin-left: 100px; border-left-color: #d63384; }
+        .comment-item.level-6 { margin-left: 120px; border-left-color: #198754; }
+        .comment-item.level-7 { margin-left: 140px; border-left-color: #ffc107; }
+        .comment-item.level-8 { margin-left: 160px; border-left-color: #0dcaf0; }
+        .comment-item.level-default { margin-left: 180px; border-left-color: #6c757d; }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .comment-author {
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .comment-date {
+            color: #6c757d;
+            font-size: 0.8rem;
+        }
+
+        .comment-content {
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+
+        .comment-actions {
+            display: flex;
+            gap: 10px;
+            font-size: 0.85rem;
+        }
+
+        .comment-action-btn {
+            background: none;
+            border: none;
+            color: #6c757d;
+            cursor: pointer;
+            padding: 2px 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .comment-action-btn:hover {
+            background-color: #f8f9fa;
+            color: #495057;
+        }
+
+        .comment-action-btn.liked {
+            color: #dc3545;
+        }
+
+        .comment-action-btn.disliked {
+            color: #6c757d;
+        }
+
+        /* 답글 폼 스타일 - 새로 추가 */
+        .reply-form {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            display: none;
+        }
+
+        .reply-form.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .edit-form {
+            margin-top: 10px;
+            display: none;
+        }
+
+        .edit-form.show {
+            display: block;
+        }
+
+        .comment-level-indicator {
+            position: absolute;
+            left: -15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: currentColor;
+        }
+
+        /* 반응형 - 새로 추가 */
+        @media (max-width: 768px) {
+            .comment-item.level-1 { margin-left: 15px; }
+            .comment-item.level-2 { margin-left: 30px; }
+            .comment-item.level-3 { margin-left: 45px; }
+            .comment-item.level-4 { margin-left: 60px; }
+            .comment-item.level-5 { margin-left: 75px; }
+            .comment-item.level-6 { margin-left: 90px; }
+            .comment-item.level-7 { margin-left: 105px; }
+            .comment-item.level-8 { margin-left: 120px; }
+            .comment-item.level-default { margin-left: 135px; }
         }
     </style>
 </head>
@@ -53,24 +188,26 @@
     </div>
 
     <!-- 게시글 상세 -->
-    <div class="card mb-4">
+    <div class="card mb-4" th:if="${post != null}">
         <div class="card-header bg-light">
             <h2 th:text="${post.title}">게시글 제목</h2>
             <div class="text-muted small mt-2">
                 작성자: <span th:text="${post.nickname}">작성자</span> |
-                작성일: <span th:text="${post.createdAt}">작성일</span> |
+                작성일: <span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">작성일</span> |
                 조회수: <span th:text="${post.viewCount}">0</span>
             </div>
         </div>
         <div class="card-body">
             <div class="post-content" th:utext="${post.content}">게시글 내용</div>
 
-            <!-- 첨부파일 목록 (가장 간단한 버전) -->
-            <div th:if="${attachments != null and !attachments.empty}" class="mt-4">
+            <!-- 첨부파일 목록 -->
+            <div th:if="${attachments != null and not #lists.isEmpty(attachments)}" class="mt-4">
                 <h5>첨부파일</h5>
                 <div class="border rounded p-3">
-                    <div th:each="attachment : ${attachments}" class="attachment-item"
-                         th:onclick="|downloadFile('${attachment.attachmentId}', '${attachment.fileName}')|">
+                    <div th:each="attachment : ${attachments}"
+                         class="attachment-item"
+                         th:data-attachment-id="${attachment.attachmentId}"
+                         th:data-file-name="${attachment.fileName}">
                         <div class="d-flex align-items-center">
                             <i class="fas fa-file me-2"></i>
                             <div>
@@ -84,22 +221,37 @@
         </div>
 
         <!-- 수정/삭제 버튼 -->
-        <div class="card-footer" th:if="${post.userId == currentUserId}">
+        <div class="card-footer" th:if="${currentUserId != null and post.userId == currentUserId}">
             <a th:href="@{/community/post/{id}/edit(id=${post.postId})}" class="btn btn-outline-primary">수정</a>
             <button type="button" class="btn btn-outline-danger" onclick="deletePost()">삭제</button>
         </div>
     </div>
 
+    <!-- 게시글이 없는 경우 -->
+    <div class="alert alert-warning" th:if="${post == null}">
+        <h4>게시글을 찾을 수 없습니다</h4>
+        <p>요청하신 게시글이 존재하지 않거나 삭제되었습니다.</p>
+        <a th:href="@{/community}" class="btn btn-primary">커뮤니티로 돌아가기</a>
+    </div>
+
     <!-- 댓글 영역 -->
-    <div class="card">
+    <div class="card" th:if="${post != null}">
         <div class="card-header">
-            <h5>댓글</h5>
+            <h5>
+                <i class="fas fa-comments me-2"></i>
+                댓글 <span id="commentCountBadge" class="badge bg-primary">0</span>
+            </h5>
         </div>
         <div class="card-body">
             <!-- 댓글 작성 폼 -->
             <div class="mb-4" th:if="${isLoggedIn}">
                 <textarea id="commentContent" class="form-control mb-2" rows="3" placeholder="댓글을 작성하세요"></textarea>
-                <button id="addComment" class="btn btn-primary">댓글 등록</button>
+                <div class="d-flex justify-content-end">
+                    <button id="addComment" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-1"></i>
+                        댓글 등록
+                    </button>
+                </div>
             </div>
 
             <div class="mb-4" th:unless="${isLoggedIn}">
@@ -119,44 +271,50 @@
 </div>
 
 <!-- 삭제 폼 -->
-<form id="deleteForm" th:action="@{/community/post/{id}/delete(id=${post.postId})}" method="post" style="display:none;"></form>
+<form id="deleteForm" th:if="${post != null}" th:action="@{/community/post/{id}/delete(id=${post.postId})}" method="post" style="display:none;"></form>
 
 <script th:inline="javascript">
-    const postId = [[${post.postId}]];
-    const currentUserId = [[${currentUserId}]];
-    const isLoggedIn = [[${isLoggedIn}]];
+    /*<![CDATA[*/
+    const postId = /*[[${post?.postId}]]*/ null;
+    const currentUserId = /*[[${currentUserId}]]*/ null;
+    const isLoggedIn = /*[[${isLoggedIn}]]*/ false;
+    /*]]>*/
 
     $(document).ready(function() {
-        loadComments();
+        console.log('페이지 로드됨:', { postId, currentUserId, isLoggedIn });
 
-        // 댓글 등록
-        $('#addComment').click(function() {
-            const content = $('#commentContent').val().trim();
-            if (!content) {
-                alert('댓글 내용을 입력해주세요.');
-                return;
-            }
+        if (postId) {
+            loadComments();
 
-            $.ajax({
-                url: '/api/board/comment/add',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                    postId: postId,
-                    content: content
-                }),
-                success: function(response) {
-                    if (response.success) {
-                        $('#commentContent').val('');
-                        loadComments();
-                        alert('댓글이 등록되었습니다.');
-                    }
-                },
-                error: function() {
-                    alert('댓글 등록 중 오류가 발생했습니다.');
+            // 첨부파일 클릭 이벤트 처리
+            $('.attachment-item').on('click', function() {
+                const attachmentId = $(this).data('attachment-id');
+                const fileName = $(this).data('file-name');
+                downloadFile(attachmentId, fileName);
+            });
+
+            // 최상위 댓글 등록
+            $('#addComment').click(function() {
+                const content = $('#commentContent').val().trim();
+                if (!content) {
+                    alert('댓글 내용을 입력해주세요.');
+                    return;
+                }
+
+                addComment(null, content, function() {
+                    $('#commentContent').val('');
+                    loadComments();
+                });
+            });
+
+            // 엔터키로 댓글 등록 (Shift+Enter는 줄바꿈)
+            $('#commentContent').keydown(function(e) {
+                if (e.keyCode === 13 && !e.shiftKey) {
+                    e.preventDefault();
+                    $('#addComment').click();
                 }
             });
-        });
+        }
     });
 
     // 게시글 삭제
@@ -168,43 +326,369 @@
 
     // 파일 다운로드
     function downloadFile(attachmentId, fileName) {
+        console.log('다운로드 요청:', attachmentId, fileName);
+
         if (confirm(fileName + ' 파일을 다운로드하시겠습니까?')) {
-            window.location.href = '/community/attachment/' + attachmentId;
+            const downloadUrl = '/community/attachment/' + attachmentId;
+            console.log('다운로드 URL:', downloadUrl);
+
+            // 방법: a 태그를 이용한 다운로드 (가장 안전)
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = fileName; // 다운로드 파일명 지정
+            link.style.display = 'none';
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
     }
 
+
     // 댓글 목록 불러오기
     function loadComments() {
+        if (!postId) return;
+
+        console.log('댓글 로드 시작:', postId);
+
         $.ajax({
             url: '/api/board/comments/' + postId,
             type: 'GET',
             success: function(response) {
+                console.log('댓글 로드 성공:', response);
                 renderComments(response.comments || []);
+                updateCommentCount(response.comments || []);
             },
-            error: function() {
+            error: function(xhr, status, error) {
+                console.error('댓글 로드 실패:', { xhr, status, error });
                 $('#commentList').html('<div class="text-center text-danger">댓글을 불러올 수 없습니다.</div>');
             }
         });
     }
 
-    // 댓글 렌더링
+    // 댓글 개수 업데이트
+    function updateCommentCount(comments) {
+        const totalCount = countAllComments(comments);
+        $('#commentCountBadge').text(totalCount);
+    }
+
+    // 전체 댓글 개수 계산 (대댓글 포함)
+    function countAllComments(comments) {
+        let count = 0;
+        comments.forEach(function(comment) {
+            count++; // 현재 댓글
+            if (comment.childComments && comment.childComments.length > 0) {
+                count += countAllComments(comment.childComments); // 대댓글들
+            }
+        });
+        return count;
+    }
+
+    // 댓글 렌더링 (재귀 호출 사용)
     function renderComments(comments) {
-        let html = '';
         if (comments.length === 0) {
-            html = '<div class="text-center py-4 text-muted">첫 번째 댓글을 작성해보세요!</div>';
-        } else {
-            comments.forEach(function(comment) {
-                if (!comment.parentId) {
-                    html += '<div class="border-bottom py-3">';
-                    html += '<div class="fw-bold">' + comment.nickname + '</div>';
-                    html += '<div class="mt-1">' + comment.content + '</div>';
-                    html += '<small class="text-muted">' + new Date(comment.createdAt).toLocaleString() + '</small>';
-                    html += '</div>';
-                }
-            });
+            $('#commentList').html('<div class="text-center py-4 text-muted">첫 번째 댓글을 작성해보세요!</div>');
+            return;
         }
+
+        let html = '';
+        comments.forEach(function(comment) {
+            html += renderSingleComment(comment, 0);  // 레벨 0부터 시작
+        });
+
         $('#commentList').html(html);
     }
+
+    // 단일 댓글 렌더링 (레벨과 함께)
+    function renderSingleComment(comment, level) {
+        const levelClass = level <= 8 ? `level-${level}` : 'level-default';
+        const canEdit = isLoggedIn && currentUserId === comment.userId;
+        const likeClass = comment.isLiked ? 'liked' : '';
+        const dislikeClass = comment.isDisliked ? 'disliked' : '';
+
+        let html = `
+            <div class="comment-item ${levelClass}" data-comment-id="${comment.commentId}">
+                <div class="comment-level-indicator"></div>
+
+                <div class="comment-header">
+                    <div class="d-flex align-items-center flex-grow-1">
+                        <span class="comment-author">${comment.nickname}</span>
+                        <span class="comment-date ms-2">${formatDate(comment.createdAt)}</span>
+                        ${level > 0 ? `<span class="badge bg-secondary ms-2 small">답글</span>` : ''}
+                    </div>
+                </div>
+
+                <div class="comment-content" id="content-${comment.commentId}">
+                    ${comment.content.replace(/\n/g, '<br>')}
+                </div>
+
+                <!-- 수정 폼 -->
+                <div class="edit-form" id="edit-form-${comment.commentId}">
+                    <textarea class="form-control mb-2" id="edit-content-${comment.commentId}">${comment.content}</textarea>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button class="btn btn-sm btn-secondary" onclick="cancelEdit(${comment.commentId})">취소</button>
+                        <button class="btn btn-sm btn-primary" onclick="saveEdit(${comment.commentId})">저장</button>
+                    </div>
+                </div>
+
+                <div class="comment-actions">
+                    ${isLoggedIn ? `
+                        <button class="comment-action-btn ${likeClass}" onclick="toggleLike(${comment.commentId}, true)">
+                            <i class="fas fa-thumbs-up"></i> ${comment.likeCount || 0}
+                        </button>
+                        <button class="comment-action-btn ${dislikeClass}" onclick="toggleLike(${comment.commentId}, false)">
+                            <i class="fas fa-thumbs-down"></i> ${comment.dislikeCount || 0}
+                        </button>
+                        <button class="comment-action-btn" onclick="showReplyForm(${comment.commentId})">
+                            <i class="fas fa-reply"></i> 답글
+                        </button>
+                    ` : ''}
+                    ${canEdit ? `
+                        <button class="comment-action-btn" onclick="showEditForm(${comment.commentId})">
+                            <i class="fas fa-edit"></i> 수정
+                        </button>
+                        <button class="comment-action-btn text-danger" onclick="deleteComment(${comment.commentId})">
+                            <i class="fas fa-trash"></i> 삭제
+                        </button>
+                    ` : ''}
+                </div>
+
+                <!-- 답글 작성 폼 -->
+                <div class="reply-form" id="reply-form-${comment.commentId}">
+                    <textarea class="form-control mb-2" id="reply-content-${comment.commentId}"
+                              rows="3" placeholder="답글을 작성하세요..."></textarea>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button class="btn btn-sm btn-secondary" onclick="hideReplyForm(${comment.commentId})">취소</button>
+                        <button class="btn btn-sm btn-primary" onclick="submitReply(${comment.commentId})">
+                            <i class="fas fa-paper-plane me-1"></i>
+                            답글 등록
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // 대댓글이 있으면 재귀적으로 렌더링
+        if (comment.childComments && comment.childComments.length > 0) {
+            comment.childComments.forEach(function(childComment) {
+                html += renderSingleComment(childComment, level + 1);
+            });
+        }
+
+        return html;
+    }
+
+    // 댓글 추가 (수정된 함수)
+    function addComment(parentId, content, callback) {
+        if (!isLoggedIn) {
+            alert('로그인이 필요합니다.');
+            return;
+        }
+
+        console.log('댓글 등록 시작:', { parentId, content, postId });
+
+        $.ajax({
+            url: '/api/board/comment/add',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                postId: postId,
+                parentId: parentId,
+                content: content
+            }),
+            success: function(response) {
+                console.log('댓글 등록 응답:', response);
+                if (response.success) {
+                    if (callback) callback();
+                    showToast('댓글이 등록되었습니다.');
+                } else {
+                    alert('댓글 등록에 실패했습니다: ' + (response.message || '알 수 없는 오류'));
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('댓글 등록 실패:', { xhr, status, error });
+                alert('댓글 등록 중 오류가 발생했습니다.');
+            }
+        });
+    }
+
+    // 답글 폼 표시
+    function showReplyForm(commentId) {
+        if (!isLoggedIn) {
+            alert('로그인이 필요합니다.');
+            return;
+        }
+
+        $('.reply-form').removeClass('show');
+        $(`#reply-form-${commentId}`).addClass('show');
+        $(`#reply-content-${commentId}`).focus();
+    }
+
+    // 답글 폼 숨기기
+    function hideReplyForm(commentId) {
+        $(`#reply-form-${commentId}`).removeClass('show');
+        $(`#reply-content-${commentId}`).val('');
+    }
+
+    // 답글 제출
+    function submitReply(parentId) {
+        const content = $(`#reply-content-${parentId}`).val().trim();
+        if (!content) {
+            alert('답글 내용을 입력해주세요.');
+            return;
+        }
+
+        addComment(parentId, content, function() {
+            hideReplyForm(parentId);
+            loadComments();
+        });
+    }
+
+    // 댓글 수정 폼 표시
+    function showEditForm(commentId) {
+        $(`#content-${commentId}`).hide();
+        $(`#edit-form-${commentId}`).addClass('show');
+        $(`#edit-content-${commentId}`).focus();
+    }
+
+    // 댓글 수정 취소
+    function cancelEdit(commentId) {
+        $(`#content-${commentId}`).show();
+        $(`#edit-form-${commentId}`).removeClass('show');
+    }
+
+    // 댓글 수정 저장
+    function saveEdit(commentId) {
+        const content = $(`#edit-content-${commentId}`).val().trim();
+        if (!content) {
+            alert('댓글 내용을 입력해주세요.');
+            return;
+        }
+
+        $.ajax({
+            url: '/api/board/comment/update',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                commentId: commentId,
+                content: content
+            }),
+            success: function(response) {
+                if (response.success) {
+                    loadComments();
+                    showToast('댓글이 수정되었습니다.');
+                } else {
+                    alert('댓글 수정에 실패했습니다.');
+                }
+            },
+            error: function() {
+                alert('댓글 수정 중 오류가 발생했습니다.');
+            }
+        });
+    }
+
+    // 댓글 삭제
+    function deleteComment(commentId) {
+        if (!confirm('댓글을 삭제하시겠습니까?')) {
+            return;
+        }
+
+        $.ajax({
+            url: '/api/board/comment/delete/' + commentId,
+            type: 'POST',
+            success: function(response) {
+                if (response.success) {
+                    loadComments();
+                    showToast('댓글이 삭제되었습니다.');
+                } else {
+                    alert('댓글 삭제에 실패했습니다.');
+                }
+            },
+            error: function() {
+                alert('댓글 삭제 중 오류가 발생했습니다.');
+            }
+        });
+    }
+
+    // 좋아요/싫어요 토글
+    function toggleLike(commentId, isLike) {
+        if (!isLoggedIn) {
+            alert('로그인이 필요합니다.');
+            return;
+        }
+
+        $.ajax({
+            url: '/api/board/comment/like',
+            type: 'POST',
+            data: {
+                commentId: commentId,
+                isLike: isLike
+            },
+            success: function(response) {
+                if (response.success) {
+                    loadComments(); // 전체 댓글 새로고침으로 좋아요 수 업데이트
+                }
+            },
+            error: function() {
+                alert('좋아요 처리 중 오류가 발생했습니다.');
+            }
+        });
+    }
+
+    // 날짜 포맷팅
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diff = now - date;
+
+        if (diff < 60000) return '방금 전';
+        if (diff < 3600000) return Math.floor(diff / 60000) + '분 전';
+        if (diff < 86400000) return Math.floor(diff / 3600000) + '시간 전';
+        if (diff < 2592000000) return Math.floor(diff / 86400000) + '일 전';
+
+        return date.toLocaleDateString();
+    }
+
+    // 토스트 메시지 표시
+    function showToast(message) {
+        const toast = $(`
+            <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+                <div class="toast show" role="alert">
+                    <div class="toast-header">
+                        <strong class="me-auto">알림</strong>
+                        <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                    </div>
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                </div>
+            </div>
+        `);
+
+        $('body').append(toast);
+
+        setTimeout(function() {
+            toast.remove();
+        }, 3000);
+    }
+
+    // 키보드 이벤트 (답글 폼에서 엔터키)
+    $(document).on('keydown', '[id^="reply-content-"]', function(e) {
+        if (e.keyCode === 13 && !e.shiftKey) {
+            e.preventDefault();
+            const commentId = this.id.replace('reply-content-', '');
+            submitReply(commentId);
+        }
+    });
+
+    // 키보드 이벤트 (수정 폼에서 엔터키)
+    $(document).on('keydown', '[id^="edit-content-"]', function(e) {
+        if (e.keyCode === 13 && !e.shiftKey) {
+            e.preventDefault();
+            const commentId = this.id.replace('edit-content-', '');
+            saveEdit(commentId);
+        }
+    });
 </script>
 </body>
 </html>

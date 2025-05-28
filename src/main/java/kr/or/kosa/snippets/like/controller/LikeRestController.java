@@ -26,14 +26,25 @@ public class LikeRestController {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            // 로그인 확인
+            // 인증 검증 (Spring Security가 이미 처리하지만 이중 체크)
             if (userDetails == null) {
                 response.put("success", false);
-                response.put("message", "로그인이 필요합니다.");
+                response.put("message", "인증이 필요합니다.");
                 return ResponseEntity.status(401).body(response);
             }
 
+            // 입력값 검증
+            if (snippetId == null || snippetId <= 0) {
+                response.put("success", false);
+                response.put("message", "유효하지 않은 스니펫 ID입니다.");
+                return ResponseEntity.badRequest().body(response);
+            }
+
             Long userId = userDetails.getUserId();
+
+            // 보안 로그
+            System.out.println("좋아요 추가 시도 - userId: " + userId + ", snippetId: " + snippetId + ", IP: " + getClientIP());
+
             likeService.addLike(snippetId, userId);
             long newCount = likeService.getLikesCount(snippetId);
 
@@ -51,21 +62,30 @@ public class LikeRestController {
         return ResponseEntity.ok(response);
     }
 
-    // 좋아요 취소
+    // 좋아요 취소 - 인증 필수
     @PostMapping("/remove")
     public ResponseEntity<Map<String, Object>> removeLike(@RequestParam Integer snippetId,
                                                           @AuthenticationPrincipal CustomUserDetails userDetails) {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            // 로그인 확인
             if (userDetails == null) {
                 response.put("success", false);
-                response.put("message", "로그인이 필요합니다.");
+                response.put("message", "인증이 필요합니다.");
                 return ResponseEntity.status(401).body(response);
             }
 
+            if (snippetId == null || snippetId <= 0) {
+                response.put("success", false);
+                response.put("message", "유효하지 않은 스니펫 ID입니다.");
+                return ResponseEntity.badRequest().body(response);
+            }
+
             Long userId = userDetails.getUserId();
+
+            // 보안 로그
+            System.out.println("좋아요 취소 시도 - userId: " + userId + ", snippetId: " + snippetId + ", IP: " + getClientIP());
+
             likeService.removeLike(snippetId, userId);
             long newCount = likeService.getLikesCount(snippetId);
 
@@ -82,16 +102,21 @@ public class LikeRestController {
         return ResponseEntity.ok(response);
     }
 
-    // 특정 스니펫의 좋아요 수 조회
+    // 특정 스니펫의 좋아요 수 조회 - 공개 접근 허용
     @GetMapping("/count")
     public ResponseEntity<Map<String, Object>> getLikesCount(@RequestParam Integer snippetId,
                                                              @AuthenticationPrincipal CustomUserDetails userDetails) {
         Map<String, Object> response = new HashMap<>();
         try {
+            if (snippetId == null || snippetId <= 0) {
+                response.put("success", false);
+                response.put("message", "유효하지 않은 스니펫 ID입니다.");
+                return ResponseEntity.badRequest().body(response);
+            }
+
             long count = likeService.getLikesCount(snippetId);
             boolean isLiked = false;
 
-            // 로그인한 사용자의 좋아요 여부 확인
             if (userDetails != null) {
                 isLiked = likeService.isLiked(snippetId, userDetails.getUserId());
             }
@@ -107,13 +132,13 @@ public class LikeRestController {
         return ResponseEntity.ok(response);
     }
 
-    // 사용자가 좋아요한 스니펫 목록
+    // 사용자가 좋아요한 스니펫 목록 - 인증 필수
     @GetMapping("/user")
     public ResponseEntity<?> getUserLikes(@AuthenticationPrincipal CustomUserDetails userDetails) {
         if (userDetails == null) {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
-            response.put("message", "로그인이 필요합니다.");
+            response.put("message", "인증이 필요합니다.");
             return ResponseEntity.status(401).body(response);
         }
 
@@ -121,17 +146,22 @@ public class LikeRestController {
         return ResponseEntity.ok(userLikes);
     }
 
-    // 특정 스니펫의 좋아요 상태 확인
+    // 특정 스니펫의 좋아요 상태 확인 - 공개 접근 허용
     @GetMapping("/status")
     public ResponseEntity<Map<String, Object>> getLikeStatus(@RequestParam Integer snippetId,
                                                              @AuthenticationPrincipal CustomUserDetails userDetails) {
         Map<String, Object> response = new HashMap<>();
 
         try {
+            if (snippetId == null || snippetId <= 0) {
+                response.put("success", false);
+                response.put("message", "유효하지 않은 스니펫 ID입니다.");
+                return ResponseEntity.badRequest().body(response);
+            }
+
             long count = likeService.getLikesCount(snippetId);
             boolean isLiked = false;
 
-            // 로그인한 사용자의 좋아요 여부 확인
             if (userDetails != null) {
                 isLiked = likeService.isLiked(snippetId, userDetails.getUserId());
             }
@@ -146,5 +176,11 @@ public class LikeRestController {
             response.put("message", "상태 조회 실패: " + e.getMessage());
         }
         return ResponseEntity.ok(response);
+    }
+
+    // 클라이언트 IP 주소 가져오기 (보안 로그용)
+    private String getClientIP() {
+        // 실제 구현에서는 HttpServletRequest를 주입받아 사용
+        return "unknown";
     }
 }

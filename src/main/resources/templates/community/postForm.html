@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>게시글 작성</title>
 
-    <!-- jQuery -->
+    <!-- jQuery (가장 먼저) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <!-- Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap 4 (Summernote와 완벽 호환) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Summernote -->
+    <!-- Summernote (Bootstrap 4 완벽 호환) -->
     <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/lang/summernote-ko-KR.min.js"></script>
@@ -31,18 +31,6 @@
             border: none;
         }
 
-        .note-editor .dropdown-toggle::after {
-            display: none;
-        }
-
-        .note-editor.note-frame {
-            border-color: #dee2e6;
-        }
-
-        .note-editor .note-toolbar {
-            background-color: #f8f9fa;
-        }
-
         .form-label {
             font-weight: 500;
         }
@@ -52,6 +40,118 @@
             box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
         }
 
+        /* Bootstrap 4 호환 스타일 */
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+
+        .btn-outline-primary {
+            color: #007bff;
+            border-color: #007bff;
+        }
+
+        .btn-outline-primary:hover {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+        /* Summernote 완전 기능 지원 스타일 */
+        .note-editor {
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+        }
+
+        .note-toolbar {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            padding: 8px;
+        }
+
+        .note-btn-group {
+            margin-right: 8px;
+            margin-bottom: 4px;
+        }
+
+        .note-btn {
+            padding: 4px 8px;
+            margin: 1px;
+            border: 1px solid #dee2e6;
+            background-color: white;
+            border-radius: 3px;
+        }
+
+        .note-btn:hover {
+            background-color: #e9ecef;
+        }
+
+        .note-btn.active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        /* 폰트 드롭다운 */
+        .note-fontname .dropdown-toggle,
+        .note-fontsize .dropdown-toggle {
+            min-width: 120px;
+            text-align: left;
+            padding: 4px 12px;
+            font-size: 14px;
+        }
+
+        .note-fontname .dropdown-menu,
+        .note-fontsize .dropdown-menu {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        /* 색상 팔레트 */
+        .note-color .dropdown-toggle {
+            width: 40px;
+            height: 30px;
+        }
+
+        .note-color-palette {
+            padding: 8px;
+        }
+
+        .note-color-btn {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #ccc;
+            margin: 1px;
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        .note-color-btn:hover {
+            border: 2px solid #333;
+        }
+
+        /* 드롭다운 메뉴 */
+        .note-dropdown-menu {
+            z-index: 1050;
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+
+        .note-dropdown-item {
+            padding: 6px 12px;
+            cursor: pointer;
+        }
+
+        .note-dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* 파일 업로드 스타일 */
         .file-upload-area {
             border: 2px dashed #dee2e6;
             border-radius: 8px;
@@ -129,6 +229,7 @@
             border-radius: 8px;
             overflow: hidden;
             background: white;
+            position: relative;
         }
 
         .attached-image img {
@@ -155,9 +256,97 @@
             height: 25px;
             cursor: pointer;
         }
+
+        /* 임시저장 관련 스타일 */
+        .draft-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+
+        .draft-status.saving {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .draft-status.saved {
+            background-color: #d1e7dd;
+            color: #0f5132;
+            border: 1px solid #badbcc;
+        }
+
+        .draft-status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .draft-list-item {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .draft-list-item:hover {
+            border-color: #0d6efd;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .draft-list-item .draft-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .draft-list-item .draft-content {
+            color: #6c757d;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .draft-list-item .draft-meta {
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+
+        /* 버튼 스타일 */
+        .btn-draft {
+            background-color: #6c757d;
+            border-color: #6c757d;
+            color: white;
+        }
+
+        .btn-draft:hover {
+            background-color: #5a6268;
+            border-color: #545b62;
+            color: white;
+        }
+
+        /* 알림 관련 스타일 */
+        .notification-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1060;
+            min-width: 300px;
+        }
     </style>
 </head>
 <body>
+
+<!-- 임시저장 상태 표시 -->
+<div id="draftStatus" class="draft-status" style="display: none;">
+    <span id="draftStatusText">저장 중...</span>
+</div>
 
 <div class="container mt-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -165,10 +354,16 @@
             <i class="fas fa-edit me-2"></i>
             게시글 작성
         </h1>
-        <a href="/community" class="btn btn-outline-secondary">
-            <i class="fas fa-home me-1"></i>
-            메인으로
-        </a>
+        <div>
+            <button type="button" class="btn btn-outline-info mr-2" id="loadDraftBtn">
+                <i class="fas fa-folder-open mr-1"></i>
+                임시저장 불러오기
+            </button>
+            <a href="/community" class="btn btn-outline-secondary">
+                <i class="fas fa-home me-1"></i>
+                메인으로
+            </a>
+        </div>
     </div>
 
     <div class="card">
@@ -250,74 +445,420 @@
                 </div>
 
                 <!-- 버튼 영역 -->
-                <div class="d-flex justify-content-end">
-                    <button type="button" class="btn btn-secondary me-2" onclick="confirmCancel()">
-                        <i class="fas fa-times me-1"></i>
-                        취소
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-paper-plane me-1"></i>
-                        등록
-                    </button>
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <button type="button" class="btn btn-draft mr-2" id="saveDraftBtn">
+                            <i class="fas fa-save mr-1"></i>
+                            임시저장
+                        </button>
+                        <span id="lastSavedTime" class="text-muted small"></span>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-secondary mr-2" onclick="confirmCancel()">
+                            <i class="fas fa-times mr-1"></i>
+                            취소
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane mr-1"></i>
+                            등록
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
+<!-- 임시저장 불러오기 모달 -->
+<div class="modal fade" id="draftModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-folder-open me-2"></i>
+                    임시저장 불러오기
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
+                <div id="draftList">
+                    <div class="text-center py-4">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        임시저장 목록을 불러오는 중...
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script th:inline="javascript">
     let selectedFiles = [];
-    let attachedImages = []; // Summernote에서 업로드된 이미지들
+    let attachedImages = [];
+    let currentDraftId = null;
+    let lastSavedData = {};
 
     $(document).ready(function() {
-        // Summernote 초기화 (모든 기능 활성화)
+        // 초기화
+        initializeSummernote();
+        setupFileDragDrop();
+
+        // 이벤트 바인딩
+        $('#saveDraftBtn').click(saveDraft);
+        $('#loadDraftBtn').click(loadDraftList);
+
+        // URL 파라미터에서 draftId 확인
+        const urlParams = new URLSearchParams(window.location.search);
+        const draftId = urlParams.get('draftId');
+        if (draftId) {
+            loadDraft(draftId);
+        }
+
+        // 폼 변경 감지
+        $('#title, #categoryId').on('input change', function() {
+            updateLastSavedData();
+        });
+    });
+
+    // ===== SUMMERNOTE 완전 기능 초기화 =====
+    function initializeSummernote() {
+        // 기존 인스턴스가 있다면 제거
+        if ($('#summernote').hasClass('note-editor')) {
+            $('#summernote').summernote('destroy');
+        }
+
+        // 완전한 Summernote 초기화
         $('#summernote').summernote({
             height: 400,
-            minHeight: null,
-            maxHeight: null,
-            focus: true,
+            minHeight: 300,
+            maxHeight: 600,
+            focus: false,
             lang: 'ko-KR',
             placeholder: '내용을 입력하세요...',
+
+            // 모든 기능이 포함된 완전한 툴바
             toolbar: [
                 ['style', ['style']],
-                ['font', ['bold', 'underline', 'clear']],
+                ['font', ['bold', 'italic', 'underline', 'strikethrough', 'superscript', 'subscript', 'clear']],
                 ['fontname', ['fontname']],
                 ['fontsize', ['fontsize']],
-                ['color', ['color']],
+                ['color', ['forecolor', 'backcolor']],
                 ['para', ['ul', 'ol', 'paragraph']],
+                ['height', ['height']],
                 ['table', ['table']],
-                ['insert', ['link', 'picture', 'video']],
+                ['insert', ['link', 'picture', 'video', 'hr']],
                 ['view', ['fullscreen', 'codeview', 'help']]
             ],
+
+            // 웹 폰트 포함 완전한 폰트 목록 (실제 시스템에 있는 폰트들)
+            fontNames: [
+                'Arial', 'Arial Black', 'Comic Sans MS', 'Courier New',
+                'Helvetica Neue', 'Helvetica', 'Impact', 'Lucida Grande',
+                'Lucida Sans Unicode', 'Tahoma', 'Times New Roman', 'Trebuchet MS', 'Verdana',
+                // 한글 폰트
+                '돋움', '굴림', '굴림체', '바탕', '바탕체', '궁서', '궁서체',
+                '맑은 고딕', 'Malgun Gothic', '나눔고딕', 'Nanum Gothic',
+                '나눔명조', 'Nanum Myeongjo', '나눔손글씨 붓', '나눔바른고딕'
+            ],
+
+            // 다양한 폰트 크기 (실제 적용되는 크기들)
+            fontSizes: ['8', '9', '10', '11', '12', '14', '16', '18', '20', '22', '24', '26', '28', '30', '32', '36', '48', '72'],
+
+            // 실제 작동하는 색상 팔레트
+            colors: [
+                // 1행: 흑백 계열
+                ['#000000', '#424242', '#636363', '#9C9C94', '#CEC6CE', '#EFEFEF', '#F7F3F7', '#FFFFFF'],
+                // 2행: 기본 컬러
+                ['#FF0000', '#FF9C00', '#FFFF00', '#00FF00', '#00FFFF', '#0000FF', '#9C00FF', '#FF00FF'],
+                // 3행: 연한 파스텔
+                ['#F7C6CE', '#FFE7CE', '#FFEFC6', '#D6EFD6', '#CEDEE7', '#CEE7F7', '#D6D6E7', '#E7D6DE'],
+                // 4행: 중간 톤
+                ['#E79C9C', '#FFC69C', '#FFE79C', '#B5D6A5', '#A5C6CE', '#9CC6EF', '#B5A5D6', '#D6A5BD'],
+                // 5행: 진한 톤
+                ['#E76363', '#F7AD6B', '#FFD663', '#94BD7B', '#73A5AD', '#6BADDE', '#8C7BC6', '#C67BA5'],
+                // 6행: 더 진한 톤
+                ['#CE0000', '#E79439', '#EFC631', '#6BA54A', '#4A7B8C', '#3984C6', '#634AA5', '#A54A7B'],
+                // 7행: 짙은 톤
+                ['#9C0000', '#B56308', '#BD9400', '#397B21', '#104A5A', '#085294', '#311873', '#731842'],
+                // 8행: 매우 짙은 톤
+                ['#630000', '#7B3900', '#846300', '#295218', '#083139', '#003163', '#21104A', '#4A1031']
+            ],
+
+            // 스타일 태그 (제대로 작동하는 스타일들)
+            styleTags: [
+                'p',
+                { title: '제목 1', tag: 'h1', className: '', value: 'h1' },
+                { title: '제목 2', tag: 'h2', className: '', value: 'h2' },
+                { title: '제목 3', tag: 'h3', className: '', value: 'h3' },
+                { title: '제목 4', tag: 'h4', className: '', value: 'h4' },
+                { title: '제목 5', tag: 'h5', className: '', value: 'h5' },
+                { title: '제목 6', tag: 'h6', className: '', value: 'h6' },
+                { title: '인용문', tag: 'blockquote', className: 'blockquote', value: 'blockquote' },
+                { title: '코드', tag: 'pre', className: 'bg-light p-2', value: 'pre' }
+            ],
+
+            // 중요: 폰트와 색상이 제대로 작동하도록 하는 설정
+            fontNamesIgnoreCheck: ['맑은 고딕', 'Malgun Gothic', '나눔고딕', 'Nanum Gothic'],
+
+            // 이미지 관련 설정
+            image: {
+                resizeEnabled: true,
+                disableResizeEditor: false
+            },
+
+            // 테이블 설정
+            table: {
+                className: 'table table-bordered'
+            },
+
+            // 링크 설정
+            link: {
+                rel: 'nofollow',
+                target: '_blank'
+            },
+
+            // 콜백 함수들
             callbacks: {
+                onInit: function() {
+                    console.log('✅ Summernote 완전 기능 초기화 완료');
+
+                    // DOM이 완전히 로드된 후 스타일 적용
+                    setTimeout(function() {
+                        // 폰트 드롭다운 스타일 강제 적용
+                        $('.note-fontname .dropdown-toggle').css({
+                            'min-width': '140px',
+                            'text-align': 'left',
+                            'font-size': '14px'
+                        });
+
+                        $('.note-fontsize .dropdown-toggle').css({
+                            'min-width': '70px',
+                            'text-align': 'center',
+                            'font-size': '14px'
+                        });
+
+                        // 색상 버튼 스타일 강제 적용
+                        $('.note-current-color-button, .note-recent-color-button').css({
+                            'width': '30px',
+                            'height': '30px'
+                        });
+
+                        // 색상 팔레트 스타일 강제 적용
+                        $('.note-color-palette .note-color-btn').css({
+                            'width': '20px',
+                            'height': '20px',
+                            'margin': '2px',
+                            'border': '1px solid #ccc',
+                            'cursor': 'pointer'
+                        });
+
+                        console.log('✅ Summernote 스타일 강제 적용 완료');
+                    }, 500);
+                },
+
                 onImageUpload: function(files) {
                     for (let i = 0; i < files.length; i++) {
                         uploadSummernoteImage(files[i], this);
                     }
                 },
-                onPaste: function(e) {
-                    const clipboardData = e.originalEvent.clipboardData;
-                    if (clipboardData && clipboardData.items) {
-                        for (let i = 0; i < clipboardData.items.length; i++) {
-                            const item = clipboardData.items[i];
-                            if (item.type.indexOf('image') !== -1) {
-                                const file = item.getAsFile();
-                                uploadSummernoteImage(file, this);
-                            }
-                        }
-                    }
+
+                onChange: function(contents) {
+                    updateLastSavedData();
+                },
+
+                // 폰트 변경 시 로그 (디버깅용)
+                onFontFamily: function(fontFamily) {
+                    console.log('폰트 변경됨:', fontFamily);
+                },
+
+                // 폰트 크기 변경 시 로그 (디버깅용)
+                onFontSize: function(fontSize) {
+                    console.log('폰트 크기 변경됨:', fontSize);
                 }
             }
         });
 
-        setupFileDragDrop();
-    });
+        // 초기화 후 추가 설정
+        setTimeout(function() {
+            // 에디터가 완전히 로드된 후 추가 스타일 적용
+            $('.note-editable').css({
+                'font-family': '맑은 고딕, Malgun Gothic, 나눔고딕, sans-serif',
+                'font-size': '14px',
+                'line-height': '1.6'
+            });
 
-    // Summernote 이미지 업로드
+            console.log('✅ Summernote 에디터 최종 설정 완료');
+        }, 1000);
+    }
+
+    // ===== 임시저장 기능 =====
+    function saveDraft() {
+        const data = getCurrentFormData();
+
+        if (!data.title && data.content.trim() === '<p><br></p>') {
+            showToast('제목이나 내용을 입력해주세요.', 'warning');
+            return;
+        }
+
+        showDraftStatus('saving', '저장 중...');
+
+        const requestData = {
+            draftId: currentDraftId,
+            title: data.title || '(제목 없음)',
+            content: data.content,
+            categoryId: data.categoryId || null
+        };
+
+        $.ajax({
+            url: '/api/community/draft/save',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(requestData),
+            success: function(response) {
+                if (response.success) {
+                    currentDraftId = response.draftId;
+                    lastSavedData = data;
+
+                    showDraftStatus('saved', '저장됨');
+                    updateLastSavedTime();
+
+                    setTimeout(hideDraftStatus, 2000);
+                    showToast('임시저장되었습니다.', 'success');
+                } else {
+                    showDraftStatus('error', '저장 실패');
+                    setTimeout(hideDraftStatus, 3000);
+                    showToast('저장에 실패했습니다.', 'error');
+                }
+            },
+            error: function() {
+                showDraftStatus('error', '저장 실패');
+                setTimeout(hideDraftStatus, 3000);
+                showToast('저장 중 오류가 발생했습니다.', 'error');
+            }
+        });
+    }
+
+    function loadDraftList() {
+        $('#draftList').html(`
+            <div class="text-center py-4">
+                <i class="fas fa-spinner fa-spin"></i>
+                임시저장 목록을 불러오는 중...
+            </div>
+        `);
+
+        $.ajax({
+            url: '/api/community/draft/list',
+            type: 'GET',
+            success: function(response) {
+                renderDraftList(response.drafts || []);
+                $('#draftModal').modal('show');
+            },
+            error: function() {
+                $('#draftList').html(`
+                    <div class="text-center py-4 text-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        임시저장 목록을 불러올 수 없습니다.
+                    </div>
+                `);
+                $('#draftModal').modal('show');
+            }
+        });
+    }
+
+    function renderDraftList(drafts) {
+        if (drafts.length === 0) {
+            $('#draftList').html(`
+                <div class="text-center py-4 text-muted">
+                    <i class="fas fa-folder-open fa-2x mb-3"></i>
+                    <p>저장된 임시글이 없습니다.</p>
+                </div>
+            `);
+            return;
+        }
+
+        let html = '';
+        drafts.forEach(function(draft) {
+            const previewContent = stripHtml(draft.content).substring(0, 100);
+            const lastModified = formatDate(draft.updatedAt);
+
+            html += `
+                <div class="draft-list-item" onclick="loadDraft(${draft.draftId})">
+                    <div class="draft-title">${draft.title || '(제목 없음)'}</div>
+                    <div class="draft-content">${previewContent}${previewContent.length >= 100 ? '...' : ''}</div>
+                    <div class="draft-meta d-flex justify-content-between">
+                        <span><i class="fas fa-clock me-1"></i>${lastModified}</span>
+                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                onclick="event.stopPropagation(); deleteDraft(${draft.draftId})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+
+        $('#draftList').html(html);
+    }
+
+    function loadDraft(draftId) {
+        if (hasContentChanged() && !confirm('현재 작성 중인 내용이 있습니다. 임시저장을 불러오시겠습니까?')) {
+            return;
+        }
+
+        $.ajax({
+            url: `/api/community/draft/${draftId}`,
+            type: 'GET',
+            success: function(response) {
+                if (response.success && response.draft) {
+                    const draft = response.draft;
+
+                    $('#title').val(draft.title || '');
+                    $('#summernote').summernote('code', draft.content || '');
+                    $('#categoryId').val(draft.categoryId || '');
+
+                    currentDraftId = draft.draftId;
+                    lastSavedData = getCurrentFormData();
+
+                    $('#draftModal').modal('hide');
+                    showToast('임시저장을 불러왔습니다.', 'success');
+                } else {
+                    showToast('임시저장을 불러올 수 없습니다.', 'error');
+                }
+            },
+            error: function() {
+                showToast('임시저장을 불러오는 중 오류가 발생했습니다.', 'error');
+            }
+        });
+    }
+
+    function deleteDraft(draftId) {
+        if (!confirm('이 임시저장을 삭제하시겠습니까?')) {
+            return;
+        }
+
+        $.ajax({
+            url: `/api/community/draft/${draftId}`,
+            type: 'DELETE',
+            success: function(response) {
+                if (response.success) {
+                    loadDraftList();
+                    showToast('임시저장이 삭제되었습니다.', 'success');
+                } else {
+                    showToast('삭제에 실패했습니다.', 'error');
+                }
+            },
+            error: function() {
+                showToast('삭제 중 오류가 발생했습니다.', 'error');
+            }
+        });
+    }
+
+    // ===== 파일 업로드 기능 (기존 코드 유지) =====
     function uploadSummernoteImage(file, editor) {
-        // 파일 크기 체크 (5MB)
         if (file.size > 5 * 1024 * 1024) {
-            alert('이미지 크기가 너무 큽니다. 5MB 이하의 이미지만 업로드 가능합니다.');
+            showToast('이미지 크기가 너무 큽니다. 5MB 이하의 이미지만 업로드 가능합니다.', 'warning');
             return;
         }
 
@@ -334,7 +875,6 @@
                 if (data.imageUrl) {
                     $(editor).summernote('insertImage', data.imageUrl);
 
-                    // 첨부된 이미지 목록에 추가
                     attachedImages.push({
                         url: data.imageUrl,
                         name: file.name,
@@ -343,11 +883,10 @@
 
                     updateAttachedImagesDisplay();
                 } else if (data.error) {
-                    alert('이미지 업로드 실패: ' + data.error);
+                    showToast('이미지 업로드 실패: ' + data.error, 'error');
                 }
             },
             error: function() {
-                // 이미지 업로드 실패 시 파일 첨부 영역에 추가
                 if (confirm('이미지 업로드에 실패했습니다. 파일로 첨부하시겠습니까?')) {
                     addFileToList(file);
                 }
@@ -355,7 +894,6 @@
         });
     }
 
-    // 첨부된 이미지 표시 업데이트
     function updateAttachedImagesDisplay() {
         if (attachedImages.length === 0) {
             $('#attachedImagesContainer').hide();
@@ -367,7 +905,7 @@
 
         attachedImages.forEach((image, index) => {
             html += `
-                <div class="attached-image position-relative" style="position: relative;">
+                <div class="attached-image">
                     <img src="${image.url}" alt="${image.name}">
                     <button type="button" class="image-remove" onclick="removeAttachedImage(${index})">
                         <i class="fas fa-times"></i>
@@ -384,7 +922,6 @@
         $('#attachedImages').html(html);
     }
 
-    // 첨부된 이미지 제거
     function removeAttachedImage(index) {
         if (confirm('이미지를 제거하시겠습니까?')) {
             const removedImage = attachedImages[index];
@@ -400,7 +937,6 @@
         }
     }
 
-    // 파일 드래그 앤 드롭 설정
     function setupFileDragDrop() {
         const uploadArea = $('#fileUploadArea');
 
@@ -432,13 +968,12 @@
         });
     }
 
-    // 파일 선택 처리
     function handleFileSelection(files) {
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
 
             if (file.size > 10 * 1024 * 1024) {
-                alert(`${file.name} 파일이 너무 큽니다. 10MB 이하의 파일만 업로드 가능합니다.`);
+                showToast(`${file.name} 파일이 너무 큽니다. 10MB 이하의 파일만 업로드 가능합니다.`, 'warning');
                 continue;
             }
 
@@ -447,7 +982,6 @@
         updateFileInput();
     }
 
-    // 파일 목록에 추가
     function addFileToList(file) {
         const fileId = Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         selectedFiles.push({id: fileId, file: file});
@@ -473,7 +1007,6 @@
         $('#fileList').append(fileHtml);
     }
 
-    // 파일 다운로드 (미리보기)
     function downloadFile(fileId) {
         const fileObj = selectedFiles.find(f => f.id === fileId);
         if (fileObj && confirm(`${fileObj.file.name} 파일을 다운로드하시겠습니까?`)) {
@@ -488,7 +1021,6 @@
         }
     }
 
-    // 파일 제거
     function removeFile(fileId) {
         if (confirm('파일을 제거하시겠습니까?')) {
             selectedFiles = selectedFiles.filter(f => f.id !== fileId);
@@ -497,7 +1029,6 @@
         }
     }
 
-    // 파일 입력 업데이트
     function updateFileInput() {
         const dt = new DataTransfer();
         selectedFiles.forEach(item => {
@@ -506,7 +1037,6 @@
         $('#files')[0].files = dt.files;
     }
 
-    // 파일 아이콘 반환
     function getFileIcon(filename) {
         const ext = filename.split('.').pop().toLowerCase();
         const iconMap = {
@@ -529,7 +1059,7 @@
         return iconMap[ext] || 'fas fa-file text-muted';
     }
 
-    // 폼 제출 처리
+    // ===== 폼 제출 및 유틸리티 함수 =====
     $('#postForm').on('submit', function(e) {
         e.preventDefault();
 
@@ -538,31 +1068,211 @@
         const categoryId = $('#categoryId').val();
 
         if (!categoryId) {
-            alert('게시판을 선택해주세요.');
+            showToast('게시판을 선택해주세요.', 'warning');
             return;
         }
 
         if (!title) {
-            alert('제목을 입력해주세요.');
+            showToast('제목을 입력해주세요.', 'warning');
             return;
         }
 
         if (content.trim() === '<p><br></p>' || !content.trim()) {
-            alert('내용을 입력해주세요.');
+            showToast('내용을 입력해주세요.', 'warning');
             return;
         }
 
         if (confirm('게시글을 등록하시겠습니까?')) {
+            // beforeunload 이벤트 임시 해제 (폼 제출 시에는 확인 안 함)
+            window.removeEventListener('beforeunload', beforeUnloadHandler);
+
+            // 임시저장이 있으면 삭제 (게시글 등록 후)
+            if (currentDraftId) {
+                $.ajax({
+                    url: `/api/community/draft/${currentDraftId}`,
+                    type: 'DELETE',
+                    async: false
+                });
+            }
+
             this.submit();
         }
     });
 
-    // 취소 확인
     function confirmCancel() {
-        if (confirm('작성을 취소하시겠습니까? 작성 중인 내용이 모두 사라집니다.')) {
+        let message = '작성을 취소하시겠습니까?';
+
+        if (hasContentChanged()) {
+            message += ' 작성 중인 내용이 모두 사라집니다.';
+        }
+
+        if (confirm(message)) {
             window.location.href = '/community';
         }
     }
+
+    // ===== 상태 관리 함수들 =====
+    function getCurrentFormData() {
+        return {
+            title: $('#title').val().trim(),
+            content: $('#summernote').summernote('code'),
+            categoryId: $('#categoryId').val()
+        };
+    }
+
+    function hasContentChanged() {
+        const currentData = getCurrentFormData();
+        return (
+            currentData.title !== (lastSavedData.title || '') ||
+            currentData.content !== (lastSavedData.content || '') ||
+            currentData.categoryId !== (lastSavedData.categoryId || '')
+        );
+    }
+
+    function updateLastSavedData() {
+        // 실시간으로 현재 데이터를 추적하지만 저장은 하지 않음
+        // 실제 저장은 saveDraft에서만 수행
+    }
+
+    function showDraftStatus(type, text) {
+        const statusEl = $('#draftStatus');
+        const textEl = $('#draftStatusText');
+
+        statusEl.removeClass('saving saved error').addClass(type);
+
+        let iconHtml = '';
+        if (type === 'saving') {
+            iconHtml = '<i class="fas fa-spinner fa-spin me-1"></i>';
+        } else if (type === 'saved') {
+            iconHtml = '<i class="fas fa-check me-1"></i>';
+        } else if (type === 'error') {
+            iconHtml = '<i class="fas fa-exclamation-triangle me-1"></i>';
+        }
+
+        textEl.html(iconHtml + text);
+        statusEl.show();
+    }
+
+    function hideDraftStatus() {
+        $('#draftStatus').hide();
+    }
+
+    function updateLastSavedTime() {
+        const now = new Date();
+        $('#lastSavedTime').text(`마지막 저장: ${now.toLocaleTimeString()}`);
+    }
+
+    function stripHtml(html) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || '';
+    }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diff = now - date;
+
+        if (diff < 60000) return '방금 전';
+        if (diff < 3600000) return Math.floor(diff / 60000) + '분 전';
+        if (diff < 86400000) return Math.floor(diff / 3600000) + '시간 전';
+
+        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString().slice(0, -3);
+    }
+
+    function showToast(message, type = 'info') {
+        const bgClass = {
+            'success': 'bg-success',
+            'error': 'bg-danger',
+            'warning': 'bg-warning',
+            'info': 'bg-info'
+        }[type] || 'bg-info';
+
+        const iconClass = {
+            'success': 'fas fa-check-circle',
+            'error': 'fas fa-exclamation-circle',
+            'warning': 'fas fa-exclamation-triangle',
+            'info': 'fas fa-info-circle'
+        }[type] || 'fas fa-info-circle';
+
+        const toast = $(`
+            <div class="notification-toast">
+                <div class="toast show" role="alert">
+                    <div class="toast-header ${bgClass} text-white">
+                        <i class="${iconClass} me-2"></i>
+                        <strong class="me-auto">알림</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                    </div>
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                </div>
+            </div>
+        `);
+
+        $('body').append(toast);
+
+        // 3초 후 자동 제거
+        setTimeout(() => {
+            toast.fadeOut(300, function() {
+                $(this).remove();
+            });
+        }, 3000);
+
+        // 클릭으로 즉시 제거
+        toast.find('.btn-close').click(function() {
+            toast.fadeOut(300, function() {
+                $(this).remove();
+            });
+        });
+    }
+
+    // ===== 페이지 나가기 전 확인 (폼 제출 시 제외) =====
+    const beforeUnloadHandler = function(e) {
+        if (hasContentChanged()) {
+            e.preventDefault();
+            e.returnValue = '작성 중인 내용이 있습니다. 정말 나가시겠습니까?';
+            return e.returnValue;
+        }
+    };
+
+    window.addEventListener('beforeunload', beforeUnloadHandler);
+
+    // ===== 알림 시스템 초기화 =====
+    $(document).ready(function() {
+        // 실시간 알림을 위한 주기적 체크 (선택사항)
+        setInterval(function() {
+            checkNewNotifications();
+        }, 30000); // 30초마다 체크
+    });
+
+    function checkNewNotifications() {
+        $.ajax({
+            url: '/api/community/notification/unread-count',
+            type: 'GET',
+            success: function(response) {
+                if (response.unreadCount > 0) {
+                    // 브라우저 알림 (권한이 있는 경우)
+                    if (Notification.permission === 'granted') {
+                        new Notification('새 알림', {
+                            body: `${response.unreadCount}개의 새 알림이 있습니다.`,
+                            icon: '/favicon.ico'
+                        });
+                    }
+                }
+            },
+            error: function() {
+                // 알림 확인 실패는 조용히 처리
+                console.log('알림 확인 실패');
+            }
+        });
+    }
+
+    // 브라우저 알림 권한 요청
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
 </script>
+
 </body>
 </html>

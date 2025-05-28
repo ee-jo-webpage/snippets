@@ -61,7 +61,7 @@
     <!-- 상위 100개 인기 스니펫 조회 제거 (popular_snippets_view로 대체) -->
     <!-- getTop100PopularSnippets는 getPopularSnippetsFromView를 사용 -->
 
-    <!-- 검색 조건에 따른 스니펫 조회 -->
+    <!-- 검색 조건에 따른 스니펫 조회 (상위 100개로 제한) -->
     <select id="searchSnippets" resultMap="SnippetResultMap">
         SELECT DISTINCT s.snippet_id, s.user_id, s.folder_id, s.color_id, s.source_url, s.type, s.memo,
         s.created_at, s.updated_at, s.visibility,
@@ -84,6 +84,7 @@
             AND (SELECT COUNT(*) FROM likes l WHERE l.snippet_id = s.snippet_id) >= #{minLikes}
         </if>
         ORDER BY like_count DESC, s.created_at DESC
+        LIMIT 100
     </select>
 
     <!-- 스니펫 상세 정보 조회 (태그 포함) -->

@@ -30,7 +30,7 @@ public class LikeSnippetService {
         return likeSnippetMapper.getPopularSnippets(limit);
     }
 
-    // 검색 기능 - 전체 DB에서 직접 검색
+    // 검색 기능 - 전체 DB에서 직접 검색 (상위 100개로 제한)
     public List<Snippet> searchSnippets(String type, String keyword, Integer minLikes, String tagName) {
         // 검색 조건이 모두 비어있으면 기본적으로 인기순 100개 반환
         if ((type == null || type.isEmpty()) &&
@@ -45,8 +45,15 @@ public class LikeSnippetService {
             minLikes = 0;
         }
 
-        // 검색을 수행하고 결과 반환
-        return likeSnippetMapper.searchSnippets(type, keyword, minLikes, tagName);
+        // 검색을 수행하고 결과 반환 (이미 쿼리에서 100개로 제한됨)
+        List<Snippet> results = likeSnippetMapper.searchSnippets(type, keyword, minLikes, tagName);
+
+        // 추가 안전장치: 만약 100개를 넘는다면 상위 100개만 반환
+        if (results.size() > 100) {
+            return results.subList(0, 100);
+        }
+
+        return results;
     }
 
     // 모든 태그 조회

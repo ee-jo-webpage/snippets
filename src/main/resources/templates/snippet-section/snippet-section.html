@@ -26,7 +26,7 @@
                 <!-- 기존 콘텐츠 -->
             </div>
 
-            <!-- 태그 섹션 추가 -->
+            <!-- 태그 섹션 -->
             <div class="snippet-tags-section">
                 <h4>태그</h4>
                 <div class="snippet-tags-display" id="snippetTagsDisplay">
@@ -39,9 +39,19 @@
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-secondary">
-                <i class="fas fa-times"></i> 닫기
-            </button>
+            <div class="modal-footer-left">
+                <button id="editSnippetBtn" class="btn btn-warning">
+                    <i class="fas fa-edit"></i> 수정
+                </button>
+                <button id="deleteSnippetBtn" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> 삭제
+                </button>
+            </div>
+            <div class="modal-footer-right">
+                <button class="btn btn-secondary">
+                    <i class="fas fa-times"></i> 닫기
+                </button>
+            </div>
         </div>
     </div>
 </div>

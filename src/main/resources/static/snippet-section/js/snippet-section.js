@@ -374,4 +374,186 @@ $(document).ready(function() {
         $('#snippetSectionContainer').empty().hide();
         $('.tag-card').removeClass('active');
     });
+
+    // 기존 JavaScript 코드에 추가할 부분
+
+// 수정 버튼 클릭 이벤트
+    $(document).on('click', '#editSnippetBtn', function() {
+        const modal = $('#snippetDetailModal');
+        const snippetId = modal.data('current-snippet-id');
+
+        if (!snippetId) {
+            alert('스니펫 정보를 찾을 수 없습니다.');
+            return;
+        }
+
+        console.log('스니펫 수정 요청:', snippetId);
+
+        // TODO: 수정 기능 구현
+        // 예: 수정 폼 모달 열기 또는 수정 페이지로 이동
+        alert(`스니펫 ID ${snippetId} 수정 기능을 구현해주세요.`);
+    });
+
+
+    // 삭제 버튼 클릭 이벤트
+    $(document).on('click', '#deleteSnippetBtn', function() {
+        const modal = $('#snippetDetailModal');
+        const snippetId = modal.data('current-snippet-id');
+
+        if (!snippetId) {
+            alert('스니펫 정보를 찾을 수 없습니다.');
+            return;
+        }
+
+        // 삭제 확인 다이얼로그
+        if (!confirm('정말로 이 스니펫을 삭제하시겠습니까?\n삭제된 스니펫은 복구할 수 없습니다.')) {
+            return;
+        }
+
+        // 삭제 버튼 비활성화 (중복 클릭 방지)
+        const deleteBtn = $('#deleteSnippetBtn');
+        const originalText = deleteBtn.html();
+        deleteBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 삭제 중...');
+
+        console.log('스니펫 삭제 프로세스 시작:', snippetId);
+
+        // 1단계: 스니펫과 연결된 모든 태그 제거
+        removeAllTagsFromSnippet(snippetId)
+            .then(() => {
+                console.log('태그 제거 완료, 스니펫 삭제 진행');
+                // 2단계: 스니펫 삭제
+                return deleteSnippetRequest(snippetId);
+            })
+            .then(() => {
+                // 삭제 성공
+                alert('스니펫이 삭제되었습니다.');
+                modal.hide();
+
+                // 현재 표시된 스니펫 카드를 DOM에서 제거
+                $(`.snippet-card[data-snippet-id="${snippetId}"], .snippet-card[data-id="${snippetId}"]`).fadeOut(300, function() {
+                    $(this).remove();
+
+                    // 스니펫이 모두 제거되었는지 확인
+                    if ($('.snippet-card').length === 0) {
+                        $('#snippetsGrid').html(`
+                        <div class="empty-state">
+                            <div class="emoji">📝</div>
+                            <p>스니펫이 없습니다.</p>
+                            <p>새로운 스니펫을 추가해보세요!</p>
+                        </div>
+                    `);
+                    }
+                });
+
+                // 전역 이벤트 발생
+                $(document).trigger('snippetDeleted', {
+                    snippetId: snippetId
+                });
+
+                // 페이지 새로고침으로 태그 매니저 업데이트
+                setTimeout(() => {
+                    window.location.reload();
+                }, 300); // 1초 후 새로고침 (사용자가 성공 메시지를 볼 시간 제공)
+            })
+            .catch((error) => {
+                console.error('스니펫 삭제 프로세스 실패:', error);
+
+                let errorMessage = '스니펫 삭제에 실패했습니다.';
+                if (error.step === 'tag-removal') {
+                    errorMessage = '태그 제거 중 오류가 발생했습니다. 다시 시도해주세요.';
+                } else if (error.step === 'snippet-deletion') {
+                    if (error.status === 404) {
+                        errorMessage = '해당 스니펫을 찾을 수 없습니다.';
+                    } else if (error.status === 403) {
+                        errorMessage = '스니펫을 삭제할 권한이 없습니다.';
+                    } else if (error.status === 500) {
+                        errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+                    }
+                }
+
+                alert(errorMessage);
+            })
+            .finally(() => {
+                // 버튼 상태 복원
+                deleteBtn.prop('disabled', false).html(originalText);
+            });
+    });
+
+// 스니펫과 연결된 모든 태그 제거 함수
+    function removeAllTagsFromSnippet(snippetId) {
+        return new Promise((resolve, reject) => {
+            // 먼저 스니펫에 연결된 태그 목록 조회
+            $.ajax({
+                url: `/api/tag/snippet/${snippetId}`,
+                method: 'GET',
+                success: function(tags) {
+                    if (!tags || tags.length === 0) {
+                        console.log('제거할 태그가 없습니다.');
+                        resolve();
+                        return;
+                    }
+
+                    console.log(`${tags.length}개의 태그 제거 시작:`, tags.map(t => t.name));
+
+                    // 모든 태그 제거 요청을 병렬로 처리
+                    const removePromises = tags.map(tag => {
+                        return new Promise((tagResolve, tagReject) => {
+                            $.ajax({
+                                url: `/api/tag/snippet/${snippetId}/tag/${tag.tagId}`,
+                                method: 'DELETE',
+                                success: function() {
+                                    console.log(`태그 "${tag.name}" 제거 완료`);
+                                    tagResolve();
+                                },
+                                error: function(xhr) {
+                                    console.warn(`태그 "${tag.name}" 제거 실패:`, xhr.responseText);
+                                    // 개별 태그 제거 실패는 무시하고 계속 진행
+                                    tagResolve();
+                                }
+                            });
+                        });
+                    });
+
+                    // 모든 태그 제거 완료 대기
+                    Promise.all(removePromises)
+                        .then(() => {
+                            console.log('모든 태그 제거 완료');
+                            resolve();
+                        })
+                        .catch((error) => {
+                            console.error('태그 제거 중 오류:', error);
+                            // 태그 제거 실패해도 스니펫 삭제는 진행
+                            resolve();
+                        });
+                },
+                error: function(xhr) {
+                    console.warn('태그 목록 조회 실패:', xhr.responseText);
+                    // 태그 목록 조회 실패해도 스니펫 삭제는 진행
+                    resolve();
+                }
+            });
+        });
+    }
+
+// 스니펫 삭제 요청 함수
+    function deleteSnippetRequest(snippetId) {
+        return new Promise((resolve, reject) => {
+            $.ajax({
+                url: `/snippets/delete/${snippetId}`,
+                method: 'POST',
+                success: function(response) {
+                    console.log('스니펫 삭제 완료');
+                    resolve(response);
+                },
+                error: function(xhr, status, error) {
+                    console.error('스니펫 삭제 실패:', xhr.responseText || error);
+                    reject({
+                        step: 'snippet-deletion',
+                        status: xhr.status,
+                        message: xhr.responseText || error
+                    });
+                }
+            });
+        });
+    }
 });

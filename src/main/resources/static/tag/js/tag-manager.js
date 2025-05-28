@@ -147,7 +147,7 @@ $(document).ready(function() {
         tags.forEach((tag, index) => {
             const card = createTagCard(tag);
             // 애니메이션 지연 효과
-            card.css('animation-delay', (index * 0.1) + 's');
+            card.css('animation-delay', (index * 0.01) + 's');
             container.append(card);
         });
     }
@@ -567,6 +567,8 @@ function createSnippetCard(snippet) {
             }
         }
     });
+
+
 }
 
 

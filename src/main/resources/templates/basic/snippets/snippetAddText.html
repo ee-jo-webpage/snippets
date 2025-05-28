@@ -13,6 +13,8 @@
       border: 1px solid #e0e0e0;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+	  max-height: 400px;  /* 원하는 최대 높이 */
+	  overflow-y: auto;   /* 내용이 넘치면 세로 스크롤바 표시 */ 
     }
     .snippet-header {
       padding: 16px;
@@ -23,46 +25,14 @@
       background-color: #ffffff;
       transition: background-color 0.3s;
     }
-    .color-palette {
-      display: flex;
-      gap: 8px;
-      max-width: calc((24px + 8px) * 8 - 8px);
-      overflow-x: auto;
-      padding-bottom: 4px;
-      scrollbar-width: thin;
-      scrollbar-color: rgba(0,0,0,0.3) transparent;
-    }
-    .color-palette::-webkit-scrollbar {
-      height: 6px;
-    }
-    .color-palette::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    .color-palette::-webkit-scrollbar-thumb {
-      background-color: rgba(0,0,0,0.3);
-      border-radius: 3px;
-    }
-    .color-circle {
-      flex: 0 0 auto;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      border: 1px solid #ccc;
-      cursor: pointer;
-      transition: box-shadow 0.2s;
-    }
-    .color-circle.selected {
-      box-shadow: 0 0 0 3px rgba(0,0,0,0.2);
-    }
-    .snippet-body { padding: 16px; }
-    .form-label { font-weight: 500; }
+    
+    
   </style>
 </head>
 <body>
   <div class="snippet-card bg-white">
     <div id="snippetHeader" class="snippet-header">
       <h5 class="m-0">Text 스니펫 추가</h5>
-      <div class="color-palette" aria-label="색상 선택">
         <div th:each="color : ${colors}"
              class="color-circle"
              role="button"
@@ -72,7 +42,6 @@
              th:style="'background-color:' + ${color.hexCode}"
              th:title="${color.name}">
         </div>
-      </div>
     </div>
 
     <form th:action="@{/snippets/new}" th:object="${snippet}" method="post" onsubmit="return validateColorSelected()">
@@ -85,12 +54,12 @@
 		          <div class="color-select-container">
 		            <select id="colorId" class="form-select color-select" th:field="*{colorId}" required>
 		              <option value="" disabled selected>-- 색상을 선택하세요 --</option>
-		              <option th:each="color : ${colors}"
-		                      th:value="${color.colorId}"
-		                      th:text="${color.name}"
-		                      th:attr="data-hex-code=${color.hexCode}"
-		                      th:style="'background: linear-gradient(90deg, ' + ${color.hexCode} + ' 20px, transparent 20px);'">
-		              </option>
+					  <option th:each="color : ${colors}"
+					          th:value="${color.colorId}"
+					          th:text="${color.name}"
+					          th:attr="data-hex-code=${color.hexCode}"
+					          th:style="'background-color:' + ${color.hexCode} + '; color: white;'">
+					  </option>
 		            </select>
 		          </div>
 		        </div>

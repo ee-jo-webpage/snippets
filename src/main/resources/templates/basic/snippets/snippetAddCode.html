@@ -13,6 +13,8 @@
       border: 1px solid #e0e0e0;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+	  max-height: 400px;  /* 원하는 최대 높이 */
+	  overflow-y: auto;   /* 내용이 넘치면 세로 스크롤바 표시 */ 
     }
     .snippet-header {
       padding: 16px;
@@ -24,7 +26,8 @@
       transition: background-color 0.3s;
     }
     .snippet-body { 
-      padding: 16px; 
+      padding: 16px;
+	  
     }
     .form-label { 
       font-weight: 500; 
@@ -76,7 +79,6 @@
   <div class="snippet-card bg-white">
     <div class="snippet-header">
       <h5 class="m-0">Code 스니펫 추가</h5>
-      <div class="color-preview" id="colorPreview" style="background-color: #ffffff;"></div>
     </div>
 
     <form th:action="@{/snippets/new}" th:object="${snippet}" method="post" enctype="multipart/form-data">
@@ -89,12 +91,12 @@
           <div class="color-select-container">
             <select id="colorId" class="form-select color-select" th:field="*{colorId}" required>
               <option value="" disabled selected>-- 색상을 선택하세요 --</option>
-              <option th:each="color : ${colors}"
-                      th:value="${color.colorId}"
-                      th:text="${color.name}"
-                      th:attr="data-hex-code=${color.hexCode}"
-                      th:style="'background: linear-gradient(90deg, ' + ${color.hexCode} + ' 20px, transparent 20px);'">
-              </option>
+			  <option th:each="color : ${colors}"
+			          th:value="${color.colorId}"
+			          th:text="${color.name}"
+			          th:attr="data-hex-code=${color.hexCode}"
+			          th:style="'background-color:' + ${color.hexCode} + '; color: white;'">
+			  </option>
             </select>
           </div>
         </div>

@@ -25,7 +25,7 @@
 
 .modal-content {
     background-color: #fefefe;
-    margin: 10% auto;
+    margin: 1% auto;
     padding: 0;
     border: none;
     border-radius: 12px;
@@ -45,6 +45,10 @@
         opacity: 1;
         transform: translateY(0) scale(1);
     }
+}
+
+#cancelBtn {
+  display: none;
 }
 
 .modal-header {
@@ -221,7 +225,7 @@
   <div class="modal-content">
     <div class="modal-header">
       <h1>스니펫 추가</h1>
-      <span class="close" data-bs-dismiss="modal">×</span>
+      <span class="close" data-bs-dismiss="modal" id="xbutton">×</span>
     </div>
     <div class="modal-body" id="modalBody">
       <div class="loading">
@@ -245,6 +249,8 @@
 	  const openBtn = document.getElementById('openModalBtn');
 	  const cancelBtn = document.getElementById('cancelBtn');
 	  const nextBtn = document.getElementById('nextBtn');
+	  const closeBtn = document.querySelector('.close');
+	  
 
 	  if (!modalEl || !bodyDiv || !footerDiv || !openBtn || !cancelBtn || !nextBtn) {
 	    console.error('❌ 필수 DOM 요소를 찾을 수 없습니다.');
@@ -280,7 +286,12 @@
 	      })
 	      .catch(err => console.error('❌ 모달 로딩 오류:', err));
 	  });
-
+	  
+	  
+	  closeBtn.addEventListener('click', () => {
+	    window.location.href = '/snippets';
+	  });
+	  
 	  cancelBtn.addEventListener('click', () => {
 	    modal.hide();
 	    // 이벤트 리스너 제거 (메모리 누수 방지)

@@ -507,7 +507,7 @@
 
     .search-bar {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 15px;
         margin-bottom: 15px;
     }
@@ -515,6 +515,7 @@
     .form-group {
         display: flex;
         flex-direction: column;
+        min-width: 0; /* 플렉스 축소 허용 */
     }
 
     .form-group label {
@@ -522,6 +523,7 @@
         margin-bottom: 5px;
         color: #333;
         font-size: 14px;
+        white-space: nowrap; /* 라벨 줄바꿈 방지 */
     }
 
     .search-input, .filter-select {
@@ -530,6 +532,9 @@
         border-radius: 6px;
         font-size: 14px;
         transition: border-color 0.3s ease;
+        width: 100%;
+        min-width: 0; /* 입력창 축소 허용 */
+        box-sizing: border-box;
     }
 
     .search-input:focus, .filter-select:focus {
@@ -548,6 +553,7 @@
     /* 태그 자동완성 드롭다운 */
     .tag-autocomplete {
         position: relative;
+        width: 100%; /* 전체 너비 사용 */
     }
 
     .tag-dropdown {
@@ -564,6 +570,7 @@
         z-index: 1000;
         display: none;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        width: 100%; /* 부모 너비에 맞춤 */
     }
 
     .tag-dropdown-item {
@@ -571,6 +578,7 @@
         cursor: pointer;
         transition: background-color 0.2s;
         border-bottom: 1px solid #f0f0f0;
+        word-break: break-all; /* 긴 태그명 처리 */
     }
 
     .tag-dropdown-item:hover, .tag-dropdown-item.highlighted {
@@ -582,6 +590,7 @@
         color: #666;
         font-style: italic;
         text-align: center;
+        font-size: 13px;
     }
 
     /* 검색 옵션 스타일 */
@@ -602,7 +611,8 @@
     .search-options-group {
         display: flex;
         flex-wrap: wrap;
-        gap: 15px;
+        gap: 10px; /* 간격 줄임 */
+        justify-content: center; /* 중앙 정렬 */
     }
 
     .option-btn {
@@ -613,6 +623,8 @@
         font-size: 14px;
         background-color: white;
         transition: all 0.2s ease;
+        white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+        flex-shrink: 0; /* 버튼 크기 고정 */
     }
 
     .option-btn.active {
@@ -755,18 +767,24 @@
     }
 
     /* 반응형 디자인 */
-    @media (max-width: 768px) {
+    @media (max-width: 1200px) {
         .search-bar {
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(2, 1fr); /* 1200px 이하에서는 2열 */
         }
 
-        .button-group {
-            flex-direction: column;
-            align-items: stretch;
+        .main-content .container {
+            padding: 15px;
+        }
+    }
+
+    @media (max-width: 900px) {
+        .search-bar {
+            grid-template-columns: repeat(2, 1fr); /* 900px 이하에서도 2열 유지 */
+            gap: 12px;
         }
 
-        .search-options-group {
-            flex-direction: column;
+        .search-form-container {
+            padding: 15px;
         }
 
         .bookmark-navigation {
@@ -775,9 +793,120 @@
             text-align: center;
         }
 
+        .option-btn {
+            font-size: 13px;
+            padding: 6px 12px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .search-bar {
+            grid-template-columns: 1fr; /* 768px 이하에서는 1열 */
+            gap: 10px;
+        }
+
+        .button-group {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+        }
+
+        .search-options-group {
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .option-btn {
+            text-align: center;
+            font-size: 12px;
+            padding: 8px 12px;
+        }
+
         .pagination {
             flex-wrap: wrap;
             justify-content: center;
+            gap: 3px;
+        }
+
+        .page-item {
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+
+        .search-title {
+            font-size: 16px;
+        }
+
+        .form-group label {
+            font-size: 13px;
+        }
+
+        .search-input, .filter-select {
+            padding: 8px;
+            font-size: 13px;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .container {
+            padding: 10px;
+        }
+
+        .search-form-container {
+            padding: 12px;
+        }
+
+        .bookmark-navigation {
+            padding: 12px;
+        }
+
+        .search-bar {
+            gap: 8px;
+        }
+
+        .option-btn {
+            font-size: 11px;
+            padding: 6px 10px;
+        }
+
+        .btn {
+            font-size: 13px;
+            padding: 8px 14px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .main-content .container {
+            padding: 8px;
+        }
+
+        .search-form-container {
+            padding: 10px;
+        }
+
+        .search-title {
+            font-size: 14px;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+        }
+
+        .bookmark-navigation h2 {
+            font-size: 1.2rem;
+        }
+
+        .bookmark-navigation > div {
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .search-input, .filter-select {
+            padding: 6px;
+            font-size: 12px;
+        }
+
+        .form-group label {
+            font-size: 12px;
         }
     }
 
@@ -830,6 +959,30 @@
 
     .alert.alert-error {
         background-color: #dc3545;
+    }
+    /* 스니펫 타입별 색상 */
+    .type-code {
+        background-color: #6f42c1;
+        color: white;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 12px;
+    }
+
+    .type-text {
+        background-color: #28a745;
+        color: white;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 12px;
+    }
+
+    .type-img {
+        background-color: #fd7e14;
+        color: white;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 12px;
     }
 </style>
 

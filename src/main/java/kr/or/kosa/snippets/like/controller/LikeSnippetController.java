@@ -140,6 +140,9 @@ public class LikeSnippetController {
                     .collect(Collectors.toList());
             Map<Integer, String> nicknameMap = likeUserService.getNicknamesByUserIds(userIds);
 
+            // 스니펫 content 미리보기 조회 (추가)
+            Map<Integer, String> contentPreviewMap = likeSnippetService.getSnippetContentPreviews(snippets);
+
             // 페이징 정보 계산
             int totalPages = (int) Math.ceil((double) totalSnippets / pageSize);
 
@@ -147,6 +150,7 @@ public class LikeSnippetController {
             model.addAttribute("snippets", snippets);
             model.addAttribute("likeStatusMap", likeStatusMap);
             model.addAttribute("nicknameMap", nicknameMap);  // 추가
+            model.addAttribute("contentPreviewMap", contentPreviewMap);  // 추가
             model.addAttribute("currentUserId", userDetails != null ? userDetails.getUserId() : null);
             model.addAttribute("currentUserNickname", userDetails != null ? userDetails.getNickname() : null);
             model.addAttribute("isLoggedIn", userDetails != null);
@@ -166,6 +170,7 @@ public class LikeSnippetController {
             e.printStackTrace();
 
             // 오류 발생 시 기본값 설정
+            model.addAttribute("contentPreviewMap", new HashMap<>());  // 추가
             model.addAttribute("snippets", new ArrayList<>());
             model.addAttribute("likeStatusMap", new HashMap<>());
             model.addAttribute("nicknameMap", new HashMap<>());  // 추가

@@ -1,14 +1,16 @@
 package kr.or.kosa.snippets.like.service;
 
 import kr.or.kosa.snippets.like.mapper.LikeSnippetMapper;
+import kr.or.kosa.snippets.like.mapper.SnippetContentMapper;
 import kr.or.kosa.snippets.like.mapper.TagMapper;
-import kr.or.kosa.snippets.like.model.LikeTag;
-import kr.or.kosa.snippets.like.model.Snippet;
+import kr.or.kosa.snippets.like.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -19,6 +21,9 @@ public class LikeSnippetService {
 
     @Autowired
     private TagMapper tagMapper;
+
+    @Autowired
+    private SnippetContentMapper snippetContentMapper;  // 추가
 
     // ===== 기존 메서드들 =====
 
@@ -157,5 +162,74 @@ public class LikeSnippetService {
         }
 
         return filteredSnippets;
+    }
+
+    /**
+     * 스니펫의 content 미리보기 조회 (타입별로 다른 테이블에서)
+     */
+    public String getSnippetContentPreview(Snippet snippet) {
+        try {
+            switch (snippet.getType().toUpperCase()) {
+                case "CODE":
+                    SnippetCode snippetCode = snippetContentMapper.getSnippetCodeById(snippet.getSnippetId());
+                    if (snippetCode != null && snippetCode.getContent() != null) {
+                        return truncateContent(snippetCode.getContent(), 100); // 100자로 제한
+                    }
+                    break;
+
+                case "TEXT":
+                    SnippetText snippetText = snippetContentMapper.getSnippetTextById(snippet.getSnippetId());
+                    if (snippetText != null && snippetText.getContent() != null) {
+                        return truncateContent(snippetText.getContent(), 100); // 100자로 제한
+                    }
+                    break;
+
+                case "IMG":
+                    SnippetImage snippetImage = snippetContentMapper.getSnippetImageById(snippet.getSnippetId());
+                    if (snippetImage != null) {
+                        return "[이미지] " + (snippetImage.getAltText() != null ? snippetImage.getAltText() : "이미지 설명 없음");
+                    }
+                    break;
+
+                default:
+                    return "내용을 불러올 수 없습니다.";
+            }
+        } catch (Exception e) {
+            System.err.println("스니펫 content 조회 실패 - snippetId: " + snippet.getSnippetId() + ", 오류: " + e.getMessage());
+        }
+
+        return "내용을 불러올 수 없습니다.";
+    }
+
+    /**
+     * 내용을 지정된 길이로 자르고 "..." 추가
+     */
+    private String truncateContent(String content, int maxLength) {
+        if (content == null) {
+            return "";
+        }
+
+        // 줄바꿈 문자를 공백으로 변경
+        content = content.replaceAll("\\r?\\n", " ");
+
+        if (content.length() <= maxLength) {
+            return content;
+        }
+
+        return content.substring(0, maxLength) + "...";
+    }
+
+    /**
+     * 여러 스니펫의 content를 한 번에 조회 (성능 최적화)
+     */
+    public Map<Integer, String> getSnippetContentPreviews(List<Snippet> snippets) {
+        Map<Integer, String> contentMap = new HashMap<>();
+
+        for (Snippet snippet : snippets) {
+            String content = getSnippetContentPreview(snippet);
+            contentMap.put(snippet.getSnippetId(), content);
+        }
+
+        return contentMap;
     }
 }

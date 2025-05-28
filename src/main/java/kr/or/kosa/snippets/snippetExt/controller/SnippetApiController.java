@@ -1,5 +1,6 @@
 package kr.or.kosa.snippets.snippetExt.controller;
 
+import kr.or.kosa.snippets.snippetExt.component.SnippetQueue;
 import kr.or.kosa.snippets.snippetExt.model.ColorExt;
 import kr.or.kosa.snippets.snippetExt.model.SnippetExtCreate;
 import kr.or.kosa.snippets.snippetExt.model.SnippetExtUpdate;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/snippets")
@@ -22,6 +24,7 @@ import java.util.Map;
 public class SnippetApiController {
 
     private final SnippetExtService snippetExtService;
+    private final SnippetQueue snippetQueue;
 
     // 인증 체크 메서드
     private Long requireLogin(CustomUserDetails details) {
@@ -31,15 +34,45 @@ public class SnippetApiController {
         return details.getUserId();
     }
 
+    // 확장 프로그램 동기화 용 아직 미구현
+    // @GetMapping("/id/{clientRequestId}")
+    // public ResponseEntity<?> findSnippetIdByRequestId(@PathVariable String clientRequestId) {
+    //     Long snippetId = snippetExtService.findIdByClientRequestId(clientRequestId);
+    //
+    //     if (snippetId == null) {
+    //         // 아직 스케줄러에 의해 저장되지 않은 상태
+    //         return ResponseEntity.status(202).body(Map.of("message", "Not yet processed"));
+    //     }
+    //
+    //     return ResponseEntity.ok(Map.of("snippetId", snippetId));
+    // }
+
     @PostMapping
-    public ResponseEntity<?> save(
+    public ResponseEntity<?> enqueueSnippet(
         @RequestBody SnippetExtCreate snippet,
         @AuthenticationPrincipal CustomUserDetails details
     ) {
         snippet.setUserId(requireLogin(details));
-        Long snippetId = snippetExtService.save(snippet);
-        return ResponseEntity.ok(Map.of("snippetId", snippetId));
+
+        if (snippet.getClientRequestId() == null) {
+            snippet.setClientRequestId(UUID.randomUUID().toString());
+        }
+
+        snippetQueue.enqueue(snippet);  // 지금은 큐에 저장만
+
+        return ResponseEntity.ok(Map.of("snippetId", snippet.getClientRequestId()));
     }
+
+    // 벌크 인서트로 전환 후 미사용
+    // @PostMapping
+    // public ResponseEntity<?> save(
+    //     @RequestBody SnippetExtCreate snippet,
+    //     @AuthenticationPrincipal CustomUserDetails details
+    // ) {
+    //     snippet.setUserId(requireLogin(details));
+    //     Long snippetId = snippetExtService.save(snippet);
+    //     return ResponseEntity.ok(Map.of("snippetId", snippetId));
+    // }
 
     @PatchMapping("/{id}")
     public ResponseEntity<?> updateSnippet(
@@ -69,4 +102,5 @@ public class SnippetApiController {
         List<ColorExt> colorList = snippetExtService.getColorsByUserId(userId);
         return ResponseEntity.ok(colorList);
     }
+
 }

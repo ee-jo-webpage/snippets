@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Like Feature</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link th:href="@{/my-snippet-page/css/my-snippet-page.css}" rel="stylesheet">
     <style>
         .like-btn {
             background: none;
@@ -60,6 +61,9 @@
     </style>
 </head>
 <body>
+<div th:replace="fragments/header :: header"></div>
+<div th:replace="fragments/sidebar :: sidebar('colors')"></div>
+
 <div id="likeSection" class="like-section">
     <button id="likeButton"
             class="like-btn"

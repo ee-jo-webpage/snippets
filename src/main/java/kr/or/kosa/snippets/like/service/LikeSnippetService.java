@@ -22,7 +22,7 @@ public class LikeSnippetService {
 
     // ===== 기존 메서드들 =====
 
-    // 인기 스니펫 조회
+    // 인기 스니펫 조회 (기본 테이블 방식)
     public List<Snippet> getPopularSnippets(Integer limit) {
         if (limit == null || limit <= 0) {
             limit = 100; // 기본값 설정
@@ -30,7 +30,7 @@ public class LikeSnippetService {
         return likeSnippetMapper.getPopularSnippets(limit);
     }
 
-    // 검색 기능 - 전체 DB에서 직접 검색
+    // 검색 기능 - 전체 DB에서 직접 검색 (상위 100개로 제한)
     public List<Snippet> searchSnippets(String type, String keyword, Integer minLikes, String tagName) {
         // 검색 조건이 모두 비어있으면 기본적으로 인기순 100개 반환
         if ((type == null || type.isEmpty()) &&
@@ -45,10 +45,16 @@ public class LikeSnippetService {
             minLikes = 0;
         }
 
-        // 검색을 수행하고 결과 반환
-        return likeSnippetMapper.searchSnippets(type, keyword, minLikes, tagName);
-    }
+        // 검색을 수행하고 결과 반환 (이미 쿼리에서 100개로 제한됨)
+        List<Snippet> results = likeSnippetMapper.searchSnippets(type, keyword, minLikes, tagName);
 
+        // 추가 안전장치: 만약 100개를 넘는다면 상위 100개만 반환
+        if (results.size() > 100) {
+            return results.subList(0, 100);
+        }
+
+        return results;
+    }
 
     // 모든 태그 조회
     public List<LikeTag> getAllTags() {
@@ -65,14 +71,23 @@ public class LikeSnippetService {
         return likeSnippetMapper.getSnippetDetailById(snippetId);
     }
 
-
-// ===== 뷰 방식 메서드들 (상위 100개로 제한) =====
+    // ===== 기존 테이블 기반 메서드들로 수정 =====
 
     /**
-     * 뷰를 이용한 인기 스니펫 조회 (상위 100개 중에서 limit만큼)
+     * 인기 스니펫 조회 (기존 테이블 방식, 상위 100개로 제한)
      */
     public List<Snippet> getPopularSnippetsFromView(Integer limit) {
-        // 뷰 자체가 상위 100개로 제한되어 있으므로 추가 제한만 적용
+        // 뷰 대신 기존 테이블 방식 사용
+        if (limit == null || limit > 100) {
+            limit = 100;
+        }
+        return likeSnippetMapper.getPopularSnippets(limit);
+    }
+
+    /**
+     * 상위 100개 인기 스니펫 조회 (popular_snippets_view 사용)
+     */
+    public List<Snippet> getTop100PopularSnippets(Integer limit) {
         if (limit == null || limit > 100) {
             limit = 100;
         }
@@ -80,23 +95,10 @@ public class LikeSnippetService {
     }
 
     /**
-     * 상위 100개 뷰에서 제한된 인기 스니펫 조회
-     */
-    public List<Snippet> getTop100PopularSnippets(Integer limit) {
-        // 이미 100개로 제한된 뷰에서 추가로 제한
-        if (limit == null || limit > 100) {
-            limit = 100;
-        }
-        return likeSnippetMapper.getTop100PopularSnippets().stream()
-                .limit(limit)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * 뷰를 이용한 페이징 처리된 인기 스니펫 조회 (상위 100개 내에서만)
+     * 페이징 처리된 인기 스니펫 조회 (기존 테이블 방식)
      */
     public List<Snippet> getPopularSnippetsPagedFromView(Integer offset, Integer limit) {
-        // 뷰가 상위 100개로 제한되어 있으므로 100개 내에서만 페이징
+        // 100개 범위 체크
         if (offset >= 100) {
             return new ArrayList<>();  // 100개 초과 시 빈 리스트 반환
         }
@@ -107,24 +109,25 @@ public class LikeSnippetService {
             return new ArrayList<>();
         }
 
-        return likeSnippetMapper.getPopularSnippetsPagedFromView(offset, maxLimit);
+        // 기존 테이블 방식의 페이징 사용
+        return likeSnippetMapper.getPopularSnippetsPaged(offset, maxLimit);
     }
 
     /**
-     * 뷰에서 전체 인기 스니펫 수 조회 (최대 100개)
+     * 전체 인기 스니펫 수 조회 (최대 100개로 제한)
      */
     public int countPopularSnippetsFromView() {
-        // 뷰가 최대 100개로 제한되어 있음
-        return Math.min(likeSnippetMapper.countPopularSnippetsFromView(), 100);
+        // 기존 테이블에서 인기 스니펫 100개의 개수 반환
+        List<Snippet> popularSnippets = likeSnippetMapper.getPopularSnippets(100);
+        return Math.min(popularSnippets.size(), 100);
     }
 
     /**
-     * 뷰에서 가져온 TOP 100 스니펫 내에서 필터링 (클라이언트 사이드)
-     * 이 메서드는 필요한 경우 서비스 측에서 인메모리 필터링을 수행하기 위한 것입니다.
+     * TOP 100 스니펫 내에서 필터링 (인메모리 방식)
      */
     public List<Snippet> filterSnippetsFromTop100(String type, String keyword, Integer minLikes, String tagName) {
-        // 먼저 TOP 100 스니펫을 가져옴
-        List<Snippet> allPopularSnippets = getTop100PopularSnippets(100);
+        // 먼저 TOP 100 스니펫을 가져옴 (popular_snippets_view 사용)
+        List<Snippet> allPopularSnippets = getPopularSnippetsFromView(100);
 
         // 필터링 조건이 모두 없으면 그대로 반환
         if ((type == null || type.isEmpty()) &&
@@ -155,5 +158,4 @@ public class LikeSnippetService {
 
         return filteredSnippets;
     }
-
 }

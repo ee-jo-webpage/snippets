@@ -26,6 +26,16 @@ public class CustomAuthSuccessHandler implements AuthenticationSuccessHandler {
         loginLogService.logLogin(authentication.getName(), request, true);
         // 차단 초기화
         loginAttemptService.reset(request.getRemoteAddr());
-        response.sendRedirect("/app");
+
+        String redirectUrl;
+
+        if (authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
+            redirectUrl = "/";
+        } else {
+            redirectUrl = "/app";
+        }
+
+        response.sendRedirect(redirectUrl);
     }
 }

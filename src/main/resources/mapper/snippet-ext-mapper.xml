@@ -12,8 +12,8 @@
     </resultMap>
 
     <insert id="insertSnippet" useGeneratedKeys="true" keyProperty="snippetId">
-        insert into snippets (source_url, type, color_id, memo, user_id)
-        values (#{sourceUrl}, #{type}, #{colorId}, #{memo}, #{userId})
+        insert into snippets (source_url, type, color_id, memo, user_id, client_request_id)
+        values (#{sourceUrl}, #{type}, #{colorId}, #{memo}, #{userId},#{clientRequestId})
     </insert>
 
     <insert id="insertSnippetText">
@@ -169,5 +169,101 @@
         limit 3
     </select>
 
+<!--    <insert id="bulkInsertSnippets">-->
+<!--        INSERT INTO snippets (-->
+<!--        user_id, type, source_url, color_id, created_at, client_request_id-->
+<!--        )-->
+<!--        VALUES-->
+<!--        <foreach collection="list" item="s" separator=",">-->
+<!--            (-->
+<!--            #{s.userId},-->
+<!--            #{s.type},-->
+<!--            #{s.sourceUrl},-->
+<!--            #{s.colorId},-->
+<!--            NOW(),-->
+<!--            #{s.clientRequestId}-->
+<!--            )-->
+<!--        </foreach>-->
+<!--    </insert>-->
+
+    <select id="findIdByClientRequestId" resultType="long">
+        SELECT snippet_id
+        FROM snippets
+        WHERE client_request_id = #{clientRequestId}
+    </select>
+
+    <select id="findDuplicateSnippets" parameterType="list" resultType="string">
+        SELECT client_request_id
+        FROM snippets
+        WHERE
+        <foreach collection="snippets" item="s" separator=" OR ">
+            (
+            user_id = #{s.userId}
+            AND type = #{s.type}
+            <choose>
+                <when test="s.typeName == 'TEXT'">
+                    AND EXISTS (
+                    SELECT 1 FROM snippet_texts t
+                    WHERE t.snippet_id = snippets.snippet_id
+                    AND t.content = #{s.content}
+                    )
+                </when>
+                <when test="s.typeName == 'CODE'">
+                    AND EXISTS (
+                    SELECT 1 FROM snippet_codes c
+                    WHERE c.snippet_id = snippets.snippet_id
+                    AND c.content = #{s.content}
+                    AND c.language = #{s.language}
+                    )
+                </when>
+                <when test="s.typeName == 'IMG'">
+                    AND EXISTS (
+                    SELECT 1 FROM snippet_images i
+                    WHERE i.snippet_id = snippets.snippet_id
+                    AND i.image_url = #{s.imageUrl}
+                    )
+                </when>
+            </choose>
+            )
+        </foreach>
+    </select>
+
+    <select id="findSnippetIdsByClientRequestIds"
+            parameterType="list"
+            resultType="kr.or.kosa.snippets.snippetExt.model.SnippetMapping">
+        SELECT
+        client_request_id AS clientRequestId,
+        snippet_id AS snippetId
+        FROM snippets
+        WHERE client_request_id IS NOT NULL
+        AND client_request_id IN
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <insert id="bulkInsertSnippetTexts">
+        INSERT INTO snippet_texts (snippet_id, content)
+        VALUES
+        <foreach collection="list" item="s" separator=",">
+            (#{s.snippetId}, #{s.content})
+        </foreach>
+    </insert>
+
+    <insert id="bulkInsertSnippetCodes">
+        INSERT INTO snippet_codes (snippet_id, content, language)
+        VALUES
+        <foreach collection="list" item="s" separator=",">
+            (#{s.snippetId}, #{s.content}, #{s.language})
+        </foreach>
+    </insert>
+
+    <insert id="bulkInsertSnippetImages">
+        INSERT INTO snippet_images (snippet_id, image_url, alt_text)
+        VALUES
+        <foreach collection="list" item="s" separator=",">
+            (#{s.snippetId}, #{s.imageUrl}, #{s.altText})
+        </foreach>
+    </insert>
 
 </mapper>

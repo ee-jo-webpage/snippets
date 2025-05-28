@@ -33,6 +33,9 @@ public class SnippetExtCreate {
     private String imageUrl;
     private String altText;
 
+    // uuid
+    private String clientRequestId;
+
     public String getTypeName() {
         return type != null ? type.name() : null;
     }

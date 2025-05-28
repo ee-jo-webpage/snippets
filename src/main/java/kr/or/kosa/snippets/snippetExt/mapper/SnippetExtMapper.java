@@ -1,6 +1,7 @@
 package kr.or.kosa.snippets.snippetExt.mapper;
 
 import kr.or.kosa.snippets.snippetExt.model.ColorExt;
+import kr.or.kosa.snippets.snippetExt.model.PopSnippets;
 import kr.or.kosa.snippets.snippetExt.model.SnippetExtCreate;
 import kr.or.kosa.snippets.snippetExt.model.SnippetExtUpdate;
 import org.apache.ibatis.annotations.Mapper;
@@ -28,4 +29,6 @@ public interface SnippetExtMapper {
     int countDuplicate(SnippetExtCreate snippet);
 
     List<ColorExt> findColorsByUserId(Long userId);
+
+    List<PopSnippets> selectTop3PopularSnippets();
 }

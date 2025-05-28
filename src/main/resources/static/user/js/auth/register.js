@@ -1,3 +1,12 @@
+function storeEmailWithExpiry(email, ttlMinutes = 5) {
+    const now = Date.now();
+    const expiry = now + ttlMinutes * 60 * 1000;
+    const data = { email, expiry };
+    localStorage.setItem("email_verification", JSON.stringify(data));
+}
+
+
+
 const form = document.getElementById('registerForm');
 const submitButton = form.querySelector("button[type='submit']");
 const messageDiv = document.getElementById('message');
@@ -105,6 +114,7 @@ form.addEventListener('submit', async function (e) {
         }
 
         if (response.ok) {
+            storeEmailWithExpiry(data.email);  //  이메일 + 만료시간 5분 저장
             await Swal.fire({
                 title: '회원가입 성공!',
                 text: result.message || '로그인 페이지로 이동합니다.',

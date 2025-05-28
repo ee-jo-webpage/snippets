@@ -91,15 +91,13 @@ public class SnippetController {
         model.addAttribute("pageGroupSize", pageGroupSize);
         model.addAttribute("startPage", startPage);
         model.addAttribute("endPage", endPage);
+        
+        // ★ 추가: 사이드바 활성화를 위한 activeMenu 설정
+        model.addAttribute("activeMenu", "snippets");
 
         return "basic/snippets/snippetsList";
     }
 
-
-
-
-    
-    
     @GetMapping("/{snippetId}")
     public String getById(@PathVariable("snippetId") Long snippetId, Model model) {
         SnippetTypeBasic type = snippetService.getSnippetTypeById(snippetId);
@@ -111,6 +109,10 @@ public class SnippetController {
             return "error/404";
         }
         model.addAttribute("snippet", snippet);
+        
+        // ★ 추가: 스니펫 상세보기도 snippets 메뉴로 간주
+        model.addAttribute("activeMenu", "snippets");
+        
         return "basic/snippets/snippetDetail";
     }
 
@@ -121,6 +123,10 @@ public class SnippetController {
             @AuthenticationPrincipal CustomUserDetails details) {
 
         model.addAttribute("snippet", new Snippets());
+        
+        // ★ 추가: 스니펫 추가 폼도 snippets 메뉴로 간주
+        model.addAttribute("activeMenu", "snippets");
+        
         // type 파라미터가 있으면 (CODE/TEXT/IMG 선택 후)
         if (type != null) {
             // ① 사용자 기본+커스텀 컬러 조회
@@ -137,6 +143,7 @@ public class SnippetController {
         // 처음엔 타입 선택 페이지
         return "basic/snippets/snippetAddSelect";
     }
+
 
     @PostMapping("/new")
     public String addSnippet(

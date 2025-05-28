@@ -1,11 +1,9 @@
 $(document).ready(function () {
     // 초기화
-    let selectedTags = [];
     let allTags = [];
-    let currentIndex = -1;
-    let autocompleteData = [];
+    let selectedTagId = null;
 
-    // 더미 스니펫 데이터 (코드와 텍스트만)
+    // 더미 스니펫 데이터 (테스트용)
     const dummySnippets = [
         {
             id: 1,
@@ -63,7 +61,7 @@ $(document).ready(function () {
         }
     ];
 
-    // 태그별 스니펫 매핑
+    // 태그별 스니펫 매핑 (테스트용)
     const tagSnippetMap = {
         1: [1, 2, 6], // JavaScript
         2: [2],       // React
@@ -73,8 +71,66 @@ $(document).ready(function () {
         6: [3, 4, 7], // Backend
     };
 
-    // 초기 데이터 로드
-    loadAllTags();
+    // 로그인된 사용자만 태그 관리 기능 초기화
+    if (userId != null) {
+        // 초기 데이터 로드
+        loadAllTags();
+
+        // 태그 검색 입력 이벤트
+        $('#tagSearchInput').on('input', function () {
+            const keyword = $(this).val().trim();
+            if (keyword.length > 0) {
+                searchAndFilterTags(keyword);
+            } else {
+                displayAllTags(allTags);
+            }
+        });
+
+        // 태그 검색 엔터키 이벤트
+        $('#tagSearchInput').on('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const tagName = $(this).val().trim();
+                if (tagName) {
+                    createNewTag(tagName);
+                }
+            }
+        });
+
+        // 태그 추가 버튼 클릭
+        $('#addTagBtn').on('click', function () {
+            const tagName = $('#tagSearchInput').val().trim();
+            if (tagName) {
+                createNewTag(tagName);
+            } else {
+                showAlert('태그명을 입력해주세요.', 'warning');
+                $('#tagSearchInput').focus();
+            }
+        });
+
+        // 태그 카드 클릭 이벤트
+        $(document).on('click', '.tag-card', function () {
+            const tagId = $(this).data('id');
+            const tagName = $(this).find('.tag-name').text();
+
+            if (tagId && tagName) {
+                // 이전 선택 해제
+                $('.tag-card').removeClass('active');
+                // 현재 선택 활성화
+                $(this).addClass('active');
+
+                selectedTagId = tagId;
+                loadSnippetsForTag(tagId, tagName);
+            }
+        });
+
+        // 스니펫 섹션 닫기 버튼
+        $('#closeSnippetsBtn').on('click', function () {
+            $('#snippetsSection').hide();
+            $('.tag-card').removeClass('active');
+            selectedTagId = null;
+        });
+    }
 
     // 알림 메시지 표시
     if (message) {
@@ -84,215 +140,143 @@ $(document).ready(function () {
         showAlert(error, 'error');
     }
 
-    // 태그 입력 자동완성
-    $('#tagInput').on('input', function () {
-        const keyword = $(this).val().trim();
-        currentIndex = -1;
-        if (keyword.length > 0) {
-            searchTags(keyword);
-        } else {
-            $('#autocomplete').hide();
-        }
-    });
-
-    // 키보드 이벤트
-    $('#tagInput').on('keydown', function (e) {
-        const dropdown = $('#autocomplete');
-        const options = dropdown.find('.autocomplete-option');
-
-        if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            currentIndex = Math.min(currentIndex + 1, options.length - 1);
-            updateHighlight(options);
-        } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            currentIndex = Math.max(currentIndex - 1, 0);
-            updateHighlight(options);
-        } else if (e.key === 'Enter') {
-            e.preventDefault();
-            if (currentIndex >= 0 && options.length > 0) {
-                const tag = autocompleteData[currentIndex];
-                addToSelected(tag);
-            } else {
-                const tagName = $(this).val().trim();
-                if (tagName) createNewTag(tagName);
-            }
-            clearInput();
-        } else if (e.key === 'Escape') {
-            dropdown.hide();
-        }
-    });
-
-    // 자동완성 클릭
-    $(document).on('click', '.autocomplete-option', function () {
-        const index = $(this).data('index');
-        const tag = autocompleteData[index];
-        addToSelected(tag);
-        clearInput();
-    });
-
-    // 태그 클릭시 스니펫 로드
-    $(document).on('click', '.tag-badge:not(.selected-tag)', function () {
-        const tagId = $(this).data('id');
-        const tagName = $(this).text();
-        if (tagId) {
-            $('.tag-badge').removeClass('active');
-            $(this).addClass('active');
-            loadSnippets(tagId, tagName);
-        }
-    });
-
-    // 외부 클릭시 자동완성 닫기
-    $(document).on('click', function (e) {
-        if (!$(e.target).closest('.tag-input-wrapper').length) {
-            $('#autocomplete').hide();
-        }
-    });
-
     // 함수들
-    function searchTags(keyword) {
-        $.ajax({
-            url: '/api/tag/search',
-            method: 'GET',
-            data: {
-                query: keyword
-                // userId: currentUserId 제거
-            },
-            success: function (tags) {
-                showAutocomplete(tags);
-            },
-            error: function () {
-                console.error('태그 검색 오류');
-            }
-        });
-    }
-
-    function showAutocomplete(tags) {
-        autocompleteData = tags;
-        const dropdown = $('#autocomplete');
-        if (tags.length > 0) {
-            dropdown.empty();
-            tags.forEach((tag, index) => {
-                dropdown.append($('<div>').addClass('autocomplete-option').text(tag.name).data('index', index));
-            });
-            dropdown.show();
-        } else {
-            dropdown.hide();
-        }
-    }
-
-    function updateHighlight(options) {
-        options.removeClass('highlight');
-        if (currentIndex >= 0) {
-            options.eq(currentIndex).addClass('highlight');
-        }
-    }
-
-    function addToSelected(tag) {
-        const exists = selectedTags.some(t => t.tagId === tag.tagId);
-        if (!exists) {
-            selectedTags.push(tag);
-            displaySelected();
-        }
-    }
-
-    function createNewTag(tagName) {
-        $.ajax({
-            url: '/api/tag',
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({
-                name: tagName
-                // userId: currentUserId 제거
-            }),
-            success: function (tag) {
-                addToSelected(tag);
-                loadAllTags();
-            },
-            error: function (xhr) {
-                if (xhr.status === 409) {
-                    const existingTag = xhr.responseJSON;
-                    if (existingTag) {
-                        addToSelected(existingTag);
-                    }
-                } else {
-                    alert('태그 생성 중 오류가 발생했습니다.');
-                }
-            }
-        });
-    }
-
-    function clearInput() {
-        $('#tagInput').val('');
-        $('#autocomplete').hide();
-        currentIndex = -1;
-    }
-
-    function displaySelected() {
-        const container = $('#selectedTags');
-        container.empty();
-        if (selectedTags.length === 0) {
-            container.html('<div class="empty-message">선택된 태그가 없습니다</div>');
-            return;
-        }
-        selectedTags.forEach((tag, index) => {
-            const element = $('<span>').addClass('tag-badge selected-tag').data('id', tag.tagId);
-            element.append($('<span>').text(tag.name));
-            element.append($('<span>').addClass('tag-delete').html('&times;').on('click', function (e) {
-                e.stopPropagation();
-                selectedTags.splice(index, 1);
-                displaySelected();
-                // 선택된 태그가 없으면 스니펫 목록 숨기기
-                if (selectedTags.length === 0) {
-                    $('#snippetsSection').hide();
-                }
-            }));
-            container.append(element);
-        });
-    }
-
     function loadAllTags() {
+        console.log('태그 목록을 로드하는 중...');
+        $('#tagsContainer').html('<div class="loading-text">태그를 불러오는 중...</div>');
+
         $.ajax({
             url: '/api/tag/my-tags',
             method: 'GET',
             success: function (tags) {
-                allTags = tags;
-                displayAllTags(tags);
+                console.log('태그 로드 성공:', tags);
+                allTags = tags || [];
+                displayAllTags(allTags);
+                updateTagCount(allTags.length);
             },
-            error: function () {
-                console.error('태그 목록 로딩 오류');
-                $('#allTags').html('<div class="empty-message">태그 목록을 불러오는데 실패했습니다</div>');
+            error: function (xhr, status, error) {
+                console.error('태그 로드 실패:', xhr.status, error);
+                $('#tagsContainer').html('<div class="empty-message">태그 목록을 불러오는데 실패했습니다.</div>');
+                updateTagCount(0);
             }
         });
     }
 
     function displayAllTags(tags) {
-        const container = $('#allTags');
+        const container = $('#tagsContainer');
         container.empty();
-        if (tags.length === 0) {
-            container.html('<div class="empty-message">등록된 태그가 없습니다</div>');
+
+        if (!tags || tags.length === 0) {
+            $('#emptyState').show();
             return;
         }
-        tags.forEach(tag => {
-            const tagBadge = $('<span>')
-                .addClass('tag-badge')
-                .data('id', tag.tagId)
-                .html(tag.name + ' <span class="tag-delete-inline" data-tag-id="' + tag.tagId + '" data-tag-name="' + tag.name + '">×</span>');
 
-            container.append(tagBadge);
+        $('#emptyState').hide();
+
+        tags.forEach(tag => {
+            const card = createTagCard(tag);
+            container.append(card);
         });
     }
 
-    // 인라인 삭제 버튼 클릭 이벤트
-    $(document).on('click', '.tag-delete-inline', function(e) {
-        e.stopPropagation();
-        const tagId = $(this).data('tag-id');
-        const tagName = $(this).data('tag-name');
-        showDeleteModal(tagId, tagName);
-    });
+    function createTagCard(tag) {
+        const card = $('<div>')
+            .addClass('tag-card')
+            .data('id', tag.tagId);
 
-    function loadSnippets(tagId, tagName) {
-        console.log('Loading snippets for tagId:', tagId, 'tagName:', tagName);
+        // 태그 이름
+        const tagName = $('<span>')
+            .addClass('tag-name')
+            .text(tag.name);
+
+        // 스니펫 개수 (초기값)
+        const snippetCount = $('<span>')
+            .addClass('tag-snippet-count')
+            .text('0');
+
+        // 삭제 버튼
+        const deleteBtn = $('<button>')
+            .addClass('tag-delete-btn')
+            .html('×')
+            .attr('title', '태그 삭제')
+            .on('click', function (e) {
+                e.stopPropagation();
+                showDeleteModal(tag.tagId, tag.name);
+            });
+
+        card.append(tagName).append(snippetCount).append(deleteBtn);
+
+        // 스니펫 개수 비동기 로드
+        loadTagSnippetCount(tag.tagId, snippetCount);
+
+        return card;
+    }
+
+    function loadTagSnippetCount(tagId, countElement) {
+        $.ajax({
+            url: '/api/tag/' + tagId + '/snippets',
+            method: 'GET',
+            success: function (snippets) {
+                const count = snippets ? snippets.length : 0;
+                countElement.text(count);
+            },
+            error: function () {
+                // API 실패시 더미 데이터 사용
+                const snippetIds = tagSnippetMap[tagId] || [];
+                const count = snippetIds.length;
+                countElement.text(count);
+            }
+        });
+    }
+
+    function searchAndFilterTags(keyword) {
+        if (!allTags || allTags.length === 0) {
+            return;
+        }
+
+        const filteredTags = allTags.filter(tag =>
+            tag.name.toLowerCase().includes(keyword.toLowerCase())
+        );
+
+        displayAllTags(filteredTags);
+    }
+
+    function createNewTag(tagName) {
+        if (!tagName || tagName.trim() === '') {
+            showAlert('태그명을 입력해주세요.', 'warning');
+            return;
+        }
+
+        console.log('새 태그 생성:', tagName);
+
+        $.ajax({
+            url: '/api/tag',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                name: tagName.trim()
+            }),
+            success: function (response) {
+                console.log('태그 생성 성공:', response);
+                showAlert('태그가 성공적으로 생성되었습니다.', 'success');
+                $('#tagSearchInput').val('');
+                loadAllTags(); // 태그 목록 새로고침
+            },
+            error: function (xhr) {
+                console.error('태그 생성 실패:', xhr.status, xhr.responseText);
+                if (xhr.status === 409) {
+                    showAlert('이미 존재하는 태그입니다.', 'warning');
+                } else if (xhr.status === 401) {
+                    showAlert('로그인이 필요합니다.', 'error');
+                } else {
+                    showAlert('태그 생성 중 오류가 발생했습니다.', 'error');
+                }
+            }
+        });
+    }
+
+    function loadSnippetsForTag(tagId, tagName) {
+        console.log('태그 스니펫 로드:', tagId, tagName);
 
         $('#snippetsSection').show();
         $('#snippetsTitle').text('📝 "' + tagName + '" 태그의 스니펫 목록');
@@ -302,77 +286,169 @@ $(document).ready(function () {
             url: '/api/tag/' + tagId + '/snippets',
             method: 'GET',
             success: function (snippets) {
-                console.log('Received snippets:', snippets);
-                showSnippets(snippets, tagName);
+                console.log('스니펫 로드 성공:', snippets);
+                displaySnippets(snippets, tagName);
             },
             error: function (xhr, status, error) {
-                console.error('API Error:', xhr.status, error);
-                console.log('Using dummy data for tagId:', tagId);
+                console.error('스니펫 로드 실패:', xhr.status, error);
 
-                // 더미 데이터 사용
+                // API 실패시 더미 데이터 사용
+                console.log('더미 데이터 사용 - tagId:', tagId);
                 const snippetIds = tagSnippetMap[tagId] || [];
                 const snippets = dummySnippets.filter(s => snippetIds.includes(s.id));
-                showSnippets(snippets, tagName);
+                displaySnippets(snippets, tagName);
             }
         });
     }
 
-    function showSnippets(snippets, tagName) {
+    function displaySnippets(snippets, tagName) {
         const container = $('#snippetsGrid');
-        $('#snippetsTitle').text('📝 "' + tagName + '" 태그의 스니펫 (' + snippets.length + '개)');
+        $('#snippetsTitle').text('📝 "' + tagName + '" 태그의 스니펫 (' + (snippets ? snippets.length : 0) + '개)');
         container.empty();
 
-        if (snippets.length === 0) {
-            container.html('<div class="empty-message">이 태그에 해당하는 스니펫이 없습니다</div>');
+        if (!snippets || snippets.length === 0) {
+            container.html('<div class="empty-state"><div class="emoji">📝</div><p>이 태그에 해당하는 스니펫이 없습니다.</p></div>');
             return;
         }
 
         snippets.forEach(snippet => {
-            const card = $('<div>').addClass('snippet-card');
-
-            // 제목
-            card.append($('<div>').addClass('snippet-header').text(snippet.title || snippet.memo || '제목 없음'));
-
-            // 메타 정보
-            const metaContainer = $('<div>').addClass('snippet-meta');
-
-            if (snippet.language) {
-                metaContainer.append($('<span>').addClass('snippet-meta-item snippet-language').text(snippet.language));
-            }
-
-            if (snippet.type) {
-                metaContainer.append($('<span>').addClass('snippet-meta-item snippet-type').text(snippet.type));
-            }
-
-            if (snippet.createdAt) {
-                metaContainer.append($('<span>').addClass('snippet-meta-item snippet-date').text(snippet.createdAt));
-            }
-
-            if (metaContainer.children().length > 0) {
-                card.append(metaContainer);
-            }
-
-            // 내용 (코드 또는 텍스트)
-            const contentDiv = $('<div>')
-                .addClass('snippet-body')
-                .text(snippet.content || '내용 없음');
-
-            // 텍스트 타입인 경우 다른 스타일 적용
-            if (snippet.type === 'text') {
-                contentDiv.addClass('text-type');
-            }
-
-            card.append(contentDiv);
+            const card = createSnippetCard(snippet);
             container.append(card);
         });
     }
+
+    function createSnippetCard(snippet) {
+        const card = $('<div>').addClass('snippet-card');
+
+        // 제목
+        const header = $('<div>')
+            .addClass('snippet-header')
+            .text(snippet.title || snippet.memo || '제목 없음');
+
+        // 메타 정보
+        const metaContainer = $('<div>').addClass('snippet-meta');
+
+        if (snippet.language) {
+            metaContainer.append(
+                $('<span>')
+                    .addClass('snippet-meta-item snippet-language')
+                    .text(snippet.language)
+            );
+        }
+
+        if (snippet.type) {
+            metaContainer.append(
+                $('<span>')
+                    .addClass('snippet-meta-item snippet-type')
+                    .text(snippet.type)
+            );
+        }
+
+        if (snippet.createdAt) {
+            const date = new Date(snippet.createdAt).toLocaleDateString('ko-KR');
+            metaContainer.append(
+                $('<span>')
+                    .addClass('snippet-meta-item snippet-date')
+                    .text(date)
+            );
+        }
+
+        // 내용
+        const contentDiv = $('<div>')
+            .addClass('snippet-body')
+            .text(snippet.content || '내용 없음');
+
+        // 텍스트 타입인 경우 다른 스타일 적용
+        if (snippet.type === 'text') {
+            contentDiv.addClass('text-type');
+        }
+
+        card.append(header);
+        if (metaContainer.children().length > 0) {
+            card.append(metaContainer);
+        }
+        card.append(contentDiv);
+
+        return card;
+    }
+
+    function updateTagCount(count) {
+        $('#tagCount').text('총 ' + count + '개의 태그');
+    }
+
+    // 삭제 모달 표시
+    function showDeleteModal(tagId, tagName) {
+        $('#deleteTagName').text(tagName);
+        $('#deleteModal').show();
+
+        // 기존 이벤트 제거 후 새로 바인딩
+        $('#confirmDelete').off('click').on('click', function () {
+            deleteTag(tagId, tagName);
+            $('#deleteModal').hide();
+        });
+    }
+
+    // 태그 삭제 함수
+    function deleteTag(tagId, tagName) {
+        console.log('태그 삭제:', tagId, tagName);
+
+        $.ajax({
+            url: '/api/tag/' + tagId,
+            method: 'DELETE',
+            success: function () {
+                showAlert('"' + tagName + '" 태그가 삭제되었습니다.', 'success');
+
+                // 삭제된 태그가 현재 선택된 태그라면 스니펫 섹션 숨기기
+                if (selectedTagId == tagId) {
+                    $('#snippetsSection').hide();
+                    selectedTagId = null;
+                }
+
+                loadAllTags(); // 태그 목록 새로고침
+            },
+            error: function (xhr) {
+                console.error('태그 삭제 실패:', xhr.status, xhr.responseText);
+                if (xhr.status === 403) {
+                    showAlert('태그 삭제 권한이 없습니다.', 'error');
+                } else if (xhr.status === 401) {
+                    showAlert('로그인이 필요합니다.', 'error');
+                } else {
+                    showAlert('태그 삭제 중 오류가 발생했습니다.', 'error');
+                }
+            }
+        });
+    }
+
+    // 모달 닫기 이벤트
+    $('#cancelDelete, .modal-close').on('click', function () {
+        $('#deleteModal').hide();
+    });
+
+    // 모달 외부 클릭시 닫기
+    $('#deleteModal').on('click', function (e) {
+        if (e.target === this) {
+            $(this).hide();
+        }
+    });
 });
 
-// 세션 관련 함수들 - 전역 스코프에 정의
+// 전역 함수들
 function showAlert(message, type) {
     const alert = document.createElement('div');
     alert.className = `alert alert-${type}`;
     alert.textContent = message;
+
+    // 아이콘 추가
+    const icon = document.createElement('i');
+    if (type === 'success') {
+        icon.className = 'fas fa-check-circle';
+    } else if (type === 'error') {
+        icon.className = 'fas fa-exclamation-triangle';
+    } else if (type === 'warning') {
+        icon.className = 'fas fa-exclamation-circle';
+    }
+
+    alert.insertBefore(icon, alert.firstChild);
     document.body.appendChild(alert);
 
     // 애니메이션 효과로 표시
@@ -388,10 +464,10 @@ function showAlert(message, type) {
 // 세션 정보 토글 함수
 function toggleSessionInfo() {
     const sessionInfo = document.getElementById('sessionInfo');
-    if (sessionInfo.style.display === 'none' || sessionInfo.style.display === '') {
+    if (sessionInfo && (sessionInfo.style.display === 'none' || sessionInfo.style.display === '')) {
         sessionInfo.style.display = 'block';
         loadSessionData();
-    } else {
+    } else if (sessionInfo) {
         sessionInfo.style.display = 'none';
     }
 }
@@ -410,108 +486,41 @@ async function loadSessionData() {
                 break;
             }
         }
-        document.getElementById('sessionId').textContent = sessionId;
+
+        const sessionIdElement = document.getElementById('sessionId');
+        if (sessionIdElement) {
+            sessionIdElement.textContent = sessionId;
+        }
 
         // 서버 세션 데이터 확인 API 호출
         try {
             const response = await fetch('/tag/check-session');
             if (response.ok) {
                 const sessionData = await response.json();
-                document.getElementById('serverSessionData').innerHTML =
-                    `userId: ${sessionData.userId || '없음'}, ` +
-                    `sessionId: ${sessionData.sessionId || '없음'}`;
+                const serverSessionElement = document.getElementById('serverSessionData');
+                if (serverSessionElement) {
+                    serverSessionElement.innerHTML =
+                        `userId: ${sessionData.userId || '없음'}, ` +
+                        `sessionId: ${sessionData.sessionId || '없음'}`;
+                }
             } else {
-                document.getElementById('serverSessionData').textContent =
-                    'API 응답 오류 - 서버에서 확인하세요';
+                const serverSessionElement = document.getElementById('serverSessionData');
+                if (serverSessionElement) {
+                    serverSessionElement.textContent = 'API 응답 오류 - 서버에서 확인하세요';
+                }
             }
         } catch (error) {
-            document.getElementById('serverSessionData').textContent =
-                `세션 확인 API 없음 - ${error.message}`;
+            const serverSessionElement = document.getElementById('serverSessionData');
+            if (serverSessionElement) {
+                serverSessionElement.textContent = `세션 확인 API 없음 - ${error.message}`;
+            }
             console.log('세션 확인 API 호출 실패:', error);
         }
     } catch (error) {
         console.error('세션 정보 로드 중 오류:', error);
-        document.getElementById('serverSessionData').textContent = '오류 발생';
+        const serverSessionElement = document.getElementById('serverSessionData');
+        if (serverSessionElement) {
+            serverSessionElement.textContent = '오류 발생';
+        }
     }
 }
-
-function displayAllTags(tags) {
-    const container = $('#allTags');
-    container.empty();
-    if (tags.length === 0) {
-        container.html('<div class="empty-message">등록된 태그가 없습니다</div>');
-        return;
-    }
-    tags.forEach(tag => {
-        const tagContainer = $('<div>').addClass('tag-badge-container');
-        const tagBadge = $('<span>')
-            .addClass('tag-badge')
-            .text(tag.name)
-            .data('id', tag.tagId);
-
-        const deleteBtn = $('<button>')
-            .addClass('tag-delete-btn')
-            .html('&times;')
-            .data('tag-id', tag.tagId)
-            .data('tag-name', tag.name)
-            .on('click', function(e) {
-                e.stopPropagation();
-                showDeleteModal(tag.tagId, tag.name);
-            });
-
-        tagContainer.append(tagBadge).append(deleteBtn);
-        container.append(tagContainer);
-    });
-}
-
-// 삭제 모달 표시
-function showDeleteModal(tagId, tagName) {
-    $('#deleteTagName').text(tagName);
-    $('#deleteModal').show();
-
-    // 확인 버튼에 이벤트 바인딩
-    $('#confirmDelete').off('click').on('click', function() {
-        deleteTag(tagId, tagName);
-        $('#deleteModal').hide();
-    });
-}
-
-// 태그 삭제 함수
-function deleteTag(tagId, tagName) {
-    $.ajax({
-        url: '/api/tag/' + tagId,
-        method: 'DELETE',
-        success: function() {
-            showAlert('"' + tagName + '" 태그가 삭제되었습니다.', 'success');
-            // 확실히 함수가 존재하는지 체크
-            if (typeof loadAllTags === 'function') {
-                loadAllTags();
-            } else {
-                console.error('loadAllTags 함수를 찾을 수 없습니다');
-                // 페이지 새로고침으로 대체
-                location.reload();
-            }
-        },
-        error: function(xhr) {
-            if (xhr.status === 403) {
-                showAlert('태그 삭제 권한이 없습니다.', 'error');
-            } else {
-                showAlert('태그 삭제 중 오류가 발생했습니다.', 'error');
-            }
-        }
-    });
-}
-
-// 모달 닫기 이벤트
-$(document).ready(function() {
-    $('#cancelDelete, .modal-close').on('click', function() {
-        $('#deleteModal').hide();
-    });
-
-    // 모달 외부 클릭시 닫기
-    $('#deleteModal').on('click', function(e) {
-        if (e.target === this) {
-            $(this).hide();
-        }
-    });
-});

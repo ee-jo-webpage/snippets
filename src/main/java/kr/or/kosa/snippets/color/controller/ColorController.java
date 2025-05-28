@@ -30,29 +30,10 @@ public class ColorController {
     // private 헬퍼 메서드
     private Long requireLogin(CustomUserDetails userDetails) {
         if (userDetails == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다");
+            log.warn("사용자 인증 정보가 없습니다.");
+            return null;
         }
         return userDetails.getUserId();
-    }
-
-    @GetMapping("/check-session")
-    @ResponseBody
-    public Map<String, Object> checkSession(HttpServletRequest request) {
-        Map<String, Object> sessionData = new HashMap<>();
-        sessionData.put("userId", request.getSession().getAttribute("userId"));
-        sessionData.put("sessionId", request.getSession().getId());
-        sessionData.put("hasUserId", request.getSession().getAttribute("userId") != null);
-        return sessionData;
-    }
-
-    // 현재 사용자 정보 확인 엔드포인트
-    @GetMapping("/session-info")
-    @ResponseBody
-    public Map<String, Object> getSessionInfo(HttpSession session) {
-        Map<String, Object> info = new HashMap<>();
-        info.put("userId", session.getAttribute("userId"));
-        info.put("sessionId", session.getId());
-        return info;
     }
 
     //등록된 전체 색상 조회
@@ -89,7 +70,7 @@ public class ColorController {
             model.addAttribute("error", "색상 정보를 불러오는 중 오류가 발생했습니다.");
             model.addAttribute("colorList", List.of());
             model.addAttribute("isMyColors", false);  // null 방지
-            return "color/user-colors";
+            return "color/temp-user-colors";
         }
     }
 
@@ -107,7 +88,7 @@ public class ColorController {
         model.addAttribute("isMyColors", true);
         model.addAttribute("isAvailableColors", true);
 
-        return "color/user-colors";
+        return "color/temp-user-colors";
     }
 
     //색상등록
@@ -129,7 +110,7 @@ public class ColorController {
             redirectAttrs.addFlashAttribute("message", "색상이 성공적으로 추가되었습니다.");
             redirectAttrs.addFlashAttribute("messageType", "success");
 
-            return "redirect:/color/my-colors";
+            return "redirect:/color/temp-my-colors";
 
         } catch (ResponseStatusException e) {
             log.error("인증 실패", e);
@@ -140,7 +121,7 @@ public class ColorController {
             redirectAttrs.addFlashAttribute("messageType", "error");
 
             if (userId != null) {
-                return "redirect:/color/my-colors";
+                return "redirect:/color/temp-my-colors";
             } else {
                 return "redirect:/login";
             }
@@ -162,7 +143,7 @@ public class ColorController {
 
             redirectAttrs.addFlashAttribute("message", "색상이 수정되었습니다.");
 
-            return "redirect:/color/my-colors";
+            return "redirect:/color/temp-my-colors";
         } catch (ResponseStatusException e) {
             log.error("인증 실패", e);
             return "redirect:/login";
@@ -170,7 +151,7 @@ public class ColorController {
             log.error("색상 수정 실패", e);
             redirectAttrs.addFlashAttribute("error", e.getMessage());
 
-            return "redirect:/color/my-colors";
+            return "redirect:/color/temp-my-colors";
         }
     }
 
@@ -187,7 +168,7 @@ public class ColorController {
 
             redirectAttrs.addFlashAttribute("message", "색상이 성공적으로 삭제되었습니다.");
 
-            return "redirect:/color/my-colors";
+            return "redirect:/color/temp-my-colors";
         } catch (ResponseStatusException e) {
             log.error("인증 실패", e);
             return "redirect:/login";
@@ -195,7 +176,7 @@ public class ColorController {
             log.error("색상 삭제 실패", e);
             redirectAttrs.addFlashAttribute("error", e.getMessage());
 
-            return "redirect:/color/my-colors";
+            return "redirect:/color/temp-my-colors";
         }
     }
 }

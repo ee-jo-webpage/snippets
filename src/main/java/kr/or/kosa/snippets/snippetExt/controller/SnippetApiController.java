@@ -65,7 +65,7 @@ public class SnippetApiController {
     public ResponseEntity<?> getColorByUserId(
         @AuthenticationPrincipal CustomUserDetails details
     ) {
-        Long userId = details.getUserId();
+        Long userId = requireLogin(details);
         List<ColorExt> colorList = snippetExtService.getColorsByUserId(userId);
         return ResponseEntity.ok(colorList);
     }

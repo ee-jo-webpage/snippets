@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Snippet Highlighter",
+  "name": "GoSnippets",
   "version": "1.0",
   "permissions": ["storage", "activeTab", "scripting"],
   "background": {

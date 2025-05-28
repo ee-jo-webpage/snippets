@@ -9,12 +9,16 @@ import kr.or.kosa.snippets.user.model.Users;
 import kr.or.kosa.snippets.user.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -72,6 +76,17 @@ public class UserRestController {
         }
     }
 
+    @PostMapping("/resend-code")
+    public ResponseEntity<?> resendCode(@RequestBody Map<String, String> payload) {
+        try {
+            String email = payload.get("email");
+            authService.resendVerificationCode(email);
+            return ResponseEntity.ok(Map.of("message", "인증 코드가 재전송되었습니다."));
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
 
     @PutMapping("/update")
     public ResponseEntity<?> updateUser(@Valid @RequestBody UserUpdateDTO dto, BindingResult result, Principal principal) {
@@ -83,6 +98,24 @@ public class UserRestController {
         }
 
         userService.updateUserInfo(principal.getName(), dto);
+        // 사용자 정보 재조회
+        Users updatedUser = userService.findByEmail(principal.getName());
+
+        CustomUserDetails updatedDetails = new CustomUserDetails(
+                updatedUser.getUserId(),
+                updatedUser.getEmail(),
+                updatedUser.getPassword(),
+                updatedUser.getNickname(),
+                updatedUser.isEnabled(),
+                updatedUser.getLoginType(),
+                List.of(new SimpleGrantedAuthority(updatedUser.getRole())),
+                null // attributes는 null or 기존 유지
+        );
+        // SecurityContext 갱신
+        UsernamePasswordAuthenticationToken newAuth =
+                new UsernamePasswordAuthenticationToken(updatedDetails, null, updatedDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(newAuth);
+
         return ResponseEntity.ok("회원 정보가 수정되었습니다.");
     }
 

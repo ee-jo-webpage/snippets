@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스니펫 관리 사이트</title>
+    <link th:href="@{/my-snippet-page/css/my-snippet-page.css}" rel="stylesheet">
+</head>
+<body>
+<!-- 헤더 -->
+<header class="header">
+    <div class="logo">CodeSnippets</div>
+    <div class="auth-buttons">
+        <!-- 로그인된 경우 -->
+        <div sec:authorize="isAuthenticated()" class="user-info">
+            <span class="user-nickname" th:text="${#authentication.principal.nickname}">사용자님</span>
+            <a th:href="@{/logout}" class="auth-btn logout-btn">로그아웃</a>
+        </div>
+
+        <!-- 로그인되지 않은 경우 -->
+        <div sec:authorize="!isAuthenticated()">
+            <a th:href="@{/login}" class="auth-btn login-btn">로그인</a>
+            <a th:href="@{/signup}" class="auth-btn signup-btn">회원가입</a>
+        </div>
+    </div>
+</header>
+
+<!-- 사이드바 -->
+<nav class="sidebar">
+    <div class="sidebar-title">Navigation</div>
+    <ul class="sidebar-menu">
+        <li class="sidebar-item">
+            <a th:href="@{/snippets}" class="sidebar-link active" data-menu="snippets">내 스니펫 목록</a>
+        </li>
+        <li class="sidebar-item">
+            <a th:href="@{/bookmark}" class="sidebar-link" data-menu="bookmarks">북마크 목록</a>
+        </li>
+        <li class="sidebar-item">
+            <a th:href="@{/tags/manager}" class="sidebar-link" data-menu="tags">태그 관리</a>
+        </li>
+        <li class="sidebar-item">
+            <a th:href="@{/color/my-colors}" class="sidebar-link" data-menu="colors">색상 관리</a>
+        </li>
+        <li class="sidebar-item">
+            <a th:href="@{/popular}" class="sidebar-link" data-menu="popular">인기 스니펫 게시판</a>
+        </li>
+        <li class="sidebar-item">
+            <a th:href="@{/community}" class="sidebar-link" data-menu="community">커뮤니티</a>
+        </li>
+    </ul>
+</nav>
+
+<!-- 메인 컨텐츠 영역 -->
+<main class="main-content">
+    <div class="welcome-card">
+        <h1 class="welcome-title">환영합니다! 🎉</h1>
+        <p class="welcome-text">코드 스니펫을 효율적으로 관리하고 공유할 수 있는 공간입니다. 개발자들과 소통하며 함께 성장해보세요!</p>
+
+        <div class="feature-grid">
+            <div class="feature-card" th:each="feature : ${features}">
+                <div class="feature-icon" th:text="${feature.icon}">📝</div>
+                <div class="feature-title" th:text="${feature.title}">스니펫 관리</div>
+                <div class="feature-desc" th:text="${feature.description}">코드 스니펫을 체계적으로 정리하고 태그와 색상으로 분류하여 쉽게 찾아보세요.</div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<style>
+    /* 추가 CSS 스타일 */
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .user-nickname {
+        color: #333;
+        font-weight: 500;
+        font-size: 14px;
+    }
+
+    .user-nickname::after {
+        content: "님";
+        margin-left: 2px;
+    }
+
+    .logout-btn {
+        background-color: #ff6b6b;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 14px;
+        transition: background-color 0.3s;
+    }
+
+    .logout-btn:hover {
+        background-color: #ff5252;
+    }
+</style>
+</body>
+</html>

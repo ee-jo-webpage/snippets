@@ -24,8 +24,10 @@ public class CustomAuthSuccessHandler implements AuthenticationSuccessHandler {
                                         Authentication authentication) throws IOException, ServletException {
         System.out.println("로그인 성공!");
         System.out.println("이메일: " + authentication.getName());
+        // 로그인 시도 로그 저장
         loginLogService.logLogin(authentication.getName(), request, true);
-        loginAttemptService.reset(request.getRemoteAddr()); // 차단 초기화
+        // 차단 초기화
+        loginAttemptService.reset(request.getRemoteAddr());
         response.sendRedirect("/");
     }
 }

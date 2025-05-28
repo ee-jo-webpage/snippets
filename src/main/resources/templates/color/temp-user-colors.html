@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스니펫 관리 사이트</title>
+    <link th:href="@{/color/css/user-colors.css}" rel="stylesheet">
+    <link th:href="@{/my-snippet-page/css/my-snippet-page.css}" rel="stylesheet">
+</head>
+<body>
+<div th:replace="fragments/header :: header"></div>
+<div th:replace="fragments/sidebar :: sidebar('snippets')"></div>
+
+<!-- 메인 컨텐츠 영역 -->
+<main class="main-content">
+    <div class="container">
+        <div class="color-container">
+            <!-- 로그인 안내 메시지 추가 -->
+            <div th:if="${currentUserId == null}" class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                로그인이 필요한 서비스입니다. <a href="/login" class="alert-link">로그인하기</a>
+            </div>
+
+            <!-- 색상 목록 (로그인된 경우에만 표시) -->
+            <div th:if="${currentUserId != null}">
+                <div th:if="${not #lists.isEmpty(colorList)}" class="color-grid">
+                    <div th:each="color, status : ${colorList}" class="color-card" th:style="'animation-delay: ' + ${status.index * 0.1} + 's;'">
+                        <!-- 소유자 표시 -->
+                        <div th:if="${color.userId != null}" class="owner-badge"
+                             th:text="${color.userId == currentUserId ? '내 색상' : '사용자 ' + color.userId}">
+                            색상 소유자
+                        </div>
+
+                        <div class="color-preview" th:style="'background-color: ' + ${color.hexCode} + ';'">
+                            <div class="color-hex-overlay" th:text="${color.hexCode}">#FFFFFF</div>
+                        </div>
+                        <div class="color-info">
+                            <div class="color-name" th:text="${color.colorId}">색상 ID</div>
+                            <div class="color-name" th:text="${color.name}">색상 이름</div>
+                            <div class="color-hex" th:text="${color.hexCode}">#FFFFFF</div>
+
+                            <!-- 수정/삭제 버튼 (내 색상일 때만 표시) -->
+                            <div th:if="${color.userId == currentUserId or (isMyColors and color.userId != null)}" class="color-actions">
+                                <button class="btn btn-edit"
+                                        onclick="openEditModal(this)"
+                                        th:data-color-id="${color.colorId}"
+                                        th:data-name="${color.name}"
+                                        th:data-hex-code="${color.hexCode}">
+                                    ✏️ 수정
+                                </button>
+                                <button class="btn btn-delete"
+                                        onclick="deleteColor(this)"
+                                        th:data-color-id="${color.colorId}"
+                                        th:data-name="${color.name}">
+                                    🗑️ 삭제
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:if="${#lists.isEmpty(colorList)}" class="empty-state">
+                    <div class="emoji">🎨</div>
+                    <p>등록된 색상이 없습니다.</p>
+                    <button th:if="${isMyColors}" class="add-color-btn" onclick="openAddModal()" style="margin-top: 20px;">
+                        🎨 첫 번째 색상 추가하기
+                    </button>
+                </div>
+            </div>
+
+            <!-- 로그인하지 않은 경우 빈 상태 메시지 -->
+            <div th:if="${currentUserId == null}" class="empty-state">
+                <div class="emoji">🔒</div>
+                <h3>로그인이 필요합니다</h3>
+                <p>색상을 관리하려면 먼저 로그인해주세요.</p>
+                <a href="/login" class="btn btn-primary" style="margin-top: 20px;">
+                    <i class="fas fa-sign-in-alt"></i> 로그인하기
+                </a>
+            </div>
+        </div>
+    </div>
+    <!-- 색상 추가 모달 -->
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">새 색상 추가</h2>
+                <button class="close" onclick="closeAddModal()">&times;</button>
+            </div>
+            <form id="addColorForm" th:action="@{/color/add}" method="POST">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="addColorName" class="form-label">색상 이름</label>
+                        <input type="text" id="addColorName" name="name" class="form-control" required placeholder="예: 새벽의 푸른색">
+                    </div>
+                    <div class="form-group">
+                        <label for="addHexCode" class="form-label">색상 코드</label>
+                        <div class="color-picker-container">
+                            <input type="text" id="addHexCode" name="hexCode" class="form-control"
+                                   pattern="^#[0-9A-Fa-f]{6}$" required placeholder="#FF0000">
+                            <input type="color" id="addColorPicker" value="#FF0000" onchange="updateAddHexFromPicker()">
+                        </div>
+                        <small style="color: #666; margin-top: 5px; display: block;">
+                            색상 선택기를 사용하거나 직접 입력하세요 (예: #FF0000)
+                        </small>
+                    </div>
+                    <div class="color-preview-box" id="addColorPreview" style="background-color: #FF0000;">
+                        #FF0000
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal btn-secondary" onclick="closeAddModal()">
+                        취소
+                    </button>
+                    <button type="submit" class="btn-modal btn-primary">
+                        추가
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 색상 수정 모달 -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">색상 수정</h2>
+                <button class="close" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="editColorForm" th:action="@{/color/update}" method="POST">
+                <input type="hidden" id="editColorId" name="colorId">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="editColorName" class="form-label">색상 이름</label>
+                        <input type="text" id="editColorName" name="name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editHexCode" class="form-label">색상 코드</label>
+                        <div class="color-picker-container">
+                            <input type="text" id="editHexCode" name="hexCode" class="form-control"
+                                   pattern="^#[0-9A-Fa-f]{6}$" required placeholder="#FF0000">
+                            <input type="color" id="editColorPicker" onchange="updateEditHexFromPicker()">
+                        </div>
+                        <small style="color: #666; margin-top: 5px; display: block;">
+                            색상 선택기를 사용하거나 직접 입력하세요 (예: #FF0000)
+                        </small>
+                    </div>
+                    <div class="color-preview-box" id="editColorPreview" style="background-color: #FFFFFF;">
+                        미리보기
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal btn-secondary" onclick="closeModal()">
+                        취소
+                    </button>
+                    <button type="submit" class="btn-modal btn-primary">
+                        저장
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</main>
+
+<script th:inline="javascript">
+    // 세션 정보 토글 함수
+    function toggleSessionInfo() {
+        const sessionInfo = document.getElementById('sessionInfo');
+        if (sessionInfo.style.display === 'none' || sessionInfo.style.display === '') {
+            sessionInfo.style.display = 'block';
+            loadSessionData();
+        } else {
+            sessionInfo.style.display = 'none';
+        }
+    }
+
+    // 세션 데이터 로드 함수
+    async function loadSessionData() {
+        try {
+            // 세션 ID 가져오기 (쿠키에서)
+            const cookies = document.cookie.split(';');
+            let sessionId = '쿠키에서 세션ID를 찾을 수 없음';
+
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'JSESSIONID' || name === 'connect.sid') {
+                    sessionId = value;
+                    break;
+                }
+            }
+            document.getElementById('sessionId').textContent = sessionId;
+
+            // 서버 세션 데이터 확인 API 호출
+            try {
+                const response = await fetch('/color/check-session');
+                if (response.ok) {
+                    const sessionData = await response.json();
+                    document.getElementById('serverSessionData').innerHTML =
+                        `userId: ${sessionData.userId || '없음'}, ` +
+                        `sessionId: ${sessionData.sessionId || '없음'}`;
+                } else {
+                    document.getElementById('serverSessionData').textContent =
+                        'API 응답 오류 - 서버에서 확인하세요';
+                }
+            } catch (error) {
+                document.getElementById('serverSessionData').textContent =
+                    `세션 확인 API 없음 - ${error.message}`;
+                console.log('세션 확인 API 호출 실패:', error);
+            }
+        } catch (error) {
+            console.error('세션 정보 로드 중 오류:', error);
+            document.getElementById('serverSessionData').textContent = '오류 발생';
+        }
+    }
+
+    // 페이지 로드 시 자동으로 세션 정보 표시 (개발 단계에서만)
+    document.addEventListener('DOMContentLoaded', function() {
+        // 개발 모드에서 자동으로 세션 정보 표시
+        // toggleSessionInfo();
+    });
+
+    // 알림 메시지 표시
+    /*[# th:if="${message != null}"]*/
+    showAlert(/*[[${message}]]*/ '메시지', 'success');
+    /*[/]*/
+
+    /*[# th:if="${error != null}"]*/
+    showAlert(/*[[${error}]]*/ '오류', 'error');
+    /*[/]*/
+
+    function showAlert(message, type) {
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type}`;
+        alert.textContent = message;
+        document.body.appendChild(alert);
+
+        // 애니메이션 효과로 표시
+        setTimeout(() => alert.classList.add('show'), 100);
+
+        // 3초 후 자동 제거
+        setTimeout(() => {
+            alert.classList.remove('show');
+            setTimeout(() => alert.remove(), 300);
+        }, 3000);
+    }
+
+    // 로그인하지 않은 사용자의 모달 접근 차단
+    function openAddModal() {
+        const currentUserId = /*[[${currentUserId}]]*/ null;
+        if (!currentUserId) {
+            alert('로그인이 필요한 기능입니다.');
+            return;
+        }
+
+        // 폼 초기화
+        document.getElementById('addColorForm').reset();
+        document.getElementById('addHexCode').value = '#FF0000';
+        document.getElementById('addColorPicker').value = '#FF0000';
+        updateAddPreview();
+
+        const modal = document.getElementById('addModal');
+        modal.style.display = 'block';
+        setTimeout(() => modal.classList.add('active'), 10);
+    }
+
+    function closeAddModal() {
+        const modal = document.getElementById('addModal');
+        modal.classList.remove('active');
+        setTimeout(() => modal.style.display = 'none', 300);
+    }
+
+    // 색상 선택기에서 hex 코드 업데이트 (추가 모달)
+    function updateAddHexFromPicker() {
+        const picker = document.getElementById('addColorPicker');
+        const hexInput = document.getElementById('addHexCode');
+        const preview = document.getElementById('addColorPreview');
+
+        hexInput.value = picker.value;
+        preview.style.backgroundColor = picker.value;
+        preview.textContent = picker.value;
+    }
+
+    // 미리보기 업데이트 (추가 모달)
+    function updateAddPreview() {
+        const hexCode = document.getElementById('addHexCode').value;
+        const preview = document.getElementById('addColorPreview');
+
+        if (/^#[0-9A-Fa-f]{6}$/i.test(hexCode)) {
+            preview.style.backgroundColor = hexCode;
+            preview.textContent = hexCode;
+            document.getElementById('addColorPicker').value = hexCode;
+        }
+    }
+
+    // hex 코드 입력 시 실시간 업데이트 (추가 모달)
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('addHexCode').addEventListener('input', updateAddPreview);
+    });
+
+    // 색상 수정 모달 관련 함수들 (기존 코드)
+    function openEditModal(buttonElement) {
+        const currentUserId = /*[[${currentUserId}]]*/ null;
+        if (!currentUserId) {
+            alert('로그인이 필요한 기능입니다.');
+            return;
+        }
+
+        const colorId = buttonElement.getAttribute('data-color-id');
+        const name = buttonElement.getAttribute('data-name');
+        const hexCode = buttonElement.getAttribute('data-hex-code');
+
+        document.getElementById('editColorId').value = colorId;
+        document.getElementById('editColorName').value = name;
+        document.getElementById('editHexCode').value = hexCode;
+        document.getElementById('editColorPicker').value = hexCode;
+        updateEditPreview();
+
+        const modal = document.getElementById('editModal');
+        modal.style.display = 'block';
+        setTimeout(() => modal.classList.add('active'), 10);
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('editModal');
+        modal.classList.remove('active');
+        setTimeout(() => modal.style.display = 'none', 300);
+    }
+
+    // 색상 선택기 업데이트 (수정 모달)
+    function updateEditHexFromPicker() {
+        const picker = document.getElementById('editColorPicker');
+        const hexInput = document.getElementById('editHexCode');
+        const preview = document.getElementById('editColorPreview');
+
+        hexInput.value = picker.value;
+        preview.style.backgroundColor = picker.value;
+        preview.textContent = picker.value;
+    }
+
+    // 미리보기 업데이트 (수정 모달)
+    function updateEditPreview() {
+        const hexCode = document.getElementById('editHexCode').value;
+        const preview = document.getElementById('editColorPreview');
+
+        if (/^#[0-9A-Fa-f]{6}$/i.test(hexCode)) {
+            preview.style.backgroundColor = hexCode;
+            preview.textContent = hexCode;
+            document.getElementById('editColorPicker').value = hexCode;
+        }
+    }
+
+    // hex 코드 입력 시 실시간 업데이트 (수정 모달)
+    document.addEventListener('DOMContentLoaded', function() {
+        const editHexInput = document.getElementById('editHexCode');
+        if (editHexInput) {
+            editHexInput.addEventListener('input', updateEditPreview);
+        }
+    });
+
+    // 모달 외부 클릭 시 닫기
+    window.onclick = function(event) {
+        const addModal = document.getElementById('addModal');
+        const editModal = document.getElementById('editModal');
+
+        if (event.target === addModal) {
+            closeAddModal();
+        }
+        if (event.target === editModal) {
+            closeModal();
+        }
+    }
+
+    // 색상 삭제
+    function deleteColor(buttonElement) {
+        const currentUserId = /*[[${currentUserId}]]*/ null;
+        if (!currentUserId) {
+            alert('로그인이 필요한 기능입니다.');
+            return;
+        }
+
+        const colorId = buttonElement.getAttribute('data-color-id');
+        const name = buttonElement.getAttribute('data-name');
+
+        if (confirm(`정말로 "${name}" 색상을 삭제하시겠습니까?`)) {
+            // 동적으로 폼 생성하여 제출
+            const form = document.createElement('form');
+            form.method = 'POST';  // DELETE 메서드는 폼에서 직접 지원하지 않음
+            form.action = /*[[@{/color/delete}]]*/ '/color/delete';
+
+            // Spring에서 DELETE 메서드를 사용하기 위한 히든 필드
+            const methodInput = document.createElement('input');
+            methodInput.type = 'hidden';
+            methodInput.name = '_method';
+            methodInput.value = 'DELETE';
+            form.appendChild(methodInput);
+
+            // colorId 파라미터
+            const colorIdInput = document.createElement('input');
+            colorIdInput.type = 'hidden';
+            colorIdInput.name = 'colorId';
+            colorIdInput.value = colorId;
+            form.appendChild(colorIdInput);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+
+    // ESC 키로 모달 닫기
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeModal();
+            closeAddModal();
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<!-- 레이아웃 템플릿 사용 -->
+<div th:replace="fragments/layout :: layout">
+    <!-- 메인 페이지 컨텐츠 -->
+    <th:block th:fragment="content">
+        <div class="welcome-card">
+            <h1 class="welcome-title">환영합니다! 🎉</h1>
+            <p class="welcome-text">코드 스니펫을 효율적으로 관리하고 공유할 수 있는 공간입니다. 개발자들과 소통하며 함께 성장해보세요!</p>
+
+            <div class="feature-grid">
+                <div class="feature-card" th:each="feature : ${features}">
+                    <div class="feature-icon" th:text="${feature.icon}">📝</div>
+                    <div class="feature-title" th:text="${feature.title}">스니펫 관리</div>
+                    <div class="feature-desc" th:text="${feature.description}">코드 스니펫을 체계적으로 정리하고 태그와 색상으로 분류하여 쉽게 찾아보세요.</div>
+                </div>
+            </div>
+        </div>
+    </th:block>
+</div>
+</body>
+</html>

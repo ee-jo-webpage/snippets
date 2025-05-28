@@ -18,6 +18,6 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
                        AccessDeniedException accessDeniedException)
             throws IOException, ServletException {
         // 로그 남기거나, 사용자 타입별 분기 가능
-        response.sendRedirect("/"); // 메인 페이지로 리다이렉트
+        response.sendRedirect("/");
     }
 }

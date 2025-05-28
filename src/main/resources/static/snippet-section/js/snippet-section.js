@@ -377,9 +377,7 @@ $(document).ready(function() {
 
     // 기존 JavaScript 코드에 추가할 부분
 
-// 기존 JavaScript 코드에 추가할 부분
-
-    // 수정 버튼 클릭 이벤트
+// 수정 버튼 클릭 이벤트
     $(document).on('click', '#editSnippetBtn', function() {
         const modal = $('#snippetDetailModal');
         const snippetId = modal.data('current-snippet-id');
@@ -465,20 +463,13 @@ $(document).ready(function() {
             url: editUrl,
             method: 'GET',
             success: function(html) {
-                // 모달 제목 변경
-                modal.find('.modal-header h3').text('스니펫 수정');
+                // 현재 상세보기 모달 닫기
+                modal.hide();
 
-                // 모달 바디 내용을 수정 폼으로 교체
-                const modalBody = modal.find('.modal-body');
-                modalBody.html(html);
+                // 새로운 수정 모달 생성 및 표시
+                showEditModal(html, snippetId);
 
-                // 푸터 버튼들을 수정 모드로 변경
-                updateModalFooterForEdit(modal, snippetId);
-
-                // 수정 폼 제출 이벤트 설정
-                setupEditFormSubmission(modal, snippetId);
-
-                console.log('수정 폼 로드 완료');
+                console.log('수정 모달 표시 완료');
             },
             error: function(xhr, status, error) {
                 console.error('수정 폼 로드 실패:', error);
@@ -488,89 +479,124 @@ $(document).ready(function() {
         });
     }
 
-// 모달 푸터를 수정 모드로 변경
-    function updateModalFooterForEdit(modal, snippetId) {
-        const modalFooter = modal.find('.modal-footer');
-        modalFooter.html(`
-        <div class="modal-footer-left">
-            <button id="saveSnippetBtn" class="btn btn-success">
-                <i class="fas fa-save"></i> 저장
-            </button>
-            <button id="cancelEditBtn" class="btn btn-secondary">
-                <i class="fas fa-times"></i> 취소
-            </button>
+// 수정 모달 표시 함수
+    function showEditModal(formHtml, snippetId) {
+        // 현재 상세보기 모달 완전히 숨기기
+        $('#snippetDetailModal').hide();
+
+        // 기존 수정 모달이 있다면 제거
+        $('#editSnippetModal').remove();
+
+        // 새로운 수정 모달 HTML 생성 (기존 모달 구조와 동일하게)
+        const editModalHtml = `
+        <div id="editSnippetModal" class="modal" style="display: block;">
+            <div class="modal-content">
+                <span class="close edit-modal-close">&times;</span>
+                <div id="editModalContent">
+                    ${formHtml}
+                </div>
+            </div>
         </div>
-        <div class="modal-footer-right">
-            <!-- 빈 공간 -->
-        </div>
-    `);
+    `;
+
+        // 모달을 body에 추가
+        $('body').append(editModalHtml);
+
+        // 수정 모달 이벤트 설정
+        setupEditModalEvents(snippetId);
     }
 
-// 수정 폼 제출 이벤트 설정
-    function setupEditFormSubmission(modal, snippetId) {
-        const form = modal.find('form');
+// 수정 모달 이벤트 설정
+    function setupEditModalEvents(snippetId) {
+        const editModal = $('#editSnippetModal');
+        const form = editModal.find('form');
 
-        if (!form.length) {
-            console.error('수정 폼을 찾을 수 없습니다.');
-            return;
+        // 폼이 있으면 제출 이벤트를 AJAX로 처리
+        if (form.length) {
+            // 폼 제출 이벤트를 AJAX로 처리
+            form.on('submit', function(e) {
+                e.preventDefault();
+
+                const formData = new FormData(this);
+                const submitBtn = form.find('button[type="submit"]');
+                const originalText = submitBtn.html();
+
+                // 버튼 비활성화
+                submitBtn.prop('disabled', true).html('저장 중...');
+
+                // AJAX로 폼 제출
+                $.ajax({
+                    url: form.attr('action'),
+                    method: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        alert('스니펫이 성공적으로 수정되었습니다.');
+
+                        // 수정 모달 닫기
+                        editModal.remove();
+
+                        // 페이지 새로고침으로 변경사항 반영
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 300);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('스니펫 수정 실패:', error);
+
+                        let errorMessage = '스니펫 수정에 실패했습니다.';
+                        if (xhr.status === 400) {
+                            errorMessage = '입력값에 오류가 있습니다. 다시 확인해주세요.';
+                        } else if (xhr.status === 403) {
+                            errorMessage = '스니펫을 수정할 권한이 없습니다.';
+                        } else if (xhr.status === 404) {
+                            errorMessage = '해당 스니펫을 찾을 수 없습니다.';
+                        }
+
+                        alert(errorMessage);
+                        submitBtn.prop('disabled', false).html(originalText);
+                    }
+                });
+            });
+
+            // 취소 버튼이 있다면 이벤트 추가
+            const cancelBtn = form.find('button:contains("취소")');
+            if (cancelBtn.length === 0) {
+                // 취소 버튼이 없다면 추가
+                const newCancelBtn = $('<button type="button" class="cancel-btn">취소</button>');
+                form.append(newCancelBtn);
+
+                newCancelBtn.on('click', function() {
+                    if (confirm('수정을 취소하시겠습니까? 변경사항이 저장되지 않습니다.')) {
+                        editModal.remove();
+                    }
+                });
+            }
         }
 
-        // 저장 버튼 클릭 이벤트
-        $(document).on('click', '#saveSnippetBtn', function() {
-            const saveBtn = $(this);
-            const originalText = saveBtn.html();
-
-            // 버튼 비활성화
-            saveBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 저장 중...');
-
-            // 폼 데이터 수집
-            const formData = new FormData(form[0]);
-
-            // AJAX로 폼 제출
-            $.ajax({
-                url: form.attr('action'),
-                method: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(response) {
-                    alert('스니펫이 성공적으로 수정되었습니다.');
-
-                    // 모달 닫기
-                    modal.hide();
-
-                    // 페이지 새로고침으로 변경사항 반영
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 300);
-                },
-                error: function(xhr, status, error) {
-                    console.error('스니펫 수정 실패:', error);
-
-                    let errorMessage = '스니펫 수정에 실패했습니다.';
-                    if (xhr.status === 400) {
-                        errorMessage = '입력값에 오류가 있습니다. 다시 확인해주세요.';
-                    } else if (xhr.status === 403) {
-                        errorMessage = '스니펫을 수정할 권한이 없습니다.';
-                    } else if (xhr.status === 404) {
-                        errorMessage = '해당 스니펫을 찾을 수 없습니다.';
-                    }
-
-                    alert(errorMessage);
-                    saveBtn.prop('disabled', false).html(originalText);
-                }
-            });
+        // 모달 닫기 이벤트들
+        editModal.find('.close, .edit-modal-close').on('click', function() {
+            if (confirm('수정을 취소하시겠습니까? 변경사항이 저장되지 않습니다.')) {
+                editModal.remove();
+            }
         });
 
-        // 취소 버튼 클릭 이벤트
-        $(document).on('click', '#cancelEditBtn', function() {
-            if (confirm('수정을 취소하시겠습니까? 변경사항이 저장되지 않습니다.')) {
-                // 원래 스니펫 데이터로 상세보기 모드로 되돌리기
-                const snippetData = modal.data('current-snippet-data');
-                if (snippetData) {
-                    showSnippetDetailModal(snippetData);
-                } else {
-                    modal.hide();
+        // 모달 외부 클릭시 닫기
+        editModal.on('click', function(e) {
+            if (e.target === this) {
+                if (confirm('수정을 취소하시겠습니까? 변경사항이 저장되지 않습니다.')) {
+                    editModal.remove();
+                }
+            }
+        });
+
+        // ESC 키로 모달 닫기
+        $(document).one('keydown.editModal', function(e) {
+            if (e.key === 'Escape') {
+                if (confirm('수정을 취소하시겠습니까? 변경사항이 저장되지 않습니다.')) {
+                    editModal.remove();
+                    $(document).off('keydown.editModal');
                 }
             }
         });

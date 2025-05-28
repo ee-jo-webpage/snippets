@@ -31,9 +31,6 @@
                 <div th:unless="${isLoggedIn}" class="login-prompt" style="color: #6c757d; font-size: 14px;">
                     <a href="/login" style="color: #007bff; text-decoration: none;">로그인</a>하여 좋아요 기능을 사용해보세요!
                 </div>
-                <div th:if="${isLoggedIn}" class="user-info" style="color: #6c757d; font-size: 14px;">
-                    현재 사용자: <strong th:text="${currentUserNickname}"></strong>
-                </div>
             </div>
         </div>
 

@@ -167,28 +167,37 @@ public class SnippetController {
     }
 
 
-    @GetMapping("/edit/{snippetId}")
-    public String showEditForm(
-            @PathVariable("snippetId") Long snippetId,
-            Model model,
-            @AuthenticationPrincipal CustomUserDetails details) {
+    @GetMapping("/edit-form/{type}/{snippetId}")
+    public String getEditForm(
+        @PathVariable(value="type") String type,
+        @PathVariable(value="snippetId") Long snippetId,
+        Model model,
+        @AuthenticationPrincipal CustomUserDetails details) {
 
-        SnippetTypeBasic type = snippetService.getSnippetTypeById(snippetId);
-        Snippets snippet = snippetService.getSnippetsById(snippetId, type);
+        SnippetTypeBasic snippetType;
+        try {
+            snippetType = SnippetTypeBasic.valueOf(type.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return "error/404";
+        }
+
+        Snippets snippet = snippetService.getSnippetsById(snippetId, snippetType);
+        if (snippet == null) return "error/404";
+
         model.addAttribute("snippet", snippet);
 
         Long userId = details.getUserId();
         List<Color> colors = colorService.getAllAvailableColorsByUserId(userId);
         model.addAttribute("colors", colors);
 
-        if (type == SnippetTypeBasic.CODE) {
-            return "basic/snippets/snippetEditCode";
-        } else if (type == SnippetTypeBasic.TEXT) {
-            return "basic/snippets/snippetEditText";
-        } else {
-            return "basic/snippets/snippetEditImg";
+        switch (snippetType) {
+            case CODE: return "basic/snippets/snippetEditCode";
+            case TEXT: return "basic/snippets/snippetEditText";
+            case IMG: return "basic/snippets/snippetEditImg";
+            default: return "error/404";
         }
     }
+
 
 
     @PostMapping("/edit/{snippetId}")

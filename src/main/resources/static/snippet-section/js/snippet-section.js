@@ -784,4 +784,132 @@ $(document).ready(function() {
             });
         });
     }
+
+
+    // 북마크 상태 로드
+    function loadBookmarkStatus(snippetId) {
+        console.log('북마크 상태 확인:', snippetId);
+
+        $.ajax({
+            url: `/api/bookmarks/check/${snippetId}`,
+            method: 'GET',
+            success: function(response) {
+                if (response.success) {
+                    updateBookmarkButton(response.isBookmarked);
+                }
+            },
+            error: function(xhr) {
+                console.warn('북마크 상태 확인 실패:', xhr.responseText);
+                // 로그인하지 않은 경우에도 버튼은 표시
+                updateBookmarkButton(false);
+            }
+        });
+    }
+
+// 북마크 버튼 상태 업데이트
+    function updateBookmarkButton(isBookmarked) {
+        const bookmarkBtn = $('#bookmarkToggleBtn');
+
+        if (!bookmarkBtn.length) {
+            console.warn('북마크 버튼을 찾을 수 없습니다.');
+            return;
+        }
+
+        const bookmarkText = bookmarkBtn.find('.bookmark-text');
+        const bookmarkIcon = bookmarkBtn.find('i');
+
+        // 버튼 활성화
+        bookmarkBtn.prop('disabled', false);
+
+        if (isBookmarked) {
+            bookmarkBtn.removeClass('btn-bookmark').addClass('btn-bookmark bookmarked');
+            bookmarkBtn.html('<i class="fas fa-bookmark"></i> <span class="bookmark-text">북마크됨</span>');
+            console.log('북마크 버튼 상태: 북마크됨');
+        } else {
+            bookmarkBtn.removeClass('bookmarked').addClass('btn-bookmark');
+            bookmarkBtn.html('<i class="far fa-bookmark"></i> <span class="bookmark-text">북마크</span>');
+            console.log('북마크 버튼 상태: 북마크 안됨');
+        }
+    }
+
+
+// 북마크 토글 이벤트
+    $(document).on('click', '#bookmarkToggleBtn', function() {
+        const modal = $('#snippetDetailModal');
+        const snippetId = modal.data('current-snippet-id');
+
+        if (!snippetId) {
+            alert('스니펫 정보를 찾을 수 없습니다.');
+            return;
+        }
+
+        const bookmarkBtn = $(this);
+        const isCurrentlyBookmarked = bookmarkBtn.hasClass('bookmarked');
+
+        // 버튼 비활성화
+        bookmarkBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 처리 중...');
+
+        console.log('북마크 토글 요청:', snippetId);
+
+        $.ajax({
+            url: '/api/bookmarks/toggle',
+            method: 'POST',
+            data: { snippetId: snippetId },
+            success: function(response) {
+                console.log('북마크 토글 응답:', response);
+
+                if (response.success) {
+                    // 북마크 상태 업데이트
+                    updateBookmarkButton(response.bookmarked);
+
+                    // 성공 메시지 표시
+                    showBookmarkFeedback(response.message, 'success');
+
+                    console.log('북마크 토글 성공:', response.bookmarked);
+                } else {
+                    console.warn('북마크 토글 실패:', response);
+                    alert(response.message || '북마크 처리에 실패했습니다.');
+                    // 원래 상태로 복원
+                    updateBookmarkButton(isCurrentlyBookmarked);
+                }
+            },
+            error: function(xhr) {
+                console.error('북마크 토글 에러:', xhr.status, xhr.responseText);
+
+                let errorMessage = '북마크 처리 중 오류가 발생했습니다.';
+                if (xhr.status === 401) {
+                    errorMessage = '로그인이 필요합니다.';
+                } else if (xhr.status === 403) {
+                    errorMessage = '권한이 없습니다.';
+                }
+
+                alert(errorMessage);
+                // 원래 상태로 복원
+                updateBookmarkButton(isCurrentlyBookmarked);
+            },
+            complete: function() {
+                // 버튼 활성화 (complete에서 처리하여 success/error 모두에서 실행)
+                bookmarkBtn.prop('disabled', false);
+                console.log('북마크 토글 요청 완료');
+            }
+        });
+    });
+
+
+// 북마크 피드백 메시지 표시
+    function showBookmarkFeedback(message, type = 'success') {
+        const feedbackClass = type === 'success' ? 'bookmark-feedback-success' : 'bookmark-feedback-error';
+        const feedback = $(`<div class="bookmark-feedback ${feedbackClass}">${message}</div>`);
+
+        // 모달 하단에 피드백 표시
+        const modal = $('#snippetDetailModal');
+        modal.find('.modal-body').append(feedback);
+
+        // 3초 후 제거
+        setTimeout(() => {
+            feedback.fadeOut(300, function() {
+                $(this).remove();
+            });
+        }, 3000);
+    }
 });

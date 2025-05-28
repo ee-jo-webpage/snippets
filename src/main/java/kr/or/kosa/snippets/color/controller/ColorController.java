@@ -64,7 +64,7 @@ public class ColorController {
             model.addAttribute("isMyColors", false);
             model.addAttribute("isAvailableColors", true);
 
-            return "color/user-colors";
+            return "color/temp-user-colors";
         } catch (Exception e) {
             log.error("사용자 {}의 사용 가능한 색상 조회 중 오류: {}", userId, e.getMessage(), e);
             model.addAttribute("error", "색상 정보를 불러오는 중 오류가 발생했습니다.");
@@ -110,7 +110,7 @@ public class ColorController {
             redirectAttrs.addFlashAttribute("message", "색상이 성공적으로 추가되었습니다.");
             redirectAttrs.addFlashAttribute("messageType", "success");
 
-            return "redirect:/color/temp-my-colors";
+            return "redirect:/color/my-colors";
 
         } catch (ResponseStatusException e) {
             log.error("인증 실패", e);
@@ -121,7 +121,7 @@ public class ColorController {
             redirectAttrs.addFlashAttribute("messageType", "error");
 
             if (userId != null) {
-                return "redirect:/color/temp-my-colors";
+                return "redirect:/color/my-colors";
             } else {
                 return "redirect:/login";
             }
@@ -143,7 +143,7 @@ public class ColorController {
 
             redirectAttrs.addFlashAttribute("message", "색상이 수정되었습니다.");
 
-            return "redirect:/color/temp-my-colors";
+            return "redirect:/color/my-colors";
         } catch (ResponseStatusException e) {
             log.error("인증 실패", e);
             return "redirect:/login";
@@ -151,7 +151,7 @@ public class ColorController {
             log.error("색상 수정 실패", e);
             redirectAttrs.addFlashAttribute("error", e.getMessage());
 
-            return "redirect:/color/temp-my-colors";
+            return "redirect:/color/my-colors";
         }
     }
 
@@ -168,7 +168,7 @@ public class ColorController {
 
             redirectAttrs.addFlashAttribute("message", "색상이 성공적으로 삭제되었습니다.");
 
-            return "redirect:/color/temp-my-colors";
+            return "redirect:/color/my-colors";
         } catch (ResponseStatusException e) {
             log.error("인증 실패", e);
             return "redirect:/login";
@@ -176,7 +176,7 @@ public class ColorController {
             log.error("색상 삭제 실패", e);
             redirectAttrs.addFlashAttribute("error", e.getMessage());
 
-            return "redirect:/color/temp-my-colors";
+            return "redirect:/color/my-colors";
         }
     }
 }

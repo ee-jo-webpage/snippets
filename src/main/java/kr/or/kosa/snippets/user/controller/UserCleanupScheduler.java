@@ -28,16 +28,15 @@ public class UserCleanupScheduler {
      * - 매 5분마다 실행
      */
     @Transactional
-    @Scheduled(cron = "0 */5 * * * *") // 매 5분마다 0초에 실행
+    @Scheduled(fixedRate = 300000) // 5분마다 실행
     public void deleteExpiredUsers() {
-        log.info(" [비활성 계정 삭제] 실행");
+        log.info(" [비활성 계정 삭제] 실행" + LocalDateTime.now());
 
         LocalDateTime cutoff = LocalDateTime.now().minusMinutes(1); // 예시용: 1분 전
         List<Users> expiredUsers = userMapper.findAllByEnabledFalseAndDeletedAtBefore(cutoff);
 
         for (Users user : expiredUsers) {
             if ("GOOGLE".equalsIgnoreCase(user.getLoginType())) {
-                log.info(" [구글 계정 revoke] 시도: {}", user.getEmail());
 
                 // accessToken은 없음 → revoke 실패 감수
                 try {
@@ -50,9 +49,6 @@ public class UserCleanupScheduler {
 
         if (!expiredUsers.isEmpty()) {
             userMapper.deleteAll(expiredUsers);
-            log.info(" {}명의 비활성 사용자 삭제 완료", expiredUsers.size());
-        } else {
-            log.info("삭제할 비활성 사용자가 없습니다.");
         }
     }
 
@@ -65,15 +61,12 @@ public class UserCleanupScheduler {
      */
     @Scheduled(cron = "30 */5 * * * *") // 매 5분마다 30초에 실행
     public void deleteInactiveUnverifiedUsers() {
-        log.info(" [미인증 계정 정리] 시작");
+        log.info(" [미인증 계정 정리] 시작" + LocalDateTime.now());
 
         LocalDateTime cutoff = LocalDateTime.now().minusMinutes(1); // 1분 전 기준
         List<Users> users = userMapper.existsByEmailAndEnabledFalseBefore(cutoff);
         if (!users.isEmpty()) {
             userMapper.deleteAll(users);
-            log.info(" [미인증 계정 정리] {}명 삭제 완료", users.size());
-        } else {
-            log.info(" [미인증 계정 정리] 삭제할 사용자 없음");
         }
     }
 }

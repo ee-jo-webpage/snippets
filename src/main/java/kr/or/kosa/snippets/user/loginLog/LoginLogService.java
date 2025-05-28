@@ -49,7 +49,6 @@ public class LoginLogService {
 
         if (!logs.isEmpty()) {
             loginLogMapper.insertLoginLogs(logs);
-            log.info("로그 {}건 DB 저장됨", logs.size());
         }
     }
 

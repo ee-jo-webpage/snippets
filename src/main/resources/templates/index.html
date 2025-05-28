@@ -7,31 +7,31 @@
 </head>
 <body>
 
-<div class="container">
-	<h1>📚 HOME PAGE</h1>
+<!--<div class="container">-->
+<!--	<h1>📚 HOME PAGE</h1>-->
 
-	<div class="box" th:if="${nickname}">
-		<p class="welcome"><strong th:text="${nickname}"></strong>님 환영합니다 😊</p>
-		<div class="btn-group">
-			<a class="button" href="/user/mypage">마이페이지</a>
-			<a class="button" href="/logout">로그아웃</a>
-		</div>
-	</div>
+<!--	<div class="box" th:if="${nickname}">-->
+<!--		<p class="welcome"><strong th:text="${nickname}"></strong>님 환영합니다 😊</p>-->
+<!--		<div class="btn-group">-->
+<!--			<a class="button" href="/user/mypage">마이페이지</a>-->
+<!--			<a class="button" href="/logout">로그아웃</a>-->
+<!--		</div>-->
+<!--	</div>-->
 
-	<div class="box" th:unless="${nickname}">
-		<p class="welcome">로그인이 필요합니다</p>
-		<div class="btn-group">
-			<a class="button" href="/login">로그인</a>
-			<a class="button" href="/register">회원가입</a>
-			<a class="btn-primary" href="/forgotPassword">비밀번호 찾기</a>
-			<a class="button google-button" href="/oauth2/authorization/google">
-				<img src="/user/images/google-logo.png" alt="Google logo">
-				<span>Google 계정으로 로그인</span>
-			</a>
+<!--	<div class="box" th:unless="${nickname}">-->
+<!--		<p class="welcome">로그인이 필요합니다</p>-->
+<!--		<div class="btn-group">-->
+<!--			<a class="button" href="/login">로그인</a>-->
+<!--			<a class="button" href="/register">회원가입</a>-->
+<!--			<a class="btn-primary" href="/forgotPassword">비밀번호 찾기</a>-->
+<!--			<a class="button google-button" href="/oauth2/authorization/google">-->
+<!--				<img src="/user/images/google-logo.png" alt="Google logo">-->
+<!--				<span>Google 계정으로 로그인</span>-->
+<!--			</a>-->
 
-		</div>
-	</div>
-</div>
+<!--		</div>-->
+<!--	</div>-->
+<!--</div>-->
 
 </body>
 </html>

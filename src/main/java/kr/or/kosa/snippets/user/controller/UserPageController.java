@@ -21,7 +21,6 @@ public class UserPageController {
     @GetMapping("/user/mypage")
     public String myPage(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
         Long userId = userDetails.getUserId();  // 세션에서 userId 직접 꺼냄
-        log.info("user id is {}", userId);
         model.addAttribute("email", userDetails.getEmail());
         model.addAttribute("nickname", userDetails.getNickname());
         return "/user/user/myPage";

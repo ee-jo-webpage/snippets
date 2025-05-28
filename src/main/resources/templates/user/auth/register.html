@@ -2,49 +2,168 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head>
 	<meta charset="UTF-8">
-	<title>회원가입</title>
+	<title>회원가입 - GoSnippets</title>
 	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-	<link rel="stylesheet" href="/user/css/common/form-common.css">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="/user/css/user/register.css">
 </head>
 <body>
 
-<form id="registerForm">
-	<h1>회원가입</h1>
+<div class="register-container">
+	<div class="register-header">
+		<div class="brand-logo">GS</div>
+		<h1>계정 만들기</h1>
+		<p class="register-subtitle">GoSnippets에 가입하여 코드 스니펫을 관리하세요</p>
+	</div>
 
-	<label>이메일:
-		<input type="email" name="email" required><br>
-		<span class="error-msg" id="emailError"></span>
-	</label>
+	<form id="registerForm">
+		<label>
+			이메일 주소
+			<input type="email" name="email" required placeholder="your@email.com">
+			<span class="error-msg" id="emailError"></span>
+		</label>
 
-	<label>닉네임:
-		<input type="text" name="nickname" required><br>
-		<span class="error-msg" id="nicknameError"></span>
-	</label>
+		<label>
+			닉네임
+			<input type="text" name="nickname" required placeholder="사용할 닉네임을 입력하세요">
+			<span class="error-msg" id="nicknameError"></span>
+		</label>
 
-	<label>비밀번호:
-		<div class="input-wrapper">
-			<input type="password" name="password" id="password" required>
-			<i class="fa-solid fa-eye toggle-password" onclick="toggleVisibility(this, 'password')"></i>
-		</div>
-		<span class="error-msg" id="passwordError"></span>
-	</label>
+		<label>
+			비밀번호
+			<div class="input-wrapper">
+				<input type="password" name="password" id="password" required placeholder="8자리 이상 입력하세요">
+				<i class="fa-solid fa-eye toggle-password" onclick="toggleVisibility(this, 'password')"></i>
+			</div>
+			<div class="password-strength" id="passwordStrength">
+				<div class="strength-meter">
+					<div class="strength-fill" id="strengthFill"></div>
+				</div>
+				<div class="strength-text" id="strengthText"></div>
+			</div>
+			<span class="error-msg" id="passwordError"></span>
+		</label>
 
-	<label>비밀번호 확인:
-		<div class="input-wrapper">
-			<input type="password" name="confirmPassword" id="confirmPassword" required>
-			<i class="fa-solid fa-eye toggle-password" onclick="toggleVisibility(this, 'confirmPassword')"></i>
-		</div>
-		<span class="error-msg" id="confirmPasswordError"></span>
-	</label>
+		<label>
+			비밀번호 확인
+			<div class="input-wrapper">
+				<input type="password" name="confirmPassword" id="confirmPassword" required placeholder="비밀번호를 다시 입력하세요">
+				<i class="fa-solid fa-eye toggle-password" onclick="toggleVisibility(this, 'confirmPassword')"></i>
+			</div>
+			<span class="error-msg" id="confirmPasswordError"></span>
+		</label>
 
-	<button type="submit">가입하기</button>
-</form>
+		<button type="submit">계정 만들기</button>
+	</form>
 
-<div id="message"></div>
+	<div id="message"></div>
+
+	<div class="login-link">
+		<p>이미 계정이 있으신가요? <a href="/login">로그인하기</a></p>
+	</div>
+</div>
 
 <script src="/user/js/auth/password-toggle.js"></script>
-
 <script src="/user/js/auth/register.js"></script>
+
+<script>
+
+	document.getElementById('password').addEventListener('input', function(e) {
+		const password = e.target.value;
+		const strengthIndicator = document.getElementById('passwordStrength');
+		const strengthFill = document.getElementById('strengthFill');
+		const strengthText = document.getElementById('strengthText');
+
+		if (password.length === 0) {
+			strengthIndicator.classList.remove('show');
+			return;
+		}
+
+		strengthIndicator.classList.add('show');
+
+		let strength = 0;
+		let text = '';
+
+		// 길이 체크 (8~20자)
+		if (password.length >= 8 && password.length <= 20) strength++;
+
+		// 영문 포함 (대소문자 무관)
+		if (/[A-Za-z]/.test(password)) strength++;
+
+		// 숫자 포함
+		if (/\d/.test(password)) strength++;
+
+		// 특수문자 포함 (서버 정규식과 동일한 집합만 허용)
+		if (/[~!@#$%^&*()_+]/.test(password)) strength++;
+
+		strengthFill.className = 'strength-fill';
+		strengthText.className = 'strength-text';
+
+		if (strength <= 2) {
+			strengthFill.classList.add('weak');
+			strengthText.classList.add('weak');
+			text = '약함';
+		} else if (strength === 3) {
+			strengthFill.classList.add('medium');
+			strengthText.classList.add('medium');
+			text = '보통';
+		} else {
+			strengthFill.classList.add('strong');
+			strengthText.classList.add('strong');
+			text = '강함';
+		}
+
+		strengthText.textContent = `비밀번호 강도: ${text}`;
+	});
+
+	// 폼 제출 시 로딩 상태 추가
+	document.getElementById('registerForm').addEventListener('submit', function(e) {
+		const button = this.querySelector('button[type="submit"]');
+		button.classList.add('btn-loading');
+		button.textContent = '';
+
+		// 실제 제출이 실패할 경우를 대비해 5초 후 원상복구
+		setTimeout(() => {
+			button.classList.remove('btn-loading');
+			button.textContent = '계정 만들기';
+		}, 5000);
+	});
+
+	// 실시간 유효성 검사 피드백
+	document.querySelectorAll('input').forEach(input => {
+		input.addEventListener('blur', function() {
+			if (this.validity.valid && this.value) {
+				this.style.borderColor = 'var(--success-color)';
+			}
+		});
+
+		input.addEventListener('input', function() {
+			if (this.validity.valid) {
+				this.style.borderColor = 'var(--border-focus)';
+			}
+		});
+	});
+
+	// 키보드 접근성 개선
+	document.addEventListener('keydown', function(e) {
+		if (e.key === 'Enter') {
+			const activeElement = document.activeElement;
+			if (activeElement.tagName === 'INPUT' && activeElement.type !== 'submit') {
+				const form = activeElement.closest('form');
+				const inputs = Array.from(form.querySelectorAll('input:not([type="submit"])'));
+				const currentIndex = inputs.indexOf(activeElement);
+
+				if (currentIndex < inputs.length - 1) {
+					e.preventDefault();
+					inputs[currentIndex + 1].focus();
+				}
+			}
+		}
+	});
+</script>
+
 </body>
 </html>

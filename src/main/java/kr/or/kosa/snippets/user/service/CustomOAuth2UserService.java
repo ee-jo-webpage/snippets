@@ -63,7 +63,6 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             user.setReason(null);
             user.setUpdatedAt(LocalDateTime.now());
             userMapper.updateUser(user);
-            log.warn("탈퇴 상태의 소셜 계정이 재로그인됨. 자동 복구 처리됨: {}", email);
 
         }
         // 신규 유저인 경우 가입 처리
@@ -114,7 +113,6 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         user.setEnabled(false);
         userMapper.updateUser(user);
 
-        log.info("🗑 사용자 탈퇴 처리 완료: {}", email);
     }
 
 }

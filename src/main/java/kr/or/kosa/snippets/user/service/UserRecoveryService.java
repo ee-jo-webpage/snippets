@@ -64,7 +64,6 @@ public class UserRecoveryService {
         user.setDeletedAt(null);
         user.setReason(null);
         userMapper.updateUser(user);
-        log.info("계정 복구 완료 - {}", email);
     }
 
     // 비활성화 계정 찾기
@@ -92,7 +91,6 @@ public class UserRecoveryService {
     @Transactional
     public void sendTemporaryPassword(String email) {
         Users user = userMapper.findByEmail(email);
-//        if (user == null) throw new IllegalArgumentException("유저 없음");
         if (user == null || !"LOCAL".equals(user.getLoginType())) {
             throw new IllegalStateException("소셜 계정은 비밀번호 변경이 불가능합니다.");
         }
@@ -101,7 +99,6 @@ public class UserRecoveryService {
         userMapper.updateUser(user);
 
         mailService.sendTemporaryPassword(user.getEmail(), tempPassword);
-        log.info("임시 비밀번호 전송: email={}, password={}", user.getEmail(), tempPassword);
     }
 
     private String createRandomPassword() {

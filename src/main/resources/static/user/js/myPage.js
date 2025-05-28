@@ -14,8 +14,6 @@ function validateField(fieldName) {
     const message = validators[fieldName](field.value);
     if (errorSpan) {
         errorSpan.innerText = message;
-    } else {
-        console.warn("error span not found for", fieldName);
     }
     return message === "";
 }
@@ -81,14 +79,30 @@ document.getElementById("deleteBtn").addEventListener("click", async () => {
     const { value: selected } = await Swal.fire({
         title: "탈퇴 사유를 선택해주세요",
         html: `
+    <style>
+        .swal2-select-enhanced {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            border-radius: 12px;
+            border: 1px solid #ccc;
+            appearance: none;
+            background-color: #fff;
+        }
+        .swal2-select-enhanced:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        }
+    </style>
     <select id="customReason" class="swal2-select-enhanced">
-      <option value="" disabled selected>사유를 선택해주세요</option>
-      <option value="이용이 불편함">이용이 불편함</option>
-      <option value="자주 사용하지 않음">자주 사용하지 않음</option>
-      <option value="개인정보 우려">개인정보 우려</option>
-      <option value="기타">기타 (직접 입력)</option>
+        <option value="" disabled selected>사유를 선택해주세요</option>
+        <option value="이용이 불편함">이용이 불편함</option>
+        <option value="자주 사용하지 않음">자주 사용하지 않음</option>
+        <option value="개인정보 우려">개인정보 우려</option>
+        <option value="기타">기타 (직접 입력)</option>
     </select>
-  `,
+    `,
         preConfirm: () => {
             const selected = document.getElementById('customReason').value;
             if (!selected) {
@@ -111,10 +125,14 @@ document.getElementById("deleteBtn").addEventListener("click", async () => {
             input: "text",
             inputPlaceholder: "ex) 자주 끊기고 느려요...",
             showCancelButton: true,
+            customClass: {
+                input: 'swal2-custom-input'
+            },
             inputValidator: (value) => {
                 if (!value || value.trim() === "") return "기타 사유를 입력해주세요.";
             }
         });
+
 
         if (!etc) return;
         reason = etc.trim();

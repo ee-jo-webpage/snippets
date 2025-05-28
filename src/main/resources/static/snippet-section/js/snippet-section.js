@@ -377,7 +377,9 @@ $(document).ready(function() {
 
     // 기존 JavaScript 코드에 추가할 부분
 
-// 수정 버튼 클릭 이벤트
+// 기존 JavaScript 코드에 추가할 부분
+
+    // 수정 버튼 클릭 이벤트
     $(document).on('click', '#editSnippetBtn', function() {
         const modal = $('#snippetDetailModal');
         const snippetId = modal.data('current-snippet-id');
@@ -387,12 +389,212 @@ $(document).ready(function() {
             return;
         }
 
-        console.log('스니펫 수정 요청:', snippetId);
+        // 현재 스니펫 데이터에서 타입 확인 (여러 방법으로 시도)
+        const snippetData = modal.data('current-snippet-data');
+        let snippetType = null;
 
-        // TODO: 수정 기능 구현
-        // 예: 수정 폼 모달 열기 또는 수정 페이지로 이동
-        alert(`스니펫 ID ${snippetId} 수정 기능을 구현해주세요.`);
+        if (snippetData) {
+            // 다양한 형태의 type 필드 확인
+            snippetType = snippetData.type || snippetData.snippetType || snippetData.TYPE;
+            console.log('스니펫 데이터:', snippetData);
+            console.log('추출된 타입:', snippetType);
+        }
+
+        // 타입을 찾지 못한 경우 모달의 메타 정보에서 추출 시도
+        if (!snippetType) {
+            console.log('데이터에서 타입을 찾지 못해 모달 UI에서 추출 시도');
+
+            // 모달의 메타 정보에서 타입 추출
+            const metaDiv = modal.find('.snippet-detail-meta');
+            const typeText = metaDiv.find('div:contains("타입:")').text();
+
+            if (typeText) {
+                // "타입: CODE" 형태에서 "CODE" 부분 추출
+                const match = typeText.match(/타입:\s*(\w+)/);
+                if (match) {
+                    snippetType = match[1];
+                    console.log('UI에서 추출한 타입:', snippetType);
+                }
+            }
+        }
+
+        // 여전히 타입을 찾지 못한 경우
+        if (!snippetType) {
+            // 기본값으로 CODE 설정하거나 사용자에게 선택하게 할 수 있음
+            const userChoice = confirm('스니펫 타입을 확인할 수 없습니다.\n코드 스니펫으로 처리하시겠습니까?\n(취소를 누르면 수정을 중단합니다)');
+            if (userChoice) {
+                snippetType = 'CODE';
+            } else {
+                return;
+            }
+        }
+
+        proceedWithEdit(modal, snippetId, snippetType);
     });
+
+// 수정 프로세스 진행 함수
+    function proceedWithEdit(modal, snippetId, snippetType) {
+        console.log('스니펫 수정 요청:', snippetId, 'Type:', snippetType);
+
+        // 수정 버튼 비활성화
+        const editBtn = $('#editSnippetBtn');
+        const originalText = editBtn.html();
+        editBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 로딩 중...');
+
+        // 타입에 따라 적절한 수정 폼 로드
+        let editUrl = '';
+        switch(snippetType.toUpperCase()) { // 대소문자 구분 없이 처리
+            case 'CODE':
+                editUrl = `/snippets/edit-form/code/${snippetId}`;
+                break;
+            case 'IMG':
+            case 'IMAGE':
+                editUrl = `/snippets/edit-form/img/${snippetId}`;
+                break;
+            case 'TEXT':
+                editUrl = `/snippets/edit-form/text/${snippetId}`;
+                break;
+            default:
+                alert(`지원하지 않는 스니펫 타입입니다: ${snippetType}`);
+                editBtn.prop('disabled', false).html(originalText);
+                return;
+        }
+
+        // AJAX로 수정 폼 로드
+        $.ajax({
+            url: editUrl,
+            method: 'GET',
+            success: function(html) {
+                // 모달 제목 변경
+                modal.find('.modal-header h3').text('스니펫 수정');
+
+                // 모달 바디 내용을 수정 폼으로 교체
+                const modalBody = modal.find('.modal-body');
+                modalBody.html(html);
+
+                // 푸터 버튼들을 수정 모드로 변경
+                updateModalFooterForEdit(modal, snippetId);
+
+                // 수정 폼 제출 이벤트 설정
+                setupEditFormSubmission(modal, snippetId);
+
+                console.log('수정 폼 로드 완료');
+            },
+            error: function(xhr, status, error) {
+                console.error('수정 폼 로드 실패:', error);
+                alert('수정 폼을 불러오는 중 오류가 발생했습니다.');
+                editBtn.prop('disabled', false).html(originalText);
+            }
+        });
+    }
+
+// 모달 푸터를 수정 모드로 변경
+    function updateModalFooterForEdit(modal, snippetId) {
+        const modalFooter = modal.find('.modal-footer');
+        modalFooter.html(`
+        <div class="modal-footer-left">
+            <button id="saveSnippetBtn" class="btn btn-success">
+                <i class="fas fa-save"></i> 저장
+            </button>
+            <button id="cancelEditBtn" class="btn btn-secondary">
+                <i class="fas fa-times"></i> 취소
+            </button>
+        </div>
+        <div class="modal-footer-right">
+            <!-- 빈 공간 -->
+        </div>
+    `);
+    }
+
+// 수정 폼 제출 이벤트 설정
+    function setupEditFormSubmission(modal, snippetId) {
+        const form = modal.find('form');
+
+        if (!form.length) {
+            console.error('수정 폼을 찾을 수 없습니다.');
+            return;
+        }
+
+        // 저장 버튼 클릭 이벤트
+        $(document).on('click', '#saveSnippetBtn', function() {
+            const saveBtn = $(this);
+            const originalText = saveBtn.html();
+
+            // 버튼 비활성화
+            saveBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 저장 중...');
+
+            // 폼 데이터 수집
+            const formData = new FormData(form[0]);
+
+            // AJAX로 폼 제출
+            $.ajax({
+                url: form.attr('action'),
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    alert('스니펫이 성공적으로 수정되었습니다.');
+
+                    // 모달 닫기
+                    modal.hide();
+
+                    // 페이지 새로고침으로 변경사항 반영
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 300);
+                },
+                error: function(xhr, status, error) {
+                    console.error('스니펫 수정 실패:', error);
+
+                    let errorMessage = '스니펫 수정에 실패했습니다.';
+                    if (xhr.status === 400) {
+                        errorMessage = '입력값에 오류가 있습니다. 다시 확인해주세요.';
+                    } else if (xhr.status === 403) {
+                        errorMessage = '스니펫을 수정할 권한이 없습니다.';
+                    } else if (xhr.status === 404) {
+                        errorMessage = '해당 스니펫을 찾을 수 없습니다.';
+                    }
+
+                    alert(errorMessage);
+                    saveBtn.prop('disabled', false).html(originalText);
+                }
+            });
+        });
+
+        // 취소 버튼 클릭 이벤트
+        $(document).on('click', '#cancelEditBtn', function() {
+            if (confirm('수정을 취소하시겠습니까? 변경사항이 저장되지 않습니다.')) {
+                // 원래 스니펫 데이터로 상세보기 모드로 되돌리기
+                const snippetData = modal.data('current-snippet-data');
+                if (snippetData) {
+                    showSnippetDetailModal(snippetData);
+                } else {
+                    modal.hide();
+                }
+            }
+        });
+    }
+
+// 모달 푸터를 원래 상태로 복원
+    function resetModalFooter(modal) {
+        const modalFooter = modal.find('.modal-footer');
+        modalFooter.html(`
+        <div class="modal-footer-left">
+            <button id="editSnippetBtn" class="btn btn-warning">
+                <i class="fas fa-edit"></i> 수정
+            </button>
+            <button id="deleteSnippetBtn" class="btn btn-danger">
+                <i class="fas fa-trash"></i> 삭제
+            </button>
+        </div>
+        <div class="modal-footer-right">
+            <button class="btn btn-secondary">
+                <i class="fas fa-times"></i> 닫기
+            </button>
+        </div>
+    `);
+    }
 
 
     // 삭제 버튼 클릭 이벤트

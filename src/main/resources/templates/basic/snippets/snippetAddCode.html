@@ -13,50 +13,65 @@
       border: 1px solid #e0e0e0;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+	  max-height: 400px;  /* 원하는 최대 높이 */
+	  overflow-y: auto;   /* 내용이 넘치면 세로 스크롤바 표시 */ 
     }
     .snippet-header {
       padding: 16px;
       display: flex;
       align-items: center;
-      justify-content: space-between; /* 좌우 배치 */
+      justify-content: space-between;
       border-bottom: 1px solid #e0e0e0;
-      background-color: #ffffff; /* 초기 배경색 흰색 */
+      background-color: #ffffff;
       transition: background-color 0.3s;
     }
-    .snippet-body { padding: 16px; }
-    .form-label { font-weight: 500; }
+    .snippet-body { 
+      padding: 16px;
+	  
+    }
+    .form-label { 
+      font-weight: 500; 
+    }
 
-    /* 색상 원 선택 영역 */
-    .color-palette {
-      display: flex;
-      gap: 8px;
-      max-width: calc((24px + 8px) * 8 - 8px); /* 최대 8개 표시 후 스크롤 */
-      overflow-x: auto;
-      padding-bottom: 4px;
-      scrollbar-width: thin;
-      scrollbar-color: rgba(0,0,0,0.3) transparent;
+    /* 색상 선택 드롭다운 커스텀 스타일 */
+    .color-select-container {
+      position: relative;
     }
-    .color-palette::-webkit-scrollbar {
-      height: 6px;
-    }
-    .color-palette::-webkit-scrollbar-track {
+    
+    .color-select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
       background: transparent;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 16px;
+      padding-right: 40px;
     }
-    .color-palette::-webkit-scrollbar-thumb {
-      background-color: rgba(0,0,0,0.3);
-      border-radius: 3px;
+
+    .color-option {
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    .color-circle {
-      flex: 0 0 auto;
+
+    .color-indicator {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 1px solid #ccc;
+      display: inline-block;
+    }
+
+    /* 헤더의 색상 미리보기 */
+    .color-preview {
       width: 24px;
       height: 24px;
       border-radius: 50%;
-      border: 1px solid #ccc;
-      cursor: pointer;
-      transition: box-shadow 0.2s;
-    }
-    .color-circle.selected {
-      box-shadow: 0 0 0 3px rgba(0,0,0,0.3);
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
     }
   </style>
 </head>
@@ -64,22 +79,28 @@
   <div class="snippet-card bg-white">
     <div class="snippet-header">
       <h5 class="m-0">Code 스니펫 추가</h5>
-      <div class="color-palette" aria-label="색상 선택">
-        <div th:each="color : ${colors}"
-             class="color-circle"
-             role="button"
-             tabindex="0"
-             th:attr="data-color-id=${color.colorId}, data-hex-code=${color.hexCode}"
-             th:style="'background-color:' + ${color.hexCode}"
-             th:title="${color.name}">
-        </div>
-      </div>
     </div>
 
-    <form th:action="@{/snippets/new}" th:object="${snippet}" method="post" enctype="multipart/form-data" onsubmit="return validateColorSelected()">
+    <form th:action="@{/snippets/new}" th:object="${snippet}" method="post" enctype="multipart/form-data">
       <input type="hidden" name="type" value="CODE"/>
-      <input type="hidden" id="colorId" th:field="*{colorId}" required/>
+      
       <div class="snippet-body">
+        <!-- 색상 선택 드롭다운 -->
+        <div class="mb-3">
+          <label for="colorId" class="form-label">색상 선택</label>
+          <div class="color-select-container">
+            <select id="colorId" class="form-select color-select" th:field="*{colorId}" required>
+              <option value="" disabled selected>-- 색상을 선택하세요 --</option>
+			  <option th:each="color : ${colors}"
+			          th:value="${color.colorId}"
+			          th:text="${color.name}"
+			          th:attr="data-hex-code=${color.hexCode}"
+			          th:style="'background-color:' + ${color.hexCode} + '; color: white;'">
+			  </option>
+            </select>
+          </div>
+        </div>
+
         <div class="mb-3">
           <label for="sourceUrl" class="form-label">Source URL</label>
           <input id="sourceUrl" type="text" class="form-control" th:field="*{sourceUrl}" placeholder="출처 URL 입력"/>
@@ -101,15 +122,27 @@
         <div class="mb-3">
           <label for="language" class="form-label">언어</label>
           <select id="language" class="form-select" th:field="*{language}">
+            <option value="" disabled selected>-- 언어를 선택하세요 --</option>
             <option value="JAVA">JAVA</option>
             <option value="PYTHON">PYTHON</option>
             <option value="C">C</option>
+            <option value="JAVASCRIPT">JavaScript</option>
+            <option value="HTML">HTML</option>
+            <option value="CSS">CSS</option>
+            <option value="SQL">SQL</option>
+            <option value="PHP">PHP</option>
+            <option value="RUBY">Ruby</option>
+            <option value="GO">Go</option>
+            <option value="KOTLIN">Kotlin</option>
+            <option value="SWIFT">Swift</option>
           </select>
         </div>
 
         <div class="mb-3">
           <label for="content" class="form-label">코드 내용</label>
-          <textarea id="content" class="form-control" rows="10" th:field="*{content}" placeholder="코드를 입력하세요" required></textarea>
+          <textarea id="content" class="form-control" rows="10" th:field="*{content}" 
+                    placeholder="코드를 입력하세요" required 
+                    style="font-family: 'Courier New', 'Monaco', 'Menlo', monospace;"></textarea>
         </div>
       </div>
 
@@ -123,35 +156,44 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     const header = document.querySelector('.snippet-header');
-    const circles = document.querySelectorAll('.color-circle');
-    const hiddenColorInput = document.getElementById('colorId');
+    const colorSelect = document.getElementById('colorId');
+    const colorPreview = document.getElementById('colorPreview');
 
-    circles.forEach(circle => {
-      circle.addEventListener('click', () => {
-        circles.forEach(c => c.classList.remove('selected'));
-        circle.classList.add('selected');
-        hiddenColorInput.value = circle.getAttribute('data-color-id');
-
+    // 색상 선택시 헤더 배경과 미리보기 변경
+    colorSelect.addEventListener('change', function() {
+      const selectedOption = this.options[this.selectedIndex];
+      
+      if (selectedOption.value) {
+        const hexCode = selectedOption.getAttribute('data-hex-code');
+        
         // 헤더 배경색 변경
-        const hex = circle.getAttribute('data-hex-code');
-        header.style.backgroundColor = hex;
-      });
-
-      circle.addEventListener('keydown', (e) => {
-        if(e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          circle.click();
-        }
-      });
+        header.style.backgroundColor = hexCode;
+        
+        // 미리보기 색상 변경
+        colorPreview.style.backgroundColor = hexCode;
+      } else {
+        // 선택 해제시 기본색으로 복원
+        header.style.backgroundColor = '#ffffff';
+        colorPreview.style.backgroundColor = '#ffffff';
+      }
     });
 
-    function validateColorSelected() {
-      if(!hiddenColorInput.value) {
+    // 폼 제출시 색상 선택 확인
+    document.querySelector('form').addEventListener('submit', function(e) {
+      if (!colorSelect.value) {
+        e.preventDefault();
         alert('색상을 선택해주세요.');
+        colorSelect.focus();
         return false;
       }
-      return true;
-    }
+    });
+
+    // 언어 선택시 코드 입력창에 포커스
+    document.getElementById('language').addEventListener('change', function() {
+      if (this.value) {
+        document.getElementById('content').focus();
+      }
+    });
   </script>
 </body>
 </html>

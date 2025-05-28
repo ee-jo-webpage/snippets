@@ -94,23 +94,27 @@
   <div class="snippet-card bg-white">
     <div id="snippetHeader" class="snippet-header">
       <h5 class="m-0">Image 스니펫 추가</h5>
-      <div class="color-palette">
-        <div th:each="color : ${colors}" 
-             class="color-circle"
-             th:attr="data-color-id=${color.colorId}, data-hex-code=${color.hexCode}"
-             th:style="'background-color:' + ${color.hexCode}">
-        </div>
-      </div>
     </div>
 
     <form th:action="@{/snippets/new}" th:object="${snippet}"
           method="post" enctype="multipart/form-data">
 	<input type="hidden" name="type" value="IMG"/>
       <div class="snippet-body">
-        <div class="mb-3">
-          <label for="colorId" class="form-label">Color</label>
-          <input id="colorId" type="hidden" th:field="*{colorId}" required/>
-        </div>
+		
+		<div class="mb-3">
+		          <label for="colorId" class="form-label">색상 선택</label>
+		          <div class="color-select-container">
+		            <select id="colorId" class="form-select color-select" th:field="*{colorId}" required>
+		              <option value="" disabled selected>-- 색상을 선택하세요 --</option>
+		              <option th:each="color : ${colors}"
+		                      th:value="${color.colorId}"
+		                      th:text="${color.name}"
+		                      th:attr="data-hex-code=${color.hexCode}"
+		                      th:style="'background: linear-gradient(90deg, ' + ${color.hexCode} + ' 20px, transparent 20px);'">
+		              </option>
+		            </select>
+		          </div>
+		        </div>
 
         <div class="mb-3">
           <label for="sourceUrl" class="form-label">Source URL</label>

@@ -236,49 +236,73 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const modalEl   = document.getElementById('snippetModal');
-    const modal     = new bootstrap.Modal(modalEl);
-    const bodyDiv   = document.getElementById('modalBody');
-    const footerDiv = document.getElementById('modalFooter');
-    const openBtn   = document.getElementById('openModalBtn');
-    const cancelBtn = document.getElementById('cancelBtn');
-    const nextBtn   = document.getElementById('nextBtn');
-    let selectedType = null;
+	document.addEventListener('DOMContentLoaded', () => {
+	  const modalEl = document.getElementById('snippetModal');
+	  const bodyDiv = document.getElementById('modalBody');
+	  const footerDiv = document.getElementById('modalFooter');
+	  const openBtn = document.getElementById('openModalBtn');
+	  const cancelBtn = document.getElementById('cancelBtn');
+	  const nextBtn = document.getElementById('nextBtn');
 
-    openBtn.addEventListener('click', e => {
-      e.preventDefault();
-      fetch('/snippets/new')
-        .then(res => res.text())
-        .then(html => {
-          bodyDiv.innerHTML       = html;
-          footerDiv.style.display = 'flex';
-          nextBtn.disabled        = true;
-          selectedType            = null;
-          bodyDiv.querySelectorAll('input[name="type"]').forEach(radio => {
-            radio.addEventListener('change', () => {
-              selectedType    = radio.value;
-              nextBtn.disabled = false;
-            });
-          });
-          modal.show();
-        });
-    });
+	  if (!modalEl || !bodyDiv || !footerDiv || !openBtn || !cancelBtn || !nextBtn) {
+	    console.error('❌ 필수 DOM 요소를 찾을 수 없습니다.');
+	    return;
+	  }
 
-    cancelBtn.addEventListener('click', () => modal.hide());
+	  let modal = new bootstrap.Modal(modalEl);
+	  let selectedType = null;
 
-    nextBtn.addEventListener('click', () => {
-      if (!selectedType) return;
-      fetch(`/snippets/new?type=${selectedType}`)
-        .then(res => res.text())
-        .then(html => {
-          bodyDiv.innerHTML       = html;
-          footerDiv.style.display = 'none';
-        });
-    });
-  });
+	  // 라디오 버튼 change 이벤트 핸들러 (이벤트 위임)
+	  function handleRadioChange(e) {
+	    if (e.target.name === 'type') {
+	      selectedType = e.target.value;
+	      nextBtn.disabled = false;
+	    }
+	  }
+
+	  openBtn.addEventListener('click', e => {
+	    e.preventDefault();
+
+	    fetch('/snippets/new')
+	      .then(res => res.text())
+	      .then(html => {
+	        bodyDiv.innerHTML = html;
+	        footerDiv.style.display = 'flex';
+	        nextBtn.disabled = true;
+	        selectedType = null;
+
+	        // 이벤트 위임으로 한 번만 등록
+	        bodyDiv.addEventListener('change', handleRadioChange);
+
+	        modal.show();
+	      })
+	      .catch(err => console.error('❌ 모달 로딩 오류:', err));
+	  });
+
+	  cancelBtn.addEventListener('click', () => {
+	    modal.hide();
+	    // 이벤트 리스너 제거 (메모리 누수 방지)
+	    bodyDiv.removeEventListener('change', handleRadioChange);
+	  });
+
+	  nextBtn.addEventListener('click', () => {
+	    if (!selectedType) return;
+
+	    fetch(`/snippets/new?type=${selectedType}`)
+	      .then(res => res.text())
+	      .then(html => {
+	        bodyDiv.innerHTML = html;
+	        footerDiv.style.display = 'none';
+
+	        // 이벤트 리스너 제거 (메모리 누수 방지)
+	        bodyDiv.removeEventListener('change', handleRadioChange);
+	      })
+	      .catch(err => console.error('❌ 폼 로딩 오류:', err));
+	  });
+	});
 </script>
+
 </body>
 </html>

@@ -77,8 +77,24 @@
 
     <form th:action="@{/snippets/new}" th:object="${snippet}" method="post" onsubmit="return validateColorSelected()">
       <input type="hidden" name="type" value="TEXT"/>
-      <input type="hidden" id="colorId" th:field="*{colorId}" required/>
+      
       <div class="snippet-body">
+		
+		<div class="mb-3">
+		          <label for="colorId" class="form-label">색상 선택</label>
+		          <div class="color-select-container">
+		            <select id="colorId" class="form-select color-select" th:field="*{colorId}" required>
+		              <option value="" disabled selected>-- 색상을 선택하세요 --</option>
+		              <option th:each="color : ${colors}"
+		                      th:value="${color.colorId}"
+		                      th:text="${color.name}"
+		                      th:attr="data-hex-code=${color.hexCode}"
+		                      th:style="'background: linear-gradient(90deg, ' + ${color.hexCode} + ' 20px, transparent 20px);'">
+		              </option>
+		            </select>
+		          </div>
+		        </div>
+		
         <div class="mb-3">
           <label for="sourceUrl" class="form-label">Source URL</label>
           <input id="sourceUrl" type="text" class="form-control" th:field="*{sourceUrl}" placeholder="출처 URL 입력"/>

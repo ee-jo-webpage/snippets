@@ -141,7 +141,7 @@ function createBookmarkSnippetCard(bookmark, index) {
     // 색상 처리
     if (bookmark.hexCode) {
         card.addClass('has-color');
-        card.css('border-left', '5px solid ' + bookmark.hexCode);
+        card.css('border', '5px solid ' + bookmark.hexCode);
 
         const colorIndicator = $('<div>')
             .addClass('color-indicator')

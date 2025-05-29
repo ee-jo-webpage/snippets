@@ -13,6 +13,7 @@ import kr.or.kosa.snippets.user.service.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -243,23 +244,36 @@ public class BookmarkRestController {
                         .body(Map.of("success", false, "message", "로그인이 필요합니다."));
             }
 
-            log.info("북마크 토글 - 사용자 ID: {}, 스니펫 ID: {}", userId, snippetId);
+            log.info("북마크 토글 요청 - 사용자 ID: {}, 스니펫 ID: {}", userId, snippetId);
 
-            boolean isBookmarked = bookmarkService.toggleBookmark(userId, snippetId);
-            String message = isBookmarked ? "북마크가 추가되었습니다." : "북마크가 제거되었습니다.";
+            // 현재 북마크 상태 확인
+            boolean wasBookmarked = bookmarkService.isBookmarked(userId, snippetId);
+            log.info("현재 북마크 상태 - 사용자 ID: {}, 스니펫 ID: {}, 북마크됨: {}", userId, snippetId, wasBookmarked);
 
-            log.info("북마크 토글 결과 - 사용자 ID: {}, 스니펫 ID: {}, 북마크됨: {}", userId, snippetId, isBookmarked);
+            // 북마크 토글 수행
+            boolean isNowBookmarked = bookmarkService.toggleBookmark(userId, snippetId);
+            String message = isNowBookmarked ? "북마크가 추가되었습니다." : "북마크가 제거되었습니다.";
+
+            log.info("북마크 토글 완료 - 사용자 ID: {}, 스니펫 ID: {}, 이전: {}, 현재: {}",
+                    userId, snippetId, wasBookmarked, isNowBookmarked);
 
             return ResponseEntity.ok(Map.of(
                     "success", true,
-                    "bookmarked", isBookmarked,
+                    "bookmarked", isNowBookmarked,
                     "message", message
             ));
 
         } catch (Exception e) {
-            log.error("북마크 토글 중 오류 발생", e);
+            log.error("북마크 토글 중 오류 발생 - 스니펫 ID: {}, 오류: {}", snippetId, e.getMessage(), e);
+
+            // 구체적인 오류 메시지 제공
+            String errorMessage = "북마크 처리 중 오류가 발생했습니다.";
+            if (e.getCause() instanceof DuplicateKeyException) {
+                errorMessage = "이미 처리된 북마크입니다. 페이지를 새로고침해주세요.";
+            }
+
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("success", false, "message", "북마크 처리 중 오류가 발생했습니다."));
+                    .body(Map.of("success", false, "message", errorMessage));
         }
     }
 

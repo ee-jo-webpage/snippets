@@ -1,106 +1,792 @@
-<!-- snippetEditImg.html - 모달용 -->
-<h2>이미지 스니펫 수정</h2>
-<form th:action="@{/snippets/edit/{snippetId}(snippetId=${snippet.snippetId})}" th:object="${snippet}" method="post" enctype="multipart/form-data">
-    <table>
-        <!-- User ID - 읽기 전용 -->
-        <tr>
-            <th>User ID</th>
-            <td><input type="text" th:value="${snippet.userId}" readonly="readonly" /></td>
-        </tr>
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 
-        <!-- Color 선택 - 드롭다운 -->
-        <tr>
-            <th>Color</th>
-            <td>
-                <select th:field="*{colorId}" required>
-                    <option value="" disabled>-- 색상 선택 --</option>
-                    <option th:each="color : ${colors}"
-                            th:value="${color.colorId}"
-                            th:text="${color.name}"
-                            th:style="'background-color:' + ${color.hexCode}">
-                    </option>
-                </select>
-            </td>
-        </tr>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Image 스니펫 수정</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+	<link th:href="@{/my-snippet-page/css/my-snippet-page.css}" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-        <!-- Source URL - 읽기 전용 -->
-        <tr>
-            <th>Source URL</th>
-            <td><input type="text" th:value="${snippet.sourceUrl}" readonly="readonly" /></td>
-        </tr>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
 
-        <!-- Type - 읽기 전용 -->
-        <tr>
-            <th>Type</th>
-            <td><input type="text" th:value="${snippet.type}" readonly="readonly" /></td>
-        </tr>
+        .main-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-        <!-- Memo - 수정 가능 -->
-        <tr>
-            <th>Memo</th>
-            <td><textarea th:field="*{memo}" rows="4"></textarea></td>
-        </tr>
+        .edit-card {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            width: 100%;
+            max-width: 580px;
+            overflow: hidden;
+            position: relative;
+        }
 
-        <!-- Created At - 읽기 전용 -->
-        <tr>
-            <th>Created At</th>
-            <td><input type="text" th:value="${snippet.createdAt}" readonly="readonly" /></td>
-        </tr>
+        .edit-header {
+            padding: 20px 25px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            text-align: center;
+            position: relative;
+        }
 
-        <!-- Updated At - 읽기 전용 -->
-        <tr>
-            <th>Updated At</th>
-            <td><input type="text" th:value="${snippet.updatedAt}" readonly="readonly" /></td>
-        </tr>
+        .edit-header h2 {
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
 
-        <!-- Like Count - 읽기 전용 -->
-        <tr>
-            <th>Like Count</th>
-            <td><input type="number" th:value="${snippet.likeCount}" readonly="readonly" /></td>
-        </tr>
+        .color-preview {
+            position: absolute;
+            top: 50%;
+            right: 25px;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
 
-        <!-- Visibility - 수정 가능 -->
-        <tr>
-            <th>Visibility</th>
-            <td>
-                <select th:field="*{visibility}">
-                    <option value="1" th:selected="${snippet.visibility == 1}">Visible</option>
-                    <option value="0" th:selected="${snippet.visibility == 0}">Hidden</option>
-                </select>
-            </td>
-        </tr>
+        .edit-body {
+            padding: 25px;
+            max-height: 75vh;
+            overflow-y: auto;
+        }
 
-        <!-- 현재 이미지 표시 -->
-        <tr th:if="${snippet.imageUrl != null}">
-            <th>현재 이미지</th>
-            <td>
-                <img th:src="${snippet.imageUrl}" alt="Current Image" style="max-width: 200px; height: auto;" />
-            </td>
-        </tr>
+        .form-section {
+            margin-bottom: 25px;
+        }
 
-        <!-- 이미지 URL - 읽기 전용 -->
-        <tr>
-            <th>현재 이미지 URL</th>
-            <td><input type="text" th:value="${snippet.imageUrl}" readonly="readonly" /></td>
-        </tr>
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-        <!-- Alt Text - 수정 가능 -->
-        <tr>
-            <th>Alt Text</th>
-            <td><input type="text" th:field="*{altText}" placeholder="이미지 설명을 입력하세요" /></td>
-        </tr>
+        .form-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 15px;
+        }
 
-        <!-- 새 이미지 파일 업로드 -->
-        <tr>
-            <th>새 이미지 업로드</th>
-            <td>
-                <input type="file" th:field="*{imageFile}" name="imageFile" accept="image/*" />
-                <small>새 이미지를 선택하면 기존 이미지가 교체됩니다.</small>
-            </td>
-        </tr>
-    </table>
-    
-    <div style="text-align: center; margin-top: 20px;">
-        <button type="submit">수정 완료</button>
-    </div>
-</form>
+        .form-label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #4a5568;
+            min-width: 80px;
+            flex-shrink: 0;
+        }
+
+        .form-input {
+            flex: 1;
+        }
+
+        .form-control, .form-select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            background: rgba(102, 126, 234, 0.02);
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-control:focus, .form-select:focus {
+            outline: none;
+            border-color: rgba(102, 126, 234, 0.5);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: white;
+        }
+
+        .form-control:read-only {
+            background: rgba(102, 126, 234, 0.05);
+            color: #718096;
+            cursor: not-allowed;
+        }
+
+        .form-control::placeholder {
+            color: rgba(102, 126, 234, 0.4);
+            font-size: 0.8rem;
+        }
+
+        /* 색상 선택 드롭다운 */
+        .color-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23667eea' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 14px;
+            padding-right: 35px;
+        }
+
+        /* 가시성 토글 */
+        .visibility-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .visibility-option {
+            flex: 1;
+            position: relative;
+        }
+
+        .visibility-input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .visibility-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 10px;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 6px;
+            background: rgba(102, 126, 234, 0.02);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+            font-weight: 500;
+            gap: 4px;
+        }
+
+        .visibility-input:checked + .visibility-label {
+            border-color: rgba(102, 126, 234, 0.5);
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        /* 현재 이미지 표시 */
+        .current-image-container {
+            text-align: center;
+            padding: 15px;
+            background: rgba(102, 126, 234, 0.02);
+            border: 2px dashed rgba(102, 126, 234, 0.2);
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+
+        .current-image {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+        }
+
+        .image-info {
+            font-size: 0.8rem;
+            color: #718096;
+            margin-top: 8px;
+        }
+
+        /* 파일 업로드 영역 */
+        .file-upload-area {
+            position: relative;
+            border: 2px dashed rgba(102, 126, 234, 0.3);
+            border-radius: 12px;
+            padding: 30px 15px;
+            text-align: center;
+            background: rgba(102, 126, 234, 0.02);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .file-upload-area:hover {
+            border-color: rgba(102, 126, 234, 0.5);
+            background: rgba(102, 126, 234, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .file-upload-area.dragover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            transform: scale(1.02);
+        }
+
+        .file-upload-area input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .upload-icon {
+            font-size: 2rem;
+            color: rgba(102, 126, 234, 0.6);
+            margin-bottom: 8px;
+        }
+
+        .upload-text {
+            font-size: 0.9rem;
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        .upload-subtext {
+            font-size: 0.75rem;
+            color: #718096;
+        }
+
+        /* 새 이미지 미리보기 */
+        .new-image-preview {
+            display: none;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .preview-info {
+            margin-top: 8px;
+            font-size: 0.8rem;
+            color: #4a5568;
+        }
+
+        .remove-image {
+            background: #e53e3e;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 4px 10px;
+            font-size: 0.7rem;
+            margin-top: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .remove-image:hover {
+            background: #c53030;
+            transform: translateY(-1px);
+        }
+
+        /* 읽기 전용 필드 스타일 */
+        .readonly-field {
+            background: rgba(102, 126, 234, 0.03);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            color: #718096;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            word-break: break-all;
+        }
+
+        .readonly-field i {
+            color: rgba(102, 126, 234, 0.5);
+            flex-shrink: 0;
+        }
+
+        /* 버튼 영역 */
+        .button-area {
+            padding: 20px 25px;
+            background: rgba(102, 126, 234, 0.03);
+            border-top: 1px solid rgba(102, 126, 234, 0.1);
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-cancel {
+            background: rgba(113, 128, 150, 0.1);
+            color: #4a5568;
+            border: 2px solid rgba(113, 128, 150, 0.2);
+        }
+
+        .btn-cancel:hover {
+            background: rgba(113, 128, 150, 0.2);
+            transform: translateY(-1px);
+            text-decoration: none;
+            color: #4a5568;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 애니메이션 */
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .edit-card {
+            animation: slideInUp 0.6s ease-out;
+        }
+
+        .form-section {
+            animation: slideInUp 0.8s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .form-section:nth-child(1) { animation-delay: 0.1s; }
+        .form-section:nth-child(2) { animation-delay: 0.2s; }
+        .form-section:nth-child(3) { animation-delay: 0.3s; }
+
+        /* 스크롤바 커스텀 */
+        .edit-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .edit-body::-webkit-scrollbar-track {
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 3px;
+        }
+
+        .edit-body::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.3);
+            border-radius: 3px;
+        }
+
+        .edit-body::-webkit-scrollbar-thumb:hover {
+            background: rgba(102, 126, 234, 0.5);
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 15px;
+            }
+
+            .edit-card {
+                max-width: 95%;
+            }
+
+            .form-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+
+            .form-label {
+                min-width: auto;
+            }
+
+            .button-area {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .file-upload-area {
+                padding: 20px 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .edit-header h2 {
+                font-size: 1.2rem;
+            }
+
+            .form-control,
+            .form-select {
+                font-size: 0.8rem;
+                padding: 6px 10px;
+            }
+
+            .current-image {
+                max-height: 150px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 헤더 포함 -->
+    <div th:replace="fragments/header :: header"></div>
+    <!-- 사이드바 포함 -->
+    <div th:replace="fragments/sidebar :: sidebar('bookmarks')"></div>
+
+    <main class="main-content">
+        <div class="edit-card">
+            <div class="edit-header" id="header">
+                <h2>
+                    <i class="fas fa-image"></i>
+                    이미지 스니펫 수정
+                </h2>
+                <div class="color-preview" id="colorPreview"></div>
+            </div>
+
+            <form th:action="@{/snippets/edit/{snippetId}(snippetId=${snippet.snippetId})}" th:object="${snippet}" method="post" enctype="multipart/form-data" id="editForm">
+                <div class="edit-body">
+                    <!-- 기본 정보 섹션 -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="fas fa-info-circle"></i>
+                            기본 정보
+                        </div>
+                        
+                        <div class="form-row">
+                            <label class="form-label">ID</label>
+                            <div class="form-input">
+                                <div class="readonly-field">
+                                    <i class="fas fa-hashtag"></i>
+                                    <span th:text="${snippet.snippetId}">123</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <label class="form-label">타입</label>
+                            <div class="form-input">
+                                <div class="readonly-field">
+                                    <i class="fas fa-image"></i>
+                                    <span th:text="${snippet.type}">IMAGE</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <label class="form-label">생성일</label>
+                            <div class="form-input">
+                                <div class="readonly-field">
+                                    <i class="fas fa-calendar"></i>
+                                    <span th:text="${#dates.format(snippet.createdAt, 'yyyy-MM-dd HH:mm')}">2024-01-01</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 현재 이미지 섹션 -->
+                    <div class="form-section" th:if="${snippet.imageUrl != null}">
+                        <div class="section-title">
+                            <i class="fas fa-eye"></i>
+                            현재 이미지
+                        </div>
+
+                        <div class="current-image-container">
+                            <img th:src="${snippet.imageUrl}" 
+                                 th:alt="${snippet.altText != null ? snippet.altText : '현재 이미지'}" 
+                                 class="current-image" />
+                            <div class="image-info">
+                                <div><strong>이미지 URL:</strong></div>
+                                <div style="word-break: break-all; color: #667eea;" th:text="${snippet.imageUrl}">URL</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 설정 섹션 -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="fas fa-cog"></i>
+                            설정
+                        </div>
+
+                        <div class="form-row">
+                            <label for="colorId" class="form-label">색상</label>
+                            <div class="form-input">
+                                <select id="colorId" class="form-select color-select" th:field="*{colorId}" required>
+                                    <option value="" disabled>색상을 선택하세요</option>
+                                    <option th:each="color : ${colors}" 
+                                            th:value="${color.colorId}" 
+                                            th:text="${color.name}"
+                                            th:attr="data-hex-code=${color.hexCode}"
+                                            th:style="'background-color:' + ${color.hexCode} + '; color: white;'">
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <label class="form-label">공개설정</label>
+                            <div class="form-input">
+                                <div class="visibility-group">
+                                    <div class="visibility-option">
+                                        <input type="radio" 
+                                               id="visible" 
+                                               name="visibility" 
+                                               value="1" 
+                                               class="visibility-input" 
+                                               th:field="*{visibility}">
+                                        <label for="visible" class="visibility-label">
+                                            <i class="fas fa-eye"></i>
+                                            공개
+                                        </label>
+                                    </div>
+                                    <div class="visibility-option">
+                                        <input type="radio" 
+                                               id="hidden" 
+                                               name="visibility" 
+                                               value="0" 
+                                               class="visibility-input" 
+                                               th:field="*{visibility}">
+                                        <label for="hidden" class="visibility-label">
+                                            <i class="fas fa-eye-slash"></i>
+                                            비공개
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 내용 수정 섹션 -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="fas fa-edit"></i>
+                            내용 수정
+                        </div>
+
+                        <div class="form-row">
+                            <label for="altText" class="form-label">이미지 설명</label>
+                            <div class="form-input">
+                                <input id="altText" 
+                                       type="text" 
+                                       class="form-control" 
+                                       th:field="*{altText}"
+                                       placeholder="이미지에 대한 설명을 입력하세요" />
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <label for="memo" class="form-label">메모</label>
+                            <div class="form-input">
+                                <textarea id="memo" 
+                                          class="form-control" 
+                                          rows="2" 
+                                          th:field="*{memo}"
+                                          placeholder="스니펫에 대한 간단한 설명"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-row" style="flex-direction: column; align-items: stretch;">
+                            <label class="form-label">새 이미지 업로드</label>
+                            
+                            <div class="file-upload-area" id="fileUploadArea">
+                                <div class="upload-icon">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <div class="upload-text">새 이미지를 선택하거나 드래그하세요</div>
+                                <div class="upload-subtext">기존 이미지가 새 이미지로 교체됩니다</div>
+                                <input type="file" name="imageFile" id="imageFile" accept="image/*" />
+                            </div>
+
+                            <div class="new-image-preview" id="newImagePreview">
+                                <img class="preview-image" id="previewImg" alt="새 이미지 미리보기" />
+                                <div class="preview-info" id="previewInfo"></div>
+                                <button type="button" class="remove-image" id="removeImage">
+                                    <i class="fas fa-trash"></i> 제거
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-area">
+                    <a th:href="@{/snippets/{id}(id=${snippet.snippetId})}" class="btn btn-cancel">
+                        <i class="fas fa-times"></i>
+                        취소
+                    </a>
+                    <button type="submit" class="btn btn-submit" id="submitBtn">
+                        <i class="fas fa-save"></i>
+                        수정 완료
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const header = document.getElementById('header');
+            const colorSelect = document.getElementById('colorId');
+            const colorPreview = document.getElementById('colorPreview');
+            const fileUploadArea = document.getElementById('fileUploadArea');
+            const imageFile = document.getElementById('imageFile');
+            const newImagePreview = document.getElementById('newImagePreview');
+            const previewImg = document.getElementById('previewImg');
+            const previewInfo = document.getElementById('previewInfo');
+            const removeImage = document.getElementById('removeImage');
+            const form = document.getElementById('editForm');
+            const submitBtn = document.getElementById('submitBtn');
+
+            // 초기 색상 설정
+            const initialColor = colorSelect.value;
+            if (initialColor) {
+                const selectedOption = colorSelect.options[colorSelect.selectedIndex];
+                const hexCode = selectedOption.getAttribute('data-hex-code');
+                if (hexCode) {
+                    header.style.background = 'linear-gradient(135deg, ' + hexCode + ', ' + adjustBrightness(hexCode, -20) + ')';
+                    colorPreview.style.backgroundColor = hexCode;
+                }
+            }
+
+            // 색상 선택시 헤더 배경과 미리보기 변경
+            colorSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+
+                if (selectedOption.value) {
+                    const hexCode = selectedOption.getAttribute('data-hex-code');
+                    
+                    header.style.background = 'linear-gradient(135deg, ' + hexCode + ', ' + adjustBrightness(hexCode, -20) + ')';
+                    colorPreview.style.backgroundColor = hexCode;
+                } else {
+                    header.style.background = 'linear-gradient(135deg, #667eea, #764ba2)';
+                    colorPreview.style.backgroundColor = 'transparent';
+                }
+            });
+
+            // 색상 밝기 조절 함수
+            function adjustBrightness(hex, percent) {
+                const num = parseInt(hex.replace("#", ""), 16);
+                const amt = Math.round(2.55 * percent);
+                const R = (num >> 16) + amt;
+                const G = (num >> 8 & 0x00FF) + amt;
+                const B = (num & 0x0000FF) + amt;
+                return "#" + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+                    (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+                    (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
+            }
+
+            // 파일 드래그 앤 드롭
+            fileUploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.classList.add('dragover');
+            });
+
+            fileUploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+            });
+
+            fileUploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFileSelect(files[0]);
+                }
+            });
+
+            // 파일 선택
+            imageFile.addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    handleFileSelect(e.target.files[0]);
+                }
+            });
+
+            // 파일 선택 처리
+            function handleFileSelect(file) {
+                if (!file.type.startsWith('image/')) {
+                    alert('이미지 파일만 업로드 가능합니다.');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    previewInfo.textContent = file.name + ' (' + (file.size / 1024 / 1024).toFixed(2) + ' MB)';
+                    newImagePreview.style.display = 'block';
+                    fileUploadArea.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+
+            // 새 이미지 제거
+            removeImage.addEventListener('click', function() {
+                imageFile.value = '';
+                newImagePreview.style.display = 'none';
+                fileUploadArea.style.display = 'flex';
+                previewImg.src = '';
+                previewInfo.textContent = '';
+            });
+
+            // 폼 제출시 처리
+            form.addEventListener('submit', function(e) {
+                // 제출 버튼 비활성화
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 수정 중...';
+            });
+        });
+    </script>
+</body>
+
+</html>

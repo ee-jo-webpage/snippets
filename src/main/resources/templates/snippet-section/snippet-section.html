@@ -65,3 +65,188 @@
         </div>
     </div>
 </div>
+
+
+<!--snippet List에 넣을 거 테스트중-->
+
+<div th:fragment="snippetList">
+    <!-- 스니펫이 없는 경우 -->
+    <div th:if="${#lists.isEmpty(snippets)}" class="empty-state">
+        <div class="emoji">📝</div>
+        <p>스니펫이 없습니다.</p>
+        <p>새로운 스니펫을 추가해보세요!</p>
+    </div>
+    
+    <!-- 스니펫 그리드 -->
+    <div th:unless="${#lists.isEmpty(snippets)}" class="snippets-grid">
+        <div th:each="snippet : ${snippets}" 
+             class="snippet-card bookmark-card" 
+             th:data-snippet-id="${snippet.snippetId}" 
+             th:data-id="${snippet.snippetId}"
+             role="button"
+             tabindex="0"
+             aria-label="스니펫 상세보기">
+            
+            <!-- 색상 인디케이터 -->
+            <div th:if="${snippet.hexCode != null and !#strings.isEmpty(snippet.hexCode)}" 
+                 class="color-indicator" 
+                 th:style="'background-color: ' + ${snippet.hexCode}"
+                 th:title="${snippet.colorName != null ? snippet.colorName : 'Color'}">
+                <span class="color-name" 
+                      th:text="${snippet.colorName != null ? snippet.colorName : 'Color'}">Color</span>
+            </div>
+            
+            <!-- 카드 헤더 -->
+            <div class="snippet-card-header">
+                <!-- 메타 정보 -->
+                <div class="snippet-meta">
+                    <span th:if="${snippet.type != null}" 
+                          th:class="'meta-item type-badge ' + (snippet.type == 'CODE' ? 'type-code' : (snippet.type == 'TEXT' ? 'type-text' : 'type-img'))"
+                          th:text="${snippet.type}">CODE</span>
+                    <span th:if="${snippet.language != null and !#strings.isEmpty(snippet.language)}" 
+                          class="meta-item language-badge" 
+                          th:text="${snippet.language}">JavaScript</span>
+                </div>
+                
+                <!-- 액션 버튼들 -->
+                
+            </div>
+            
+            <!-- 카드 바디 -->
+            <div class="snippet-card-body">
+                <!-- 제목 -->
+                <h3 class="snippet-title bookmark-title" 
+                    th:text="${snippet.memo != null and !#strings.isEmpty(snippet.memo) ? snippet.memo : '제목 없음'}">
+                    스니펫 제목
+                </h3>
+                
+                <!-- 콘텐츠 미리보기 -->
+                <div class="snippet-content-preview">
+                    <pre th:if="${snippet.type == 'CODE'}" 
+                         class="code-preview"><code th:text="${snippet.content != null and #strings.length(snippet.content) > 150 ? 
+                                                              #strings.substring(snippet.content, 0, 150) + '...' : 
+                                                              (snippet.content != null ? snippet.content : '내용 없음')}">코드 미리보기</code></pre>
+                    <p th:unless="${snippet.type == 'CODE'}" 
+                       class="text-preview"
+                       th:text="${snippet.content != null and #strings.length(snippet.content) > 150 ? 
+                                 #strings.substring(snippet.content, 0, 150) + '...' : 
+                                 (snippet.content != null ? snippet.content : '내용 없음')}">
+                        텍스트 미리보기
+                    </p>
+                </div>
+                
+                
+                
+                <!-- 생성일 -->
+                <div class="snippet-footer">
+                    <span class="snippet-date" 
+                          th:text="${#dates.format(snippet.createdAt, 'yyyy-MM-dd HH:mm')}">
+                        2024-01-01 12:00
+                    </span>
+                    <span class="more-indicator">
+                        <i class="fas fa-chevron-right"></i>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 스니펫 상세보기 모달 -->
+<div th:fragment="A" id="snippetDetailModal" class="modal" style="display: none;">
+    <div class="modal-content snippet-modal-content">
+        <div class="modal-header">
+            <h3 id="snippetModalTitle">스니펫 상세보기</h3>
+            <span class="modal-close" aria-label="모달 닫기">&times;</span>
+        </div>
+        <div class="modal-body snippet-modal-body" id="snippetModalBody">
+            <!-- 로딩 상태 -->
+            <div class="snippet-loading" id="snippetLoading">
+                <div class="spinner"></div>
+                <p>스니펫 정보를 불러오는 중...</p>
+            </div>
+            
+            <!-- 상세 내용 (동적으로 로드됨) -->
+            <div class="snippet-detail-container" id="snippetDetailContainer" style="display: none;">
+                <!-- 상단: 메타 정보와 콘텐츠를 가로로 배치 -->
+                <div class="snippet-main-content">
+                    <div class="snippet-left-panel">
+                        <div class="snippet-detail-meta">
+                            <div class="meta-item">
+                                <span class="meta-label">ID:</span>
+                                <span class="meta-value" id="snippetId"></span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">타입:</span>
+                                <span class="meta-value snippet-type" id="snippetType"></span>
+                            </div>
+                            <div class="meta-item" id="languageItem" style="display: none;">
+                                <span class="meta-label">언어:</span>
+                                <span class="meta-value snippet-language" id="snippetLanguage"></span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">생성일:</span>
+                                <span class="meta-value snippet-date" id="snippetDate"></span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">수정일:</span>
+                                <span class="meta-value snippet-updated" id="snippetUpdated"></span>
+                            </div>
+                            <div class="meta-item" id="colorItem" style="display: none;">
+                                <span class="meta-label">색상:</span>
+                                <div class="color-preview" id="snippetColorPreview">
+                                    <span class="color-name" id="snippetColorName"></span>
+                                </div>
+                            </div>
+                            <div class="meta-item" id="sourceUrlItem" style="display: none;">
+                                <span class="meta-label">출처:</span>
+                                <a class="meta-value source-link" id="snippetSourceUrl" target="_blank"></a>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">좋아요:</span>
+                                <span class="meta-value" id="snippetLikeCount"></span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">공개설정:</span>
+                                <span class="meta-value" id="snippetVisibility"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="snippet-right-panel">
+                        <div class="snippet-detail-content">
+                            <div class="snippet-title-section">
+                                <h4 id="snippetTitle" class="detail-title"></h4>
+                            </div>
+                            
+                            <!-- 코드 타입 콘텐츠 -->
+                            <div class="snippet-content-wrapper" id="codeContentWrapper" style="display: none;">
+                                <button class="copy-btn" id="copyContentBtn" title="코드 복사">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                                <pre><code id="snippetCodeContent" class="snippet-code"></code></pre>
+                            </div>
+                            
+                            <!-- 텍스트 타입 콘텐츠 -->
+                            <div class="snippet-text-wrapper" id="textContentWrapper" style="display: none;">
+                                <button class="copy-btn" id="copyTextBtn" title="텍스트 복사">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                                <div class="snippet-text-content" id="snippetTextContent"></div>
+                            </div>
+                            
+                            <!-- 이미지 타입 콘텐츠 -->
+                            <div class="snippet-image-wrapper" id="imageContentWrapper" style="display: none;">
+                                <div class="snippet-image-container">
+                                    <img id="snippetImage" class="snippet-image" alt="Snippet Image"/>
+                                    <button class="copy-btn image-copy-btn" id="copyImageBtn" title="이미지 URL 복사">
+                                        <i class="fas fa-link"></i>
+                                    </button>
+                                </div>
+                                <div class="snippet-alt-text" id="snippetAltText" style="display: none;">
+                                    <strong>설명:</strong> <span id="altTextContent"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>

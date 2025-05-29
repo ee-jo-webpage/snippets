@@ -1,83 +1,702 @@
-<!-- snippetEditText.html - 모달용 -->
-<h2>텍스트 스니펫 수정</h2>
-<form th:action="@{/snippets/edit/{snippetId}(snippetId=${snippet.snippetId})}" th:object="${snippet}" method="post">
-    <table>
-        <!-- User ID - 읽기 전용 -->
-        <tr>
-            <th>User ID</th>
-            <td><input type="text" th:value="${snippet.userId}" readonly="readonly" /></td>
-        </tr>
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 
-        <!-- Color 선택 - 드롭다운 -->
-        <tr>
-            <th>Color</th>
-            <td>
-                <select th:field="*{colorId}" required>
-                    <option value="" disabled>-- 색상 선택 --</option>
-                    <option th:each="color : ${colors}"
-                            th:value="${color.colorId}"
-                            th:text="${color.name}"
-                            th:style="'background-color:' + ${color.hexCode}">
-                    </option>
-                </select>
-            </td>
-        </tr>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Text 스니펫 수정</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+	<link th:href="@{/my-snippet-page/css/my-snippet-page.css}" rel="stylesheet">
 
-        <!-- Source URL - 읽기 전용 -->
-        <tr>
-            <th>Source URL</th>
-            <td><input type="text" th:field="*{sourceUrl}" readonly="readonly" /></td>
-        </tr>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-        <!-- Type - 읽기 전용 -->
-        <tr>
-            <th>Type</th>
-            <td><input type="text" th:value="${snippet.type}" readonly="readonly" /></td>
-        </tr>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
 
-        <!-- Memo - 수정 가능 -->
-        <tr>
-            <th>Memo</th>
-            <td><textarea th:field="*{memo}" rows="4" placeholder="메모를 입력하세요"></textarea></td>
-        </tr>
+        .main-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-        <!-- Created At - 읽기 전용 -->
-        <tr>
-            <th>Created At</th>
-            <td><input type="text" th:value="${snippet.createdAt}" readonly="readonly" /></td>
-        </tr>
+        .edit-card {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            width: 100%;
+            max-width: 550px;
+            overflow: hidden;
+            position: relative;
+        }
 
-        <!-- Updated At - 읽기 전용 -->
-        <tr>
-            <th>Updated At</th>
-            <td><input type="text" th:value="${snippet.updatedAt}" readonly="readonly" /></td>
-        </tr>
+        .edit-header {
+            padding: 20px 25px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            text-align: center;
+            position: relative;
+        }
 
-        <!-- Like Count - 읽기 전용 -->
-        <tr>
-            <th>Like Count</th>
-            <td><input type="number" th:value="${snippet.likeCount}" readonly="readonly" /></td>
-        </tr>
+        .edit-header h2 {
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
 
-        <!-- Visibility - 수정 가능 -->
-        <tr>
-            <th>Visibility</th>
-            <td>
-                <select th:field="*{visibility}">
-                    <option value="1" th:selected="${snippet.visibility == 1}">Visible</option>
-                    <option value="0" th:selected="${snippet.visibility == 0}">Hidden</option>
-                </select>
-            </td>
-        </tr>
+        .color-preview {
+            position: absolute;
+            top: 50%;
+            right: 25px;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
 
-        <!-- Text Content - 수정 가능 -->
-        <tr>
-            <th>Text Content</th>
-            <td><textarea th:field="*{content}" rows="10" placeholder="텍스트 내용을 입력하세요"></textarea></td>
-        </tr>
-    </table>
-    
-    <div style="text-align: center; margin-top: 20px;">
-        <button type="submit">수정 완료</button>
-    </div>
-</form>
+        .edit-body {
+            padding: 25px;
+            max-height: 75vh;
+            overflow-y: auto;
+        }
+
+        .form-section {
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 15px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #4a5568;
+            min-width: 80px;
+            flex-shrink: 0;
+        }
+
+        .form-input {
+            flex: 1;
+        }
+
+        .form-control, .form-select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            background: rgba(102, 126, 234, 0.02);
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-control:focus, .form-select:focus {
+            outline: none;
+            border-color: rgba(102, 126, 234, 0.5);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: white;
+        }
+
+        .form-control:read-only {
+            background: rgba(102, 126, 234, 0.05);
+            color: #718096;
+            cursor: not-allowed;
+        }
+
+        .form-control::placeholder {
+            color: rgba(102, 126, 234, 0.4);
+            font-size: 0.8rem;
+        }
+
+        /* 색상 선택 드롭다운 */
+        .color-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23667eea' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 14px;
+            padding-right: 35px;
+        }
+
+        /* 텍스트 에리어 */
+        .text-content {
+            font-family: inherit;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            background: rgba(102, 126, 234, 0.02);
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        .text-content:focus {
+            border-color: rgba(102, 126, 234, 0.5);
+            background: white;
+        }
+
+        /* 가시성 토글 */
+        .visibility-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .visibility-option {
+            flex: 1;
+            position: relative;
+        }
+
+        .visibility-input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .visibility-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 10px;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 6px;
+            background: rgba(102, 126, 234, 0.02);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+            font-weight: 500;
+            gap: 4px;
+        }
+
+        .visibility-input:checked + .visibility-label {
+            border-color: rgba(102, 126, 234, 0.5);
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        /* 텍스트 포맷팅 툴바 */
+        .text-toolbar {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 8px;
+            padding: 6px;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 6px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .toolbar-btn {
+            padding: 4px 8px;
+            border: none;
+            background: transparent;
+            color: rgba(102, 126, 234, 0.7);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.2s ease;
+        }
+
+        .toolbar-btn:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        /* 문자 카운터 */
+        .char-counter {
+            text-align: right;
+            font-size: 0.75rem;
+            color: rgba(102, 126, 234, 0.6);
+            margin-top: 4px;
+        }
+
+        /* 버튼 영역 */
+        .button-area {
+            padding: 20px 25px;
+            background: rgba(102, 126, 234, 0.03);
+            border-top: 1px solid rgba(102, 126, 234, 0.1);
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-cancel {
+            background: rgba(113, 128, 150, 0.1);
+            color: #4a5568;
+            border: 2px solid rgba(113, 128, 150, 0.2);
+        }
+
+        .btn-cancel:hover {
+            background: rgba(113, 128, 150, 0.2);
+            transform: translateY(-1px);
+            text-decoration: none;
+            color: #4a5568;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 읽기 전용 필드 스타일 */
+        .readonly-field {
+            background: rgba(102, 126, 234, 0.03);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            color: #718096;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .readonly-field i {
+            color: rgba(102, 126, 234, 0.5);
+        }
+
+        /* 애니메이션 */
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .edit-card {
+            animation: slideInUp 0.6s ease-out;
+        }
+
+        .form-section {
+            animation: slideInUp 0.8s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .form-section:nth-child(1) { animation-delay: 0.1s; }
+        .form-section:nth-child(2) { animation-delay: 0.2s; }
+        .form-section:nth-child(3) { animation-delay: 0.3s; }
+
+        /* 스크롤바 커스텀 */
+        .edit-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .edit-body::-webkit-scrollbar-track {
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 3px;
+        }
+
+        .edit-body::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.3);
+            border-radius: 3px;
+        }
+
+        .edit-body::-webkit-scrollbar-thumb:hover {
+            background: rgba(102, 126, 234, 0.5);
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 15px;
+            }
+
+            .edit-card {
+                max-width: 95%;
+            }
+
+            .form-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+
+            .form-label {
+                min-width: auto;
+            }
+
+            .button-area {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .edit-header h2 {
+                font-size: 1.2rem;
+            }
+
+            .form-control,
+            .form-select {
+                font-size: 0.8rem;
+                padding: 6px 10px;
+            }
+
+            .text-content {
+                min-height: 120px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 헤더 포함 -->
+    <div th:replace="fragments/header :: header"></div>
+    <!-- 사이드바 포함 -->
+    <div th:replace="fragments/sidebar :: sidebar('bookmarks')"></div>
+
+    <main class="main-content">
+        <div class="edit-card">
+            <div class="edit-header" id="header">
+                <h2>
+                    <i class="fas fa-edit"></i>
+                    텍스트 스니펫 수정
+                </h2>
+                <div class="color-preview" id="colorPreview"></div>
+            </div>
+
+            <form th:action="@{/snippets/edit/{snippetId}(snippetId=${snippet.snippetId})}" th:object="${snippet}" method="post" id="editForm">
+                <div class="edit-body">
+                    <!-- 기본 정보 섹션 -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="fas fa-info-circle"></i>
+                            기본 정보
+                        </div>
+                        
+                        <div class="form-row">
+                            <label class="form-label">ID</label>
+                            <div class="form-input">
+                                <div class="readonly-field">
+                                    <i class="fas fa-hashtag"></i>
+                                    <span th:text="${snippet.snippetId}">123</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <label class="form-label">타입</label>
+                            <div class="form-input">
+                                <div class="readonly-field">
+                                    <i class="fas fa-file-text"></i>
+                                    <span th:text="${snippet.type}">TEXT</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <label class="form-label">생성일</label>
+                            <div class="form-input">
+                                <div class="readonly-field">
+                                    <i class="fas fa-calendar"></i>
+                                    <span th:text="${#dates.format(snippet.createdAt, 'yyyy-MM-dd HH:mm')}">2024-01-01</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 수정 가능 섹션 -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="fas fa-cog"></i>
+                            설정
+                        </div>
+
+                        <div class="form-row">
+                            <label for="colorId" class="form-label">색상</label>
+                            <div class="form-input">
+                                <select id="colorId" class="form-select color-select" th:field="*{colorId}" required>
+                                    <option value="" disabled>색상을 선택하세요</option>
+                                    <option th:each="color : ${colors}" 
+                                            th:value="${color.colorId}" 
+                                            th:text="${color.name}"
+                                            th:attr="data-hex-code=${color.hexCode}"
+                                            th:style="'background-color:' + ${color.hexCode} + '; color: white;'">
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <label class="form-label">공개설정</label>
+                            <div class="form-input">
+                                <div class="visibility-group">
+                                    <div class="visibility-option">
+                                        <input type="radio" 
+                                               id="visible" 
+                                               name="visibility" 
+                                               value="1" 
+                                               class="visibility-input" 
+                                               th:field="*{visibility}">
+                                        <label for="visible" class="visibility-label">
+                                            <i class="fas fa-eye"></i>
+                                            공개
+                                        </label>
+                                    </div>
+                                    <div class="visibility-option">
+                                        <input type="radio" 
+                                               id="hidden" 
+                                               name="visibility" 
+                                               value="0" 
+                                               class="visibility-input" 
+                                               th:field="*{visibility}">
+                                        <label for="hidden" class="visibility-label">
+                                            <i class="fas fa-eye-slash"></i>
+                                            비공개
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 내용 섹션 -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="fas fa-edit"></i>
+                            내용 수정
+                        </div>
+
+                        <div class="form-row">
+                            <label for="memo" class="form-label">메모</label>
+                            <div class="form-input">
+                                <textarea id="memo" 
+                                          class="form-control" 
+                                          rows="2" 
+                                          th:field="*{memo}"
+                                          placeholder="스니펫에 대한 간단한 설명"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-row" style="flex-direction: column; align-items: stretch;">
+                            <label for="content" class="form-label">텍스트 내용</label>
+                            
+                            <!-- 텍스트 포맷팅 툴바 -->
+                            <div class="text-toolbar">
+                                <button type="button" class="toolbar-btn" onclick="insertText('**')">
+                                    <i class="fas fa-bold"></i>
+                                </button>
+                                <button type="button" class="toolbar-btn" onclick="insertText('*')">
+                                    <i class="fas fa-italic"></i>
+                                </button>
+                                <button type="button" class="toolbar-btn" onclick="insertText('`')">
+                                    <i class="fas fa-code"></i>
+                                </button>
+                                <button type="button" class="toolbar-btn" onclick="insertText('- ')">
+                                    <i class="fas fa-list"></i>
+                                </button>
+                                <button type="button" class="toolbar-btn" onclick="insertText('# ')">
+                                    <i class="fas fa-heading"></i>
+                                </button>
+                            </div>
+
+                            <textarea id="content" 
+                                      class="form-control text-content" 
+                                      rows="8" 
+                                      th:field="*{content}"
+                                      placeholder="텍스트 내용을 입력하세요..." 
+                                      required></textarea>
+                            <div class="char-counter" id="charCounter">0 / 5000자</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-area">
+                    <a th:href="@{/snippets/{id}(id=${snippet.snippetId})}" class="btn btn-cancel">
+                        <i class="fas fa-times"></i>
+                        취소
+                    </a>
+                    <button type="submit" class="btn btn-submit" id="submitBtn">
+                        <i class="fas fa-save"></i>
+                        수정 완료
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const header = document.getElementById('header');
+            const colorSelect = document.getElementById('colorId');
+            const colorPreview = document.getElementById('colorPreview');
+            const contentTextarea = document.getElementById('content');
+            const charCounter = document.getElementById('charCounter');
+            const form = document.getElementById('editForm');
+            const submitBtn = document.getElementById('submitBtn');
+
+            // 초기 색상 설정
+            const initialColor = colorSelect.value;
+            if (initialColor) {
+                const selectedOption = colorSelect.options[colorSelect.selectedIndex];
+                const hexCode = selectedOption.getAttribute('data-hex-code');
+                if (hexCode) {
+                    header.style.background = `linear-gradient(135deg, ${hexCode}, ${adjustBrightness(hexCode, -20)})`;
+                    colorPreview.style.backgroundColor = hexCode;
+                }
+            }
+
+            // 색상 선택시 헤더 배경과 미리보기 변경
+            colorSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+
+                if (selectedOption.value) {
+                    const hexCode = selectedOption.getAttribute('data-hex-code');
+                    
+                    header.style.background = `linear-gradient(135deg, ${hexCode}, ${adjustBrightness(hexCode, -20)})`;
+                    colorPreview.style.backgroundColor = hexCode;
+                } else {
+                    header.style.background = 'linear-gradient(135deg, #667eea, #764ba2)';
+                    colorPreview.style.backgroundColor = 'transparent';
+                }
+            });
+
+            // 색상 밝기 조절 함수
+            function adjustBrightness(hex, percent) {
+                const num = parseInt(hex.replace("#", ""), 16);
+                const amt = Math.round(2.55 * percent);
+                const R = (num >> 16) + amt;
+                const G = (num >> 8 & 0x00FF) + amt;
+                const B = (num & 0x0000FF) + amt;
+                return "#" + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+                    (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+                    (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
+            }
+
+            // 문자 수 카운터
+            function updateCharCounter() {
+                const length = contentTextarea.value.length;
+                charCounter.textContent = `${length} / 5000자`;
+                
+                if (length > 5000) {
+                    charCounter.style.color = '#e53e3e';
+                } else if (length > 4500) {
+                    charCounter.style.color = '#ed8936';
+                } else {
+                    charCounter.style.color = 'rgba(102, 126, 234, 0.6)';
+                }
+            }
+
+            contentTextarea.addEventListener('input', updateCharCounter);
+
+            // 텍스트 삽입 함수 (툴바 버튼용)
+            window.insertText = function(marker) {
+                const textarea = contentTextarea;
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                const selectedText = textarea.value.substring(start, end);
+                
+                let newText;
+                if (marker === '- ') {
+                    newText = marker + selectedText;
+                } else if (marker === '# ') {
+                    newText = marker + selectedText;
+                } else {
+                    newText = marker + selectedText + marker;
+                }
+                
+                textarea.value = textarea.value.substring(0, start) + newText + textarea.value.substring(end);
+                textarea.focus();
+                textarea.setSelectionRange(start + marker.length, start + marker.length + selectedText.length);
+                updateCharCounter();
+            };
+
+            // 폼 제출시 유효성 검사
+            form.addEventListener('submit', function(e) {
+                const content = contentTextarea.value.trim();
+
+                if (!content) {
+                    e.preventDefault();
+                    alert('텍스트 내용을 입력해주세요.');
+                    contentTextarea.focus();
+                    return false;
+                }
+
+                if (content.length > 5000) {
+                    e.preventDefault();
+                    alert('텍스트 내용은 5000자를 초과할 수 없습니다.');
+                    contentTextarea.focus();
+                    return false;
+                }
+
+                // 제출 버튼 비활성화
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 수정 중...';
+            });
+
+            // 초기 상태 설정
+            updateCharCounter();
+        });
+    </script>
+</body>
+
+</html>

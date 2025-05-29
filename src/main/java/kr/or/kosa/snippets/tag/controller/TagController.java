@@ -3,6 +3,12 @@ package kr.or.kosa.snippets.tag.controller;
 import jakarta.servlet.http.HttpSession;
 import kr.or.kosa.snippets.basic.model.Snippets;
 import kr.or.kosa.snippets.basic.service.SnippetService;
+import kr.or.kosa.snippets.bookmark.service.BookmarkService;
+import kr.or.kosa.snippets.like.mapper.SnippetContentMapper;
+import kr.or.kosa.snippets.like.model.LikeTag;
+import kr.or.kosa.snippets.like.service.LikeService;
+import kr.or.kosa.snippets.like.service.LikeSnippetService;
+import kr.or.kosa.snippets.like.service.LikeUserService;
 import kr.or.kosa.snippets.tag.model.TagItem;
 import kr.or.kosa.snippets.tag.service.TagService;
 import kr.or.kosa.snippets.user.service.CustomUserDetails;
@@ -28,6 +34,21 @@ public class TagController {
 
     @Autowired
     private SnippetService snippetService;
+
+    @Autowired
+    BookmarkService bookmarkService;
+
+    @Autowired
+    private LikeService likeService;
+
+    @Autowired
+    private LikeSnippetService likeSnippetService;
+
+    @Autowired
+    private LikeUserService likeUserService;
+
+    @Autowired
+    private SnippetContentMapper snippetContentMapper;
 
     private Long requireLogin(CustomUserDetails userDetails) {
         if (userDetails == null) {
@@ -238,5 +259,86 @@ public class TagController {
 
         List<Snippets> snippets = tagService.getSnippetsByTagId(tagId);
         return ResponseEntity.ok(snippets != null ? snippets : new ArrayList<>());
+    }
+
+    @GetMapping("/snippet/{snippetId}/detail")
+    public ResponseEntity<?> getBookmarkedSnippetDetail(@PathVariable Long snippetId,
+                                                        @AuthenticationPrincipal CustomUserDetails userDetails) {
+        try {
+            Long userId = requireLogin(userDetails);
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("success", false, "message", "로그인이 필요합니다."));
+            }
+
+
+            Snippets snippet = bookmarkService.getSnippetById(snippetId);
+            if (snippet == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("success", false, "message", "스니펫을 찾을 수 없습니다."));
+            }
+
+            Map<String, Object> result = new HashMap<>();
+
+
+            // 기본 스니펫 정보
+            result.put("snippet", snippet);
+
+            // 스니펫 태그 조회
+            List<LikeTag> tags = likeSnippetService.getTagsBySnippetId(snippetId);
+            result.put("tags", tags);
+
+            // 좋아요 상태 확인
+            boolean isLiked = likeService.isLiked(snippetId, userId);
+            result.put("isLiked", isLiked);
+
+            // 실제 좋아요 수 업데이트
+            long actualLikeCount = likeService.getLikesCount(snippetId);
+            result.put("actualLikeCount", actualLikeCount);
+
+            // 소유자 nickname 조회
+            String ownerNickname = likeUserService.getNicknameByUserId(snippet.getUserId());
+            result.put("ownerNickname", ownerNickname);
+
+            // 스니펫 타입별 실제 content 조회
+            Object snippetContent = null;
+            try {
+                switch (snippet.getType().toString().toUpperCase()) {
+                    case "CODE":
+                        snippetContent = snippetContentMapper.getSnippetCodeById(snippetId);
+                        break;
+                    case "TEXT":
+                        snippetContent = snippetContentMapper.getSnippetTextById(snippetId);
+                        break;
+                    case "IMG":
+                        snippetContent = snippetContentMapper.getSnippetImageById(snippetId);
+                        break;
+                }
+            } catch (Exception e) {
+                log.error("스니펫 content 조회 실패 - 스니펫 ID: {}, 오류: {}", snippetId, e.getMessage());
+            }
+            result.put("snippetContent", snippetContent);
+
+            // 북마크된 스니펫인지 확인
+            if (bookmarkService.isBookmarked(userId, snippetId)) {
+                result.put("isBookmarked", true);
+            }
+
+
+            // 현재 사용자 정보
+            result.put("currentUserId", userId);
+            result.put("currentUserNickname", userDetails.getNickname());
+            result.put("isLoggedIn", true);
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "data", result
+            ));
+
+        } catch (Exception e) {
+            log.error("스니펫 상세정보 조회 중 오류 발생", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", "스니펫 상세정보 조회 중 오류가 발생했습니다."));
+        }
     }
 }

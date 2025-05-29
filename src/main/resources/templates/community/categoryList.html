@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>커뮤니티</title>
 
     <!-- jQuery -->
@@ -13,150 +13,168 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Google Fonts - Pretendard 또는 Noto Sans KR -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 
     <style>
+        :root {
+            --primary-color: #6357FF; /* GoSnippets 보라색 계열 */
+            --secondary-color: #8075FF; /* 조금 더 밝은 보라색 */
+            --accent-color: #9F97FF; /* 더 밝은 보라색 */
+            --background-gradient: linear-gradient(135deg, #F0F2FF 0%, #E6E9FF 100%); /* 부드러운 배경 그라데이션 */
+            --text-dark: #333344; /* 어두운 텍스트 색상 */
+            --text-muted: #666677; /* 중간 텍스트 색상 */
+            --border-color: #EAEAEA; /* 경계선 색상 */
+            --shadow-small: 0 2px 8px rgba(99, 87, 255, 0.08); /* 작은 그림자 */
+            --shadow-medium: 0 4px 12px rgba(99, 87, 255, 0.12); /* 중간 그림자 */
+        }
+
         * {
             box-sizing: border-box;
         }
 
         body {
-            background-color: #f5f6f7;
-            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            font-family: 'Noto Sans KR', sans-serif;
             margin: 0;
             padding: 0;
-            color: #333;
+            color: var(--text-dark);
+            background: var(--background-gradient);
+            min-height: 100vh;
         }
 
-        /* 헤더 스타일 */
+        /* 헤더 스타일 - 흰색 네비바 */
         .community-header {
-            background: linear-gradient(135deg, #00d084 0%, #33b5e5 100%);
-            color: white;
+            background-color: #ffffff;
+            color: var(--text-dark);
             padding: 1rem 0;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow-small);
             position: sticky;
             top: 0;
             z-index: 100;
+            border-bottom: 1px solid var(--border-color);
         }
 
         .community-header h1 {
             margin: 0;
             font-size: 1.5rem;
             font-weight: 600;
+            color: var(--primary-color);
         }
 
         .header-controls {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.8rem;
             align-items: center;
-            justify-content: flex-end; /* 오른쪽 정렬로 수정 */
+            justify-content: flex-end;
         }
 
         .header-controls .btn {
             padding: 0.5rem 1rem;
-            border-radius: 20px;
+            border-radius: 24px;
             font-size: 0.9rem;
-            border: 1px solid rgba(255, 255, 255, 0.3);
             transition: all 0.3s ease;
         }
 
-        .header-controls .btn:hover {
-            background-color: rgba(255, 255, 255, 0.2);
+        .header-btn-outline {
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            background-color: transparent;
+        }
+
+        .header-btn-outline:hover {
+            background-color: var(--primary-color);
+            color: white;
             transform: translateY(-1px);
+            box-shadow: var(--shadow-small);
         }
 
         /* 메인 컨테이너 */
         .main-container {
             display: flex;
-            min-height: calc(100vh - 80px);
+            min-height: calc(100vh - 70px);
             max-width: 1200px;
-            margin: 0 auto;
-            gap: 0;
+            margin: 1.5rem auto;
+            gap: 1.5rem;
+            padding: 0 1rem;
         }
 
-        /* 사이드바 스타일 (네이버 카페 스타일) */
+        /* 사이드바 스타일 */
         .sidebar {
             width: 250px;
             background: white;
-            border-right: 1px solid #e5e5e5;
-            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-            position: sticky;
-            top: 80px;
-            height: calc(100vh - 80px);
-            overflow-y: auto;
+            border-radius: 12px;
+            box-shadow: var(--shadow-small);
+            overflow: hidden;
+            flex-shrink: 0;
         }
 
         .sidebar-header {
-            padding: 1.5rem 1rem 1rem;
-            border-bottom: 1px solid #e5e5e5;
-            background: #fafafa;
+            padding: 1.2rem 1rem;
+            border-bottom: 1px solid var(--border-color);
         }
 
         .sidebar-title {
             font-size: 1.1rem;
             font-weight: 600;
-            color: #333;
+            color: var(--text-dark);
             margin: 0;
         }
 
         /* 카테고리 메뉴 */
         .category-menu {
-            padding: 0;
+            padding: 0.5rem 0;
             margin: 0;
             background: white;
         }
 
         .category-item {
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .category-item:last-child {
-            border-bottom: none;
+            padding: 0.2rem 0.8rem;
         }
 
         .category-link {
             display: flex;
             align-items: center;
-            padding: 1rem 1.5rem;
-            color: #333;
+            padding: 0.8rem 1rem;
+            color: var(--text-dark);
             text-decoration: none;
             font-size: 0.95rem;
             transition: all 0.2s ease;
-            position: relative;
+            border-radius: 8px;
         }
 
         .category-link:hover {
             background: #f8f9fa;
-            color: #00d084;
-            padding-left: 2rem;
+            color: var(--primary-color);
         }
 
         .category-link.active {
-            background: #e8f5e8;
-            color: #00d084;
-            font-weight: 600;
-            border-right: 3px solid #00d084;
+            background: #f0f2ff;
+            color: var(--primary-color);
+            font-weight: 500;
         }
 
         .category-icon {
             margin-right: 0.75rem;
             width: 16px;
             text-align: center;
+            color: var(--primary-color);
         }
 
         .category-count {
             margin-left: auto;
-            background: #e9ecef;
-            color: #6c757d;
+            background: #f0f2ff;
+            color: var(--primary-color);
             font-size: 0.8rem;
             padding: 0.2rem 0.5rem;
-            border-radius: 10px;
+            border-radius: 12px;
             min-width: 24px;
             text-align: center;
         }
 
         .category-link.active .category-count {
-            background: #00d084;
+            background: var(--primary-color);
             color: white;
         }
 
@@ -164,65 +182,67 @@
         .main-content {
             flex: 1;
             background: white;
-            padding: 0;
-            min-height: calc(100vh - 80px);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow-small);
         }
 
         /* 콘텐츠 헤더 */
         .content-header {
-            padding: 1.5rem 2rem 1rem;
-            border-bottom: 2px solid #f0f0f0;
-            background: linear-gradient(to right, #fafafa, #ffffff);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            background: white;
         }
 
         .content-title {
             font-size: 1.4rem;
             font-weight: 600;
-            color: #333;
+            color: var(--text-dark);
             margin: 0 0 0.5rem;
         }
 
         .content-subtitle {
-            color: #666;
+            color: var(--text-muted);
             font-size: 0.9rem;
             margin: 0;
         }
 
         .content-actions {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.8rem;
             margin-top: 1rem;
         }
 
-        .btn-write {
-            background: linear-gradient(135deg, #00d084, #33b5e5);
+        .btn-primary-custom {
+            background: var(--primary-color);
             color: white;
             border: none;
             padding: 0.6rem 1.5rem;
-            border-radius: 20px;
+            border-radius: 24px;
             font-weight: 500;
             transition: all 0.3s ease;
         }
 
-        .btn-write:hover {
+        .btn-primary-custom:hover {
+            background: var(--secondary-color);
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 208, 132, 0.3);
+            box-shadow: var(--shadow-medium);
             color: white;
         }
 
-        .btn-search {
+        .btn-outline-custom {
             background: white;
-            color: #666;
-            border: 1px solid #ddd;
+            color: var(--text-dark);
+            border: 1px solid var(--border-color);
             padding: 0.6rem 1.5rem;
-            border-radius: 20px;
+            border-radius: 24px;
             transition: all 0.3s ease;
         }
 
-        .btn-search:hover {
+        .btn-outline-custom:hover {
             background: #f8f9fa;
-            border-color: #00d084;
-            color: #00d084;
+            border-color: var(--primary-color);
+            color: var(--primary-color);
         }
 
         /* 게시글 목록 스타일 */
@@ -234,7 +254,7 @@
             display: flex;
             align-items: center;
             padding: 1rem 2rem;
-            border-bottom: 1px solid #f0f0f0;
+            border-bottom: 1px solid var(--border-color);
             transition: all 0.2s ease;
             cursor: pointer;
         }
@@ -244,30 +264,30 @@
         }
 
         .post-item.notice {
-            background: #fff8e1;
-            border-left: 4px solid #ff9800;
+            background: #f0f2ff;
+            border-left: 4px solid var(--primary-color);
         }
 
         .post-item.notice:hover {
-            background: #fff3c4;
+            background: #e8ebff;
         }
 
         .post-number {
             width: 60px;
             text-align: center;
             font-size: 0.9rem;
-            color: #999;
+            color: var(--text-muted);
             flex-shrink: 0;
         }
 
         .notice-badge {
-            background: linear-gradient(135deg, #ff9800, #f57c00);
+            background: var(--primary-color);
             color: white;
             padding: 0.3rem 0.8rem;
             border-radius: 12px;
             font-size: 0.8rem;
-            font-weight: 600;
-            display: inline-block; /* 공지 배지 수정 */
+            font-weight: 500;
+            display: inline-block;
         }
 
         .post-content {
@@ -279,7 +299,7 @@
         .post-title {
             font-size: 1rem;
             font-weight: 500;
-            color: #333;
+            color: var(--text-dark);
             margin: 0 0 0.3rem;
             line-height: 1.4;
             overflow: hidden;
@@ -288,12 +308,12 @@
         }
 
         .post-item:hover .post-title {
-            color: #00d084;
+            color: var(--primary-color);
         }
 
         .post-meta {
             font-size: 0.85rem;
-            color: #888;
+            color: var(--text-muted);
             display: flex;
             gap: 1rem;
             align-items: center;
@@ -311,7 +331,7 @@
             align-items: center;
             flex-shrink: 0;
             font-size: 0.85rem;
-            color: #666;
+            color: var(--text-muted);
         }
 
         .post-stat {
@@ -321,7 +341,7 @@
         }
 
         .comment-count {
-            background: #00d084;
+            background: var(--primary-color);
             color: white;
             padding: 0.2rem 0.6rem;
             border-radius: 10px;
@@ -330,7 +350,7 @@
         }
 
         .new-badge {
-            background: #dc3545;
+            background: #ff4757;
             color: white;
             padding: 0.1rem 0.4rem;
             border-radius: 8px;
@@ -343,7 +363,7 @@
         .empty-state {
             text-align: center;
             padding: 4rem 2rem;
-            color: #999;
+            color: var(--text-muted);
         }
 
         .empty-state i {
@@ -368,13 +388,13 @@
         }
 
         .search-form .form-control:focus {
-            border-color: #00d084;
-            box-shadow: 0 0 0 0.2rem rgba(0, 208, 132, 0.25);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(99, 87, 255, 0.25);
         }
 
         .search-form .btn-primary {
-            background: #00d084;
-            border-color: #00d084;
+            background: var(--primary-color);
+            border-color: var(--primary-color);
             border-radius: 8px;
             padding: 0.75rem 1.5rem;
         }
@@ -383,7 +403,7 @@
         .pagination-container {
             padding: 2rem;
             text-align: center;
-            border-top: 1px solid #f0f0f0;
+            border-top: 1px solid var(--border-color);
             background: #fafafa;
         }
 
@@ -393,45 +413,55 @@
         }
 
         .pagination .page-link {
-            color: #666;
+            color: var(--text-dark);
             border: 1px solid #ddd;
             margin: 0 0.2rem;
             border-radius: 6px;
         }
 
         .pagination .page-item.active .page-link {
-            background: #00d084;
-            border-color: #00d084;
+            background: var(--primary-color);
+            border-color: var(--primary-color);
         }
 
         .pagination .page-link:hover {
-            color: #00d084;
-            border-color: #00d084;
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        /* 모달 스타일 */
+        .modal-header {
+            background: var(--primary-color);
+            color: white;
+            border-bottom: none;
+        }
+
+        .modal-header .btn-close {
+            color: white;
         }
 
         /* 반응형 디자인 */
         @media (max-width: 768px) {
             .main-container {
                 flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
             }
 
             .sidebar {
                 width: 100%;
-                height: auto;
                 position: static;
-                border-right: none;
-                border-bottom: 1px solid #e5e5e5;
             }
 
             .category-menu {
                 display: flex;
                 overflow-x: auto;
-                padding: 0.5rem 0;
+                padding: 0.5rem;
             }
 
             .category-item {
                 border-bottom: none;
-                border-right: 1px solid #f0f0f0;
+                border-right: none;
                 flex-shrink: 0;
             }
 
@@ -470,22 +500,46 @@
             }
         }
 
-        /* 스크롤바 커스텀 */
-        .sidebar::-webkit-scrollbar {
-            width: 6px;
+        /* 카테고리 헤더 */
+        .category-header {
+            background: var(--background-gradient);
+            color: var(--text-dark);
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 12px;
         }
 
-        .sidebar::-webkit-scrollbar-track {
-            background: #f1f1f1;
+        /* 테이블 스타일 */
+        .table {
+            margin-bottom: 0;
         }
 
-        .sidebar::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 3px;
+        .table thead th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: var(--text-dark);
+            border-bottom: 2px solid var(--border-color);
         }
 
-        .sidebar::-webkit-scrollbar-thumb:hover {
-            background: #a8a8a8;
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .table a {
+            color: var(--text-dark);
+            text-decoration: none;
+        }
+
+        .table a:hover {
+            color: var(--primary-color);
+        }
+
+        .notice-row {
+            background-color: #f0f2ff !important;
+        }
+
+        .notice-row td:first-child {
+            border-left: 4px solid var(--primary-color);
         }
     </style>
 </head>
@@ -503,14 +557,14 @@
             <div class="col-md-6 text-md-end">
                 <div class="header-controls">
                     <!-- 알림 버튼 -->
-                    <button class="btn btn-outline-light position-relative" id="notificationBtn">
+                    <button class="btn header-btn-outline position-relative" id="notificationBtn">
                         <i class="fas fa-bell"></i>
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
                               id="notificationCount" style="display: none;">0</span>
                     </button>
 
                     <!-- 임시저장 버튼 -->
-                    <button class="btn btn-outline-light" id="draftBtn">
+                    <button class="btn header-btn-outline" id="draftBtn">
                         <i class="fas fa-save me-1"></i>
                         임시저장
                     </button>
@@ -530,7 +584,7 @@
         <nav class="category-menu">
             <!-- 전체 게시글 -->
             <div class="category-item">
-                <a class="category-link" data-category="all" href="/community/posts/all"
+                <a href="/community/posts/all" class="category-link" data-category="all"
                    th:classappend="${currentCategoryId == 'all'} ? 'active' : ''">
                     <i class="fas fa-home category-icon"></i>
                     전체 게시글
@@ -540,10 +594,10 @@
 
             <!-- 카테고리 목록 (서버에서 동적으로 생성) -->
             <div class="category-item" th:each="category : ${categories}">
-                <a class="category-link"
-                   th:classappend="${currentCategoryId == category.categoryId} ? 'active' : ''"
+                <a th:href="@{/community/category/{categoryId}(categoryId=${category.categoryId})}"
+                   class="category-link"
                    th:data-category="${category.categoryId}"
-                   th:href="@{/community(categoryId=${category.categoryId})}">
+                   th:classappend="${currentCategoryId == category.categoryId} ? 'active' : ''">
                     <i class="fas fa-folder category-icon"></i>
                     <span th:text="${category.name}">카테고리명</span>
                     <span class="category-count">42</span>
@@ -566,12 +620,11 @@
                 <span th:unless="${currentCategoryId == 'all' or currentCategoryId == 1 or currentCategoryId == 2 or currentCategoryId == 3 or currentCategoryId == 4}">게시글을 확인하세요.</span>
             </p>
             <div class="content-actions">
-                <button class="btn btn-write"
-                        th:onclick="|location.href='/community/post/new?categoryId=${currentCategoryId}'|">
+                <button class="btn btn-primary-custom" th:onclick="|location.href='/community/post/new?categoryId=${currentCategoryId}'|">
                     <i class="fas fa-edit me-1"></i>
                     글쓰기
                 </button>
-                <button class="btn btn-search" data-bs-target="#searchModal" data-bs-toggle="modal">
+                <button class="btn btn-outline-custom" data-bs-toggle="modal" data-bs-target="#searchModal">
                     <i class="fas fa-search me-1"></i>
                     검색
                 </button>
@@ -583,27 +636,24 @@
             <!-- 게시글이 있는 경우 -->
             <div th:if="${not #lists.isEmpty(posts)}">
                 <div class="post-item"
-                     th:classappend="${post.notice} ? 'notice' : ''"
                      th:each="post : ${posts}"
+                     th:classappend="${post.notice} ? 'notice' : ''"
                      th:onclick="|location.href='/community/post/${post.postId}'|">
                     <div class="post-number">
-                            <span class="notice-badge" th:if="${post.notice}">
-                                <i class="fas fa-bullhorn me-1"></i>공지
-                            </span>
-                        <span th:text="${post.postId}" th:unless="${post.notice}">1</span>
+                        <span th:if="${post.notice}" class="notice-badge">
+                            <i class="fas fa-bullhorn me-1"></i>공지
+                        </span>
+                        <span th:unless="${post.notice}" th:text="${post.postId}">1</span>
                     </div>
                     <div class="post-content">
                         <div class="post-title">
                             <span th:text="${post.title}">게시글 제목입니다</span>
-                            <span class="new-badge"
-                                  th:if="${#temporals.createNow().minusDays(1).isBefore(post.createdAt)}">NEW</span>
+                            <span class="new-badge" th:if="${#temporals.createNow().minusDays(1).isBefore(post.createdAt)}">NEW</span>
                         </div>
                         <div class="post-meta">
                             <span><i class="fas fa-user"></i><span th:text="${post.nickname}">작성자</span></span>
-                            <span><i class="fas fa-calendar"></i><span
-                                    th:text="${#temporals.format(post.createdAt, 'MM-dd HH:mm')}">01-15 14:30</span></span>
-                            <span class="badge bg-secondary" th:if="${post.categoryName}"
-                                  th:text="${post.categoryName}">카테고리</span>
+                            <span><i class="fas fa-calendar"></i><span th:text="${#temporals.format(post.createdAt, 'MM-dd HH:mm')}">01-15 14:30</span></span>
+                            <span th:if="${post.categoryName}" class="badge bg-light text-dark" th:text="${post.categoryName}">카테고리</span>
                         </div>
                     </div>
                     <div class="post-stats">
@@ -623,8 +673,7 @@
                 <i class="fas fa-inbox"></i>
                 <h4>게시글이 없습니다</h4>
                 <p>첫 번째 게시글을 작성해보세요!</p>
-                <button class="btn btn-write"
-                        th:onclick="|location.href='/community/post/new?categoryId=${currentCategoryId}'|">
+                <button class="btn btn-primary-custom" th:onclick="|location.href='/community/post/new?categoryId=${currentCategoryId}'|">
                     <i class="fas fa-edit me-1"></i>
                     글쓰기
                 </button>
@@ -669,13 +718,13 @@
                     <i class="fas fa-search me-2"></i>
                     게시글 검색
                 </h5>
-                <button class="btn-close" data-bs-dismiss="modal" type="button"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form action="/community/search" class="search-form" method="get">
+                <form class="search-form" action="/community/search" method="get">
                     <div class="mb-3">
                         <label class="form-label">검색 유형</label>
-                        <select class="form-select" name="searchType">
+                        <select name="searchType" class="form-select">
                             <option value="titleContent">제목+내용</option>
                             <option value="title">제목만</option>
                             <option value="content">내용만</option>
@@ -684,19 +733,19 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">검색어</label>
-                        <input class="form-control" name="keyword" placeholder="검색어를 입력하세요" type="text">
+                        <input type="text" name="keyword" class="form-control" placeholder="검색어를 입력하세요">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">카테고리</label>
-                        <select class="form-select" name="categoryId">
+                        <select name="categoryId" class="form-select">
                             <option value="">전체 카테고리</option>
                             <option th:each="category : ${categories}"
-                                    th:text="${category.name}"
-                                    th:value="${category.categoryId}"></option>
+                                    th:value="${category.categoryId}"
+                                    th:text="${category.name}"></option>
                         </select>
                     </div>
                     <div class="d-grid">
-                        <button class="btn btn-primary" type="submit">
+                        <button type="submit" class="btn btn-primary">
                             <i class="fas fa-search me-1"></i>
                             검색
                         </button>
@@ -716,7 +765,7 @@
                     <i class="fas fa-bell me-2"></i>
                     알림
                 </h5>
-                <button class="btn-close" data-bs-dismiss="modal" type="button"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
                 <div id="notificationList">
@@ -727,11 +776,11 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-outline-secondary" id="markAllReadBtn" type="button">
+                <button type="button" class="btn btn-outline-secondary" id="markAllReadBtn">
                     <i class="fas fa-check-double me-1"></i>
                     모두 읽음 처리
                 </button>
-                <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">닫기</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
             </div>
         </div>
     </div>
@@ -746,7 +795,7 @@
                     <i class="fas fa-save me-2"></i>
                     임시저장 목록
                 </h5>
-                <button class="btn-close" data-bs-dismiss="modal" type="button"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" style="max-height: 500px; overflow-y: auto;">
                 <div id="draftList">
@@ -757,7 +806,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">닫기</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
             </div>
         </div>
     </div>
@@ -769,22 +818,22 @@
     const currentCategoryName = /*[[${currentCategoryName}]]*/ '자유게시판';
     /*]]>*/
 
-    $(document).ready(function () {
+    $(document).ready(function() {
         console.log('현재 카테고리 ID:', currentCategoryId);
         console.log('현재 카테고리 이름:', currentCategoryName);
 
         // 알림 관련 이벤트
-        $('#notificationBtn').click(function () {
+        $('#notificationBtn').click(function() {
             loadNotifications();
             $('#notificationModal').modal('show');
         });
 
-        $('#draftBtn').click(function () {
+        $('#draftBtn').click(function() {
             loadDrafts();
             $('#draftModal').modal('show');
         });
 
-        $('#markAllReadBtn').click(function () {
+        $('#markAllReadBtn').click(function() {
             markAllNotificationsAsRead();
         });
 
@@ -797,14 +846,14 @@
         $.ajax({
             url: '/api/community/notification/unread-count',
             type: 'GET',
-            success: function (response) {
+            success: function(response) {
                 if (response.unreadCount > 0) {
                     $('#notificationCount').text(response.unreadCount).show();
                 } else {
                     $('#notificationCount').hide();
                 }
             },
-            error: function () {
+            error: function() {
                 console.log('알림 개수 로드 실패');
             }
         });
@@ -815,39 +864,172 @@
         $.ajax({
             url: '/api/community/notification/list',
             type: 'GET',
-            success: function (response) {
+            success: function(response) {
                 renderNotifications(response.notifications);
             },
-            error: function () {
+            error: function() {
                 $('#notificationList').html('<div class="text-center text-danger">알림을 불러올 수 없습니다.</div>');
             }
         });
     }
 
+    // 알림 렌더링
+    function renderNotifications(notifications) {
+        let html = '';
+
+        if (notifications.length === 0) {
+            html = '<div class="text-center py-4 text-muted">새로운 알림이 없습니다.</div>';
+        } else {
+            notifications.forEach(function(notification) {
+                const unreadClass = !notification.read ? 'bg-light' : '';
+                const icon = getNotificationIcon(notification.type);
+                const message = getNotificationMessage(notification);
+
+                html += `
+                        <div class="notification-item ${unreadClass} p-3 border-bottom" data-id="${notification.notificationId}">
+                            <div class="d-flex align-items-start">
+                                <div class="me-3">
+                                    <i class="${icon}"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold">${notification.senderNickname || '시스템'}</div>
+                                    <div class="text-muted">${message}</div>
+                                    <small class="text-muted">${formatDate(notification.createdAt)}</small>
+                                </div>
+                                <div>
+                                    <button class="btn btn-sm btn-outline-primary mark-read-btn" data-id="${notification.notificationId}">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+            });
+        }
+
+        $('#notificationList').html(html);
+    }
+
+    // 임시저장 목록 로드
+    function loadDrafts() {
+        $.ajax({
+            url: '/api/community/draft/list',
+            type: 'GET',
+            success: function(response) {
+                renderDrafts(response.drafts);
+            },
+            error: function() {
+                $('#draftList').html('<div class="text-center text-danger">임시저장 목록을 불러올 수 없습니다.</div>');
+            }
+        });
+    }
+
+    // 임시저장 렌더링
+    function renderDrafts(drafts) {
+        let html = '';
+
+        if (drafts.length === 0) {
+            html = '<div class="text-center py-4 text-muted">임시저장된 글이 없습니다.</div>';
+        } else {
+            drafts.forEach(function(draft) {
+                html += `
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <h6 class="card-title">${draft.title || '(제목 없음)'}</h6>
+                                        <p class="card-text text-muted">${truncateText(draft.content, 100)}</p>
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock me-1"></i>
+                                            ${formatDate(draft.updatedAt)}
+                                        </small>
+                                    </div>
+                                    <div class="ms-3">
+                                        <button class="btn btn-sm btn-primary me-2" onclick="editDraft(${draft.draftId})">
+                                            <i class="fas fa-edit me-1"></i>
+                                            수정
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteDraft(${draft.draftId})">
+                                            <i class="fas fa-trash me-1"></i>
+                                            삭제
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+            });
+        }
+
+        $('#draftList').html(html);
+    }
+
+    // 모든 알림 읽음 처리
+    function markAllNotificationsAsRead() {
+        $.ajax({
+            url: '/api/community/notification/read-all',
+            type: 'POST',
+            success: function(response) {
+                if (response.success) {
+                    loadNotifications();
+                    loadNotificationCount();
+                }
+            }
+        });
+    }
+
+    // 개별 알림 읽음 처리
+    $(document).on('click', '.mark-read-btn', function() {
+        const notificationId = $(this).data('id');
+
+        $.ajax({
+            url: `/api/community/notification/read/${notificationId}`,
+            type: 'POST',
+            success: function(response) {
+                if (response.success) {
+                    loadNotifications();
+                    loadNotificationCount();
+                }
+            }
+        });
+    });
+
+    // 임시저장 수정
+    function editDraft(draftId) {
+        window.location.href = `/community/post/new?draftId=${draftId}`;
+    }
+
+    // 임시저장 삭제
+    function deleteDraft(draftId) {
+        if (confirm('정말 삭제하시겠습니까?')) {
+            $.ajax({
+                url: `/api/community/draft/${draftId}`,
+                type: 'DELETE',
+                success: function(response) {
+                    if (response.success) {
+                        loadDrafts();
+                    }
+                }
+            });
+        }
+    }
+
     // 유틸리티 함수들
     function getNotificationIcon(type) {
-        switch (type) {
-            case 'new_comment':
-                return 'fas fa-comment text-primary';
-            case 'new_reply':
-                return 'fas fa-reply text-info';
-            case 'comment_like':
-                return 'fas fa-heart text-danger';
-            default:
-                return 'fas fa-bell text-secondary';
+        switch(type) {
+            case 'new_comment': return 'fas fa-comment text-primary';
+            case 'new_reply': return 'fas fa-reply text-info';
+            case 'comment_like': return 'fas fa-heart text-danger';
+            default: return 'fas fa-bell text-secondary';
         }
     }
 
     function getNotificationMessage(notification) {
-        switch (notification.type) {
-            case 'new_comment':
-                return '회원님의 게시글에 새 댓글이 달렸습니다.';
-            case 'new_reply':
-                return '회원님의 댓글에 답글이 달렸습니다.';
-            case 'comment_like':
-                return '회원님의 댓글에 좋아요가 눌렸습니다.';
-            default:
-                return '새로운 알림이 있습니다.';
+        switch(notification.type) {
+            case 'new_comment': return '회원님의 게시글에 새 댓글이 달렸습니다.';
+            case 'new_reply': return '회원님의 댓글에 답글이 달렸습니다.';
+            case 'comment_like': return '회원님의 댓글에 좋아요가 눌렸습니다.';
+            default: return '새로운 알림이 있습니다.';
         }
     }
 
@@ -867,7 +1049,6 @@
         if (!text) return '';
         return text.length > length ? text.substring(0, length) + '...' : text;
     }
-
 
     // 개별 알림 읽음 처리
     $(document).on('click', '.mark-read-btn', function () {

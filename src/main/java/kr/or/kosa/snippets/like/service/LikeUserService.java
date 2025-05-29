@@ -20,7 +20,7 @@ public class LikeUserService {
      * @param userId 사용자 ID
      * @return nickname (없으면 "알 수 없음" 반환)
      */
-    public String getNicknameByUserId(int userId) {
+    public String getNicknameByUserId(long userId) {
         try {
             String sql = "SELECT nickname FROM users WHERE user_id = ?";
             return jdbcTemplate.queryForObject(sql, String.class, userId);
@@ -35,8 +35,8 @@ public class LikeUserService {
      * @param userIds 사용자 ID 목록
      * @return userId -> nickname 매핑
      */
-    public Map<Integer, String> getNicknamesByUserIds(List<Integer> userIds) {
-        Map<Integer, String> nicknameMap = new HashMap<>();
+    public Map<Long, String> getNicknamesByUserIds(List<Long> userIds) {
+        Map<Long, String> nicknameMap = new HashMap<>();
 
         if (userIds == null || userIds.isEmpty()) {
             return nicknameMap;
@@ -51,7 +51,7 @@ public class LikeUserService {
             String sql = "SELECT user_id, nickname FROM users WHERE user_id IN (" + placeholders + ")";
 
             jdbcTemplate.query(sql, userIds.toArray(), (rs) -> {
-                nicknameMap.put(rs.getInt("user_id"), rs.getString("nickname"));
+                nicknameMap.put(rs.getLong("user_id"), rs.getString("nickname"));
             });
 
         } catch (Exception e) {
@@ -59,7 +59,7 @@ public class LikeUserService {
         }
 
         // 조회되지 않은 userId들은 기본값 설정
-        for (Integer userId : userIds) {
+        for (long userId : userIds) {
             if (!nicknameMap.containsKey(userId)) {
                 nicknameMap.put(userId, "알 수 없음");
             }

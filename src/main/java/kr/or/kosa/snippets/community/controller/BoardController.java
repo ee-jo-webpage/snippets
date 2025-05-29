@@ -38,7 +38,7 @@ public class BoardController {
     private final CommentService commentService;
     private final NotificationService notificationService;
 
-    // 게시판 목록
+    // 게시판 메인 페이지
     @GetMapping
     public String boardMain(@RequestParam(required = false) Integer categoryId, Model model) {
         try {
@@ -48,43 +48,129 @@ public class BoardController {
             if (categoryId != null) {
                 // 특정 카테고리가 지정된 경우
                 posts = boardService.getPostsByCategoryId(categoryId);
+                BoardCategory currentCategory = boardService.getCategoryById(categoryId);
+                model.addAttribute("currentCategoryId", categoryId);
+                model.addAttribute("currentCategoryName", currentCategory != null ? currentCategory.getName() : "알 수 없음");
+                model.addAttribute("category", currentCategory);
             } else {
                 // 기본값: 자유게시판 (categoryId = 1)
                 posts = boardService.getPostsByCategoryId(1);
+                model.addAttribute("currentCategoryId", 1);
+                model.addAttribute("currentCategoryName", "자유게시판");
+                model.addAttribute("category", boardService.getCategoryById(1));
             }
 
             model.addAttribute("categories", categories);
             model.addAttribute("posts", posts);
 
-            // 현재 카테고리 정보 추가
-            if (categoryId != null) {
-                BoardCategory currentCategory = boardService.getCategoryById(categoryId);
-                model.addAttribute("currentCategoryId", categoryId);
-                model.addAttribute("currentCategoryName", currentCategory != null ? currentCategory.getName() : "알 수 없음");
-            } else {
-                model.addAttribute("currentCategoryId", 1);
-                model.addAttribute("currentCategoryName", "자유게시판");
-            }
-
-            return "community/categoryList"; // 기존 파일명 유지
+            return "community/categoryList"; // 메인 템플릿
         } catch (Exception e) {
+            e.printStackTrace();
             model.addAttribute("error", "데이터베이스 연결에 문제가 있습니다. 관리자에게 문의하세요.");
             return "error/database-error";
         }
     }
 
-    // 게시글 목록
+
+    // 게시글 목록 - AJAX 지원 추가
     @GetMapping("/category/{categoryId}")
-    public String postList(@PathVariable Integer categoryId, Model model) {
+    public String postList(@PathVariable Integer categoryId,
+                           @RequestParam(required = false) Boolean ajax,
+                           Model model) {
         try {
             BoardCategory category = boardService.getCategoryById(categoryId);
             List<Post> posts = boardService.getPostsByCategoryId(categoryId);
+            List<BoardCategory> categories = boardService.getAllCategories(); // 전체 카테고리 정보 추가
 
             model.addAttribute("category", category);
             model.addAttribute("posts", posts);
+            model.addAttribute("categories", categories);
+            model.addAttribute("currentCategoryId", categoryId);
+            model.addAttribute("currentCategoryName", category.getName());
+
+            // AJAX 요청인 경우 콘텐츠만 포함된 템플릿 반환
+            if (ajax != null && ajax) {
+                return "community/postListContent"; // 콘텐츠만 포함하는 템플릿
+            }
+
+            // 일반 요청인 경우 전체 템플릿 반환
             return "community/postList";
         } catch (Exception e) {
+            e.printStackTrace();
             model.addAttribute("error", "게시글 목록을 불러올 수 없습니다.");
+            return "redirect:/community";
+        }
+    }
+
+
+    // 전체 게시글 목록 - AJAX 지원 추가
+    @GetMapping("/posts/all")
+    public String allPostsList(@RequestParam(required = false) Boolean ajax,
+                               Model model) {
+        try {
+            List<Post> allPosts = boardService.getAllPosts();
+            List<BoardCategory> categories = boardService.getAllCategories();
+
+            model.addAttribute("posts", allPosts);
+            model.addAttribute("categories", categories);
+            model.addAttribute("currentCategoryId", "all");
+            model.addAttribute("currentCategoryName", "전체 게시글");
+            model.addAttribute("category", new BoardCategory()); // 빈 카테고리 객체 추가
+
+            // AJAX 요청인 경우 콘텐츠만 포함된 템플릿 반환
+            if (ajax != null && ajax) {
+                return "community/postListContent"; // 콘텐츠만 포함하는 템플릿
+            }
+
+            // 일반 요청인 경우 전체 템플릿 반환
+            return "community/postList";
+        } catch (Exception e) {
+            e.printStackTrace();
+            model.addAttribute("error", "게시글 목록을 불러올 수 없습니다.");
+            return "redirect:/community";
+        }
+    }
+
+
+    /**
+     * 게시글 작성 폼
+     * 중요: 이 메서드는 @GetMapping("/post/{postId}") 메서드보다 반드시 위에 위치해야 합니다.
+     * Spring MVC는 더 구체적인 URL 패턴을 먼저 처리하므로, 명시적인 "/post/new" 경로가
+     * 와일드카드 경로인 "/post/{postId}"보다 먼저 처리되어야 합니다.
+     */
+    @GetMapping("/post/new")
+    public String newPostForm(@RequestParam(required = false) Integer categoryId,
+                              Model model,
+                              @AuthenticationPrincipal CustomUserDetails userDetails) {
+        // 로그인 체크
+        if (userDetails == null) {
+            return "redirect:/login?message=loginRequired";
+        }
+
+        try {
+            System.out.println("=== 게시글 작성 폼 접근 ===");
+
+            // 카테고리 목록 조회
+            List<BoardCategory> categories = boardService.getAllCategories();
+            model.addAttribute("categories", categories);
+
+            // 새 게시글 객체 생성
+            Post post = new Post();
+
+            // 카테고리 ID가 지정된 경우 설정
+            if (categoryId != null) {
+                post.setCategoryId(categoryId);
+                System.out.println("선택된 카테고리 ID: " + categoryId);
+            }
+
+            model.addAttribute("post", post);
+            model.addAttribute("isNew", true);
+            model.addAttribute("currentUserNickname", userDetails.getNickname());
+
+            return "community/postForm";
+        } catch (Exception e) {
+            e.printStackTrace();
+            model.addAttribute("error", "게시글 작성 폼을 불러올 수 없습니다.");
             return "redirect:/community";
         }
     }

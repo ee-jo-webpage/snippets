@@ -41,7 +41,7 @@ public class LikeSnippetController {
     private SnippetContentMapper snippetContentMapper;
 
     @GetMapping("/snippet/{id}")
-    public String showSnippetDetail(@PathVariable("id") Integer snippetId,
+    public String showSnippetDetail(@PathVariable("id") Long snippetId,
                                     @AuthenticationPrincipal CustomUserDetails userDetails,
                                     Model model) {
 
@@ -148,7 +148,7 @@ public class LikeSnippetController {
             }
 
             // 각 스니펫의 좋아요 상태 확인
-            Map<Integer, Boolean> likeStatusMap = new HashMap<>();
+            Map<Long, Boolean> likeStatusMap = new HashMap<>();
             if (userDetails != null) {
                 for (Snippet snippet : snippets) {
                     boolean isLiked = likeService.isLiked(snippet.getSnippetId(), userDetails.getUserId());
@@ -157,14 +157,14 @@ public class LikeSnippetController {
             }
 
             // 각 스니펫 소유자의 nickname 조회 (추가)
-            List<Integer> userIds = snippets.stream()
+            List<Long> userIds = snippets.stream()
                     .map(Snippet::getUserId)
                     .distinct()
                     .collect(Collectors.toList());
-            Map<Integer, String> nicknameMap = likeUserService.getNicknamesByUserIds(userIds);
+            Map<Long, String> nicknameMap = likeUserService.getNicknamesByUserIds(userIds);
 
             // 스니펫 content 미리보기 조회 (추가)
-            Map<Integer, String> contentPreviewMap = likeSnippetService.getSnippetContentPreviews(snippets);
+            Map<Long, String> contentPreviewMap = likeSnippetService.getSnippetContentPreviews(snippets);
 
             // 페이징 정보 계산
             int totalPages = (int) Math.ceil((double) totalSnippets / pageSize);

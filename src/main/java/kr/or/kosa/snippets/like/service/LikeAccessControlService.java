@@ -21,7 +21,7 @@ public class LikeAccessControlService {
      * @param userDetails 현재 로그인한 사용자 정보
      * @return 접근 가능 여부
      */
-    public boolean canAccessSnippet(Integer snippetId, CustomUserDetails userDetails) {
+    public boolean canAccessSnippet(Long snippetId, CustomUserDetails userDetails) {
         if (snippetId == null || snippetId <= 0) {
             return false;
         }
@@ -50,7 +50,7 @@ public class LikeAccessControlService {
      * @param userDetails 현재 로그인한 사용자 정보
      * @return 소유자 여부
      */
-    public boolean isSnippetOwner(Integer snippetId, CustomUserDetails userDetails) {
+    public boolean isSnippetOwner(Long snippetId, CustomUserDetails userDetails) {
         if (snippetId == null || snippetId <= 0 || userDetails == null) {
             return false;
         }
@@ -68,7 +68,7 @@ public class LikeAccessControlService {
      * @param snippetId 스니펫 ID
      * @return 공개 여부
      */
-    public boolean isPublicSnippet(Integer snippetId) {
+    public boolean isPublicSnippet(Long snippetId) {
         if (snippetId == null || snippetId <= 0) {
             return false;
         }
@@ -87,7 +87,7 @@ public class LikeAccessControlService {
      * @param userDetails 사용자 정보
      * @param reason 거부 사유
      */
-    public void logAccessDenied(Integer snippetId, CustomUserDetails userDetails, String reason) {
+    public void logAccessDenied(Long snippetId, CustomUserDetails userDetails, String reason) {
         String userInfo = userDetails != null ?
                 "User ID: " + userDetails.getUserId() + ", Nickname: " + userDetails.getNickname() :
                 "Anonymous";
@@ -101,7 +101,7 @@ public class LikeAccessControlService {
      * @param userDetails 사용자 정보
      * @param action 수행한 작업
      */
-    public void logAccessGranted(Integer snippetId, CustomUserDetails userDetails, String action) {
+    public void logAccessGranted(Long snippetId, CustomUserDetails userDetails, String action) {
         String userInfo = userDetails != null ?
                 "User ID: " + userDetails.getUserId() + ", Nickname: " + userDetails.getNickname() :
                 "Anonymous";

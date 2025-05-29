@@ -11,17 +11,17 @@ import java.util.List;
 public interface LikeMapper {
 
     // 좋아요 추가
-    void addLike(@Param("userId") Integer userId, @Param("snippetId") Integer snippetId);
+    void addLike(@Param("userId") Long userId, @Param("snippetId") Long snippetId);
 
     // 좋아요 취소
-    void removeLike(@Param("userId") Integer userId, @Param("snippetId") Integer snippetId);
+    void removeLike(@Param("userId") Long userId, @Param("snippetId") Long snippetId);
 
     // 특정 스니펫에 대한 좋아요 수 반환
-    long countLikes(@Param("snippetId") Integer snippetId);
+    long countLikes(@Param("snippetId") Long snippetId);
 
     // 특정 사용자가 누른 좋아요 목록 반환
-    List<Like> getUserLikes(@Param("userId") Integer userId);
+    List<Like> getUserLikes(@Param("userId") Long userId);
 
     // 사용자가 특정 스니펫에 좋아요를 눌렀는지 확인
-    boolean isLiked(@Param("userId") Integer userId, @Param("snippetId") Integer snippetId);
+    boolean isLiked(@Param("userId") Long userId, @Param("snippetId") Long snippetId);
 }

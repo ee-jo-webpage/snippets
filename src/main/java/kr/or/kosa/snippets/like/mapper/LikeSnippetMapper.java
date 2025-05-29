@@ -10,7 +10,7 @@ import java.util.List;
 public interface LikeSnippetMapper {
 
     // 특정 사용자의 스니펫 목록 조회
-    List<Snippet> getSnippetsByUserId(@Param("userId") Integer userId);
+    List<Snippet> getSnippetsByUserId(@Param("userId") Long userId);
 
     // 모든 공개 스니펫 목록 조회
     List<Snippet> getAllPublicSnippets();
@@ -31,13 +31,13 @@ public interface LikeSnippetMapper {
                                  @Param("tagName") String tagName);
 
     // 특정 스니펫 조회
-    Snippet getSnippetById(@Param("snippetId") Integer snippetId);
+    Snippet getSnippetById(@Param("snippetId") Long snippetId);
 
     // 스니펫 상세 정보 조회 (태그 포함)
-    Snippet getSnippetDetailById(@Param("snippetId") Integer snippetId);
+    Snippet getSnippetDetailById(@Param("snippetId") Long snippetId);
 
     // 좋아요 수 업데이트
-    void updateLikeCount(@Param("snippetId") Integer snippetId, @Param("likeCount") Integer likeCount);
+    void updateLikeCount(@Param("snippetId") Long snippetId, @Param("likeCount") Integer likeCount);
 
     // 페이징 처리된 인기 스니펫 조회 (기존)
     List<Snippet> getPopularSnippetsPaged(@Param("offset") Integer offset, @Param("limit") Integer limit);

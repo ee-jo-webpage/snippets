@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class SnippetImage {
-    private int snippetId;
+    private Long snippetId;
     private String imageUrl;
     private String altText;
 }

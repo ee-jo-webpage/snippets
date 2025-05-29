@@ -12,10 +12,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class Snippet {
-    private int snippetId;      // snippet_id
-    private int userId;         // user_id
-    private int folderId;       // folder_id
-    private int colorId;        // color_id
+    private Long snippetId;      // snippet_id
+    private Long userId;         // user_id
+    private Long colorId;        // color_id
     private String sourceUrl;   // source_url
     private String type;        // type
     private String memo;        // memo

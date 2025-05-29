@@ -8,11 +8,11 @@ public class LikedId implements Serializable {
     // JPA 복합 키를 위한 클래스
     // Like 엔티티의 @IdClass로 사용됨
 
-    private int user_id;   // Like.java와 동일하게 int 타입
+    private Long user_id;
     // 복합 키의 첫 번째 부분: 사용자 ID
     // Like 클래스의 user_id 필드와 이름과 타입이 정확히 일치해야 함
 
-    private int snippet_id; // Like.java와 동일하게 int 타입
+    private Long snippet_id;
     // 복합 키의 두 번째 부분: 스니펫 ID
     // Like 클래스의 snippet_id 필드와 이름과 타입이 정확히 일치해야 함
 
@@ -21,7 +21,7 @@ public class LikedId implements Serializable {
     // JPA 복합 키 클래스는 반드시 기본 생성자가 있어야 함
     // 기본 생성자가 없으면 JPA가 객체를 생성할 수 없음
 
-    public LikedId(int user_id, int snippet_id) {
+    public LikedId(Long user_id, Long snippet_id) {
         this.user_id = user_id;
         this.snippet_id = snippet_id;
     }
@@ -48,7 +48,9 @@ public class LikedId implements Serializable {
     public int hashCode() {
         // 해시코드 생성 메서드
         // HashMap, HashSet 등에서 객체를 빠르게 찾기 위해 사용
-        return 31 * (user_id + snippet_id);
+        int result = Long.hashCode(user_id);
+        result = 31 * result + Long.hashCode(snippet_id);
+        return result;
         // 간단한 해시코드 계산 공식
         // 31은 소수로, 해시 충돌을 줄이는 일반적인 관례
     }

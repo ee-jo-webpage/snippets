@@ -21,11 +21,11 @@ public class Like {
 
     @Id
     @Column(name = "user_id")
-    private int user_id;  // DB INT 타입에 맞게 int 유지
+    private Long user_id;
 
     @Id
     @Column(name = "snippet_id")
-    private int snippet_id;  // DB INT 타입에 맞게 int 유지
+    private Long snippet_id;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime created_at;  // 생성 시간

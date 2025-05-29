@@ -20,7 +20,7 @@ public class LikeController {
     private LikeAccessControlService accessControlService;
 
     @GetMapping("/likePage")
-    public String showLikePage(@RequestParam(value = "snippetId", defaultValue = "1") Integer snippetId,
+    public String showLikePage(@RequestParam(value = "snippetId", defaultValue = "1") Long snippetId,
                                @AuthenticationPrincipal CustomUserDetails userDetails,
                                Model model) {
 

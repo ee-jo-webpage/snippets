@@ -3,6 +3,8 @@ package kr.or.kosa.snippets.basic.controller;
 import java.beans.PropertyEditorSupport;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -71,9 +73,41 @@ public class SnippetController {
         // 2) 페이징 시작
         PageHelper.startPage(page, pageSize);
 
-        // 3) 해당 유저 스니펫만 조회
+        // 3) 해당 유저 스니펫만 조회 (타입별 내용 포함)
         List<Snippets> list = snippetService.getUserSnippets(userId);
         model.addAttribute("filterUserId", userId);
+
+        // ★ 수정: 타입별 실제 내용으로 contentPreviewMap 생성
+        Map<Long, String> previewMap = list.stream()
+            .collect(Collectors.toMap(
+                Snippets::getSnippetId,
+                snippet -> {
+                    String preview = "";
+                    switch (snippet.getType()) {
+                        case CODE:
+                        case TEXT:
+                            String content = snippet.getContent();
+                            if (content != null && !content.trim().isEmpty()) {
+                                preview = content.length() > 100 ? content.substring(0, 100) + "…" : content;
+                            } else {
+                                preview = "내용 없음";
+                            }
+                            break;
+                        case IMG:
+                            String altText = snippet.getAltText();
+                            if (altText != null && !altText.trim().isEmpty()) {
+                                preview = "[이미지] " + altText;
+                            } else {
+                                preview = "[이미지] 설명 없음";
+                            }
+                            break;
+                        default:
+                            preview = "내용 없음";
+                    }
+                    return preview;
+                }
+            ));
+        model.addAttribute("contentPreviewMap", previewMap);
 
         // 4) 페이지 정보 생성
         PageInfo<Snippets> pageInfo = new PageInfo<>(list);
@@ -92,7 +126,7 @@ public class SnippetController {
         model.addAttribute("startPage", startPage);
         model.addAttribute("endPage", endPage);
         
-        // ★ 추가: 사이드바 활성화를 위한 activeMenu 설정
+        // ★ 사이드바 활성화를 위한 activeMenu 설정
         model.addAttribute("activeMenu", "snippets");
 
         return "basic/snippets/snippetsList";
@@ -118,7 +152,7 @@ public class SnippetController {
 
     @GetMapping("/new")
     public String showAddForm(
-            @RequestParam(value = "type", required = false) SnippetTypeBasic type,
+            @RequestParam(value="type", required = false) SnippetTypeBasic type,
             Model model,
             @AuthenticationPrincipal CustomUserDetails details) {
 

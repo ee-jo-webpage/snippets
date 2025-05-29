@@ -23,7 +23,7 @@ public class LikeSnippetService {
     private TagMapper tagMapper;
 
     @Autowired
-    private SnippetContentMapper snippetContentMapper;  // 추가
+    private SnippetContentMapper snippetContentMapper;
 
     // ===== 기존 메서드들 =====
 
@@ -128,7 +128,7 @@ public class LikeSnippetService {
     }
 
     /**
-     * TOP 100 스니펫 내에서 필터링 (인메모리 방식)
+     * TOP 100 스니펫 내에서 필터링 (인메모리 방식) - 내용 검색으로 수정
      */
     public List<Snippet> filterSnippetsFromTop100(String type, String keyword, Integer minLikes, String tagName) {
         // 먼저 TOP 100 스니펫을 가져옴 (popular_snippets_view 사용)
@@ -142,13 +142,18 @@ public class LikeSnippetService {
             return allPopularSnippets;
         }
 
-        // 유형, 키워드, 좋아요 수로 필터링
+        // 유형, 좋아요 수로 먼저 필터링
         List<Snippet> filteredSnippets = allPopularSnippets.stream()
                 .filter(s -> type == null || type.isEmpty() || s.getType().equals(type))
-                .filter(s -> keyword == null || keyword.isEmpty() ||
-                        (s.getMemo() != null && s.getMemo().toLowerCase().contains(keyword.toLowerCase())))
                 .filter(s -> minLikes == null || s.getLikeCount() >= minLikes)
                 .collect(Collectors.toList());
+
+        // 키워드 필터링 (내용 검색)
+        if (keyword != null && !keyword.isEmpty()) {
+            filteredSnippets = filteredSnippets.stream()
+                    .filter(s -> matchesContentKeyword(s, keyword))
+                    .collect(Collectors.toList());
+        }
 
         // 태그 필터링 (필요한 경우)
         if (tagName != null && !tagName.isEmpty()) {
@@ -165,58 +170,76 @@ public class LikeSnippetService {
     }
 
     /**
-     * 스니펫의 content 미리보기 조회 (타입별로 다른 테이블에서)
+     * 스니펫 내용에서 키워드가 포함되어 있는지 검사하는 메서드
      */
-    public String getSnippetContentPreview(Snippet snippet) {
+    private boolean matchesContentKeyword(Snippet snippet, String keyword) {
         try {
-            if (snippet == null || snippet.getType() == null) {
-                return "스니펫 정보를 불러올 수 없습니다.";
-            }
+            String lowerKeyword = keyword.toLowerCase();
 
             switch (snippet.getType().toUpperCase()) {
                 case "CODE":
                     SnippetCode snippetCode = snippetContentMapper.getSnippetCodeById(snippet.getSnippetId());
                     if (snippetCode != null && snippetCode.getContent() != null) {
-                        return truncateContent(snippetCode.getContent(), 100);
-                    } else {
-                        return "[코드] 코드 내용을 불러올 수 없습니다.";
+                        return snippetCode.getContent().toLowerCase().contains(lowerKeyword);
                     }
+                    break;
 
                 case "TEXT":
                     SnippetText snippetText = snippetContentMapper.getSnippetTextById(snippet.getSnippetId());
                     if (snippetText != null && snippetText.getContent() != null) {
-                        return truncateContent(snippetText.getContent(), 100);
-                    } else {
-                        return "[텍스트] 텍스트 내용을 불러올 수 없습니다.";
+                        return snippetText.getContent().toLowerCase().contains(lowerKeyword);
                     }
+                    break;
+
+                case "IMG":
+                    SnippetImage snippetImage = snippetContentMapper.getSnippetImageById(snippet.getSnippetId());
+                    if (snippetImage != null && snippetImage.getAltText() != null) {
+                        return snippetImage.getAltText().toLowerCase().contains(lowerKeyword);
+                    }
+                    break;
+            }
+        } catch (Exception e) {
+            System.err.println("키워드 매칭 실패 - snippetId: " + snippet.getSnippetId() + ", 오류: " + e.getMessage());
+        }
+
+        return false;
+    }
+
+    /**
+     * 스니펫의 content 미리보기 조회 (타입별로 다른 테이블에서)
+     */
+    public String getSnippetContentPreview(Snippet snippet) {
+        try {
+            switch (snippet.getType().toUpperCase()) {
+                case "CODE":
+                    SnippetCode snippetCode = snippetContentMapper.getSnippetCodeById(snippet.getSnippetId());
+                    if (snippetCode != null && snippetCode.getContent() != null) {
+                        return truncateContent(snippetCode.getContent(), 100); // 100자로 제한
+                    }
+                    break;
+
+                case "TEXT":
+                    SnippetText snippetText = snippetContentMapper.getSnippetTextById(snippet.getSnippetId());
+                    if (snippetText != null && snippetText.getContent() != null) {
+                        return truncateContent(snippetText.getContent(), 100); // 100자로 제한
+                    }
+                    break;
 
                 case "IMG":
                     SnippetImage snippetImage = snippetContentMapper.getSnippetImageById(snippet.getSnippetId());
                     if (snippetImage != null) {
-                        String altText = snippetImage.getAltText();
-                        String imageUrl = snippetImage.getImageUrl();
-
-                        if (altText != null && !altText.trim().isEmpty()) {
-                            return "[이미지] " + altText;
-                        } else if (imageUrl != null && !imageUrl.trim().isEmpty()) {
-                            return "[이미지] " + imageUrl;
-                        } else {
-                            return "[이미지] 이미지 정보 없음";
-                        }
-                    } else {
-                        // 이미지 데이터가 없는 경우 처리
-                        System.err.println("이미지 스니펫 데이터 누락 - snippetId: " + snippet.getSnippetId());
-                        return "[이미지] 이미지 데이터를 불러올 수 없습니다.";
+                        return "[이미지] " + (snippetImage.getAltText() != null ? snippetImage.getAltText() : "이미지 설명 없음");
                     }
+                    break;
 
                 default:
-                    return "알 수 없는 스니펫 타입: " + snippet.getType();
+                    return "내용을 불러올 수 없습니다.";
             }
         } catch (Exception e) {
             System.err.println("스니펫 content 조회 실패 - snippetId: " + snippet.getSnippetId() + ", 오류: " + e.getMessage());
-            e.printStackTrace();
-            return "내용을 불러오는 중 오류가 발생했습니다.";
         }
+
+        return "내용을 불러올 수 없습니다.";
     }
 
     /**

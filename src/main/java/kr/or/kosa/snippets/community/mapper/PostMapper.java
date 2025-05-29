@@ -15,7 +15,7 @@ public interface PostMapper {
     List<Post> getPostsByUserId(Long userId);
     Post getPostById(Integer postId);
     void insertPost(Post post);
-    void updatePost(Post post);
+    int updatePost(Post post);
     void deletePost(Integer postId);
     void increaseViewCount(Integer postId);
 

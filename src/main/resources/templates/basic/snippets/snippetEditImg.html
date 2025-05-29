@@ -1,85 +1,106 @@
-<!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-  <meta charset="UTF-8" />
-  <title>스니펫 수정 - 이미지</title>
-</head>
-<body>
-  <h1>이미지 수정</h1>
-  <form th:action="@{/snippets/edit/{snippetId}(snippetId=${snippet.snippetId})}" th:object="${snippet}" method="post" enctype="multipart/form-data">
+<!-- snippetEditImg.html - 모달용 -->
+<h2>이미지 스니펫 수정</h2>
+<form th:action="@{/snippets/edit/{snippetId}(snippetId=${snippet.snippetId})}" th:object="${snippet}" method="post" enctype="multipart/form-data">
     <table>
-       User ID - 읽기 전용 
-	  <tr>
-	      <th>User ID</th>
-	      <td><input type="text" th:value="${snippet.userId}" readonly="readonly" /></td>
-	  </tr>
-	  <tr>
-	      <th>Folder ID</th>
-	      <td><input type="text" th:value="${snippet.folderId}" readonly="readonly" /></td>
-	  </tr>
-	  <tr>
-	      <th>Color ID</th>
-	      <td><input type="text" th:field="*{colorId}" /></td>
-	  </tr>
-	  <tr>
-	      <th>Source URL</th>
-	      <td><input type="text" th:value="${snippet.sourceUrl}" readonly="readonly" /></td>
-	  </tr>
-	  <tr>
-	      <th>Type</th>
-	      <td><input type="text" th:value="${snippet.type}" readonly="readonly" /></td>
-	  </tr>
-	  <tr>
-	      <th>Memo</th>
-	      <td><textarea th:field="*{memo}" rows="4"></textarea></td>
-	  </tr>
-	  <tr>
-	      <th>Created At</th>
-	      <td><input type="text" th:value="${snippet.createdAt}" readonly="readonly" /></td>
-	  </tr>
-	  <tr>
-	      <th>Updated At</th>
-	      <td><input type="text" th:value="${snippet.updatedAt}" readonly="readonly" /></td>
-	  </tr>
-	  <tr>
-	      <th>Like Count</th>
-	      <td><input type="number" th:value="${snippet.likeCount}" readonly="readonly" /></td>
-	  </tr>
-	  <tr>
-	      <th>Visibility</th>
-	      <td>
-	          <select th:field="*{visibility}">
-	              <option value="1" th:selected="${snippet.visibility == 1}">Visible</option>
-	              <option value="0" th:selected="${snippet.visibility == 0}">Hidden</option>
-	          </select>
-	      </td>
-	  </tr>
-	  <tr>
-	      <th>Img URL</th>
-	      <td><input type="text" th:value="${snippet.imageUrl}" readonly="readonly" /></td>
-	  </tr>
-	  <tr>
-	      <th>Alt Text</th>
-	      <td><input type="text" th:field="*{altText}" /></td>
-	  </tr>
-	  <tr>
-	      <th>Image File</th>
-	      <td><input type="file" th:field="*{imageFile}" name="imageFile" accept="image/*" /></td>
-	  </tr>
-	  <tr>
-	      <th>Language</th>
-	      <td>
-	          <select th:field="*{language}">
-	              <option value="JAVA" th:selected="${snippet.language == 'JAVA'}">JAVA</option>
-	              <option value="PYTHON" th:selected="${snippet.language == 'PYTHON'}">PYTHON</option>
-	              <option value="C" th:selected="${snippet.language == 'C'}">C</option>
-	          </select>
-	      </td>
-	  </tr>
-    </table>
-    <button type="submit">수정</button>
-  </form>
+        <!-- User ID - 읽기 전용 -->
+        <tr>
+            <th>User ID</th>
+            <td><input type="text" th:value="${snippet.userId}" readonly="readonly" /></td>
+        </tr>
 
-  <a href="/snippets" class="back">← 목록으로 돌아가기</a>
-</body>
-</html>
+        <!-- Color 선택 - 드롭다운 -->
+        <tr>
+            <th>Color</th>
+            <td>
+                <select th:field="*{colorId}" required>
+                    <option value="" disabled>-- 색상 선택 --</option>
+                    <option th:each="color : ${colors}"
+                            th:value="${color.colorId}"
+                            th:text="${color.name}"
+                            th:style="'background-color:' + ${color.hexCode}">
+                    </option>
+                </select>
+            </td>
+        </tr>
+
+        <!-- Source URL - 읽기 전용 -->
+        <tr>
+            <th>Source URL</th>
+            <td><input type="text" th:value="${snippet.sourceUrl}" readonly="readonly" /></td>
+        </tr>
+
+        <!-- Type - 읽기 전용 -->
+        <tr>
+            <th>Type</th>
+            <td><input type="text" th:value="${snippet.type}" readonly="readonly" /></td>
+        </tr>
+
+        <!-- Memo - 수정 가능 -->
+        <tr>
+            <th>Memo</th>
+            <td><textarea th:field="*{memo}" rows="4"></textarea></td>
+        </tr>
+
+        <!-- Created At - 읽기 전용 -->
+        <tr>
+            <th>Created At</th>
+            <td><input type="text" th:value="${snippet.createdAt}" readonly="readonly" /></td>
+        </tr>
+
+        <!-- Updated At - 읽기 전용 -->
+        <tr>
+            <th>Updated At</th>
+            <td><input type="text" th:value="${snippet.updatedAt}" readonly="readonly" /></td>
+        </tr>
+
+        <!-- Like Count - 읽기 전용 -->
+        <tr>
+            <th>Like Count</th>
+            <td><input type="number" th:value="${snippet.likeCount}" readonly="readonly" /></td>
+        </tr>
+
+        <!-- Visibility - 수정 가능 -->
+        <tr>
+            <th>Visibility</th>
+            <td>
+                <select th:field="*{visibility}">
+                    <option value="1" th:selected="${snippet.visibility == 1}">Visible</option>
+                    <option value="0" th:selected="${snippet.visibility == 0}">Hidden</option>
+                </select>
+            </td>
+        </tr>
+
+        <!-- 현재 이미지 표시 -->
+        <tr th:if="${snippet.imageUrl != null}">
+            <th>현재 이미지</th>
+            <td>
+                <img th:src="${snippet.imageUrl}" alt="Current Image" style="max-width: 200px; height: auto;" />
+            </td>
+        </tr>
+
+        <!-- 이미지 URL - 읽기 전용 -->
+        <tr>
+            <th>현재 이미지 URL</th>
+            <td><input type="text" th:value="${snippet.imageUrl}" readonly="readonly" /></td>
+        </tr>
+
+        <!-- Alt Text - 수정 가능 -->
+        <tr>
+            <th>Alt Text</th>
+            <td><input type="text" th:field="*{altText}" placeholder="이미지 설명을 입력하세요" /></td>
+        </tr>
+
+        <!-- 새 이미지 파일 업로드 -->
+        <tr>
+            <th>새 이미지 업로드</th>
+            <td>
+                <input type="file" th:field="*{imageFile}" name="imageFile" accept="image/*" />
+                <small>새 이미지를 선택하면 기존 이미지가 교체됩니다.</small>
+            </td>
+        </tr>
+    </table>
+    
+    <div style="text-align: center; margin-top: 20px;">
+        <button type="submit">수정 완료</button>
+    </div>
+</form>

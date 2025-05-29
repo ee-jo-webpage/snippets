@@ -69,7 +69,7 @@ public class BoardService {
 
         return post.getPostId();
     }
-
+/*
     public void updatePost(Post post, MultipartFile[] files) throws IOException {
         postMapper.updatePost(post);
 
@@ -80,6 +80,42 @@ public class BoardService {
                 }
             }
         }
+    }*/
+
+    //업로드 디버그용
+    public void updatePost(Post post, MultipartFile[] files) throws IOException {
+        System.out.println("=== BoardService.updatePost 시작 ===");
+        System.out.println("업데이트할 Post: " + post.toString());
+
+        try {
+            // 실제 업데이트 실행
+            int updateCount = postMapper.updatePost(post);
+            System.out.println("업데이트된 행 개수: " + updateCount);
+
+            if (updateCount == 0) {
+                System.out.println("❌ 업데이트된 행이 없습니다!");
+            } else {
+                System.out.println("✅ 업데이트 성공!");
+            }
+
+        } catch (Exception e) {
+            System.out.println("❌ 업데이트 오류: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
+
+        // 파일 처리 (있다면)
+        if(files != null && files.length > 0) {
+            System.out.println("파일 처리 시작...");
+            for (MultipartFile file : files) {
+                if (!file.isEmpty()) {
+                    saveAttachment(post.getPostId(), file);
+                }
+            }
+            System.out.println("파일 처리 완료");
+        }
+
+        System.out.println("=== BoardService.updatePost 완료 ===");
     }
 
     public void deletePost(Integer postId) {
@@ -87,7 +123,7 @@ public class BoardService {
     }
 
     //첨부파일 저장
-    private void saveAttachment(Integer postId, MultipartFile file) throws IOException {
+   /* private void saveAttachment(Integer postId, MultipartFile file) throws IOException {
         Path uploadRoot = Paths.get("uploads","board").toAbsolutePath();
         Files.createDirectories(uploadRoot);
 
@@ -104,9 +140,90 @@ public class BoardService {
         attachment.setFileType(file.getContentType());
         attachment.setFileSize(file.getSize());
 
-        attachmentMapper.insertAttachment(attachment);
+        System.out.println("첨부파일 저장 시도:");
+        System.out.println("- 파일명: " + attachment.getFileName());
+        System.out.println("- 경로: " + attachment.getFilePath());
+        System.out.println("- 크기: " + attachment.getFileSize());
 
+        attachmentMapper.insertAttachment(attachment);
+        System.out.println("첨부파일 저장 완료!");
+    }*/
+
+    private void saveAttachment(Integer postId, MultipartFile file) throws IOException {
+        System.out.println("=== 파일 저장 시작 ===");
+        System.out.println("게시글 ID: " + postId);
+        System.out.println("원본 파일명: " + file.getOriginalFilename());
+        System.out.println("파일 크기: " + file.getSize() + " bytes");
+        System.out.println("파일 타입: " + file.getContentType());
+
+        // 업로드 디렉토리 생성
+        Path uploadRoot = Paths.get("uploads", "board").toAbsolutePath();
+        System.out.println("업로드 디렉토리: " + uploadRoot);
+
+        try {
+            Files.createDirectories(uploadRoot);
+            System.out.println("✅ 디렉토리 생성/확인 완료");
+        } catch (IOException e) {
+            System.out.println("❌ 디렉토리 생성 실패: " + e.getMessage());
+            throw e;
+        }
+
+        String originalFilename = file.getOriginalFilename();
+        String storedFilename = UUID.randomUUID() + "_" + originalFilename;
+        Path targetPath = uploadRoot.resolve(storedFilename);
+
+        System.out.println("저장될 파일명: " + storedFilename);
+        System.out.println("저장될 경로: " + targetPath);
+
+        try {
+            // 파일 저장
+            Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+            System.out.println("✅ 파일 저장 완료");
+
+            // 저장된 파일 확인
+            if (Files.exists(targetPath)) {
+                System.out.println("✅ 파일 존재 확인 완료");
+                System.out.println("저장된 파일 크기: " + Files.size(targetPath) + " bytes");
+            } else {
+                System.out.println("❌ 파일 저장 후 존재하지 않음!");
+            }
+
+        } catch (IOException e) {
+            System.out.println("❌ 파일 저장 실패: " + e.getMessage());
+            throw e;
+        }
+
+        // DB에 저장할 정보 준비
+        PostAttachment attachment = new PostAttachment();
+        attachment.setPostId(postId);
+        attachment.setFileName(originalFilename);
+        attachment.setFilePath(targetPath.toString()); // 절대 경로로 저장
+        attachment.setFileType(file.getContentType());
+        attachment.setFileSize(file.getSize());
+
+        System.out.println("DB 저장 정보:");
+        System.out.println("- 파일명: " + attachment.getFileName());
+        System.out.println("- 파일 경로: " + attachment.getFilePath());
+        System.out.println("- 파일 크기: " + attachment.getFileSize());
+
+        try {
+            attachmentMapper.insertAttachment(attachment);
+            System.out.println("✅ DB 저장 완료 - Attachment ID: " + attachment.getAttachmentId());
+        } catch (Exception e) {
+            System.out.println("❌ DB 저장 실패: " + e.getMessage());
+            // 파일 삭제 (롤백)
+            try {
+                Files.deleteIfExists(targetPath);
+                System.out.println("파일 롤백 완료");
+            } catch (IOException deleteE) {
+                System.out.println("파일 롤백 실패: " + deleteE.getMessage());
+            }
+            throw e;
+        }
+
+        System.out.println("=== 파일 저장 완료 ===");
     }
+
 
     //검색 기능
     public List<Post> searchPosts(String keyword, String searchType, Integer categoryId, LocalDateTime startDate, LocalDateTime endDate) {
@@ -167,6 +284,7 @@ public class BoardService {
     public void deleteDraft(Integer draftId) {
         postMapper.deleteDraft(draftId);
     }
+
 
 
 

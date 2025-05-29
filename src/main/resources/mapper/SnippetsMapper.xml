@@ -23,20 +23,29 @@
 
     <result property="imageUrl"    column="image_url" />
     <result property="altText"     column="alt_text" />
+    
+    <result property="name" column="name"/>
+    <result property="hexCode" column="hex_code"/>
   </resultMap>
 
   <!-- 전체 조회 -->
   <select id="getAllSnippets" resultMap="SnippetsResultMap">
-    SELECT * FROM snippets
-  </select>
+	  SELECT
+	    s.*,
+	    c.name,
+	    c.hex_code
+	  FROM snippets s
+	  LEFT JOIN snippet_colors c ON s.color_id = c.color_id
+	  ORDER BY s.snippet_id DESC
+	</select>
   
-  
+  <!--유저 아이디로 조회-->
   <select id="getUserSnippets" resultMap="SnippetsResultMap">
-  	SELECT * FROM snippets WHERE user_id = #{userId}
+  	SELECT * FROM snippets WHERE user_id = #{userId} ORDER BY snippet_id DESC
   </select>
 
   <!-- 상세 조회 -->
-  <select id="getSnippetsById" resultMap="SnippetsResultMap">
+	 <select id="getSnippetsById" resultMap="SnippetsResultMap">
 	  SELECT
 	    s.snippet_id,
 	    s.user_id,
@@ -50,30 +59,34 @@
 	    s.like_count,
 	    s.visibility,
 	
-	    <!-- 1) TEXT, CODE 두 가지 content 분기 -->
+	    <!-- 1) 컬러 테이블에서 name, hex_code 가져오기 -->
+	    c.name      AS name,
+	    c.hex_code  AS hex_code,
+	
+	    <!-- 2) TEXT, CODE 두 가지 content 분기 -->
 	    <choose>
 	      <when test="type.name() == 'TEXT'">
 	        t.content AS content
 	      </when>
 	      <when test="type.name() == 'CODE'">
-	        c.content AS content
+	        c2.content AS content
 	      </when>
 	      <otherwise>
 	        NULL AS content
 	      </otherwise>
 	    </choose>,
 	
-	    <!-- 2) CODE 일 때만 language -->
+	    <!-- 3) CODE 일 때만 language -->
 	    <choose>
 	      <when test="type.name() == 'CODE'">
-	        c.language AS language
+	        c2.language AS language
 	      </when>
 	      <otherwise>
 	        NULL AS language
 	      </otherwise>
 	    </choose>,
 	
-	    <!-- 3) IMG 일 때만 이미지 필드 -->
+	    <!-- 4) IMG 일 때만 이미지 필드 -->
 	    <choose>
 	      <when test="type.name() == 'IMG'">
 	        i.image_url AS image_url,
@@ -87,21 +100,26 @@
 	
 	  FROM snippets s
 	
-	  <!-- 조인도 유형별로 분기 -->
+	  <!-- 컬러 테이블 JOIN -->
+	  LEFT JOIN snippet_colors c 
+	    ON s.color_id = c.color_id
+	
+	  <!-- 타입별 child 테이블 JOIN -->
 	  <choose>
 	    <when test="type.name() == 'TEXT'">
-	      LEFT JOIN snippet_texts  t ON s.snippet_id = t.snippet_id
+	      LEFT JOIN snippet_texts  t  ON s.snippet_id = t.snippet_id
 	    </when>
 	    <when test="type.name() == 'CODE'">
-	      LEFT JOIN snippet_codes  c ON s.snippet_id = c.snippet_id
+	      LEFT JOIN snippet_codes  c2 ON s.snippet_id = c2.snippet_id
 	    </when>
 	    <when test="type.name() == 'IMG'">
-	      LEFT JOIN snippet_images i ON s.snippet_id = i.snippet_id
+	      LEFT JOIN snippet_images i  ON s.snippet_id = i.snippet_id
 	    </when>
 	  </choose>
 	
 	  WHERE s.snippet_id = #{snippetId}
 	</select>
+
 
 
   <!-- 추가하기: snippets 기본정보 insert -->
@@ -123,9 +141,9 @@
       like_count,
       visibility
     ) VALUES (
+      #{userId},
       1,
-      1,
-      1,
+      #{colorId},
       #{sourceUrl},
       #{type},
       #{memo},
@@ -242,9 +260,9 @@
     parameterType="kr.or.kosa.snippets.basic.model.Snippets">
     UPDATE snippets
     SET
-      user_id      = 1,
+      user_id      = #{userId},
       folder_id    = 1,
-      color_id     = 1,
+      color_id     = #{colorId},
       source_url   = #{sourceUrl},
       type         = #{type},
       memo         = #{memo},

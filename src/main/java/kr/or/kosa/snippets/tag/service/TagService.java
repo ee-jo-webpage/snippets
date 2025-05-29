@@ -1,6 +1,8 @@
 package kr.or.kosa.snippets.tag.service;
 
 import kr.or.kosa.snippets.basic.model.Snippets;
+import kr.or.kosa.snippets.basic.model.SnippetTypeBasic;
+import kr.or.kosa.snippets.basic.service.SnippetService;
 import kr.or.kosa.snippets.tag.mapper.TagMapper;
 import kr.or.kosa.snippets.tag.model.SnippetTag;
 import kr.or.kosa.snippets.tag.model.TagItem;
@@ -9,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +22,9 @@ public class TagService {
 
     @Autowired
     TagMapper tagMapper;
+
+    @Autowired
+    SnippetService snippetService;  // SnippetService 추가
 
     // 사용자Id로 모든 태그 조회
     @Transactional(readOnly = true)
@@ -105,22 +111,32 @@ public class TagService {
         return tag != null && tag.getUserId().equals(userId);
     }
 
-    // 특정 스니펫 조회
+    // 특정 스니펫 조회 - SnippetService 사용하도록 개선
     @Transactional(readOnly = true)
     public Snippets getSnippetById(Long snippetId) {
-        return tagMapper.selectSnippetById(snippetId);
+        try {
+            // 타입을 먼저 조회
+            SnippetTypeBasic type = snippetService.getSnippetTypeById(snippetId);
+            if (type != null) {
+                // 타입별 완전한 스니펫 정보 조회
+                return snippetService.getSnippetsById(snippetId, type);
+            }
+        } catch (Exception e) {
+            log.error("스니펫 조회 중 오류 발생 - snippetId: {}", snippetId, e);
+        }
+        return null;
     }
 
-    // 모든 스니펫 조회
+    // 모든 스니펫 조회 - SnippetService로 위임
     @Transactional(readOnly = true)
     public List<Snippets> getAllSnippets() {
-        return tagMapper.selectAllSnippets();
+        return snippetService.getAllSnippets();
     }
 
-    // 특정 사용자가 작성한 모든 스니펫 조회
+    // 특정 사용자가 작성한 모든 스니펫 조회 - SnippetService로 위임하되 완전한 정보 포함
     @Transactional(readOnly = true)
     public List<Snippets> getSnippetsByUserId(Long userId) {
-        return tagMapper.selectSnippetsByUserId(userId);
+        return snippetService.getUserSnippets(userId);
     }
 
     // 특정 태그가 연결된 스니펫 수 조회
@@ -135,19 +151,78 @@ public class TagService {
         return tagMapper.selectMostUsedTagsByUserId(userId, limit);
     }
 
-    // 특정 태그로 스니펫 검색 - 추가
+    // 특정 태그로 스니펫 검색 - SnippetService 사용하도록 개선 (색상 정보 포함)
     @Transactional(readOnly = true)
     public List<Snippets> getSnippetsByTagId(Long tagId) {
-        return tagMapper.selectSnippetsByTagId(tagId);
+        // 1. 태그와 연결된 스니펫 기본 정보 조회 (색상 정보 포함)
+        List<Snippets> basicSnippets = tagMapper.selectSnippetsByTagIdWithColor(tagId);
+        List<Snippets> completeSnippets = new ArrayList<>();
+
+        // 2. 각 스니펫에 대해 완전한 정보를 SnippetService를 통해 조회
+        for (Snippets snippet : basicSnippets) {
+            try {
+                // 색상 정보 임시 저장
+                String colorName = snippet.getName();
+                String hexCode = snippet.getHexCode();
+
+                // 타입을 먼저 조회
+                SnippetTypeBasic type = snippetService.getSnippetTypeById(snippet.getSnippetId());
+                if (type != null) {
+                    // 타입별 완전한 스니펫 정보 조회
+                    Snippets completeSnippet = snippetService.getSnippetsById(snippet.getSnippetId(), type);
+                    if (completeSnippet != null) {
+                        // 색상 정보 복원 (조인으로 가져온 정보)
+                        completeSnippet.setName(colorName);
+                        completeSnippet.setHexCode(hexCode);
+                        completeSnippets.add(completeSnippet);
+                    }
+                }
+            } catch (Exception e) {
+                log.error("태그별 스니펫 조회 중 오류 발생 - snippetId: {}", snippet.getSnippetId(), e);
+                // 오류가 발생한 스니펫은 건너뛰지만 나머지는 계속 처리
+            }
+        }
+
+        return completeSnippets;
     }
 
-    // 여러 태그로 스니펫 검색 (AND 조건) - 추가
+    // 여러 태그로 스니펫 검색 (AND 조건) - SnippetService 사용하도록 개선 (색상 정보 포함)
     @Transactional(readOnly = true)
     public List<Snippets> getSnippetsByMultipleTags(List<Long> tagIds) {
         if (tagIds == null || tagIds.isEmpty()) {
             return List.of();
         }
-        return tagMapper.selectSnippetsByMultipleTags(tagIds);
+
+        // 1. 여러 태그와 모두 연결된 스니펫 기본 정보 조회 (색상 정보 포함)
+        List<Snippets> basicSnippets = tagMapper.selectSnippetsByMultipleTagsWithColor(tagIds);
+        List<Snippets> completeSnippets = new ArrayList<>();
+
+        // 2. 각 스니펫에 대해 완전한 정보를 SnippetService를 통해 조회
+        for (Snippets snippet : basicSnippets) {
+            try {
+                // 색상 정보 임시 저장
+                String colorName = snippet.getName();
+                String hexCode = snippet.getHexCode();
+
+                // 타입을 먼저 조회
+                SnippetTypeBasic type = snippetService.getSnippetTypeById(snippet.getSnippetId());
+                if (type != null) {
+                    // 타입별 완전한 스니펫 정보 조회
+                    Snippets completeSnippet = snippetService.getSnippetsById(snippet.getSnippetId(), type);
+                    if (completeSnippet != null) {
+                        // 색상 정보 복원 (조인으로 가져온 정보)
+                        completeSnippet.setName(colorName);
+                        completeSnippet.setHexCode(hexCode);
+                        completeSnippets.add(completeSnippet);
+                    }
+                }
+            } catch (Exception e) {
+                log.error("다중 태그 스니펫 조회 중 오류 발생 - snippetId: {}", snippet.getSnippetId(), e);
+                // 오류가 발생한 스니펫은 건너뛰지만 나머지는 계속 처리
+            }
+        }
+
+        return completeSnippets;
     }
 
     // 태그명으로 검색 (사용자별) - 추가
@@ -187,5 +262,4 @@ public class TagService {
 
         return (double) totalTags / snippets.size();
     }
-
 }

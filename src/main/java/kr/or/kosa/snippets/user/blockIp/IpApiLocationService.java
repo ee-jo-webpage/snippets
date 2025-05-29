@@ -4,7 +4,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
-
+/**
+ *  IP 주소를 기반으로 지리적 위치(GeoIP)를 조회하는 무료 및 유료 API
+ * */
 @Service
 public class IpApiLocationService implements IpLocationService {
 

@@ -8,13 +8,25 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-core.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/plugins/autoloader/prism-autoloader.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link th:href="@{/my-snippet-page/css/my-snippet-page.css}" rel="stylesheet">
     <style>
         body {
             font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        .main-content {
+            margin-left: 250px; /* 사이드바 너비만큼 마진 */
+            padding: 20px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .container {
             max-width: 800px;
             margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
         }
 
         .back-btn {
@@ -31,6 +43,7 @@
         .back-btn:hover {
             background-color: #5a6268;
         }
+
 
         .snippet-detail-card {
             background-color: white;
@@ -77,41 +90,36 @@
         .like-section {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .like-btn {
             background: none;
-            border: 2px solid #ddd;
-            font-size: 24px;
+            border: none;
+            font-size: 16px;
             cursor: pointer;
-            padding: 10px;
+            padding: 4px;
             border-radius: 50%;
             transition: all 0.3s ease;
+            color: #999;
         }
 
         .like-btn.liked {
             color: #ff6b6b;
-            border-color: #ff6b6b;
-            background-color: #fff5f5;
             transform: scale(1.1);
         }
 
-        .like-btn:not(.liked) {
-            color: #999;
-        }
-
         .like-btn:hover {
-            background-color: #f8f9fa;
+            background-color: rgba(255, 107, 107, 0.1);
         }
 
         .like-count {
             font-weight: bold;
             color: #333;
-            font-size: 18px;
+            font-size: 14px;
         }
 
-        .snippet-memo {
+        .snippet-title {
             font-size: 20px;
             color: #333;
             margin-bottom: 15px;
@@ -130,6 +138,11 @@
             background-color: #f8f9fa;
             padding: 10px;
             border-radius: 6px;
+            word-break: break-all;
+        }
+
+        .snippet-meta-item.source-url {
+            grid-column: 1 / -1; /* 전체 너비 사용 */
         }
 
         .snippet-meta-label {
@@ -230,92 +243,163 @@
             color: #666;
             font-style: italic;
         }
+
+        /* 반응형 디자인 */
+        @media (max-width: 1024px) {
+            .main-content {
+                margin-left: 200px; /* 태블릿에서 사이드바 너비 줄임 */
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0; /* 모바일에서 사이드바 마진 제거 */
+                padding: 15px;
+            }
+
+            .container {
+                padding: 0 10px;
+            }
+
+
+            .snippet-title-section {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .snippet-meta {
+                grid-template-columns: 1fr; /* 모바일에서 1열로 */
+            }
+
+            .back-btn {
+                margin-top: 10px;
+                margin-bottom: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 10px;
+            }
+
+            .snippet-detail-card {
+                padding: 15px;
+            }
+
+            .snippet-title {
+                font-size: 18px;
+            }
+
+            .content-title {
+                font-size: 16px;
+            }
+
+            .snippet-meta-item {
+                padding: 8px;
+            }
+
+            .code-header {
+                padding: 8px 12px;
+            }
+
+            .text-content {
+                padding: 15px;
+            }
+        }
     </style>
 </head>
 <body>
-<a href="/snippets" class="back-btn">← 목록으로 돌아가기</a>
 
-<div class="snippet-detail-card">
-    <div class="snippet-header">
-        <div class="snippet-title-section">
-                <span class="snippet-type" th:class="'snippet-type ' + ${snippet.type}"
-                      th:text="${snippet.type.toUpperCase()}"></span>
-            <div class="like-section">
-                <button class="like-btn"
-                        th:classappend="${isLiked} ? 'liked' : ''"
-                        th:data-snippet-id="${snippet.snippetId}"
-                        th:data-is-liked="${isLiked}">❤️</button>
-                <span class="like-count" th:text="${snippet.likeCount}">0</span>
-                <span>좋아요</span>
-            </div>
-        </div>
 
-        <div class="snippet-memo" th:text="${snippet.memo}">스니펫 제목</div>
+<div th:replace="fragments/header :: header"></div>
+<div th:replace="fragments/sidebar :: sidebar('popular')"></div>
 
-        <div class="snippet-meta">
-            <div class="snippet-meta-item">
-                <div class="snippet-meta-label">소유자</div>
-                <div>
-                    user_id = <span th:text="${snippet.userId}"></span>
-                    <span th:if="${snippet.userId == currentUserId}"> (내 스니펫)</span>
+<main class="main-content">
+    <div class="container">
+        <a href="/popular-snippets" class="back-btn">← 목록으로 돌아가기</a>
+
+        <div class="snippet-detail-card">
+            <div class="snippet-header">
+                <div class="snippet-title-section">
+                        <span class="snippet-type" th:class="'snippet-type ' + ${snippet.type}"
+                              th:text="${snippet.type.toUpperCase()}"></span>
+                    <div class="like-section">
+                        <button class="like-btn"
+                                th:classappend="${isLiked} ? 'liked' : ''"
+                                th:data-snippet-id="${snippet.snippetId}"
+                                th:data-is-liked="${isLiked}">
+                            <i class="fas fa-heart"></i>
+                        </button>
+                        <span class="like-count" th:text="${snippet.likeCount}">0</span>
+                    </div>
+                </div>
+
+                <div class="snippet-title" th:text="${snippet.memo}">스니펫 제목</div>
+
+                <div class="snippet-meta">
+                    <div class="snippet-meta-item">
+                        <div class="snippet-meta-label">소유자</div>
+                        <div>
+                            <span th:text="${ownerNickname}">nickname</span>
+                            <span th:if="${snippet.userId == currentUserId}"> (내 스니펫)</span>
+                        </div>
+                    </div>
+                    <div class="snippet-meta-item">
+                        <div class="snippet-meta-label">생성일</div>
+                        <div th:text="${#temporals.format(snippet.createdAt, 'yyyy년 MM월 dd일 HH:mm')}"></div>
+                    </div>
+                    <div class="snippet-meta-item" th:if="${snippet.updatedAt != null}">
+                        <div class="snippet-meta-label">수정일</div>
+                        <div th:text="${#temporals.format(snippet.updatedAt, 'yyyy년 MM월 dd일 HH:mm')}"></div>
+                    </div>
+                    <div class="snippet-meta-item source-url" th:if="${snippet.sourceUrl != null}">
+                        <div class="snippet-meta-label">출처</div>
+                        <div><a th:href="${snippet.sourceUrl}" target="_blank" th:text="${snippet.sourceUrl}"></a></div>
+                    </div>
                 </div>
             </div>
-            <div class="snippet-meta-item">
-                <div class="snippet-meta-label">생성일</div>
-                <div th:text="${#temporals.format(snippet.createdAt, 'yyyy년 MM월 dd일 HH:mm')}"></div>
+
+            <!-- 스니펫 내용 표시 -->
+            <div class="snippet-content">
+                <div class="content-title">내용</div>
+
+                <!-- 코드 스니펫인 경우 -->
+                <div th:if="${snippet.type == 'CODE'}" class="code-container">
+                    <div class="code-header">
+                        <span>코드</span>
+                        <button class="copy-btn" onclick="copyCode()">복사</button>
+                    </div>
+                    <pre><code id="codeContent" th:class="'language-' + ${snippetContent.language}" th:text="${snippetContent.content}">
+// 코드 내용을 불러올 수 없습니다
+                    </code></pre>
+                </div>
+
+                <!-- 텍스트 스니펫인 경우 -->
+                <div th:if="${snippet.type == 'TEXT'}" class="text-content" th:text="${snippetContent.content}">
+                    텍스트 내용을 불러올 수 없습니다.
+                </div>
+
+                <!-- 이미지 스니펫인 경우 -->
+                <div th:if="${snippet.type == 'IMG'}" class="image-content">
+                    <img th:src="${snippetContent.imageUrl}" th:alt="${snippetContent.altText}" class="snippet-image">
+                    <div class="image-alt" th:text="${snippetContent.altText}">이미지 설명</div>
+                </div>
             </div>
-            <div class="snippet-meta-item" th:if="${snippet.updatedAt != null}">
-                <div class="snippet-meta-label">수정일</div>
-                <div th:text="${#temporals.format(snippet.updatedAt, 'yyyy년 MM월 dd일 HH:mm')}"></div>
-            </div>
-            <div class="snippet-meta-item" th:if="${snippet.sourceUrl != null}">
-                <div class="snippet-meta-label">출처</div>
-                <div><a th:href="${snippet.sourceUrl}" target="_blank" th:text="${snippet.sourceUrl}"></a></div>
+
+            <!-- 태그 섹션 -->
+            <div class="tag-section">
+                <div class="content-title">태그</div>
+                <div class="tag-list" th:if="${tags != null && !tags.isEmpty()}">
+                    <span th:each="tag : ${tags}" class="tag" th:text="${tag.name}"></span>
+                </div>
+                <div th:if="${tags == null || tags.isEmpty()}" class="no-tags">
+                    연결된 태그가 없습니다.
+                </div>
             </div>
         </div>
     </div>
-
-    <!-- 스니펫 내용 표시 -->
-    <div class="snippet-content">
-        <div class="content-title">내용</div>
-
-        <!-- 코드 스니펫인 경우 -->
-        <div th:if="${snippet.type == 'code'}" class="code-container">
-            <div class="code-header">
-                <span>코드</span>
-                <button class="copy-btn" onclick="copyCode()">복사</button>
-            </div>
-            <pre><code id="codeContent" class="language-javascript">
-// 실제 코드 내용은 별도 조회가 필요합니다
-console.log('샘플 코드');
-                </code></pre>
-        </div>
-
-        <!-- 텍스트 스니펫인 경우 -->
-        <div th:if="${snippet.type == 'text'}" class="text-content">
-            <!-- 실제 텍스트 내용은 별도 조회가 필요합니다 -->
-            <p>텍스트 스니펫의 상세 내용이 여기에 표시됩니다.</p>
-        </div>
-
-        <!-- 이미지 스니펫인 경우 -->
-        <div th:if="${snippet.type == 'img'}" class="image-content">
-            <!-- 실제 이미지 URL은 별도 조회가 필요합니다 -->
-            <img src="/api/placeholder/400/300" alt="스니펫 이미지" class="snippet-image">
-            <div class="image-alt">이미지 설명</div>
-        </div>
-    </div>
-
-    <!-- 태그 섹션 -->
-    <div class="tag-section">
-        <div class="content-title">태그</div>
-        <div class="tag-list" th:if="${tags != null && !tags.isEmpty()}">
-            <span th:each="tag : ${tags}" class="tag" th:text="${tag.name}"></span>
-        </div>
-        <div th:if="${tags == null || tags.isEmpty()}" class="no-tags">
-            연결된 태그가 없습니다.
-        </div>
-    </div>
-</div>
+</main>
 
 <!-- snippet-detail.html의 JavaScript 부분 수정 -->
 <script th:inline="javascript">
@@ -419,6 +503,7 @@ console.log('샘플 코드');
             }
         });
     });
+
 
     // 코드 복사 함수
     function copyCode() {

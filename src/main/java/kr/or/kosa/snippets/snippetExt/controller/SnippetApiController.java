@@ -1,5 +1,6 @@
 package kr.or.kosa.snippets.snippetExt.controller;
 
+import kr.or.kosa.snippets.snippetExt.component.SnippetQueue;
 import kr.or.kosa.snippets.snippetExt.model.ColorExt;
 import kr.or.kosa.snippets.snippetExt.model.SnippetExtCreate;
 import kr.or.kosa.snippets.snippetExt.model.SnippetExtUpdate;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/snippets")
@@ -22,6 +24,7 @@ import java.util.Map;
 public class SnippetApiController {
 
     private final SnippetExtService snippetExtService;
+    private final SnippetQueue snippetQueue;
 
     // 인증 체크 메서드
     private Long requireLogin(CustomUserDetails details) {
@@ -31,6 +34,24 @@ public class SnippetApiController {
         return details.getUserId();
     }
 
+    // 비동기식 벌크 insert
+    // @PostMapping
+    // public ResponseEntity<?> enqueueSnippet(
+    //     @RequestBody SnippetExtCreate snippet,
+    //     @AuthenticationPrincipal CustomUserDetails details
+    // ) {
+    //     snippet.setUserId(requireLogin(details));
+    //
+    //     if (snippet.getClientRequestId() == null) {
+    //         snippet.setClientRequestId(UUID.randomUUID().toString());
+    //     }
+    //
+    //     snippetQueue.enqueue(snippet);  // 지금은 큐에 저장만
+    //
+    //     return ResponseEntity.ok(Map.of("snippetId", snippet.getClientRequestId()));
+    // }
+
+    // 동기식 insert
     @PostMapping
     public ResponseEntity<?> save(
         @RequestBody SnippetExtCreate snippet,
@@ -65,8 +86,9 @@ public class SnippetApiController {
     public ResponseEntity<?> getColorByUserId(
         @AuthenticationPrincipal CustomUserDetails details
     ) {
-        Long userId = details.getUserId();
+        Long userId = requireLogin(details);
         List<ColorExt> colorList = snippetExtService.getColorsByUserId(userId);
         return ResponseEntity.ok(colorList);
     }
+
 }

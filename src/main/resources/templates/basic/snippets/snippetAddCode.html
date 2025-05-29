@@ -2,44 +2,198 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8"/>
-  <title>스니펫 추가 – Code</title>
-  <style> /* 기존 notepad 스타일 동일 적용 가능 */ </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Code 스니펫 추가</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+  <style>
+    .snippet-card {
+      max-width: 600px;
+      margin: 40px auto;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+	  max-height: 400px;  /* 원하는 최대 높이 */
+	  overflow-y: auto;   /* 내용이 넘치면 세로 스크롤바 표시 */ 
+    }
+    .snippet-header {
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #e0e0e0;
+      background-color: #ffffff;
+      transition: background-color 0.3s;
+    }
+    .snippet-body { 
+      padding: 16px;
+	  
+    }
+    .form-label { 
+      font-weight: 500; 
+    }
+
+    /* 색상 선택 드롭다운 커스텀 스타일 */
+    .color-select-container {
+      position: relative;
+    }
+    
+    .color-select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background: transparent;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 16px;
+      padding-right: 40px;
+    }
+
+    .color-option {
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .color-indicator {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 1px solid #ccc;
+      display: inline-block;
+    }
+
+    /* 헤더의 색상 미리보기 */
+    .color-preview {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
+    }
+  </style>
 </head>
 <body>
-  <h1>Code 스니펫 추가</h1>
-  <form th:action="@{/snippets/new}" th:object="${snippet}"
-        method="post" enctype="multipart/form-data">
+  <div class="snippet-card bg-white">
+    <div class="snippet-header">
+      <h5 class="m-0">Code 스니펫 추가</h5>
+    </div>
 
-    <!-- 반드시 hidden 으로 타입 전달 -->
-    <input type="hidden" name="type" value="CODE"/>
-
-    <table>
-      <tr><th>Source URL</th>
-          <td><input type="text" th:field="*{sourceUrl}" /></td></tr>
-      <tr><th>Memo</th>
-          <td><textarea th:field="*{memo}" rows="3"></textarea></td></tr>
-      <tr><th>Visibility</th>
-          <td>
-            <select th:field="*{visibility}">
-              <option value="1">Visible</option>
-              <option value="0">Hidden</option>
+    <form th:action="@{/snippets/new}" th:object="${snippet}" method="post" enctype="multipart/form-data">
+      <input type="hidden" name="type" value="CODE"/>
+      
+      <div class="snippet-body">
+        <!-- 색상 선택 드롭다운 -->
+        <div class="mb-3">
+          <label for="colorId" class="form-label">색상 선택</label>
+          <div class="color-select-container">
+            <select id="colorId" class="form-select color-select" th:field="*{colorId}" required>
+              <option value="" disabled selected>-- 색상을 선택하세요 --</option>
+			  <option th:each="color : ${colors}"
+			          th:value="${color.colorId}"
+			          th:text="${color.name}"
+			          th:attr="data-hex-code=${color.hexCode}"
+			          th:style="'background-color:' + ${color.hexCode} + '; color: white;'">
+			  </option>
             </select>
-          </td></tr>
+          </div>
+        </div>
 
-      <tr><th>Language</th>
-          <td>
-            <select th:field="*{language}">
-              <option value="JAVA">JAVA</option>
-              <option value="PYTHON">PYTHON</option>
-              <option value="C">C</option>
-            </select>
-          </td></tr>
-      <tr><th>Code Content</th>
-          <td><textarea th:field="*{content}" rows="10" required></textarea></td></tr>
-    </table>
+        <div class="mb-3">
+          <label for="sourceUrl" class="form-label">Source URL</label>
+          <input id="sourceUrl" type="text" class="form-control" th:field="*{sourceUrl}" placeholder="출처 URL 입력"/>
+        </div>
 
-    <button type="submit">추가</button>
-  </form>
-  <a href="/snippets">← 목록으로 돌아가기</a>
+        <div class="mb-3">
+          <label for="memo" class="form-label">메모</label>
+          <textarea id="memo" class="form-control" rows="3" th:field="*{memo}" placeholder="간단 메모"></textarea>
+        </div>
+
+        <div class="mb-3">
+          <label for="visibility" class="form-label">가시성</label>
+          <select id="visibility" class="form-select" th:field="*{visibility}">
+            <option value="1">Visible</option>
+            <option value="0">Hidden</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label for="language" class="form-label">언어</label>
+          <select id="language" class="form-select" th:field="*{language}">
+            <option value="" disabled selected>-- 언어를 선택하세요 --</option>
+            <option value="JAVA">JAVA</option>
+            <option value="PYTHON">PYTHON</option>
+            <option value="C">C</option>
+            <option value="JAVASCRIPT">JavaScript</option>
+            <option value="HTML">HTML</option>
+            <option value="CSS">CSS</option>
+            <option value="SQL">SQL</option>
+            <option value="PHP">PHP</option>
+            <option value="RUBY">Ruby</option>
+            <option value="GO">Go</option>
+            <option value="KOTLIN">Kotlin</option>
+            <option value="SWIFT">Swift</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label for="content" class="form-label">코드 내용</label>
+          <textarea id="content" class="form-control" rows="10" th:field="*{content}" 
+                    placeholder="코드를 입력하세요" required 
+                    style="font-family: 'Courier New', 'Monaco', 'Menlo', monospace;"></textarea>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-end gap-2 p-3 border-top">
+        <a href="/snippets" class="btn btn-outline-secondary">취소</a>
+        <button type="submit" class="btn btn-primary">추가</button>
+      </div>
+    </form>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const header = document.querySelector('.snippet-header');
+    const colorSelect = document.getElementById('colorId');
+    const colorPreview = document.getElementById('colorPreview');
+
+    // 색상 선택시 헤더 배경과 미리보기 변경
+    colorSelect.addEventListener('change', function() {
+      const selectedOption = this.options[this.selectedIndex];
+      
+      if (selectedOption.value) {
+        const hexCode = selectedOption.getAttribute('data-hex-code');
+        
+        // 헤더 배경색 변경
+        header.style.backgroundColor = hexCode;
+        
+        // 미리보기 색상 변경
+        colorPreview.style.backgroundColor = hexCode;
+      } else {
+        // 선택 해제시 기본색으로 복원
+        header.style.backgroundColor = '#ffffff';
+        colorPreview.style.backgroundColor = '#ffffff';
+      }
+    });
+
+    // 폼 제출시 색상 선택 확인
+    document.querySelector('form').addEventListener('submit', function(e) {
+      if (!colorSelect.value) {
+        e.preventDefault();
+        alert('색상을 선택해주세요.');
+        colorSelect.focus();
+        return false;
+      }
+    });
+
+    // 언어 선택시 코드 입력창에 포커스
+    document.getElementById('language').addEventListener('change', function() {
+      if (this.value) {
+        document.getElementById('content').focus();
+      }
+    });
+  </script>
 </body>
 </html>

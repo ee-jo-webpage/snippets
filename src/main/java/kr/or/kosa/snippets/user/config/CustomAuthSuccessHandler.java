@@ -22,10 +22,20 @@ public class CustomAuthSuccessHandler implements AuthenticationSuccessHandler {
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
-        System.out.println("로그인 성공!");
-        System.out.println("이메일: " + authentication.getName());
+        // 로그인 시도 로그 저장
         loginLogService.logLogin(authentication.getName(), request, true);
-        loginAttemptService.reset(request.getRemoteAddr()); // 차단 초기화
-        response.sendRedirect("/");
+        // 차단 초기화
+        loginAttemptService.reset(request.getRemoteAddr());
+
+        String redirectUrl;
+
+        if (authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
+            redirectUrl = "/";
+        } else {
+            redirectUrl = "/app";
+        }
+
+        response.sendRedirect(redirectUrl);
     }
 }

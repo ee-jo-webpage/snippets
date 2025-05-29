@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 public class CommentLike {
     private Integer likeId;
     private Integer commentId;
-    private long userId;
+    private Long userId;
     private boolean isLike; // true: 좋아요, false: 싫어요
     private LocalDateTime createdAt;
 }

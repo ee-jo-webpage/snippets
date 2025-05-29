@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 @Data
 public class Post {
     private Integer postId;
-    private Integer userId;
+    private Long userId;
     private Integer categoryId;
     private String title;
     private String content;
@@ -41,4 +41,17 @@ public class Post {
     // public void setNotice(Boolean notice) {
     //     this.isNotice = notice;
     // }
+
+    @Override
+    public String toString() {
+        return "Post{" +
+                "postId=" + postId +
+                ", userId=" + userId +
+                ", categoryId=" + categoryId +
+                ", title='" + title + '\'' +
+                ", content='" + (content != null ? content.substring(0, Math.min(50, content.length())) : "null") + '\'' +
+                ", isNotice=" + isNotice +
+                ", status='" + status + '\'' +
+                '}';
+    }
 }

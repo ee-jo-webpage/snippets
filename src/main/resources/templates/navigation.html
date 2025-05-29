@@ -75,6 +75,10 @@
             text-decoration: none;
             color: #333;
             transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: inherit;
         }
 
         .link-item:hover {
@@ -123,6 +127,20 @@
             text-align: center;
         }
 
+        .user-status {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .user-status.not-logged-in {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
         .color-code {
             display: inline-block;
             width: 15px;
@@ -135,12 +153,28 @@
         .hidden {
             display: none !important;
         }
+
+        .dynamic-user-id {
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .loading {
+            color: #666;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
 <div class="container">
     <h1>🚀 스니펫 저장 프로젝트</h1>
     <p class="subtitle">각 기능별 페이지 네비게이션</p>
+
+    <!-- 현재 사용자 상태 표시 -->
+    <div id="userStatus" class="user-status">
+        <strong>👤 현재 로그인 상태:</strong>
+        <span id="userInfo" class="loading">확인 중...</span>
+    </div>
 
     <div class="session-info">
         <strong>📌 테스트 계정 정보</strong><br>
@@ -178,109 +212,9 @@
         </div>
     </div>
 
-    <!-- 스니펫 기본 기능 -->
-    <div class="section">
-        <h2>📝 스니펫 기본 기능 <span class="developer">담당: 기본팀</span></h2>
-        <div class="links">
-            <a href="/snippets" class="link-item">
-                <span class="icon">📋</span> 스니펫 목록
-            </a>
-            <a href="/snippets/new" class="link-item">
-                <span class="icon">➕</span> 스니펫 등록
-            </a>
-        </div>
-    </div>
-
-    <!-- 북마크 기능 -->
-    <div class="section">
-        <h2>⭐ 북마크 기능 <span class="developer">담당: 북마크팀</span></h2>
-        <div class="links">
-            <a href="/bookmark" class="link-item">
-                <span class="icon">📌</span> 내 북마크 목록
-            </a>
-            <a href="/bookmark/my-snippets" class="link-item">
-                <span class="icon">👤</span> 내가 작성한 스니펫
-            </a>
-        </div>
-    </div>
-
-    <!-- 색상 관리 -->
-    <div class="section">
-        <h2>🎨 색상 관리 <span class="developer">담당: 색상팀</span></h2>
-        <div class="links">
-            <a href="/color/all-colors" class="link-item hidden" >
-                <span class="icon">🎨</span> 전체 색상 목록
-            </a>
-            <a href="/color/user/1" class="link-item">
-                <span class="icon">👤</span> 사용자별 색상 (userId: 1)
-            </a>
-            <a href="/color/init-session" class="link-item hidden">
-                <span class="icon">🔧</span> 세션 초기화 (테스트용)
-            </a>
-            <a href="/switch-user/2" class="link-item hidden" >
-                <span class="icon">🔄</span> 사용자 전환 (userId: 2)
-            </a>
-            <a href="/color/check-session" class="link-item hidden" >
-                <span class="icon">🔍</span> 세션 정보 확인
-            </a>
-        </div>
-    </div>
-
-    <!-- 태그 관리 -->
-    <div class="section">
-        <h2>🏷️ 태그 관리 <span class="developer">담당: 태그팀</span></h2>
-        <div class="links">
-            <a href="/tags/manager" class="link-item">
-                <span class="icon">🏷️</span> 태그 관리 페이지
-            </a>
-            <a href="/tags/snippet-tag" class="link-item">
-                <span class="icon">🔗</span> 스니펫-태그 연결 관리
-            </a>
-            <a href="/tag/init-session" class="link-item hidden" >
-                <span class="icon">🔧</span> 태그 세션 초기화
-            </a>
-            <a href="/tag/switch-user/2" class="link-item hidden" >
-                <span class="icon">🔄</span> 태그 사용자 전환
-            </a>
-        </div>
-    </div>
-
-    <!-- 좋아요 기능 -->
-    <div class="section">
-        <h2>❤️ 좋아요 기능 <span class="developer">담당: 좋아요팀</span></h2>
-        <div class="links">
-            <a href="/likePage?snippetId=1" class="link-item">
-                <span class="icon">❤️</span> 좋아요 페이지 (snippetId: 1)
-            </a>
-            <a href="/popular-snippets" class="link-item">
-                <span class="icon">🔥</span> 인기 스니펫 목록
-            </a>
-            <a href="/snippet/1" class="link-item">
-                <span class="icon">📄</span> 스니펫 상세 (좋아요 포함)
-            </a>
-        </div>
-    </div>
-
-    <!-- 스니펫 확장 기능 -->
-    <div class="section">
-        <h2>🔧 스니펫 확장 기능 (REST API) <span class="developer">담당: 스니펫확장팀</span></h2>
-        <div class="links">
-            <a href="#" onclick="alert('이 기능은 REST API로만 제공됩니다.\n\nPOST /api/snippets - 스니펫 생성\nPATCH /api/snippets/{id} - 스니펫 수정\nDELETE /api/snippets/{id} - 스니펫 삭제\n\nPostman이나 API 테스트 도구를 사용해주세요.'); return false;" class="link-item">
-                <span class="icon">📡</span> API 테스트 안내
-            </a>
-            <a href="/api-test" class="link-item" onclick="if(!confirm('API 테스트 페이지가 없을 수 있습니다. 계속하시겠습니까?')) return false;">
-                <span class="icon">🧪</span> API 테스트 페이지 (있는 경우)
-            </a>
-        </div>
-        <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px; font-size: 0.9em;">
-            <strong>💡 참고:</strong> 이 기능은 REST API로만 제공되며, Spring Security 인증이 필요합니다.<br>
-            Postman Collection이나 Swagger UI가 있다면 활용하세요.
-        </div>
-    </div>
-
     <!-- 사용자 인증 및 관리 -->
     <div class="section">
-        <h2>👤 사용자 인증/관리 <span class="developer">담당: 인증팀</span></h2>
+        <h2>👤 사용자 인증/관리 <span class="developer">담당: 김현우</span></h2>
         <div class="links">
             <a href="/" class="link-item" style="background: #e3f2fd;">
                 <span class="icon">🏠</span> 메인 페이지 (로그인 상태 확인)
@@ -314,6 +248,105 @@
             </a>
         </div>
     </div>
+
+    <!-- 스니펫 기본 기능 -->
+    <div class="section">
+        <h2>📝 스니펫 기본 기능 <span class="developer">담당: 최승준</span></h2>
+        <div class="links">
+            <a href="/snippets" class="link-item">
+                <span class="icon">📋</span> 스니펫 목록
+            </a>
+            <a href="/snippets/new" class="link-item">
+                <span class="icon">➕</span> 스니펫 등록
+            </a>
+        </div>
+    </div>
+
+    <!-- 북마크 기능 -->
+    <div class="section">
+        <h2>⭐ 북마크 기능 <span class="developer">담당: 우민지</span></h2>
+        <div class="links">
+            <a href="/bookmark" class="link-item">
+                <span class="icon">📌</span> 내 북마크 목록
+            </a>
+            <a href="/bookmark/my-snippets" class="link-item">
+                <span class="icon">👤</span> 내가 작성한 스니펫
+            </a>
+        </div>
+    </div>
+
+    <!-- 색상 관리 -->
+    <div class="section">
+        <h2>🎨 색상 관리 <span class="developer">담당: 우민지</span></h2>
+        <div class="links">
+            <a href="/color/all-colors" class="link-item hidden">
+                <span class="icon">🎨</span> 전체 색상 목록
+            </a>
+<!--            <button onclick="goToMyColors()" class="link-item">-->
+<!--                <span class="icon">👤</span> <span id="colorLinkText">내 색상 관리</span>-->
+<!--            </button>-->
+            <a href="/color/my-colors" class="link-item">
+                <span class="icon">🌈</span> 내 색상
+            </a>
+            <a href="/color/init-session" class="link-item hidden">
+                <span class="icon">🔧</span> 세션 초기화 (테스트용)
+            </a>
+            <button onclick="switchUser(2)" class="link-item hidden">
+                <span class="icon">🔄</span> 사용자 전환 (userId: 2)
+            </button>
+            <a href="/color/check-session" class="link-item hidden">
+                <span class="icon">🔍</span> 세션 정보 확인
+            </a>
+        </div>
+    </div>
+
+    <!-- 태그 관리 -->
+    <div class="section">
+        <h2>🏷️ 태그 관리 <span class="developer">담당: 우민지</span></h2>
+        <div class="links">
+            <a href="/tags/manager" class="link-item">
+                <span class="icon">🏷️</span> 태그 관리 페이지
+            </a>
+            <a href="/tags/snippet-tag" class="link-item">
+                <span class="icon">🔗</span> 스니펫-태그 연결 관리
+            </a>
+            <a href="/tag/init-session" class="link-item hidden">
+                <span class="icon">🔧</span> 태그 세션 초기화
+            </a>
+            <a href="/tag/switch-user/2" class="link-item hidden">
+                <span class="icon">🔄</span> 태그 사용자 전환
+            </a>
+        </div>
+    </div>
+
+    <!-- 좋아요 기능 -->
+    <div class="section">
+        <h2>❤️ 좋아요 기능 <span class="developer">담당: 임소희</span></h2>
+        <div class="links">
+            <a href="/popular-snippets" class="link-item">
+                <span class="icon">🔥</span> 인기 스니펫 목록
+            </a>
+        </div>
+    </div>
+
+    <!-- 스니펫 확장 기능 -->
+    <div class="section">
+        <h2>🔧 스니펫 확장 기능 (REST API) <span class="developer">담당: 김성민</span></h2>
+        <div class="links">
+            <a href="#" onclick="alert('이 기능은 REST API로만 제공됩니다.\n\nPOST /api/snippets - 스니펫 생성\nPATCH /api/snippets/{id} - 스니펫 수정\nDELETE /api/snippets/{id} - 스니펫 삭제\n\nPostman이나 API 테스트 도구를 사용해주세요.'); return false;" class="link-item">
+                <span class="icon">📡</span> API 테스트 안내
+            </a>
+            <a href="/api-test" class="link-item" onclick="if(!confirm('API 테스트 페이지가 없을 수 있습니다. 계속하시겠습니까?')) return false;">
+                <span class="icon">🧪</span> API 테스트 페이지 (있는 경우)
+            </a>
+        </div>
+        <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px; font-size: 0.9em;">
+            <strong>💡 참고:</strong> 이 기능은 REST API로만 제공되며, Spring Security 인증이 필요합니다.<br>
+            Postman Collection이나 Swagger UI가 있다면 활용하세요.
+        </div>
+    </div>
+
+
 
     <!-- 추가 페이지들 -->
     <div class="section">
@@ -434,5 +467,97 @@
         </div>
     </div>
 </div>
+
+<script>
+    let currentUserId = null;
+
+    // 페이지 로드 시 사용자 정보 확인
+    document.addEventListener('DOMContentLoaded', function() {
+        checkUserStatus();
+    });
+
+    // 사용자 상태 확인 함수
+    async function checkUserStatus() {
+        try {
+            // 1. 먼저 Spring Security 사용자 정보 확인
+            try {
+                const securityResponse = await fetch('/api/session-user');
+                if (securityResponse.ok) {
+                    const userData = await securityResponse.json();
+                    if (userData && userData.userId) {
+                        currentUserId = userData.userId;
+                        updateUserStatus(`Spring Security 인증 사용자 (ID: ${currentUserId})`, true);
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.log('Spring Security 사용자 정보 확인 실패:', error);
+            }
+
+            // 2. 세션 기반 사용자 정보 확인
+            try {
+                const sessionResponse = await fetch('/color/session-info');
+                if (sessionResponse.ok) {
+                    const sessionData = await sessionResponse.json();
+                    if (sessionData && sessionData.userId) {
+                        currentUserId = sessionData.userId;
+                        updateUserStatus(`세션 기반 사용자 (ID: ${currentUserId})`, true);
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.log('세션 사용자 정보 확인 실패:', error);
+            }
+
+            // 3. 사용자 정보가 없는 경우
+            updateUserStatus('로그인되지 않음', false);
+
+        } catch (error) {
+            console.error('사용자 상태 확인 중 오류:', error);
+            updateUserStatus('사용자 상태 확인 실패', false);
+        }
+    }
+
+    // 사용자 상태 UI 업데이트
+    function updateUserStatus(statusText, isLoggedIn) {
+        const userStatusDiv = document.getElementById('userStatus');
+        const userInfoSpan = document.getElementById('userInfo');
+        const colorLinkText = document.getElementById('colorLinkText');
+
+        userInfoSpan.textContent = statusText;
+        userInfoSpan.className = isLoggedIn ? 'dynamic-user-id' : 'loading';
+
+        if (isLoggedIn) {
+            userStatusDiv.className = 'user-status';
+            colorLinkText.textContent = `내 색상 관리 (ID: ${currentUserId})`;
+        } else {
+            userStatusDiv.className = 'user-status not-logged-in';
+            colorLinkText.textContent = '로그인 후 이용 가능';
+        }
+    }
+
+    // 내 색상 페이지로 이동
+    function goToMyColors() {
+        if (currentUserId) {
+            window.location.href = `/color/user/${currentUserId}`;
+        } else {
+            alert('먼저 로그인해주세요.\n\n다음 방법 중 하나를 사용하세요:\n1. 일반 로그인 (/login)\n2. 세션 초기화 (/color/init-session)\n3. Spring Security 로그인');
+        }
+    }
+
+    // 사용자 전환 (개발/테스트용)
+    function switchUser(userId) {
+        if (confirm(`사용자를 ${userId}로 전환하시겠습니까?`)) {
+            window.location.href = `/switch-user/${userId}`;
+        }
+    }
+
+    // 새로고침 버튼 (필요시 사용)
+    function refreshUserStatus() {
+        document.getElementById('userInfo').textContent = '확인 중...';
+        document.getElementById('userInfo').className = 'loading';
+        checkUserStatus();
+    }
+</script>
 </body>
 </html>

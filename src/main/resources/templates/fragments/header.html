@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<!-- 헤더 프래그먼트 -->
+<header class="header" th:fragment="header">
+    <div class="logo">CodeSnippets</div>
+    <div class="auth-buttons">
+        <!-- 로그인된 경우 -->
+        <div sec:authorize="isAuthenticated()" class="user-info">
+            <span class="user-nickname" th:text="${#authentication.principal.nickname}">사용자님</span>
+            <a th:href="@{/logout}" class="auth-btn logout-btn">로그아웃</a>
+        </div>
+
+        <!-- 로그인되지 않은 경우 -->
+        <div sec:authorize="!isAuthenticated()">
+            <a th:href="@{/login}" class="auth-btn login-btn">로그인</a>
+            <a th:href="@{/signup}" class="auth-btn signup-btn">회원가입</a>
+        </div>
+    </div>
+</header>
+</body>
+</html>

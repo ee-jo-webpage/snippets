@@ -1,3 +1,12 @@
+function storeEmailWithExpiry(email, ttlMinutes = 5) {
+    const now = Date.now();
+    const expiry = now + ttlMinutes * 60 * 1000;
+    const data = { email, expiry };
+    localStorage.setItem("email_verification", JSON.stringify(data));
+}
+
+
+
 const form = document.getElementById('registerForm');
 const submitButton = form.querySelector("button[type='submit']");
 const messageDiv = document.getElementById('message');
@@ -35,6 +44,15 @@ function validateField(fieldName) {
     const message = validators[fieldName](field.value);
     const errorSpan = document.getElementById(`${fieldName}Error`);
     errorSpan.innerText = message;
+
+    if (message) {
+        errorSpan.classList.add("show");  // 👈 에러 있으면 보이게
+        field.style.borderColor = 'var(--error-color)';
+    } else {
+        errorSpan.classList.remove("show"); // 👈 에러 없으면 숨기기
+        field.style.borderColor = 'var(--border-focus)';
+    }
+
     return message === "";
 }
 
@@ -82,20 +100,18 @@ form.addEventListener('submit', async function (e) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
-        console.log("✅ 서버 응답 수신됨", response);
         let result;
         try {
             result = await response.json();
         } catch (e) {
-            console.error(" JSON 파싱 실패", e);
             alert("서버 오류가 발생했습니다.");
             const text = await response.text();
-            console.error("서버 응답 텍스트:", text);
             setSubmitState(false);
             return;
         }
 
         if (response.ok) {
+            storeEmailWithExpiry(data.email);  //  이메일 + 만료시간 5분 저장
             await Swal.fire({
                 title: '회원가입 성공!',
                 text: result.message || '로그인 페이지로 이동합니다.',
@@ -110,7 +126,9 @@ form.addEventListener('submit', async function (e) {
                 for (let field in errors) {
                     const msg = errors[field];
                     const span = document.getElementById(`${field}Error`);
-                    if (span) span.innerText = msg;
+                    if (span){ span.innerText = msg;
+                        span.classList.add("show");
+                    }
 
                     if (msg.includes("탈퇴 처리된")) {
                         await Swal.fire({

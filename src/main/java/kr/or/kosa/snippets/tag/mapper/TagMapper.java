@@ -79,7 +79,7 @@ public interface TagMapper {
             "LIMIT #{limit}")
     List<TagItem> selectMostUsedTagsByUserId(@Param("userId") Long userId, @Param("limit") int limit);
 
-    // 특정 태그로 스니펫 검색
+    // 특정 태그로 스니펫 검색 (기존 - 색상 정보 없음)
     @Select("SELECT s.* FROM snippets s " +
             "INNER JOIN snippet_tags st ON s.snippet_id = st.snippet_id " +
             "INNER JOIN tags t ON st.tag_id = t.tag_id " +
@@ -87,7 +87,19 @@ public interface TagMapper {
             "ORDER BY s.created_at DESC")
     List<Snippets> selectSnippetsByTagId(@Param("tagId") Long tagId);
 
-    // 여러 태그로 스니펫 검색 (AND 조건)
+    // 특정 태그로 스니펫 검색 (색상 정보 포함) - 새로 추가
+    @Select("SELECT s.snippet_id, s.user_id, s.folder_id, s.color_id, s.source_url, s.type, " +
+            "s.memo, s.created_at, s.updated_at, s.like_count, s.visibility, " +
+            "c.name, c.hex_code " +
+            "FROM snippets s " +
+            "INNER JOIN snippet_tags st ON s.snippet_id = st.snippet_id " +
+            "INNER JOIN tags t ON st.tag_id = t.tag_id " +
+            "LEFT JOIN snippet_colors c ON s.color_id = c.color_id " +
+            "WHERE t.tag_id = #{tagId} " +
+            "ORDER BY s.created_at DESC")
+    List<Snippets> selectSnippetsByTagIdWithColor(@Param("tagId") Long tagId);
+
+    // 여러 태그로 스니펫 검색 (AND 조건) - 기존
     @Select("<script>" +
             "SELECT s.* FROM snippets s " +
             "WHERE s.snippet_id IN (" +
@@ -102,6 +114,26 @@ public interface TagMapper {
             "ORDER BY s.created_at DESC" +
             "</script>")
     List<Snippets> selectSnippetsByMultipleTags(@Param("tagIds") List<Long> tagIds);
+
+    // 여러 태그로 스니펫 검색 (AND 조건, 색상 정보 포함) - 새로 추가
+    @Select("<script>" +
+            "SELECT s.snippet_id, s.user_id, s.folder_id, s.color_id, s.source_url, s.type, " +
+            "s.memo, s.created_at, s.updated_at, s.like_count, s.visibility, " +
+            "c.name, c.hex_code " +
+            "FROM snippets s " +
+            "LEFT JOIN snippet_colors c ON s.color_id = c.color_id " +
+            "WHERE s.snippet_id IN (" +
+            "  SELECT st.snippet_id FROM snippet_tags st " +
+            "  WHERE st.tag_id IN " +
+            "  <foreach collection='tagIds' item='tagId' open='(' separator=',' close=')'>" +
+            "    #{tagId}" +
+            "  </foreach>" +
+            "  GROUP BY st.snippet_id " +
+            "  HAVING COUNT(DISTINCT st.tag_id) = #{tagIds.size()}" +
+            ") " +
+            "ORDER BY s.created_at DESC" +
+            "</script>")
+    List<Snippets> selectSnippetsByMultipleTagsWithColor(@Param("tagIds") List<Long> tagIds);
 
     // 태그명으로 검색 (사용자별)
     @Select("SELECT * FROM tags WHERE user_id = #{userId} AND name LIKE CONCAT('%', #{keyword}, '%') ORDER BY name")

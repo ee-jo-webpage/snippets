@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스니펫 관리 사이트</title>
+    <link th:href="@{/tag/css/tag-manager.css}" rel="stylesheet">
+    <link th:href="@{/my-snippet-page/css/my-snippet-page.css}" rel="stylesheet">
+    <!-- jQuery 라이브러리 추가 -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link th:href="@{/snippet-section/css/snippet-section.css}" rel="stylesheet">
+
+    <!-- Font Awesome 아이콘 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+</head>
+<body>
+<!-- 헤더 -->
+<div th:replace="fragments/header :: header"></div>
+<div th:replace="fragments/sidebar :: sidebar('tags')"></div>
+
+<!-- 메인 컨텐츠 영역 -->
+<main class="main-content">
+    <div class="container">
+        <!-- 태그 관리 네비게이션 -->
+        <div class="tag-navigation" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+            <h2 style="margin: 0; color: #333;">태그 관리</h2>
+            <div id="tagCount" style="color: #6c757d; font-size: 14px;">태그를 불러오는 중...</div>
+        </div>
+
+        <!-- 알림 메시지 표시 영역 -->
+        <div id="alertContainer"></div>
+        <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+        <!-- 태그 관리 기능들 (로그인된 경우에만 표시) -->
+        <div th:if="${userId != null}">
+            <!-- 검색/추가 섹션 -->
+            <div class="search-section">
+                <div class="search-bar">
+                    <input type="text"
+                           id="tagSearchInput"
+                           class="search-input"
+                           placeholder="태그 검색 또는 새 태그 추가...">
+                    <button id="addTagBtn" class="add-tag-btn">
+                        <i class="fas fa-plus"></i> 태그 추가
+                    </button>
+                </div>
+            </div>
+
+            <!-- 태그 목록 -->
+            <div class="tags-grid" id="tagsContainer">
+                <div class="loading-text">태그를 불러오는 중...</div>
+            </div>
+
+            <!-- 태그가 없는 경우 -->
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <div class="emoji">🏷️</div>
+                <p>아직 생성한 태그가 없습니다</p>
+                <p>새로운 태그를 만들어서 스니펫을 체계적으로 관리해보세요!</p>
+                <button class="btn btn-primary" onclick="document.getElementById('tagSearchInput').focus()">
+                    <i class="fas fa-plus"></i> 첫 태그 만들기
+                </button>
+            </div>
+        </div>
+
+        <!-- 로그인하지 않은 경우 빈 상태 메시지 -->
+        <div th:if="${userId == null}" class="empty-state">
+            <div class="emoji">🔒</div>
+            <h3>로그인이 필요합니다</h3>
+            <p>태그를 관리하려면 먼저 로그인해주세요.</p>
+            <a href="/login" class="btn btn-primary">
+                <i class="fas fa-sign-in-alt"></i> 로그인하기
+            </a>
+        </div>
+        <!-- AJAX로 로드될 스니펫 섹션 -->
+        <div id="snippetSectionContainer"></div>
+
+    </div>
+
+    <!-- 태그 삭제 확인 모달 -->
+    <div id="deleteModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>태그 삭제 확인</h3>
+                <span class="modal-close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p><strong>"<span id="deleteTagName"></span>"</strong> 태그를 삭제하시겠습니까?</p>
+                <p class="warning-text">⚠️ 이 태그와 연결된 모든 스니펫에서도 태그가 제거됩니다.</p>
+            </div>
+            <div class="modal-footer">
+                <button id="confirmDelete" class="btn btn-danger">삭제</button>
+                <button id="cancelDelete" class="btn btn-secondary">취소</button>
+            </div>
+        </div>
+    </div>
+<!--    <div id="alertContainer"></div>-->
+    <div th:replace="snippet-section/snippet-section :: snippetModal"></div>
+</main>
+
+<!-- 전역 변수 설정 (가장 먼저) -->
+<script th:inline="javascript">
+    const userId = /*[[${userId}]]*/ null;
+    const message = /*[[${message}]]*/ null;
+    const error = /*[[${error}]]*/ null;
+</script>
+
+<!-- 분리된 JavaScript 파일들 (순서 중요!) -->
+<script th:src="@{/tag/js/tag-api.js}"></script>
+<script th:src="@{/tag/js/tag-manager-ui.js}"></script>
+<script th:src="@{/snippet-section/js/snippet-modal-main.js}"></script>
+<script th:src="@{/snippet-section/js/snippet-tags.js}"></script>
+<script th:src="@{/snippet-section/js/snippet-actions.js}"></script>
+<script th:src="@{/snippet-section/js/snippet-display.js}"></script>
+<script th:src="@{/tag/js/main-tag-manager.js}"></script>
+
+</body>
+</html>

@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoSnippets - 스니펫을 더 스마트하게</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-600: #4f46e5;
+            --primary-700: #4338ca;
+            --primary-50: #eef2ff;
+            --gray-900: #111827;
+            --gray-800: #1f2937;
+            --gray-600: #4b5563;
+            --gray-400: #9ca3af;
+            --gray-100: #f3f4f6;
+            --white: #ffffff;
+            --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: var(--gray-800);
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--gray-600);
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-600);
+        }
+
+        .nav-cta {
+            background: var(--primary-600);
+            color: white !important;
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-cta:hover {
+            background: var(--primary-700);
+            transform: translateY(-1px);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 30% 70%, rgba(79, 70, 229, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 70% 30%, rgba(236, 72, 153, 0.1) 0%, transparent 50%);
+        }
+
+        .hero-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-content h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--gray-900) 0%, var(--primary-600) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-content p {
+            font-size: 1.25rem;
+            color: var(--gray-600);
+            margin-bottom: 2rem;
+            line-height: 1.7;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background: var(--gradient-1);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--gray-800);
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 2px solid var(--gray-100);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--primary-600);
+            color: var(--primary-600);
+        }
+
+        .hero-visual {
+            position: relative;
+        }
+
+        .floating-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-xl);
+            position: absolute;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .floating-card:nth-child(1) {
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .floating-card:nth-child(2) {
+            top: 30%;
+            right: 20%;
+            animation-delay: 2s;
+        }
+
+        .floating-card:nth-child(3) {
+            bottom: 20%;
+            left: 20%;
+            animation-delay: 4s;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        /* Features Section */
+        .features {
+            padding: 6rem 0;
+            background: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--gray-900);
+        }
+
+        .section-subtitle {
+            font-size: 1.1rem;
+            color: var(--gray-600);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 3rem;
+        }
+
+        .feature-card {
+            text-align: center;
+            padding: 2rem;
+            border-radius: 16px;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+        }
+
+        .feature-card:nth-child(1) .feature-icon {
+            background: var(--gradient-1);
+        }
+
+        .feature-card:nth-child(2) .feature-icon {
+            background: var(--gradient-2);
+        }
+
+        .feature-card:nth-child(3) .feature-icon {
+            background: var(--gradient-3);
+        }
+
+        .feature-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--gray-900);
+        }
+
+        .feature-description {
+            color: var(--gray-600);
+            line-height: 1.6;
+        }
+
+        /* Platform Share Section */
+        .platform-share {
+            padding: 6rem 0;
+            background: linear-gradient(135deg, var(--primary-50) 0%, rgba(79, 70, 229, 0.05) 100%);
+        }
+
+        .platform-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .platform-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .platform-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .platform-logo {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 1rem;
+            background: var(--gray-100);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .github {
+            background: #24292e;
+            color: white;
+        }
+
+        .gist {
+            background: #0969da;
+            color: white;
+        }
+
+        .pastebin {
+            background: #02a8f4;
+            color: white;
+        }
+
+        .codepen {
+            background: #000;
+            color: white;
+        }
+
+        /* How it Works */
+        .how-it-works {
+            padding: 6rem 0;
+            background: white;
+        }
+
+        .step-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            margin-bottom: 6rem;
+            max-width: 1000px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .step-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .step-item.reverse {
+            direction: rtl;
+        }
+
+        .step-item.reverse > * {
+            direction: ltr;
+        }
+
+        .step-content {
+            padding: 2rem;
+        }
+
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            background: var(--gradient-1);
+            color: white;
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .step-content h3 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 1rem;
+        }
+
+        .step-content p {
+            font-size: 1.1rem;
+            color: var(--gray-600);
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        .step-features {
+            list-style: none;
+            padding: 0;
+        }
+
+        .step-features li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            color: var(--gray-700);
+            font-weight: 500;
+        }
+
+        .step-features li::before {
+            content: '✓';
+            color: var(--primary-600);
+            font-weight: bold;
+            margin-right: 0.75rem;
+            width: 16px;
+        }
+
+        .step-visual {
+            position: relative;
+            background: var(--gray-100);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow-xl);
+            aspect-ratio: 16/10;
+        }
+
+        .gif-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            color: var(--gray-500);
+            font-size: 0.9rem;
+        }
+
+        .gif-placeholder::before {
+            content: '🎬';
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .step-visual img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Snippets Preview */
+        .snippets-preview {
+            padding: 6rem 0;
+            background: var(--gray-100);
+        }
+
+        .snippets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .snippet-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+            transition: all 0.3s ease;
+        }
+
+        .snippet-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .snippet-header {
+            padding: 1rem 1.5rem;
+            background: var(--gray-800);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .snippet-lang {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .snippet-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .close {
+            background: #ff5f57;
+        }
+
+        .minimize {
+            background: #ffbd2e;
+        }
+
+        .maximize {
+            background: #28ca42;
+        }
+
+        .snippet-code {
+            padding: 1.5rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            background: #fafafa;
+            color: var(--gray-800);
+        }
+
+        .snippet-meta {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--gray-100);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        .snippet-stats {
+            display: flex;
+            gap: 1rem;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--gray-900);
+            color: white;
+            padding: 3rem 0 1rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            text-align: center;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: var(--gray-400);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid var(--gray-800);
+            padding-top: 1rem;
+            color: var(--gray-400);
+            font-size: 0.875rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-container {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .hero-content h1 {
+                font-size: 2.5rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .features-grid,
+            .platform-grid,
+            .snippets-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .step-item {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+                margin-bottom: 4rem;
+            }
+
+            .step-item.reverse {
+                direction: ltr;
+            }
+        }
+
+        .nickname {
+            display: flex;
+            align-items: center;
+            background-color: var(--gray-100);
+            padding: 0.4rem 0.9rem;
+            border-radius: 16px;
+            color: var(--gray-800);
+            font-weight: 600;
+            font-size: 0.95rem;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 768px) {
+            .nickname {
+                justify-content: center;
+                margin-bottom: 0.5rem;
+            }
+        }
+
+        .snippet-code {
+            padding: 1.5rem;
+            background: #fafafa;
+            color: var(--gray-800);
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: left;
+            overflow: hidden;
+        }
+
+        .snippet-code pre {
+            margin: 0;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 8;
+            -webkit-box-orient: vertical;
+        }
+
+        .snippet-text-content {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            font-family: 'Inter', sans-serif;
+            white-space: pre-line;
+            width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 8;
+            -webkit-box-orient: vertical;
+        }
+
+        .snippet-code img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 10px;
+        }
+
+    </style>
+</head>
+<body>
+    <header>
+        <div class="nav-container">
+            <a href="#" class="logo">GoSnippets</a>
+            <ul class="nav-links">
+                <li><a href="#features">기능</a></li>
+                <li><a href="#how-it-works">사용법</a></li>
+                <li><a href="/app">스니펫</a></li>
+
+                <!-- 로그인 상태일 때 -->
+                <li th:if="${nickname}" class="nickname">
+                    <span th:text="'안녕하세요, ' + ${nickname} + '님'"></span>
+                </li>
+
+                <!-- 관리자일 경우 → 대시보드 -->
+                <li th:if="${nickname} and ${isAdmin}">
+                    <a href="/admin/ip-blocks" class="nav-cta">관리자 대시보드</a>
+                </li>
+
+                <!-- 일반 사용자일 경우 → 마이페이지 -->
+                <li th:if="${nickname} and ${!isAdmin}">
+                    <a href="/user/mypage" class="nav-cta">마이페이지</a>
+                </li>
+
+                <li th:if="${nickname}"><a href="/logout">로그아웃</a></li>
+
+                <!-- 비로그인 상태일 때 -->
+                <li th:unless="${nickname}"><a href="/login">로그인</a></li>
+                <li th:unless="${nickname}"><a href="/register" class="nav-cta">시작하기</a></li>
+            </ul>
+        </div>
+    </header>
+
+
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1>스니펫을<br>더 스마트하게</h1>
+                <p>웹에서 발견한 유용한 스니펫을 클릭 한 번으로 저장하고, 어디서든 접근할 수 있게 만드세요. Chrome 확장프로그램으로 더욱 편리하게!</p>
+
+                <div class="hero-cta">
+                    <a href="/snippets/new" class="btn-primary">무료로 시작하기</a>
+                    <a href="#how-it-works" class="btn-secondary">사용법 보기</a>
+                </div>
+            </div>
+
+            <div class="hero-visual">
+                <div class="floating-card">
+                    <div style="font-family: monospace; font-size: 12px; color: #666;">
+                        function debounce(fn, delay) {<br>
+                        &nbsp;&nbsp;let timeoutId;<br>
+                        &nbsp;&nbsp;return (...args) => {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;clearTimeout(timeoutId);<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;timeoutId = setTimeout(() => fn(...args), delay);<br>
+                        &nbsp;&nbsp;};<br>
+                        }
+                    </div>
+                </div>
+
+                <div class="floating-card">
+                    <div style="font-family: monospace; font-size: 12px; color: #666;">
+                        SELECT users.name, COUNT(orders.id)<br>
+                        FROM users<br>
+                        LEFT JOIN orders ON users.id = orders.user_id<br>
+                        GROUP BY users.id;
+                    </div>
+                </div>
+
+                <div class="floating-card">
+                    <div style="font-family: monospace; font-size: 12px; color: #666;">
+                        import React, { useState } from 'react';<br><br>
+                        const Counter = () => {<br>
+                        &nbsp;&nbsp;const [count, setCount] = useState(0);<br>
+                        &nbsp;&nbsp;return &lt;button onClick={() => setCount(count + 1)}&gt;<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;Count: {count}<br>
+                        &nbsp;&nbsp;&lt;/button&gt;;<br>
+                        };
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">강력한 기능들</h2>
+                <p class="section-subtitle">개발자를 위한 최고의 스니펫 관리 도구입니다</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3 class="feature-title">원클릭 저장</h3>
+                    <p class="feature-description">웹페이지에서 텍스트를 드래그하거나 코드 블록에 마우스를 올리면 저장 버튼이 자동으로 나타납니다.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h3 class="feature-title">스마트 검색</h3>
+                    <p class="feature-description">언어별, 태그별, 키워드별로 빠르게 검색하고 필터링하여 원하는 스니펫을 즉시 찾을 수 있습니다.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3 class="feature-title">크로스 플랫폼</h3>
+                    <p class="feature-description">웹, 모바일, 데스크톱에서 동기화되어 언제 어디서든 스니펫에 접근할 수 있습니다.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="platform-share">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">외부 플랫폼 연동</h2>
+                <p class="section-subtitle">다양한 플랫폼과 연동하여 코드를 공유하고 백업하세요</p>
+            </div>
+
+            <div class="platform-grid">
+                <div class="platform-card">
+                    <div class="platform-logo github">📁</div>
+                    <h3>GitHub 연동</h3>
+                    <p>GitHub Repository에 직접 업로드하고 버전 관리를 통해 코드 히스토리를 관리하세요.</p>
+                </div>
+
+                <div class="platform-card">
+                    <div class="platform-logo gist">📝</div>
+                    <h3>GitHub Gist</h3>
+                    <p>간단한 스니펫은 Gist로 빠르게 공유하고 링크를 통해 다른 개발자들과 공유하세요.</p>
+                </div>
+
+                <div class="platform-card">
+                    <div class="platform-logo pastebin">🔗</div>
+                    <h3>Pastebin</h3>
+                    <p>임시 코드 공유나 빠른 협업을 위해 Pastebin에 자동으로 업로드할 수 있습니다.</p>
+                </div>
+
+                <div class="platform-card">
+                    <div class="platform-logo codepen">✏️</div>
+                    <h3>CodePen</h3>
+                    <p>프론트엔드 코드는 CodePen으로 바로 내보내서 실시간으로 테스트하고 공유하세요.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-it-works" class="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">사용법</h2>
+                <p class="section-subtitle">3단계로 간단하게 시작하세요</p>
+            </div>
+
+            <!-- Step 1: Extension Install -->
+            <div class="step-item">
+                <div class="step-visual">
+                    <!-- Replace with actual GIF -->
+                    <img src="/images/install.gif" alt="확장프로그램 설치 과정"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="gif-placeholder" style="display: none;">
+                        확장프로그램 설치 GIF
+                    </div>
+                </div>
+                <div class="step-content">
+                    <div class="step-number">1</div>
+                    <h3>확장프로그램 설치</h3>
+                    <p>Chrome 웹스토어에서 GoSnippet 확장프로그램을 설치하고 간단한 계정 연동으로 바로 시작하세요.</p>
+                    <ul class="step-features">
+                        <li>원클릭 설치</li>
+                        <li>자동 로그인 연동</li>
+                        <li>모든 Chrome 기반 브라우저 지원</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Step 2: Code Selection & Save -->
+            <div class="step-item reverse">
+                <div class="step-visual">
+                    <!-- Replace with actual GIF -->
+                    <img src="/images/save.gif" alt="코드 선택 및 저장 과정"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="gif-placeholder" style="display: none;">
+                        스니펫 저장
+                    </div>
+                </div>
+                <div class="step-content">
+                    <div class="step-number">2</div>
+                    <h3>스니펫 선택 & 저장</h3>
+                    <p>웹페이지에서 유용한 스니펫을 발견했다면 드래그하거나 마우스를 올려보세요. 저장 버튼이 자동으로 나타납니다.</p>
+                    <ul class="step-features">
+                        <li>텍스트 드래그로 스니펫 저장</li>
+                        <li>이미지 및 코드 블록 자동 감지</li>
+                        <li>색상과 메모 추가 가능</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Step 3: Manage & Use -->
+            <div class="step-item">
+                <div class="step-visual">
+                    <!-- Replace with actual GIF -->
+                    <img src="/images/sidebar.gif" alt="스니펫 관리 및 활용"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="gif-placeholder" style="display: none;">
+                        스니펫 관리 GIF
+                    </div>
+                </div>
+                <div class="step-content">
+                    <div class="step-number">3</div>
+                    <h3>관리 & 활용</h3>
+                    <p>저장된 스니펫을 색상, 태그로 체계적으로 분류하고, 강력한 검색 기능으로 필요할 때 즉시 찾아서 활용하세요.</p>
+                    <ul class="step-features">
+                        <li>타입, 색상 기반 분류 시스템</li>
+                        <li>색상, 시간별 정렬 기능</li>
+                        <li>검색 및 필터링</li>
+                        <li>외부 플랫폼 연동</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="snippets" class="snippets-preview">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">인기 스니펫</h2>
+                <p class="section-subtitle">다른 개발자들이 자주 저장하는 유용한 코드들을 확인해보세요</p>
+            </div>
+
+            <div class="snippets-grid">
+                <div th:each="snippet : ${topSnippets}" class="snippet-card">
+                    <div class="snippet-header">
+                        <span class="snippet-lang" th:text="${snippet.type}">TYPE</span>
+                        <div class="snippet-actions">
+                            <div class="action-btn close"></div>
+                            <div class="action-btn minimize"></div>
+                            <div class="action-btn maximize"></div>
+                        </div>
+                    </div>
+
+                    <div class="snippet-code">
+                        <img th:if="${snippet.typeName == 'IMG'}" th:src="${snippet.imageUrl}" alt="스니펫 이미지"/>
+
+                        <pre th:if="${snippet.typeName == 'CODE'}" th:text="${snippet.content}">스니펫 코드</pre>
+
+                        <div th:if="${snippet.typeName == 'TEXT'}" class="snippet-text-content"
+                             th:text="${snippet.content}">스니펫 텍스트
+                        </div>
+                    </div>
+
+                    <div class="snippet-meta">
+                        <span th:text="${#temporals.format(snippet.createdAt, 'yyyy-MM-dd')}">날짜</span>
+                        <div class="snippet-stats">
+                            <span th:text="'❤️ ' + ${snippet.likeCount}">❤️ 0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="/navigation">API 문서</a>
+                <a href="https://github.com/ee-jo-webpage/snippets">Github</a>
+                <a href="https://www.erdcloud.com/d/H7qRKYuQXSitY6HeH">ERD Cloud</a>
+                <a href="https://2jofromkosa.atlassian.net/jira/software/projects/SNIPPET/boards/3/backlog">Jira</a>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 GoSnippet. All rights reserved. Made with ESonJava for developers.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

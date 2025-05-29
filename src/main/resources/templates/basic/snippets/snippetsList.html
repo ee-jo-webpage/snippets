@@ -1,66 +1,333 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-   <meta charset="UTF-8">
-   <title>Snippets List</title>
+    <meta charset="UTF-8">
+    <title>Snippets List</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link th:href="@{/my-snippet-page/css/my-snippet-page.css}" rel="stylesheet">
+<style>
+.pagination { display: flex; list-style: none; padding: 0; margin: 1rem 0; }
+.pagination li { margin: 0 0.3rem; }
+.pagination li.disabled a { pointer-events: none; color: gray; }
+.pagination li.active a { font-weight: bold; }
+
+/* 모달 스타일 */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 1% auto;
+    padding: 0;
+    border: none;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease-out;
+    position: relative;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+#cancelBtn {
+  display: none;
+}
+
+.modal-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h1 {
+    margin: 0;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 1.5rem;
+    color: #333;
+}
+
+.close {
+    color: #999;
+    font-size: 2rem;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.close:hover,
+.close:focus {
+    color: #333;
+}
+
+.modal-body {
+    padding: 2rem;
+    font-family: 'Noto Sans KR', sans-serif;
+}
+
+/* 로딩 스피너 */
+.loading {
+    text-align: center;
+    padding: 2rem;
+}
+
+.spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #007bff;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.modal-body .box {
+    max-width: none;
+    margin: 0;
+}
+
+.modal-body label {
+    display: block;
+    margin: 0.75rem 0;
+    padding: 1rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.modal-body label:hover {
+    border-color: #007bff;
+    background-color: #f8f9ff;
+}
+
+.modal-body label.selected {
+    border-color: #007bff;
+    background-color: #e3f2fd;
+}
+
+.modal-body input[type="radio"] {
+    margin-right: 0.75rem;
+    transform: scale(1.2);
+}
+
+.modal-footer {
+    padding: 1rem 2rem 2rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.btn-primary:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background-color: transparent;
+    color: #6c757d;
+    border: 1px solid #6c757d;
+}
+
+.btn-secondary:hover {
+    background-color: #6c757d;
+    color: white;
+}
+</style>
 </head>
 
 <body>
-   <h1>Snippets List</h1>
 	
-   <form th:action="@{/snippets}" method="get" style="margin-bottom:1rem;">
-     <input type="text" name="userId"
-            placeholder="User ID로 검색"
-            th:value="${filterUserId}" />
-     <button type="submit">검색</button>
-     <a th:if="${filterUserId != null}" th:href="@{/snippets}">전체 보기</a>
-   </form>
+	<!-- 헤더 포함 -->
+	<div th:replace="fragments/header :: header" style="position: fixed; top: 0; left: 0; right: 0; height: 60px; z-index: 1000;"></div>
+	
+	<div style="display: flex; margin-top: 60px;"> <!-- 헤더 높이만큼 margin-top -->
+	
+	<!-- 사이드바 -->
+	    <div th:replace="fragments/sidebar :: sidebar('bookmarks')" tyle="width: 20vw; min-width: 200px; max-width: 300px; position: fixed; top: 8vh; bottom: 0; left: 0; overflow-y: auto; background: #f8f9fa;"></div>
+		<!-- 메인 콘텐츠 -->
+		    <main style="margin-left: 20vw; min-width: 200px; max-width: calc(100vw - 20vw); padding: 2vh 2vw; overflow-y: auto; height: 100%;">
+<h1>Snippets List</h1>
 
-   <table border="1">
-      <thead>
-         <tr>
-            <th>Snippet ID</th>
-            <th>User ID</th>
-            <th>Folder ID</th>
-            <th>Color ID</th>
-            <th>Source URL</th>
-            <th>Type</th>
-            <th>Memo</th>
-            <th>Created At</th>
-            <th>Updated At</th>
-            <th>Like Count</th>
-            <th>Visibility</th>
-         </tr>
-      </thead>
-      <tbody>
-         <!-- Snippets 리스트를 반복하여 출력 -->
-         <tr th:each="snippet : ${snippets}">
+<table border="1">
+<thead>
+<tr>
+<th>Snippet ID</th><th>User ID</th><th>Color ID</th><th>Source URL</th>
+<th>Type</th><th>Memo</th><th>Created At</th><th>Updated At</th>
+<th>Like Count</th><th>Visibility</th><th>Actions</th>
+</tr>
+</thead>
+<tbody>
+<tr th:each="snippet : ${snippets}">
+<td th:text="${snippet.snippetId}"></td>
+<td th:text="${snippet.userId}"></td>
+<td th:text="${snippet.colorId}"></td>
+<td th:text="${snippet.sourceUrl}"></td>
+<td th:text="${snippet.type}"></td>
+<td th:text="${snippet.memo}"></td>
+<td th:text="${#dates.format(snippet.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
+<td th:text="${#dates.format(snippet.updatedAt, 'yyyy-MM-dd HH:mm')}"></td>
+<td th:text="${snippet.likeCount}"></td>
+<td th:text="${snippet.visibility}"></td>
+<td><a th:href="@{/snippets/{id}(id=${snippet.snippetId})}">상세 보기</a></td>
+</tr>
+</tbody>
+</table>
 
-            <td th:text="${snippet.snippetId}"></td>
-            <td th:text="${snippet.userId}"></td>
-            <td th:text="${snippet.folderId}"></td>
-            <td th:text="${snippet.colorId}"></td>
-            <td th:text="${snippet.sourceUrl}"></td>
-            <td th:text="${snippet.type}"></td>
-            <td th:text="${snippet.memo}"></td>
-            <td th:text="${snippet.createdAt}"></td>
-            <td th:text="${snippet.updatedAt}"></td>
-            <td th:text="${snippet.likeCount}"></td>
-            <td th:text="${snippet.visibility}"></td>
-            <td>
-               <a th:href="@{/snippets/{id}(id=${snippet.snippetId})}">상세 보기</a>
-            </td>
-         </tr>
-      </tbody>
-   </table>
-   
-   <a href="/snippets/new">
-      <button>스니펫 추가</button>
-   </a>
-   
-   <!-- 페이지 내비게이션 또는 다른 링크 추가 가능 -->
-   <a href="/">Go to Home</a>
+<nav>
+<ul class="pagination">
+<li th:classappend="${startPage > pageGroupSize} ? '' : 'disabled'"><a th:href="@{/snippets(page=${startPage - pageGroupSize})}">이전</a></li>
+<li th:each="i : ${#numbers.sequence(startPage, endPage)}" th:classappend="${i == pageInfo.pageNum} ? 'active' : ''">
+<a th:href="@{/snippets(page=${i})}" th:text="${i}">1</a></li>
+<li th:classappend="${endPage < pageInfo.pages} ? '' : 'disabled'"><a th:href="@{/snippets(page=${endPage + 1})}">다음</a></li>
+</ul>
+</nav>
+
+<button id="openModalBtn" class="btn btn-primary">스니펫 추가</button>
+<a href="/">Go to Home</a>
+
+<div id="snippetModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1>스니펫 추가</h1>
+      <span class="close" data-bs-dismiss="modal" id="xbutton">×</span>
+    </div>
+    <div class="modal-body" id="modalBody">
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>로딩 중...</p>
+      </div>
+    </div>
+    <div class="modal-footer" id="modalFooter" style="display: none;">
+      <button type="button" class="btn btn-secondary" id="cancelBtn">취소</button>
+      <button type="button" class="btn btn-primary" id="nextBtn">다음</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+<script>
+	document.addEventListener('DOMContentLoaded', () => {
+	  const modalEl = document.getElementById('snippetModal');
+	  const bodyDiv = document.getElementById('modalBody');
+	  const footerDiv = document.getElementById('modalFooter');
+	  const openBtn = document.getElementById('openModalBtn');
+	  const cancelBtn = document.getElementById('cancelBtn');
+	  const nextBtn = document.getElementById('nextBtn');
+	  const closeBtn = document.querySelector('.close');
+	  
+
+	  if (!modalEl || !bodyDiv || !footerDiv || !openBtn || !cancelBtn || !nextBtn) {
+	    console.error('❌ 필수 DOM 요소를 찾을 수 없습니다.');
+	    return;
+	  }
+
+	  let modal = new bootstrap.Modal(modalEl);
+	  let selectedType = null;
+
+	  // 라디오 버튼 change 이벤트 핸들러 (이벤트 위임)
+	  function handleRadioChange(e) {
+	    if (e.target.name === 'type') {
+	      selectedType = e.target.value;
+	      nextBtn.disabled = false;
+	    }
+	  }
+
+	  openBtn.addEventListener('click', e => {
+	    e.preventDefault();
+
+	    fetch('/snippets/new')
+	      .then(res => res.text())
+	      .then(html => {
+	        bodyDiv.innerHTML = html;
+	        footerDiv.style.display = 'flex';
+	        nextBtn.disabled = true;
+	        selectedType = null;
+
+	        // 이벤트 위임으로 한 번만 등록
+	        bodyDiv.addEventListener('change', handleRadioChange);
+
+	        modal.show();
+	      })
+	      .catch(err => console.error('❌ 모달 로딩 오류:', err));
+	  });
+	  
+	  
+	  closeBtn.addEventListener('click', () => {
+	    window.location.href = '/snippets';
+	  });
+	  
+	  cancelBtn.addEventListener('click', () => {
+	    modal.hide();
+	    // 이벤트 리스너 제거 (메모리 누수 방지)
+	    bodyDiv.removeEventListener('change', handleRadioChange);
+	  });
+
+	  nextBtn.addEventListener('click', () => {
+	    if (!selectedType) return;
+
+	    fetch(`/snippets/new?type=${selectedType}`)
+	      .then(res => res.text())
+	      .then(html => {
+	        bodyDiv.innerHTML = html;
+	        footerDiv.style.display = 'none';
+
+	        // 이벤트 리스너 제거 (메모리 누수 방지)
+	        bodyDiv.removeEventListener('change', handleRadioChange);
+	      })
+	      .catch(err => console.error('❌ 폼 로딩 오류:', err));
+	  });
+	});
+</script>
+	    </main>
+	</div>
 </body>
-
 </html>

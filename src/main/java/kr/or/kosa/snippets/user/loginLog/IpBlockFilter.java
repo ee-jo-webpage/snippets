@@ -10,8 +10,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.GenericFilterBean;
-
+import kr.or.kosa.snippets.user.blockIp.IpBlockException;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @Component
 @RequiredArgsConstructor
@@ -26,17 +28,15 @@ public class IpBlockFilter extends GenericFilterBean {
         HttpServletRequest req = (HttpServletRequest) request;
         String ip = req.getRemoteAddr();
 
-        // 👇 여기 로그 넣기 (조건문 바로 위)
-        log.info("IP: {}, URI: {}, method: {}", ip, req.getRequestURI(), req.getMethod());
-        log.info("차단 여부: {}", loginAttemptService.isBlocked(ip));
-
         if ("/loginproc".equals(req.getRequestURI())
                 && "POST".equalsIgnoreCase(req.getMethod())
                 && loginAttemptService.isBlocked(ip)) {
 
-            log.warn("차단된 IP의 로그인 시도: {}", ip);
             HttpServletResponse res = (HttpServletResponse) response;
-            res.sendRedirect("/login?blocked");
+
+            String errorMessage = "보안 사유로 해당 IP에서의 접속이 차단되었습니다.";
+            String encodedMessage = URLEncoder.encode(errorMessage, StandardCharsets.UTF_8);
+            res.sendRedirect("/login?error=" + encodedMessage);
             return;
         }
 

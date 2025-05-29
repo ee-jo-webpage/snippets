@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<!-- 사이드바 프래그먼트 -->
+<nav class="sidebar" th:fragment="sidebar(activeMenu)">
+    <div class="sidebar-title">Navigation</div>
+    <ul class="sidebar-menu">
+        <li class="sidebar-item">
+            <a th:href="@{/snippets}"
+               th:class="|sidebar-link ${activeMenu == 'snippets' ? 'active' : ''}|"
+               data-menu="snippets">내 스니펫 목록</a>
+        </li>
+        <li class="sidebar-item">
+            <a th:href="@{/bookmark}"
+               th:class="|sidebar-link ${activeMenu == 'bookmarks' ? 'active' : ''}|"
+               data-menu="bookmarks">북마크 목록</a>
+        </li>
+        <li class="sidebar-item">
+            <a th:href="@{/tags/manager}"
+               th:class="|sidebar-link ${activeMenu == 'tags' ? 'active' : ''}|"
+               data-menu="tags">태그 관리</a>
+        </li>
+        <li class="sidebar-item">
+            <a th:href="@{/color/my-colors}"
+               th:class="|sidebar-link ${activeMenu == 'colors' ? 'active' : ''}|"
+               data-menu="colors">색상 관리</a>
+        </li>
+        <li class="sidebar-item">
+            <a th:href="@{/popular-snippets}"
+               th:class="|sidebar-link ${activeMenu == 'popular' ? 'active' : ''}|"
+               data-menu="popular">인기 스니펫 게시판</a>
+        </li>
+<!--        <li class="sidebar-item">-->
+<!--            <a th:href="@{/community}"-->
+<!--               th:class="|sidebar-link ${activeMenu == 'community' ? 'active' : ''}|"-->
+<!--               data-menu="community">커뮤니티</a>-->
+<!--        </li>-->
+    </ul>
+</nav>
+</body>
+</html>

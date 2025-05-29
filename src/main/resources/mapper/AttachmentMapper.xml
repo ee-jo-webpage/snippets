@@ -5,7 +5,7 @@
     <resultMap id="AttachmentResultMap" type="kr.or.kosa.snippets.community.model.PostAttachment">
         <id property="attachmentId" column="attachment_id"/>
         <result property="postId" column="post_id"/>
-        <result property="filename" column="filename"/>
+        <result property="fileName" column="filename"/>
         <result property="filePath" column="file_path"/>
         <result property="fileType" column="file_type"/>
         <result property="fileSize" column="file_size"/>
@@ -31,7 +31,7 @@
     <insert id="insertAttachment" parameterType="kr.or.kosa.snippets.community.model.PostAttachment"
             useGeneratedKeys="true" keyProperty="attachmentId">
         INSERT INTO post_attachments (post_id, filename, file_path, file_type, file_size, created_at)
-        VALUES (#{postId}, #{filename}, #{filePath}, #{fileType}, #{fileSize}, NOW())
+        VALUES (#{postId}, #{fileName}, #{filePath}, #{fileType}, #{fileSize}, NOW())
     </insert>
 
     <!-- 첨부파일 삭제 -->

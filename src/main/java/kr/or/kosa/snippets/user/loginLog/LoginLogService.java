@@ -11,14 +11,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
+/**
+ * 로그인 시도 기록을 메모리에 임시 저장한 뒤
+ * 일정 주기로 DB에 저장하고,
+ * 오래된 로그는 주기적으로 삭제하는 서비스
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class LoginLogService {
     private final LoginLogMapper loginLogMapper;
+    // 로그인 로그를 임시 저장하는 비동기 큐
     private final Queue<LoginLog> logBuffer = new ConcurrentLinkedQueue<>();
-
+    /**
+     * 로그인 시도 시 호출
+     * - email, IP, User-Agent, 성공 여부를 기록
+     * - DB에 바로 저장하지 않고 메모리에 임시 저장
+     */
     public void logLogin(String email, HttpServletRequest request, boolean success) {
         LoginLog log = LoginLog.builder()
                 .email(email)
@@ -31,7 +40,7 @@ public class LoginLogService {
         logBuffer.add(log);
     }
 
-    @Scheduled(fixedRate = 1 * 60 * 1000) // 5분마다
+    @Scheduled(fixedRate = 5 * 60 * 1000) // 5분마다
     public void flushLogsToDb() {
         List<LoginLog> logs = new ArrayList<>();
         while (!logBuffer.isEmpty()) {
@@ -40,7 +49,6 @@ public class LoginLogService {
 
         if (!logs.isEmpty()) {
             loginLogMapper.insertLoginLogs(logs);
-            log.info("로그 {}건 DB 저장됨", logs.size());
         }
     }
 

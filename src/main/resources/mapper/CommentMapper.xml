@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.kosa.snippets.community.mapper.CommentMapper">
+
+    <resultMap id="CommentResultMap" type="kr.or.kosa.snippets.community.model.Comment">
+        <id property="commentId" column="comment_id"/>
+        <result property="postId" column="post_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="content" column="content"/>
+        <result property="parentId" column="parent_id"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="nickname" column="nickname"/>
+        <result property="likeCount" column="like_count"/>
+        <result property="dislikeCount" column="dislike_count"/>
+        <result property="isLiked" column="is_liked"/>
+        <result property="isDisliked" column="is_disliked"/>
+    </resultMap>
+
+    <resultMap id="CommentLikeResultMap" type="kr.or.kosa.snippets.community.model.CommentLike">
+        <id property="likeId" column="like_id"/>
+        <result property="commentId" column="comment_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="isLike" column="is_like"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <!-- 게시글의 모든 댓글 조회 (계층 구조를 위해 모든 댓글을 한 번에 가져옴) -->
+    <select id="getCommentsByPostId" parameterType="Integer" resultMap="CommentResultMap">
+        SELECT c.comment_id, c.post_id, c.user_id, c.content, c.parent_id,
+               c.created_at, c.updated_at, u.nickname,
+               (SELECT COUNT(*) FROM comment_likes cl WHERE cl.comment_id = c.comment_id AND cl.is_like = 1) as like_count,
+               (SELECT COUNT(*) FROM comment_likes cl WHERE cl.comment_id = c.comment_id AND cl.is_like = 0) as dislike_count
+        FROM comments c
+                 JOIN users u ON c.user_id = u.user_id
+        WHERE c.post_id = #{postId}
+        ORDER BY
+            CASE WHEN c.parent_id IS NULL THEN c.comment_id ELSE c.parent_id END ASC,
+            c.parent_id ASC,
+            c.created_at ASC
+    </select>
+
+    <!-- 댓글 상세 조회 -->
+    <select id="getCommentById" parameterType="Integer" resultMap="CommentResultMap">
+        SELECT c.comment_id, c.post_id, c.user_id, c.content, c.parent_id,
+               c.created_at, c.updated_at, u.nickname
+        FROM comments c
+                 JOIN users u ON c.user_id = u.user_id
+        WHERE c.comment_id = #{commentId}
+    </select>
+
+    <!-- 댓글 등록 -->
+    <insert id="insertComment" parameterType="kr.or.kosa.snippets.community.model.Comment"
+            useGeneratedKeys="true" keyProperty="commentId">
+        INSERT INTO comments (post_id, user_id, content, parent_id, created_at, updated_at)
+        VALUES (#{postId}, #{userId}, #{content}, #{parentId}, NOW(), NOW())
+    </insert>
+
+    <!-- 댓글 수정 -->
+    <update id="updateComment" parameterType="kr.or.kosa.snippets.community.model.Comment">
+        UPDATE comments
+        SET content = #{content},
+            updated_at = NOW()
+        WHERE comment_id = #{commentId}
+    </update>
+
+    <!-- 댓글 삭제 -->
+    <delete id="deleteComment" parameterType="Integer">
+        DELETE FROM comments WHERE comment_id = #{commentId}
+    </delete>
+
+    <!-- 특정 부모의 자식 댓글들 조회 (기존 메서드는 유지하되 사용하지 않음) -->
+    <select id="getChildComments" parameterType="Integer" resultMap="CommentResultMap">
+        SELECT c.comment_id, c.post_id, c.user_id, c.content, c.parent_id,
+               c.created_at, c.updated_at, u.nickname,
+               (SELECT COUNT(*) FROM comment_likes cl WHERE cl.comment_id = c.comment_id AND cl.is_like = 1) as like_count,
+               (SELECT COUNT(*) FROM comment_likes cl WHERE cl.comment_id = c.comment_id AND cl.is_like = 0) as dislike_count
+        FROM comments c
+                 JOIN users u ON c.user_id = u.user_id
+        WHERE c.parent_id = #{parentId}
+        ORDER BY c.created_at ASC
+    </select>
+
+    <!-- 댓글 좋아요/싫어요 등록 -->
+    <insert id="insertCommentLike" parameterType="kr.or.kosa.snippets.community.model.CommentLike"
+            useGeneratedKeys="true" keyProperty="likeId">
+        INSERT INTO comment_likes (comment_id, user_id, is_like, created_at)
+        VALUES (#{commentId}, #{userId}, #{isLike}, NOW())
+    </insert>
+
+    <!-- 댓글 좋아요/싫어요 수정 -->
+    <update id="updateCommentLike" parameterType="kr.or.kosa.snippets.community.model.CommentLike">
+        UPDATE comment_likes
+        SET is_like = #{isLike}
+        WHERE comment_id = #{commentId} AND user_id = #{userId}
+    </update>
+
+    <!-- 댓글 좋아요/싫어요 삭제 -->
+    <delete id="deleteCommentLike">
+        DELETE FROM comment_likes
+        WHERE comment_id = #{commentId} AND user_id = #{userId}
+    </delete>
+
+    <!-- 댓글 좋아요/싫어요 조회 -->
+    <select id="getCommentLike" resultMap="CommentLikeResultMap">
+        SELECT like_id, comment_id, user_id, is_like, created_at
+        FROM comment_likes
+        WHERE comment_id = #{commentId} AND user_id = #{userId}
+    </select>
+
+    <!-- 좋아요/싫어요 수 조회 -->
+    <select id="getLikeCount" resultType="Integer">
+        SELECT COUNT(*)
+        FROM comment_likes
+        WHERE comment_id = #{commentId} AND is_like = #{isLike}
+    </select>
+
+</mapper>

@@ -3,15 +3,34 @@
 <head>
 	<meta charset="UTF-8">
 	<title>마이페이지</title>
-	<link rel="stylesheet" href="/user/css/myPage.css">
 	<!--sweet alert 추가-->
 	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	<link rel="stylesheet" href="/user/css/myPage.css">
+
+
+	<style>
+		.swal2-popup .swal2-input {
+			width: 90%;
+			max-width: 100% !important;
+			box-sizing: border-box;
+			padding: 0.75rem 1rem;
+			border-radius: 12px;
+			font-size: 1rem;
+		}
+
+	</style>
+
 </head>
 <body>
 <div class="container">
 	<h2>마이페이지</h2>
 
 	<form id="updateForm">
+		<div class="profile-header">
+			<div class="profile-icon"></div>
+			<p class="profile-subtitle">개인정보를 안전하게 관리하세요</p>
+		</div>
+
 		<label>이메일
 			<input type="email" name="email" th:value="${email}" readonly>
 		</label>
@@ -19,11 +38,12 @@
 		<label>닉네임
 			<input type="text" name="nickname" th:value="${nickname}">
 		</label>
+
 		<div class="btns">
 			<button type="submit">정보 수정</button>
 			<span th:if="${#authentication.principal.loginType == 'LOCAL'}">
-				<button type="button" onclick="location.href='/changePassword'">비밀번호 변경</button>
-			</span>
+                <button type="button" onclick="location.href='/changePassword'">비밀번호 변경</button>
+            </span>
 			<button type="button" class="delete" id="deleteBtn">회원 탈퇴</button>
 		</div>
 	</form>

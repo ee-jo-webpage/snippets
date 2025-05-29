@@ -4,156 +4,108 @@
 	<meta charset="UTF-8">
 	<title>IP 차단 로그</title>
 	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-	<style>
-		body {
-			font-family: Arial, sans-serif;
-			padding: 2rem;
-			background-color: #f9f9f9;
-		}
-
-		h1, h2 {
-			text-align: center;
-			color: #333;
-		}
-
-		table {
-			width: 100%;
-			border-collapse: collapse;
-			margin-top: 1rem;
-			background-color: #fff;
-			box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-		}
-
-		th, td {
-			padding: 12px;
-			border-bottom: 1px solid #ddd;
-			text-align: center;
-		}
-
-		th {
-			background-color: #f0f0f0;
-			color: #555;
-		}
-
-		td {
-			font-size: 0.95rem;
-		}
-
-		canvas {
-			max-width: 600px;
-			margin: 2rem auto;
-			display: block;
-		}
-	</style>
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+	<link rel="stylesheet" href="/user/css/admin/ip-blocks.css">
 </head>
 <body>
-<h1>IP 차단 로그</h1>
+<div class="status-indicator online" id="statusIndicator">
+	<div class="pulse"></div>
+	실시간 모니터링 중
+</div>
 
-<table>
-	<thead>
-	<tr>
-		<th>IP</th>
-		<th>국가</th>
-		<th>도시</th>
-		<th>유저 에이전트</th>
-		<th>Bot 여부</th>
-		<th>차단 시간</th>
-	</tr>
-	</thead>
-	<tbody id="logTableBody"></tbody>
-</table>
+<div class="container">
+	<div class="header">
+		<h1><i class="fas fa-shield-alt"></i> IP 차단 로그</h1>
+		<p class="header-subtitle">실시간 보안 모니터링 대시보드</p>
+	</div>
 
-<h2>차단 국가 분포</h2>
-<canvas id="countryChart"></canvas>
+	<div class="stats-grid" id="statsGrid">
+		<div class="stat-card">
+			<div class="stat-icon danger">
+				<i class="fas fa-ban"></i>
+			</div>
+			<div class="stat-value" id="totalBlocked">0</div>
+			<div class="stat-label">총 차단된 IP</div>
+		</div>
+		<div class="stat-card">
+			<div class="stat-icon warning">
+				<i class="fas fa-robot"></i>
+			</div>
+			<div class="stat-value" id="botCount">0</div>
+			<div class="stat-label">Bot 차단</div>
+		</div>
+		<div class="stat-card">
+			<div class="stat-icon success">
+				<i class="fas fa-globe"></i>
+			</div>
+			<div class="stat-value" id="countryCount">0</div>
+			<div class="stat-label">차단 국가</div>
+		</div>
+		<div class="stat-card">
+			<div class="stat-icon primary">
+				<i class="fas fa-clock"></i>
+			</div>
+			<div class="stat-value" id="lastUpdate">-</div>
+			<div class="stat-label">마지막 업데이트</div>
+		</div>
+	</div>
 
-<h2>Bot vs Browser</h2>
-<canvas id="typeChart"></canvas>
+	<div class="content-grid">
+		<div class="table-section">
+			<div class="section-header">
+				<h2 class="section-title">
+					<i class="fas fa-list"></i>
+					차단된 IP 목록
+				</h2>
+			</div>
+			<div class="table-container">
+				<table>
+					<thead>
+					<tr>
+						<th>IP 주소</th>
+						<th>국가</th>
+						<th>도시</th>
+						<th>유저 에이전트</th>
+						<th>타입</th>
+						<th>차단 시간</th>
+					</tr>
+					</thead>
+					<tbody id="logTableBody">
+					<tr>
+						<td colspan="6" class="loading">
+							<div class="spinner"></div>
+							데이터를 불러오는 중...
+						</td>
+					</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
 
-<script>
-	async function fetchBlockedIps() {
-		const res = await fetch("/api/admin/blocked-ips");
-		const data = await res.json();
+		<div class="charts-section">
+			<div class="chart-card">
+				<h3 class="chart-title">
+					<i class="fas fa-chart-bar"></i>
+					국가별 차단 분포
+				</h3>
+				<div class="chart-container">
+					<canvas id="countryChart"></canvas>
+				</div>
+			</div>
 
-		const tbody = document.getElementById("logTableBody");
-		tbody.innerHTML = "";
+			<div class="chart-card">
+				<h3 class="chart-title">
+					<i class="fas fa-chart-pie"></i>
+					Bot vs Browser
+				</h3>
+				<div class="chart-container">
+					<canvas id="typeChart"></canvas>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
 
-		const countryCounts = {};
-		let botCount = 0, browserCount = 0;
-
-		data.forEach(log => {
-			const row = `
-          <tr>
-            <td>${log.ip}</td>
-            <td>${log.country || 'N/A'}</td>
-            <td>${log.city || 'N/A'}</td>
-            <td>${log.userAgent || 'N/A'}</td>
-            <td>${log.bot ? "✅" : "❌"}</td>
-            <td>${log.blockedAt}</td>
-          </tr>`;
-			tbody.insertAdjacentHTML("beforeend", row);
-
-			const country = log.country || "Unknown";
-			countryCounts[country] = (countryCounts[country] || 0) + 1;
-			log.bot ? botCount++ : browserCount++;
-		});
-
-		updateCharts(countryCounts, botCount, browserCount);
-	}
-
-	let countryChart, typeChart;
-
-	function updateCharts(countryCounts, botCount, browserCount) {
-		const countries = Object.keys(countryCounts);
-		const counts = Object.values(countryCounts);
-
-		if (!countryChart) {
-			countryChart = new Chart(document.getElementById('countryChart'), {
-				type: 'bar',
-				data: {
-					labels: countries,
-					datasets: [{
-						label: 'Blocked IPs by Country',
-						data: counts,
-						borderWidth: 1
-					}]
-				},
-				options: {
-					responsive: true,
-					scales: {
-						y: {
-							beginAtZero: true
-						}
-					}
-				}
-			});
-		} else {
-			countryChart.data.labels = countries;
-			countryChart.data.datasets[0].data = counts;
-			countryChart.update();
-		}
-
-		if (!typeChart) {
-			typeChart = new Chart(document.getElementById('typeChart'), {
-				type: 'pie',
-				data: {
-					labels: ['Bot', 'Browser'],
-					datasets: [{
-						data: [botCount, browserCount],
-						backgroundColor: ['#ff4d4f', '#4e91f9']
-					}]
-				},
-				options: {
-					responsive: true
-				}
-			});
-		} else {
-			typeChart.data.datasets[0].data = [botCount, browserCount];
-			typeChart.update();
-		}
-	}
-
-	setInterval(fetchBlockedIps, 5000);
-	fetchBlockedIps(); // 초기 로딩
-</script>
+<script src="/user/js/admin/ip-blocks.js"></script>
 </body>
 </html>

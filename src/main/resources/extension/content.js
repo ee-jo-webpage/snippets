@@ -88,7 +88,6 @@ function init() {
 
     document.addEventListener("mouseup", handleMouseUp);
     document.addEventListener("click", handleSnippetClick);
-    restoreHighlights();
     detectCodeBlocks();
     detectImageBlocks();
     detectBackgroundImageBlocks();
@@ -100,11 +99,15 @@ function init() {
                 colorMapName[colorId] = name;
             });
             console.log("서버 색상 정보 로드 완료");
+            restoreHighlights();
+
         })
         .catch((err) => {
             console.warn("❌ 서버 색상 정보 불러오기 실패:", err.message);
             setDefaultColors();
             console.log("기본 색상 정보로 대체 완료");
+            restoreHighlights();
+
         });
 }
 

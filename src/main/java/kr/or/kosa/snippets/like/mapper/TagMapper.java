@@ -13,5 +13,5 @@ public interface TagMapper {
     List<LikeTag> getAllTags();
 
     // 특정 스니펫의 태그 조회
-    List<LikeTag> getTagsBySnippetId(@Param("snippetId") Integer snippetId);
+    List<LikeTag> getTagsBySnippetId(@Param("snippetId") Long snippetId);
 }

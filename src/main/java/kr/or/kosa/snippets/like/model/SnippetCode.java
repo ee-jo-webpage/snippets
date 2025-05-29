@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class SnippetCode {
-    private int snippetId;
+    private Long snippetId;
     private String content;
     private String language;
 }

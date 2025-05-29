@@ -21,7 +21,7 @@ public class LikeRestController {
 
     // 좋아요 추가
     @PostMapping("/add")
-    public ResponseEntity<Map<String, Object>> addLike(@RequestParam Integer snippetId,
+    public ResponseEntity<Map<String, Object>> addLike(@RequestParam Long snippetId,
                                                        @AuthenticationPrincipal CustomUserDetails userDetails) {
         Map<String, Object> response = new HashMap<>();
 
@@ -64,7 +64,7 @@ public class LikeRestController {
 
     // 좋아요 취소 - 인증 필수
     @PostMapping("/remove")
-    public ResponseEntity<Map<String, Object>> removeLike(@RequestParam Integer snippetId,
+    public ResponseEntity<Map<String, Object>> removeLike(@RequestParam Long snippetId,
                                                           @AuthenticationPrincipal CustomUserDetails userDetails) {
         Map<String, Object> response = new HashMap<>();
 
@@ -104,7 +104,7 @@ public class LikeRestController {
 
     // 특정 스니펫의 좋아요 수 조회 - 공개 접근 허용
     @GetMapping("/count")
-    public ResponseEntity<Map<String, Object>> getLikesCount(@RequestParam Integer snippetId,
+    public ResponseEntity<Map<String, Object>> getLikesCount(@RequestParam Long snippetId,
                                                              @AuthenticationPrincipal CustomUserDetails userDetails) {
         Map<String, Object> response = new HashMap<>();
         try {
@@ -148,7 +148,7 @@ public class LikeRestController {
 
     // 특정 스니펫의 좋아요 상태 확인 - 공개 접근 허용
     @GetMapping("/status")
-    public ResponseEntity<Map<String, Object>> getLikeStatus(@RequestParam Integer snippetId,
+    public ResponseEntity<Map<String, Object>> getLikeStatus(@RequestParam Long snippetId,
                                                              @AuthenticationPrincipal CustomUserDetails userDetails) {
         Map<String, Object> response = new HashMap<>();
 

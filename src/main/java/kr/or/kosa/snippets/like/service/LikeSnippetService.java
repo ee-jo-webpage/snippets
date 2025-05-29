@@ -67,12 +67,12 @@ public class LikeSnippetService {
     }
 
     // 특정 스니펫의 태그 조회
-    public List<LikeTag> getTagsBySnippetId(Integer snippetId) {
+    public List<LikeTag> getTagsBySnippetId(Long snippetId) {
         return tagMapper.getTagsBySnippetId(snippetId);
     }
 
     // 스니펫 상세 조회
-    public Snippet getSnippetDetailById(Integer snippetId) {
+    public Snippet getSnippetDetailById(Long snippetId) {
         return likeSnippetMapper.getSnippetDetailById(snippetId);
     }
 
@@ -222,8 +222,8 @@ public class LikeSnippetService {
     /**
      * 여러 스니펫의 content를 한 번에 조회 (성능 최적화)
      */
-    public Map<Integer, String> getSnippetContentPreviews(List<Snippet> snippets) {
-        Map<Integer, String> contentMap = new HashMap<>();
+    public Map<Long, String> getSnippetContentPreviews(List<Snippet> snippets) {
+        Map<Long, String> contentMap = new HashMap<>();
 
         for (Snippet snippet : snippets) {
             String content = getSnippetContentPreview(snippet);

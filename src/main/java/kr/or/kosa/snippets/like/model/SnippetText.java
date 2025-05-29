@@ -11,6 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class SnippetText {
-    private int snippetId;
+    private Long snippetId;
     private String content;
 }

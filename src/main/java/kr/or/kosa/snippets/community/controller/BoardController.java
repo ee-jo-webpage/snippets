@@ -21,13 +21,14 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @Controller
 @RequestMapping("/community")
@@ -37,50 +38,139 @@ public class BoardController {
     private final CommentService commentService;
     private final NotificationService notificationService;
 
-    // 게시판 목록
+    // 게시판 메인 페이지
     @GetMapping
-    public String boardList(Model model) {
+    public String boardMain(@RequestParam(required = false) Integer categoryId, Model model) {
         try {
             List<BoardCategory> categories = boardService.getAllCategories();
+            List<Post> posts;
+
+            if (categoryId != null) {
+                // 특정 카테고리가 지정된 경우
+                posts = boardService.getPostsByCategoryId(categoryId);
+                BoardCategory currentCategory = boardService.getCategoryById(categoryId);
+                model.addAttribute("currentCategoryId", categoryId);
+                model.addAttribute("currentCategoryName", currentCategory != null ? currentCategory.getName() : "알 수 없음");
+                model.addAttribute("category", currentCategory);
+            } else {
+                // 기본값: 자유게시판 (categoryId = 1)
+                posts = boardService.getPostsByCategoryId(1);
+                model.addAttribute("currentCategoryId", 1);
+                model.addAttribute("currentCategoryName", "자유게시판");
+                model.addAttribute("category", boardService.getCategoryById(1));
+            }
+
             model.addAttribute("categories", categories);
-            return "community/categoryList";
+            model.addAttribute("posts", posts);
+
+            return "community/categoryList"; // 메인 템플릿
         } catch (Exception e) {
+            e.printStackTrace();
             model.addAttribute("error", "데이터베이스 연결에 문제가 있습니다. 관리자에게 문의하세요.");
             return "error/database-error";
         }
     }
 
 
-    // 전체 게시글 목록
+    // 게시글 목록 - AJAX 지원 추가
+    @GetMapping("/category/{categoryId}")
+    public String postList(@PathVariable Integer categoryId,
+                           @RequestParam(required = false) Boolean ajax,
+                           Model model) {
+        try {
+            BoardCategory category = boardService.getCategoryById(categoryId);
+            List<Post> posts = boardService.getPostsByCategoryId(categoryId);
+            List<BoardCategory> categories = boardService.getAllCategories(); // 전체 카테고리 정보 추가
+
+            model.addAttribute("category", category);
+            model.addAttribute("posts", posts);
+            model.addAttribute("categories", categories);
+            model.addAttribute("currentCategoryId", categoryId);
+            model.addAttribute("currentCategoryName", category.getName());
+
+            // AJAX 요청인 경우 콘텐츠만 포함된 템플릿 반환
+            if (ajax != null && ajax) {
+                return "community/postListContent"; // 콘텐츠만 포함하는 템플릿
+            }
+
+            // 일반 요청인 경우 전체 템플릿 반환
+            return "community/postList";
+        } catch (Exception e) {
+            e.printStackTrace();
+            model.addAttribute("error", "게시글 목록을 불러올 수 없습니다.");
+            return "redirect:/community";
+        }
+    }
+
+
+    // 전체 게시글 목록 - AJAX 지원 추가
     @GetMapping("/posts/all")
-    public String allPostsList(Model model) {
+    public String allPostsList(@RequestParam(required = false) Boolean ajax,
+                               Model model) {
         try {
             List<Post> allPosts = boardService.getAllPosts();
             List<BoardCategory> categories = boardService.getAllCategories();
 
             model.addAttribute("posts", allPosts);
             model.addAttribute("categories", categories);
-            model.addAttribute("pageTitle", "전체 게시글");
-            model.addAttribute("showAllPosts", true);
+            model.addAttribute("currentCategoryId", "all");
+            model.addAttribute("currentCategoryName", "전체 게시글");
+            model.addAttribute("category", new BoardCategory()); // 빈 카테고리 객체 추가
 
-            return "community/allPostsList";
+            // AJAX 요청인 경우 콘텐츠만 포함된 템플릿 반환
+            if (ajax != null && ajax) {
+                return "community/postListContent"; // 콘텐츠만 포함하는 템플릿
+            }
+
+            // 일반 요청인 경우 전체 템플릿 반환
+            return "community/postList";
         } catch (Exception e) {
+            e.printStackTrace();
             model.addAttribute("error", "게시글 목록을 불러올 수 없습니다.");
             return "redirect:/community";
         }
     }
-    // 게시글 목록
-    @GetMapping("/category/{categoryId}")
-    public String postList(@PathVariable Integer categoryId, Model model) {
-        try {
-            BoardCategory category = boardService.getCategoryById(categoryId);
-            List<Post> posts = boardService.getPostsByCategoryId(categoryId);
 
-            model.addAttribute("category", category);
-            model.addAttribute("posts", posts);
-            return "community/postList";
+
+    /**
+     * 게시글 작성 폼
+     * 중요: 이 메서드는 @GetMapping("/post/{postId}") 메서드보다 반드시 위에 위치해야 합니다.
+     * Spring MVC는 더 구체적인 URL 패턴을 먼저 처리하므로, 명시적인 "/post/new" 경로가
+     * 와일드카드 경로인 "/post/{postId}"보다 먼저 처리되어야 합니다.
+     */
+    @GetMapping("/post/new")
+    public String newPostForm(@RequestParam(required = false) Integer categoryId,
+                              Model model,
+                              @AuthenticationPrincipal CustomUserDetails userDetails) {
+        // 로그인 체크
+        if (userDetails == null) {
+            return "redirect:/login?message=loginRequired";
+        }
+
+        try {
+            System.out.println("=== 게시글 작성 폼 접근 ===");
+
+            // 카테고리 목록 조회
+            List<BoardCategory> categories = boardService.getAllCategories();
+            model.addAttribute("categories", categories);
+
+            // 새 게시글 객체 생성
+            Post post = new Post();
+
+            // 카테고리 ID가 지정된 경우 설정
+            if (categoryId != null) {
+                post.setCategoryId(categoryId);
+                System.out.println("선택된 카테고리 ID: " + categoryId);
+            }
+
+            model.addAttribute("post", post);
+            model.addAttribute("isNew", true);
+            model.addAttribute("currentUserNickname", userDetails.getNickname());
+
+            return "community/postForm";
         } catch (Exception e) {
-            model.addAttribute("error", "게시글 목록을 불러올 수 없습니다.");
+            e.printStackTrace();
+            model.addAttribute("error", "게시글 작성 폼을 불러올 수 없습니다.");
             return "redirect:/community";
         }
     }
@@ -91,88 +181,24 @@ public class BoardController {
                              @AuthenticationPrincipal CustomUserDetails userDetails,
                              Model model) {
         try {
-            System.out.println("=== 게시글 상세 조회 시작 ===");
-            System.out.println("요청된 게시글 ID: " + postId);
-
             Post post = boardService.getPostById(postId);
             if (post == null) {
-                System.out.println("❌ 게시글을 찾을 수 없음: " + postId);
                 return "redirect:/community";
             }
 
-            System.out.println("✅ 게시글 조회 성공: " + post.getTitle());
+            // CustomUserDetails에서 사용자 ID 추출
+            Long currentUserId = getCurrentUserId(userDetails);
+            List<PostAttachment> attachments = boardService.getAttachmentsByPostId(postId);
 
-            // 현재 사용자 정보
-            Long currentUserId = null;
-            boolean isLoggedIn = false;
-            String currentUserNickname = null;
-
-            if (userDetails != null) {
-                currentUserId = userDetails.getUserId();
-                isLoggedIn = true;
-                currentUserNickname = userDetails.getNickname();
-                System.out.println("현재 사용자 ID: " + currentUserId);
-            } else {
-                System.out.println("비로그인 사용자");
-            }
-
-            // 첨부파일 조회 (안전하게 처리)
-            List<PostAttachment> attachments = null;
-            try {
-                attachments = boardService.getAttachmentsByPostId(postId);
-                System.out.println("첨부파일 개수: " + (attachments != null ? attachments.size() : 0));
-            } catch (Exception e) {
-                System.out.println("첨부파일 조회 실패: " + e.getMessage());
-                attachments = new ArrayList<>(); // 빈 리스트로 초기화
-            }
-
-            // 모델에 데이터 추가
             model.addAttribute("post", post);
-            model.addAttribute("attachments", attachments != null ? attachments : new ArrayList<>());
+            model.addAttribute("attachments", attachments);
             model.addAttribute("currentUserId", currentUserId);
-            model.addAttribute("isLoggedIn", isLoggedIn);
-            model.addAttribute("currentUserNickname", currentUserNickname);
+            model.addAttribute("isLoggedIn", userDetails != null);
+            model.addAttribute("currentUserNickname", userDetails != null ? userDetails.getNickname() : null);
 
-            System.out.println("=== 모델 데이터 설정 완료 ===");
             return "community/postDetail";
-
         } catch (Exception e) {
-            System.out.println("❌ 게시글 상세 조회 오류: " + e.getMessage());
-            e.printStackTrace();
             model.addAttribute("error", "게시글을 불러올 수 없습니다.");
-            return "redirect:/community";
-        }
-    }
-
-    // 게시글 작성 폼
-    @GetMapping("/post/new")
-    public String newPostForm(Model model,
-                              @AuthenticationPrincipal CustomUserDetails userDetails) {
-        // 디버깅용 로그 추가
-        System.out.println("=== 새 게시글 폼 접근 ===");
-        if (userDetails != null) {
-            System.out.println("현재 사용자 ID: " + userDetails.getUserId());
-            System.out.println("현재 사용자 타입: " + userDetails.getUserId().getClass().getSimpleName());
-            System.out.println("현재 사용자 닉네임: " + userDetails.getNickname());
-            System.out.println("현재 사용자 이메일: " + userDetails.getUsername());
-        } else {
-            System.out.println("로그인되지 않음");
-            return "redirect:/login?message=loginRequired";
-        }
-
-        try {
-            List<BoardCategory> categories = boardService.getAllCategories();
-            System.out.println("카테고리 개수: " + categories.size());
-
-            model.addAttribute("categories", categories);
-            model.addAttribute("post", new Post());
-            model.addAttribute("currentUserNickname", userDetails.getNickname());
-
-            return "community/postForm";
-        } catch (Exception e) {
-            System.out.println("ERROR: " + e.getMessage());
-            e.printStackTrace();
-            model.addAttribute("error", "게시글 작성 폼을 불러올 수 없습니다.");
             return "redirect:/community";
         }
     }
@@ -219,9 +245,9 @@ public class BoardController {
                 return "redirect:/community/post/new?error=category";
             }
 
-            // 사용자 ID 설정 - ✅ .intValue() 제거
+            // 사용자 ID 설정
             if (userId != null) {
-                post.setUserId(userId);  // Long → Long 직접 설정
+                post.setUserId(userId);
                 System.out.println("Post에 설정된 사용자 ID: " + post.getUserId());
             } else {
                 System.out.println("ERROR: 사용자 ID가 null");
@@ -269,6 +295,7 @@ public class BoardController {
         }
     }
 
+
     // 게시글 수정 폼
     @GetMapping("/post/{postId}/edit")
     public String editPostForm(@PathVariable Integer postId,
@@ -286,8 +313,8 @@ public class BoardController {
             }
 
             Long currentUserId = getCurrentUserId(userDetails);
-            // 작성자 또는 관리자만 수정 가능 - ✅ .intValue() 제거
-            if (!post.getUserId().equals(currentUserId) && !isAdmin(userDetails)) {
+            // 작성자 또는 관리자만 수정 가능
+            if (!post.getUserId().equals(currentUserId.intValue()) && !isAdmin(userDetails)) {
                 return "redirect:/community/post/" + postId + "?error=permission";
             }
 
@@ -298,14 +325,13 @@ public class BoardController {
             model.addAttribute("categories", categories);
             model.addAttribute("attachments", attachments);
 
-            return "community/postEdit";
+            return "community/postEditForm";
         } catch (Exception e) {
             return "redirect:/community";
         }
     }
 
     // 게시글 수정 처리
-    /*
     @PostMapping("/post/{postId}/edit")
     public String updatePost(@PathVariable Integer postId,
                              @ModelAttribute Post post,
@@ -320,9 +346,8 @@ public class BoardController {
             Long currentUserId = getCurrentUserId(userDetails);
             Post existingPost = boardService.getPostById(postId);
 
-            // 권한 체크 - ✅ .intValue() 제거
             if (existingPost == null ||
-                    (!existingPost.getUserId().equals(currentUserId) && !isAdmin(userDetails))) {
+                    (!existingPost.getUserId().equals(currentUserId.intValue()) && !isAdmin(userDetails))) {
                 return "redirect:/community/post/" + postId + "?error=permission";
             }
 
@@ -334,65 +359,6 @@ public class BoardController {
         } catch (IOException e) {
             return "redirect:/community/post/" + postId + "/edit?error=file";
         } catch (Exception e) {
-            return "redirect:/community/post/" + postId + "/edit?error=save";
-        }
-    }
-    */
-
-    @PostMapping("/post/{postId}/edit")
-    public String updatePost(@PathVariable Integer postId,
-                             @ModelAttribute Post post,
-                             @RequestParam(value = "files", required = false) MultipartFile[] files,
-                             @AuthenticationPrincipal CustomUserDetails userDetails) {
-
-        System.out.println("=== 게시글 수정 디버깅 ===");
-        System.out.println("Post ID: " + postId);
-        System.out.println("제목: " + post.getTitle());
-        System.out.println("내용: " + post.getContent());
-        System.out.println("카테고리 ID: " + post.getCategoryId());
-        System.out.println("공지사항: " + post.isNotice());
-
-        // 로그인 체크
-        if (userDetails == null) {
-            return "redirect:/login?message=loginRequired";
-        }
-
-        try {
-            Long currentUserId = getCurrentUserId(userDetails);
-            Post existingPost = boardService.getPostById(postId);
-
-            if (existingPost == null) {
-                System.out.println("❌ 게시글이 존재하지 않음");
-                return "redirect:/community/post/" + postId + "?error=permission";
-            }
-
-            // 권한 체크
-            boolean isOwner = existingPost.getUserId().equals(currentUserId);
-            boolean isAdminUser = isAdmin(userDetails);
-
-            System.out.println("권한 체크: 기존 userId=" + existingPost.getUserId() + ", 현재 userId=" + currentUserId);
-            System.out.println("소유자인가? " + isOwner);
-            System.out.println("관리자인가? " + isAdminUser);
-
-            if (!isOwner && !isAdminUser) {
-                System.out.println("❌ 권한 없음");
-                return "redirect:/community/post/" + postId + "?error=permission";
-            }
-
-            // 필수 정보 설정
-            post.setPostId(postId);
-            post.setUserId(currentUserId);
-
-            System.out.println("✅ 권한 체크 통과, 업데이트 시작");
-
-            boardService.updatePost(post, files);
-
-            System.out.println("✅ 수정 완료!");
-            return "redirect:/community/post/" + postId + "?success=updated";
-
-        } catch (Exception e) {
-            System.out.println("❌ 수정 오류: " + e.getMessage());
-            e.printStackTrace();
             return "redirect:/community/post/" + postId + "/edit?error=save";
         }
     }
@@ -413,8 +379,7 @@ public class BoardController {
             }
 
             Long currentUserId = getCurrentUserId(userDetails);
-            // 권한 체크 - ✅ .intValue() 제거
-            if (!post.getUserId().equals(currentUserId) && !isAdmin(userDetails)) {
+            if (!post.getUserId().equals(currentUserId.intValue()) && !isAdmin(userDetails)) {
                 return "redirect:/community/post/" + postId + "?error=permission";
             }
 
@@ -453,7 +418,6 @@ public class BoardController {
         }
     }
 
-    /*
     // 첨부파일 다운로드
     @GetMapping("/attachment/{attachmentId}")
     public ResponseEntity<Resource> downloadAttachment(@PathVariable Integer attachmentId) {
@@ -466,6 +430,10 @@ public class BoardController {
             Path filePath = Paths.get(attachment.getFilePath());
             Resource resource = new UrlResource(filePath.toUri());
 
+            // 5단계: 파일 존재 및 읽기 가능 여부 확인
+            System.out.println("- 파일 존재 여부: " + resource.exists());
+            System.out.println("- 파일 읽기 가능: " + resource.isReadable());
+
             if (resource.exists() && resource.isReadable()) {
                 return ResponseEntity.ok()
                         .header(HttpHeaders.CONTENT_DISPOSITION,
@@ -475,97 +443,6 @@ public class BoardController {
                 return ResponseEntity.notFound().build();
             }
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }*/
-
-    // BoardController.java - 첨부파일 다운로드 메서드에 디버깅 추가
-
-    @GetMapping("/attachment/{attachmentId}")
-    public ResponseEntity<Resource> downloadAttachment(@PathVariable Integer attachmentId) {
-        System.out.println("=== 첨부파일 다운로드 요청 ===");
-        System.out.println("요청된 Attachment ID: " + attachmentId);
-
-        try {
-            // 1단계: 서비스 메서드 호출 전 로그
-            System.out.println("BoardService.getAttachmentById() 호출 시작...");
-
-            PostAttachment attachment = boardService.getAttachmentById(attachmentId);
-
-            // 2단계: 서비스 메서드 호출 후 결과 확인
-            System.out.println("BoardService.getAttachmentById() 호출 완료");
-
-            if (attachment == null) {
-                System.out.println("❌ 첨부파일을 찾을 수 없음 - ID: " + attachmentId);
-                return ResponseEntity.notFound().build();
-            }
-
-            // 3단계: 첨부파일 정보 출력
-            System.out.println("✅ 첨부파일 조회 성공:");
-            System.out.println("- ID: " + attachment.getAttachmentId());
-            System.out.println("- 파일명: " + attachment.getFileName());
-            System.out.println("- 파일 경로: " + attachment.getFilePath());
-            System.out.println("- 파일 타입: " + attachment.getFileType());
-            System.out.println("- 파일 크기: " + attachment.getFileSize());
-            System.out.println("- 게시글 ID: " + attachment.getPostId());
-
-            // 4단계: 파일 경로 처리
-            Path filePath;
-
-            // 상대 경로인지 절대 경로인지 확인
-            if (attachment.getFilePath().startsWith("/uploads/")) {
-                // 상대 경로인 경우 절대 경로로 변환
-                String fileName = attachment.getFilePath().substring(attachment.getFilePath().lastIndexOf("/") + 1);
-                filePath = Paths.get("uploads", "board", fileName).toAbsolutePath();
-                System.out.println("- 상대 경로에서 절대 경로로 변환");
-            } else {
-                // 이미 절대 경로인 경우
-                filePath = Paths.get(attachment.getFilePath());
-                System.out.println("- 절대 경로 사용");
-            }
-
-            System.out.println("- 최종 파일 경로: " + filePath.toAbsolutePath());
-            System.out.println("- 파일 존재 여부: " + Files.exists(filePath));
-
-            Resource resource = new UrlResource(filePath.toUri());
-
-            // 5단계: 파일 존재 및 읽기 가능 여부 확인
-            System.out.println("- 파일 존재 여부: " + resource.exists());
-            System.out.println("- 파일 읽기 가능: " + resource.isReadable());
-
-            if (resource.exists() && resource.isReadable()) {
-                System.out.println("✅ 파일 다운로드 시작");
-
-                // 한글 파일명 인코딩 처리
-                String encodedFileName;
-                try {
-                    encodedFileName = URLEncoder.encode(attachment.getFileName(), StandardCharsets.UTF_8.toString())
-                            .replaceAll("\\+", "%20");
-                } catch (Exception e) {
-                    encodedFileName = "download_file";
-                }
-
-                System.out.println("- 원본 파일명: " + attachment.getFileName());
-                System.out.println("- 인코딩된 파일명: " + encodedFileName);
-
-                return ResponseEntity.ok()
-                        // 강제 다운로드를 위한 헤더 설정
-                        .header(HttpHeaders.CONTENT_DISPOSITION,
-                                "attachment; filename=\"" + attachment.getFileName() + "\"; filename*=UTF-8''" + encodedFileName)
-                        .header(HttpHeaders.CONTENT_TYPE, "application/octet-stream") // 강제 다운로드
-                        .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(attachment.getFileSize()))
-                        .header("Cache-Control", "no-cache, no-store, must-revalidate")
-                        .header("Pragma", "no-cache")
-                        .header("Expires", "0")
-                        .body(resource);
-            } else {
-                System.out.println("❌ 파일이 존재하지 않거나 읽을 수 없음");
-                return ResponseEntity.notFound().build();
-            }
-
-        } catch (Exception e) {
-            System.out.println("❌ 첨부파일 다운로드 오류: " + e.getMessage());
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -623,30 +500,6 @@ public class BoardController {
 
         } catch (IOException e) {
             result.put("error", "파일 업로드 중 오류가 발생했습니다.");
-        }
-
-        return result;
-    }
-
-    /**
-     * 현재 로그인된 사용자 정보 확인용 (디버깅용)
-     */
-    @GetMapping("/debug/user")
-    @ResponseBody
-    public Map<String, Object> getCurrentUserDebug(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        Map<String, Object> result = new HashMap<>();
-
-        if (userDetails != null) {
-            result.put("success", true);
-            result.put("userId", userDetails.getUserId());
-            result.put("nickname", userDetails.getNickname());
-            result.put("email", userDetails.getUsername()); // 이메일
-            result.put("authorities", userDetails.getAuthorities().toString());
-            result.put("userIdType", userDetails.getUserId().getClass().getSimpleName());
-        } else {
-            result.put("success", false);
-            result.put("error", "로그인되지 않음");
-            result.put("message", "로그인이 필요합니다.");
         }
 
         return result;

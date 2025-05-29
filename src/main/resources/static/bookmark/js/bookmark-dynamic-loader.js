@@ -3,17 +3,15 @@ $(document).ready(function() {
     console.log('북마크 페이지 초기화');
     console.log('사용자 ID:', userId);
 
-    // SnippetModal이 로드되지 않은 경우를 대비한 체크
-    if (typeof SnippetModal === 'undefined') {
-        console.error('SnippetModal이 로드되지 않았습니다.');
-    }
-
     // 사용자가 로그인된 경우 북마크 로드
     if (typeof userId !== 'undefined' && userId != null) {
         loadBookmarkedSnippets();
     }
 
-    // 스니펫 카드 클릭 이벤트 (위임 방식)
+    // 북마크 페이지에서는 기존 SnippetModal 이벤트를 오버라이드
+    $(document).off('click', '.snippet-card'); // 기존 이벤트 제거
+
+    // 북마크 전용 스니펫 카드 클릭 이벤트
     $(document).on('click', '.snippet-card', function(e) {
         // 북마크 제거 버튼 클릭은 제외
         if ($(e.target).closest('.bookmark-remove-btn').length > 0) {
@@ -21,7 +19,7 @@ $(document).ready(function() {
         }
 
         const snippetId = $(this).data('snippet-id');
-        console.log('스니펫 카드 클릭:', snippetId);
+        console.log('북마크 스니펫 카드 클릭:', snippetId);
 
         if (!snippetId) {
             console.error('스니펫 ID를 찾을 수 없습니다.');
@@ -141,7 +139,7 @@ function createBookmarkSnippetCard(bookmark, index) {
     // 색상 처리
     if (bookmark.hexCode) {
         card.addClass('has-color');
-        card.css('border', '5px solid ' + bookmark.hexCode);
+        card.css('border-left', '5px solid ' + bookmark.hexCode);
 
         const colorIndicator = $('<div>')
             .addClass('color-indicator')
@@ -208,7 +206,7 @@ function createBookmarkSnippetCard(bookmark, index) {
         const codeContent = bookmark.content || '';
         const preview = codeContent.length > 100 ? codeContent.substring(0, 100) + '...' : codeContent;
         contentPreview.append($('<div>').addClass('code-preview')
-            .append($('<div>').addClass('language-badge').text(bookmark.language || 'text'))
+            // .append($('<div>').addClass('language-badge').text(bookmark.language || 'text'))
             .append($('<pre>').append($('<code>').text(preview))));
     } else {
         const textContent = bookmark.content || bookmark.memo || '';
@@ -239,11 +237,26 @@ function openBookmarkModal(snippetId) {
     const modal = $('#snippetDetailModal');
     modal.find('.modal-header h3').text(basicSnippet.title || '스니펫 상세보기');
 
+    // 기본 색상 적용 (로딩 중에도 색상 표시)
+    if (basicSnippet.hexCode) {
+        const modalContent = modal.find('.modal-content');
+        modalContent.css({
+            'border-left': `6px solid ${basicSnippet.hexCode}`,
+            'box-shadow': `0 4px 20px rgba(0,0,0,0.1), -2px 0 0 0 ${basicSnippet.hexCode}`
+        });
+
+        const modalHeader = modal.find('.modal-header');
+        modalHeader.css({
+            'border-bottom': `2px solid ${basicSnippet.hexCode}`,
+            'background': `linear-gradient(90deg, ${basicSnippet.hexCode}15 0%, transparent 100%)`
+        });
+    }
+
     // 로딩 상태 표시
     const contentDiv = modal.find('.snippet-detail-content');
     contentDiv.html(`
         <div class="loading-spinner" style="text-align: center; padding: 40px;">
-            <i class="fas fa-spinner fa-spin" style="font-size: 24px; color: #666;"></i>
+            <i class="fas fa-spinner fa-spin" style="font-size: 24px; color: ${basicSnippet.hexCode || '#666'};"></i>
             <p style="margin-top: 10px; color: #666;">북마크 상세 정보를 불러오는 중...</p>
         </div>
     `);
@@ -292,18 +305,298 @@ function openBookmarkModal(snippetId) {
 function updateModalWithDetailedInfo(modal, snippet) {
     console.log('모달 업데이트:', snippet);
 
-    // SnippetModal이 있는 경우 사용
-    if (typeof SnippetModal !== 'undefined' && SnippetModal.updateContent) {
-        SnippetModal.updateContent(modal, snippet);
+    // 북마크 페이지 전용 모달 업데이트
+    updateBookmarkModalContent(modal, snippet);
+
+    // 태그 정보 업데이트 (안전하게 처리)
+    updateSnippetTags(snippet.tags);
+}
+
+// 북마크 전용 모달 콘텐츠 업데이트
+function updateBookmarkModalContent(modal, snippet) {
+    // 모달에 색상 테두리 적용
+    const modalContent = modal.find('.modal-content');
+    if (snippet.hexCode) {
+        modalContent.css({
+            'border-left': `6px solid ${snippet.hexCode}`,
+            'box-shadow': `0 4px 20px rgba(0,0,0,0.1), -2px 0 0 0 ${snippet.hexCode}`
+        });
+
+        // 모달 헤더에도 색상 포인트 추가
+        const modalHeader = modal.find('.modal-header');
+        modalHeader.css({
+            'border-bottom': `2px solid ${snippet.hexCode}`,
+            'background': `linear-gradient(90deg, ${snippet.hexCode}15 0%, transparent 100%)`
+        });
     } else {
-        // 대체 구현
-        displayBasicContent(modal, snippet);
+        // 색상이 없는 경우 기본 스타일로 리셋
+        modalContent.css({
+            'border-left': '',
+            'box-shadow': '0 4px 20px rgba(0,0,0,0.1)'
+        });
+
+        const modalHeader = modal.find('.modal-header');
+        modalHeader.css({
+            'border-bottom': '1px solid #dee2e6',
+            'background': ''
+        });
     }
 
-    // 태그 정보 업데이트
-    if (typeof SnippetTags !== 'undefined' && snippet.tags) {
-        SnippetTags.updateTags(snippet.tags);
+    // 메타 정보 업데이트
+    const metaDiv = modal.find('.snippet-detail-meta');
+    metaDiv.empty();
+
+    if (snippet.type) {
+        metaDiv.append(`<div class="meta-row"><strong>타입:</strong> ${snippet.type}</div>`);
     }
+    if (snippet.language) {
+        metaDiv.append(`<div class="meta-row"><strong>언어:</strong> ${snippet.language}</div>`);
+    }
+    if (snippet.createdAt) {
+        const date = new Date(snippet.createdAt).toLocaleDateString('ko-KR');
+        metaDiv.append(`<div class="meta-row"><strong>생성일:</strong> ${date}</div>`);
+    }
+    if (snippet.ownerNickname) {
+        metaDiv.append(`<div class="meta-row"><strong>작성자:</strong> ${snippet.ownerNickname}</div>`);
+    }
+    if (snippet.hexCode && snippet.colorName) {
+        const colorDiv = $('<div class="meta-row color-meta"><strong>색상:</strong> </div>');
+        colorDiv.append(`
+            <span class="color-preview" style="
+                background-color: ${snippet.hexCode}; 
+                width: 24px; 
+                height: 24px; 
+                display: inline-block; 
+                margin-right: 8px; 
+                border-radius: 4px; 
+                border: 2px solid ${snippet.hexCode}40;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                vertical-align: middle;
+            "></span> 
+            <span style="vertical-align: middle;">${snippet.colorName}</span>
+        `);
+        metaDiv.append(colorDiv);
+    }
+
+    // 콘텐츠 업데이트
+    const contentDiv = modal.find('.snippet-detail-content');
+    contentDiv.empty();
+
+    const contentHtml = renderBookmarkSnippetContent(snippet);
+    contentDiv.html(contentHtml);
+}
+
+// 북마크 스니펫 콘텐츠 렌더링
+function renderBookmarkSnippetContent(snippet) {
+    const snippetContent = snippet.snippetContent || {};
+
+    if (snippet.type === 'IMG' || snippet.type === 'IMAGE') {
+        const imageUrl = snippetContent.imageUrl || snippet.imageUrl;
+        const altText = snippetContent.altText || snippet.altText || snippet.memo || '이미지';
+        const sourceUrl = snippet.sourceUrl;
+
+        if (!imageUrl) {
+            return `
+                <div class="bookmark-modal-content image-content">
+                    <div class="image-error">🖼️ 이미지 URL이 설정되지 않았습니다</div>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="bookmark-modal-content image-content">
+                <div class="image-container">
+                    <img src="${imageUrl}" 
+                         alt="${escapeHtml(altText)}" 
+                         class="modal-image"
+                         onclick="showImageZoom('${imageUrl}')"
+                         style="max-width: 100%; height: auto; border-radius: 8px;"
+                         onerror="this.parentNode.innerHTML='<div class=\\'image-error\\'>🖼️ 이미지를 불러올 수 없습니다</div>'">
+                    <div class="image-actions" style="margin-top: 10px;">
+                        <button class="image-zoom-btn" onclick="showImageZoom('${imageUrl}')" 
+                                style="margin-right: 10px; padding: 8px 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            <i class="fas fa-search-plus"></i> 확대
+                        </button>
+                        <button class="image-download-btn" onclick="downloadImage('${imageUrl}', '${escapeHtml(altText)}')"
+                                style="padding: 8px 12px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            <i class="fas fa-download"></i> 다운로드
+                        </button>
+                    </div>
+                </div>
+                ${altText ? `<div class="image-info" style="margin-top: 15px;"><strong>설명:</strong> ${escapeHtml(altText)}</div>` : ''}
+                ${sourceUrl ? `<div class="image-source" style="margin-top: 10px;"><strong>출처:</strong> <a href="${sourceUrl}" target="_blank">${sourceUrl}</a></div>` : ''}
+            </div>
+        `;
+
+    } else if (snippet.type === 'CODE') {
+        const language = snippetContent.language || snippet.language || 'text';
+        const content = snippetContent.content || snippet.content || '코드 내용이 없습니다.';
+
+        return `
+            <div class="bookmark-modal-content code-content">
+                // <div class="language-badge" style="background: #f8f9fa; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-bottom: 10px;">${language}</div>
+                <div class="code-container" style="position: relative;">
+                    <button class="code-copy-btn" onclick="copyToClipboard('${escapeHtml(content).replace(/'/g, "\\'")}', this)" 
+                            style="position: absolute; top: 10px; right: 10px; padding: 6px 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                        <i class="fas fa-copy"></i> 복사
+                    </button>
+                    <pre class="code-block" style="background: #f8f9fa; padding: 15px; border-radius: 8px; overflow-x: auto; margin: 0;"><code class="language-${language}">${escapeHtml(content)}</code></pre>
+                </div>
+            </div>
+        `;
+
+    } else {
+        // TEXT 타입 또는 기타
+        const content = snippetContent.content || snippet.content || '텍스트 내용이 없습니다.';
+
+        return `
+            <div class="bookmark-modal-content text-content">
+                <div class="text-container" style="position: relative;">
+                    <button class="text-copy-btn" onclick="copyToClipboard('${escapeHtml(content).replace(/'/g, "\\'")}', this)" 
+                            style="position: absolute; top: 10px; right: 10px; padding: 6px 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                        <i class="fas fa-copy"></i> 복사
+                    </button>
+                    <div class="text-content-body" style="background: #f8f9fa; padding: 15px; border-radius: 8px; line-height: 1.6;">${escapeHtml(content).replace(/\n/g, '<br>')}</div>
+                </div>
+            </div>
+        `;
+    }
+}
+
+// 태그 정보 업데이트 (안전하게 처리)
+function updateSnippetTags(tags) {
+    const tagsDisplay = $('#snippetTagsDisplay');
+    if (tagsDisplay.length === 0) return;
+
+    tagsDisplay.empty();
+
+    if (tags && tags.length > 0) {
+        tags.forEach(function(tag) {
+            const tagElement = $(`
+                <div class="tag-badge" data-tag-id="${tag.tagId}">
+                    <span>${tag.name}</span>
+                    <span class="tag-remove" title="태그 제거">×</span>
+                </div>
+            `);
+            tagsDisplay.append(tagElement);
+        });
+    } else {
+        tagsDisplay.append('<span style="color: #6c757d; font-style: italic;">태그가 없습니다</span>');
+    }
+}
+
+// 유틸리티 함수들
+function showImageZoom(imageUrl) {
+    const zoomModal = $(`
+        <div id="imageZoomModal" class="modal" style="
+            display: flex; 
+            position: fixed; 
+            z-index: 10000; 
+            left: 0; 
+            top: 0; 
+            width: 100%; 
+            height: 100%; 
+            background-color: rgba(0,0,0,0.9);
+            align-items: center;
+            justify-content: center;
+        ">
+            <div class="modal-content" style="position: relative; max-width: 90%; max-height: 90%;">
+                <span class="modal-close" style="
+                    position: absolute; 
+                    top: -40px; 
+                    right: 0; 
+                    color: white; 
+                    font-size: 40px; 
+                    font-weight: bold; 
+                    cursor: pointer;
+                ">&times;</span>
+                <img src="${imageUrl}" style="max-width: 100%; max-height: 100%; object-fit: contain;" alt="확대된 이미지">
+            </div>
+        </div>
+    `);
+
+    $('body').append(zoomModal);
+
+    zoomModal.on('click', function(e) {
+        if (e.target === this || $(e.target).hasClass('modal-close')) {
+            zoomModal.remove();
+        }
+    });
+}
+
+function downloadImage(imageUrl, filename) {
+    try {
+        const link = document.createElement('a');
+        link.href = imageUrl;
+        link.download = filename || 'image';
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast('이미지 다운로드를 시작합니다.');
+    } catch (error) {
+        console.error('이미지 다운로드 실패:', error);
+        showToast('이미지 다운로드에 실패했습니다.');
+    }
+}
+
+function copyToClipboard(text, button) {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('클립보드에 복사되었습니다!');
+            $(button).text('복사됨!');
+            setTimeout(() => {
+                $(button).html('<i class="fas fa-copy"></i> 복사');
+            }, 2000);
+        }).catch(() => {
+            fallbackCopyToClipboard(text, button);
+        });
+    } else {
+        fallbackCopyToClipboard(text, button);
+    }
+}
+
+function fallbackCopyToClipboard(text, button) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+        document.execCommand('copy');
+        showToast('클립보드에 복사되었습니다!');
+        $(button).text('복사됨!');
+        setTimeout(() => {
+            $(button).html('<i class="fas fa-copy"></i> 복사');
+        }, 2000);
+    } catch (err) {
+        showToast('복사에 실패했습니다.');
+    }
+    document.body.removeChild(textArea);
+}
+
+function showToast(message) {
+    const toast = $(`
+        <div class="toast-message" style="
+            position: fixed; 
+            top: 20px; 
+            right: 20px; 
+            background: #333; 
+            color: white; 
+            padding: 12px 20px; 
+            border-radius: 4px; 
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        ">${message}</div>
+    `);
+
+    $('body').append(toast);
+
+    setTimeout(() => toast.css('opacity', '1'), 10);
+    setTimeout(() => {
+        toast.css('opacity', '0');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
 }
 
 // 기본 콘텐츠 표시 (SnippetModal이 없는 경우 대체)
@@ -330,7 +623,7 @@ function displayBasicContent(modal, snippet) {
         const language = snippetContent.language || snippet.language || 'text';
         contentHtml = `
             <div class="code-content">
-                <div class="language-badge">${language}</div>
+<!--                <div class="language-badge">${language}</div>-->
                 <pre><code>${escapeHtml(content)}</code></pre>
             </div>
         `;
@@ -404,48 +697,4 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
-}
-
-function removeBookmarkDynamic(snippetId, cardElement) {
-    if (!confirm('정말로 이 북마크를 제거하시겠습니까?')) {
-        return;
-    }
-
-    $.ajax({
-        url: '/api/bookmarks/remove',
-        method: 'DELETE',
-        data: { snippetId: snippetId },
-        success: function(response) {
-            if (response.success) {
-                Utils.showAlert(response.message, 'success');
-                cardElement.fadeOut(300, function() {
-                    $(this).remove();
-                    // 북마크가 모두 제거되었는지 확인
-                    if ($('.snippet-card').length === 0) {
-                        showEmptyBookmarkState();
-                    }
-                });
-            } else {
-                Utils.showAlert(response.message || '북마크 제거에 실패했습니다.', 'error');
-            }
-        },
-        error: function(xhr) {
-            console.error('북마크 제거 실패:', xhr.responseText);
-            Utils.showAlert('북마크 제거 중 오류가 발생했습니다.', 'error');
-        }
-    });
-}
-
-function showEmptyBookmarkState() {
-    const emptyHtml = `
-        <div class="empty-state">
-            <div class="emoji">🌟</div>
-            <p>아직 북마크한 스니펫이 없습니다</p>
-            <p>마음에 드는 스니펫을 북마크하여 나중에 쉽게 찾아보세요!</p>
-            <a href="/snippets" class="btn btn-primary">
-                <i class="fas fa-search"></i> 스니펫 둘러보기
-            </a>
-        </div>
-    `;
-    $('#snippetSectionContainer').html(emptyHtml);
 }

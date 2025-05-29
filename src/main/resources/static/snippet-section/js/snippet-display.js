@@ -26,7 +26,7 @@ const SnippetDisplay = {
 
         // REST API 호출로 변경
         $.ajax({
-            url: `/api/snippets/tag/${tagId}`,
+            url: `/api/tag/${tagId}/snippets`,
             method: 'GET',
             success: function(snippets) {
                 console.log('API에서 받은 스니펫 데이터:', snippets);
@@ -41,36 +41,6 @@ const SnippetDisplay = {
                     window.location.href = '/login';
                     return;
                 }
-
-                // 다른 오류의 경우 더미 데이터 사용 (개발용)
-                console.log('더미 데이터로 대체');
-                const dummySnippets = [
-                    {
-                        id: 1,
-                        snippetId: 1,
-                        title: 'JavaScript 배열 맵',
-                        memo: 'JavaScript 배열 맵 예제',
-                        content: 'const numbers = [1, 2, 3, 4, 5];\nconst doubled = numbers.map(num => num * 2);\nconsole.log(doubled);',
-                        language: 'javascript',
-                        type: 'CODE',
-                        hexCode: '#3b82f6',
-                        colorName: 'Blue',
-                        createdAt: new Date().toISOString()
-                    },
-                    {
-                        id: 2,
-                        snippetId: 2,
-                        title: '이미지 예제',
-                        memo: '샘플 이미지',
-                        imageUrl: 'https://via.placeholder.com/300x200/3b82f6/ffffff?text=Sample+Image',
-                        altText: '샘플 이미지입니다',
-                        type: 'IMG',
-                        hexCode: '#10b981',
-                        colorName: 'Green',
-                        createdAt: new Date().toISOString()
-                    }
-                ];
-                SnippetDisplay.display(dummySnippets);
             }
         });
     },

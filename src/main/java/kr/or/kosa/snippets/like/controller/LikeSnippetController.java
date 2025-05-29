@@ -2,8 +2,7 @@ package kr.or.kosa.snippets.like.controller;
 
 import kr.or.kosa.snippets.like.mapper.LikeSnippetMapper;
 import kr.or.kosa.snippets.like.mapper.SnippetContentMapper;
-import kr.or.kosa.snippets.like.model.Snippet;
-import kr.or.kosa.snippets.like.model.LikeTag;
+import kr.or.kosa.snippets.like.model.*;
 import kr.or.kosa.snippets.like.service.LikeService;
 import kr.or.kosa.snippets.like.service.LikeSnippetService;
 import kr.or.kosa.snippets.like.service.LikeUserService;
@@ -45,56 +44,123 @@ public class LikeSnippetController {
                                     @AuthenticationPrincipal CustomUserDetails userDetails,
                                     Model model) {
 
-        Snippet snippet = likeSnippetMapper.getSnippetDetailById(snippetId);
-
-        if (snippet == null) {
-            return "redirect:/popular-snippets";
-        }
-
-        // 스니펫 태그 조회
-        List<LikeTag> likeTags = likeSnippetService.getTagsBySnippetId(snippetId);
-
-        // 좋아요 상태 확인 (로그인한 경우만)
-        boolean isLiked = false;
-        if (userDetails != null) {
-            isLiked = likeService.isLiked(snippetId, userDetails.getUserId());
-        }
-
-        // 실제 좋아요 수 업데이트
-        long actualLikeCount = likeService.getLikesCount(snippetId);
-        snippet.setLikeCount((int) actualLikeCount);
-
-        // 소유자 nickname 조회
-        String ownerNickname = likeUserService.getNicknameByUserId(snippet.getUserId());
-
-        // 스니펫 타입별 실제 content 조회 (추가)
-        Object snippetContent = null;
         try {
-            switch (snippet.getType().toUpperCase()) {
-                case "CODE":
-                    snippetContent = snippetContentMapper.getSnippetCodeById(snippetId);
-                    break;
-                case "TEXT":
-                    snippetContent = snippetContentMapper.getSnippetTextById(snippetId);
-                    break;
-                case "IMG":
-                    snippetContent = snippetContentMapper.getSnippetImageById(snippetId);
-                    break;
+            System.out.println("스니펫 상세보기 요청 - snippetId: " + snippetId);
+
+            Snippet snippet = likeSnippetMapper.getSnippetDetailById(snippetId);
+
+            if (snippet == null) {
+                System.err.println("스니펫을 찾을 수 없음 - snippetId: " + snippetId);
+                return "redirect:/popular-snippets?error=snippet_not_found";
             }
+
+            // 스니펫 타입별 실제 content 조회 (null 체크 강화)
+            Object snippetContent = null;
+            try {
+                switch (snippet.getType().toUpperCase()) {
+                    case "CODE":
+                        snippetContent = snippetContentMapper.getSnippetCodeById(snippetId);
+                        if (snippetContent == null) {
+                            System.err.println("코드 스니펫 데이터 누락 - snippetId: " + snippetId);
+                            // 기본 객체 생성
+                            snippetContent = SnippetCode.builder()
+                                    .snippetId(snippetId)
+                                    .content("코드 내용을 불러올 수 없습니다.")
+                                    .language("text")
+                                    .build();
+                        }
+                        break;
+                    case "TEXT":
+                        snippetContent = snippetContentMapper.getSnippetTextById(snippetId);
+                        if (snippetContent == null) {
+                            System.err.println("텍스트 스니펫 데이터 누락 - snippetId: " + snippetId);
+                            snippetContent = SnippetText.builder()
+                                    .snippetId(snippetId)
+                                    .content("텍스트 내용을 불러올 수 없습니다.")
+                                    .build();
+                        }
+                        break;
+                    case "IMG":
+                        snippetContent = snippetContentMapper.getSnippetImageById(snippetId);
+                        if (snippetContent == null) {
+                            System.err.println("이미지 스니펫 데이터 누락 - snippetId: " + snippetId);
+                            snippetContent = SnippetImage.builder()
+                                    .snippetId(snippetId)
+                                    .imageUrl("/images/placeholder.jpg")
+                                    .altText("이미지를 불러올 수 없습니다.")
+                                    .build();
+                        }
+                        break;
+                    default:
+                        System.err.println("알 수 없는 스니펫 타입 - snippetId: " + snippetId + ", type: " + snippet.getType());
+                        break;
+                }
+            } catch (Exception contentException) {
+                System.err.println("스니펫 content 조회 중 예외 발생 - snippetId: " + snippetId + ", 오류: " + contentException.getMessage());
+                contentException.printStackTrace();
+                // 타입별 기본 객체 생성
+                snippetContent = createDefaultContent(snippet.getType(), snippetId);
+            }
+
+            // 스니펫 태그 조회
+            List<LikeTag> likeTags = likeSnippetService.getTagsBySnippetId(snippetId);
+
+            // 좋아요 상태 확인 (로그인한 경우만)
+            boolean isLiked = false;
+            if (userDetails != null) {
+                isLiked = likeService.isLiked(snippetId, userDetails.getUserId());
+            }
+
+            // 실제 좋아요 수 업데이트
+            long actualLikeCount = likeService.getLikesCount(snippetId);
+            snippet.setLikeCount((int) actualLikeCount);
+
+            // 소유자 nickname 조회
+            String ownerNickname = likeUserService.getNicknameByUserId(snippet.getUserId());
+
+            // 모델에 데이터 추가
+            model.addAttribute("snippet", snippet);
+            model.addAttribute("tags", likeTags);
+            model.addAttribute("isLiked", isLiked);
+            model.addAttribute("ownerNickname", ownerNickname);
+            model.addAttribute("snippetContent", snippetContent);
+            model.addAttribute("currentUserId", userDetails != null ? userDetails.getUserId() : null);
+            model.addAttribute("currentUserNickname", userDetails != null ? userDetails.getNickname() : null);
+            model.addAttribute("isLoggedIn", userDetails != null);
+
+            System.out.println("스니펫 상세보기 성공 - snippetId: " + snippetId);
+            return "like/snippet-detail";
+
         } catch (Exception e) {
-            System.err.println("스니펫 content 조회 실패: " + e.getMessage());
+            System.err.println("스니펫 상세보기 처리 중 예외 발생 - snippetId: " + snippetId + ", 오류: " + e.getMessage());
+            e.printStackTrace();
+            return "redirect:/popular-snippets?error=system_error";
         }
+    }
 
-        model.addAttribute("snippet", snippet);
-        model.addAttribute("tags", likeTags);
-        model.addAttribute("isLiked", isLiked);
-        model.addAttribute("ownerNickname", ownerNickname);
-        model.addAttribute("snippetContent", snippetContent);  // 추가
-        model.addAttribute("currentUserId", userDetails != null ? userDetails.getUserId() : null);
-        model.addAttribute("currentUserNickname", userDetails != null ? userDetails.getNickname() : null);
-        model.addAttribute("isLoggedIn", userDetails != null);
-
-        return "like/snippet-detail";
+    // 기본 콘텐츠 생성 헬퍼 메서드
+    private Object createDefaultContent(String type, Long snippetId) {
+        switch (type.toUpperCase()) {
+            case "CODE":
+                return SnippetCode.builder()
+                        .snippetId(snippetId)
+                        .content("코드 내용을 불러올 수 없습니다.")
+                        .language("text")
+                        .build();
+            case "TEXT":
+                return SnippetText.builder()
+                        .snippetId(snippetId)
+                        .content("텍스트 내용을 불러올 수 없습니다.")
+                        .build();
+            case "IMG":
+                return SnippetImage.builder()
+                        .snippetId(snippetId)
+                        .imageUrl("/images/placeholder.jpg")
+                        .altText("이미지를 불러올 수 없습니다.")
+                        .build();
+            default:
+                return null;
+        }
     }
 
     @GetMapping("/popular-snippets")

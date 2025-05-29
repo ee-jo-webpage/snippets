@@ -169,36 +169,54 @@ public class LikeSnippetService {
      */
     public String getSnippetContentPreview(Snippet snippet) {
         try {
+            if (snippet == null || snippet.getType() == null) {
+                return "스니펫 정보를 불러올 수 없습니다.";
+            }
+
             switch (snippet.getType().toUpperCase()) {
                 case "CODE":
                     SnippetCode snippetCode = snippetContentMapper.getSnippetCodeById(snippet.getSnippetId());
                     if (snippetCode != null && snippetCode.getContent() != null) {
-                        return truncateContent(snippetCode.getContent(), 100); // 100자로 제한
+                        return truncateContent(snippetCode.getContent(), 100);
+                    } else {
+                        return "[코드] 코드 내용을 불러올 수 없습니다.";
                     }
-                    break;
 
                 case "TEXT":
                     SnippetText snippetText = snippetContentMapper.getSnippetTextById(snippet.getSnippetId());
                     if (snippetText != null && snippetText.getContent() != null) {
-                        return truncateContent(snippetText.getContent(), 100); // 100자로 제한
+                        return truncateContent(snippetText.getContent(), 100);
+                    } else {
+                        return "[텍스트] 텍스트 내용을 불러올 수 없습니다.";
                     }
-                    break;
 
                 case "IMG":
                     SnippetImage snippetImage = snippetContentMapper.getSnippetImageById(snippet.getSnippetId());
                     if (snippetImage != null) {
-                        return "[이미지] " + (snippetImage.getAltText() != null ? snippetImage.getAltText() : "이미지 설명 없음");
+                        String altText = snippetImage.getAltText();
+                        String imageUrl = snippetImage.getImageUrl();
+
+                        if (altText != null && !altText.trim().isEmpty()) {
+                            return "[이미지] " + altText;
+                        } else if (imageUrl != null && !imageUrl.trim().isEmpty()) {
+                            return "[이미지] " + imageUrl;
+                        } else {
+                            return "[이미지] 이미지 정보 없음";
+                        }
+                    } else {
+                        // 이미지 데이터가 없는 경우 처리
+                        System.err.println("이미지 스니펫 데이터 누락 - snippetId: " + snippet.getSnippetId());
+                        return "[이미지] 이미지 데이터를 불러올 수 없습니다.";
                     }
-                    break;
 
                 default:
-                    return "내용을 불러올 수 없습니다.";
+                    return "알 수 없는 스니펫 타입: " + snippet.getType();
             }
         } catch (Exception e) {
             System.err.println("스니펫 content 조회 실패 - snippetId: " + snippet.getSnippetId() + ", 오류: " + e.getMessage());
+            e.printStackTrace();
+            return "내용을 불러오는 중 오류가 발생했습니다.";
         }
-
-        return "내용을 불러올 수 없습니다.";
     }
 
     /**

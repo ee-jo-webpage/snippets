@@ -160,23 +160,41 @@ public class ColorController {
     public String deleteColor(@AuthenticationPrincipal CustomUserDetails userDetails,
                               @RequestParam Long colorId,
                               RedirectAttributes redirectAttrs) {
+
+        log.info("색상 삭제 페이지 진입");
+
         try {
-            Long userId = requireLogin(userDetails);
-            // Long userId = userDetails.getUserId(); // 시큐리티 체인 수정시 얘만 남길것 requireLogin 삭제
+            // 인증 상태 먼저 확인
+            if (userDetails == null) {
+                log.warn("사용자 인증 정보가 없습니다 - 로그인이 필요합니다");
+                redirectAttrs.addFlashAttribute("error", "로그인이 필요합니다.");
+                return "redirect:/login"; // 명시적으로 로그인 페이지로
+            }
+
+            Long userId = userDetails.getUserId();
+            if (userId == null) {
+                log.warn("사용자 ID가 null입니다");
+                redirectAttrs.addFlashAttribute("error", "사용자 정보를 찾을 수 없습니다.");
+                return "redirect:/login";
+            }
+
+            log.info("색상 삭제 시도 - 사용자 ID: {}, 색상 ID: {}", userId, colorId);
 
             colorService.deleteColor(colorId, userId);
 
             redirectAttrs.addFlashAttribute("message", "색상이 성공적으로 삭제되었습니다.");
-
             return "redirect:/color/my-colors";
-        } catch (ResponseStatusException e) {
-            log.error("인증 실패", e);
-            return "redirect:/login";
+
         } catch (Exception e) {
-            log.error("색상 삭제 실패", e);
-            redirectAttrs.addFlashAttribute("error", e.getMessage());
+            log.error("색상 삭제 실패 - colorId: {}, error: {}", colorId, e.getMessage(), e);
+            redirectAttrs.addFlashAttribute("error", "색상 삭제 중 오류가 발생했습니다: " + e.getMessage());
 
-            return "redirect:/color/my-colors";
+            // 인증된 사용자라면 my-colors로, 아니라면 로그인으로
+            if (userDetails != null && userDetails.getUserId() != null) {
+                return "redirect:/color/my-colors";
+            } else {
+                return "redirect:/login";
+            }
         }
     }
 }

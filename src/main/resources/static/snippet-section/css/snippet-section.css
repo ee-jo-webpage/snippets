@@ -675,3 +675,64 @@ body {
         justify-content: center;
     }
 }
+
+/* 스니펫 콘텐츠 미리보기 */
+.snippet-content-preview {
+    background: #f8fafc;
+    padding: 16px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    color: #4a5568;
+    line-height: 1.6;
+    margin-bottom: 16px;
+    border-left: 4px solid #667eea;
+    flex-grow: 1;
+    font-family: 'Monaco', 'Menlo', monospace;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* 이미지 스니펫 미리보기 */
+.snippet-content-preview.image-preview {
+    padding: 8px;
+    text-align: center;
+    font-family: inherit;
+    border-left-color: #f59e0b;
+}
+
+.snippet-preview-image {
+    max-width: 100%;
+    max-height: 120px;
+    border-radius: 8px;
+    object-fit: cover;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 8px;
+}
+
+.image-preview-info {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-top: 8px;
+}
+
+/* 이미지 로딩 상태 */
+.image-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 80px;
+    color: #9ca3af;
+    font-style: italic;
+}
+
+.image-error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 80px;
+    color: #ef4444;
+    font-size: 0.9rem;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+}

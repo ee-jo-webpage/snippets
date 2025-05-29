@@ -48,7 +48,7 @@ $(document).ready(function() {
 
 // 스니펫 모달 네임스페이스
 const SnippetModal = {
-    show: function(snippet) {
+    show: function (snippet) {
         const modal = $('#snippetDetailModal');
         const snippetId = snippet.id || snippet.snippetId;
 
@@ -72,11 +72,11 @@ const SnippetModal = {
         modal.show();
     },
 
-    hide: function() {
+    hide: function () {
         $('#snippetDetailModal').hide();
     },
 
-    updateContent: function(modal, snippet) {
+    updateContent: function (modal, snippet) {
         // 메타 정보 업데이트
         const metaDiv = modal.find('.snippet-detail-meta');
         metaDiv.empty();
@@ -101,13 +101,69 @@ const SnippetModal = {
         const contentDiv = modal.find('.snippet-detail-content');
         contentDiv.empty();
 
-        if (snippet.type === 'CODE') {
+        if (snippet.type === 'IMG' || snippet.type === 'IMAGE') {
+            // 이미지 스니펫인 경우
+            contentDiv.addClass('image-content');
+
+            if (snippet.imageUrl) {
+                console.log('이미지 모달 표시:', snippet.imageUrl);
+
+                const img = $('<img>')
+                    .addClass('snippet-detail-image')
+                    .attr('src', snippet.imageUrl)
+                    .attr('alt', snippet.altText || snippet.memo || '이미지')
+                    .css('cursor', 'zoom-in')
+                    .on('error', function () {
+                        console.error('모달 이미지 로드 실패:', snippet.imageUrl);
+                        $(this).replaceWith('<div class="image-error">🖼️ 이미지를 불러올 수 없습니다</div>');
+                    })
+                    .on('load', function () {
+                        console.log('모달 이미지 로드 완료:', snippet.imageUrl);
+                    })
+                    .on('click', function () {
+                        SnippetModal.showImageZoom(snippet.imageUrl);
+                    });
+
+                contentDiv.append(img);
+
+                // 이미지 정보 표시
+                const infoDiv = $('<div>').addClass('image-detail-info');
+
+                // altText 우선, 없으면 memo 사용
+                if (snippet.altText) {
+                    infoDiv.append($('<div>').addClass('image-filename').text('Alt: ' + snippet.altText));
+                }
+
+                if (snippet.memo && snippet.memo !== snippet.altText) {
+                    infoDiv.append($('<div>').text('메모: ' + snippet.memo));
+                }
+
+                // sourceUrl이 있으면 출처 표시
+                if (snippet.sourceUrl) {
+                    infoDiv.append($('<div>').text('출처: ' + snippet.sourceUrl));
+                }
+
+                if (infoDiv.children().length > 0) {
+                    contentDiv.append(infoDiv);
+                }
+
+            } else {
+                console.error('이미지 URL이 없습니다:', snippet);
+                contentDiv.append('<div class="image-error">🖼️ 이미지 URL이 설정되지 않았습니다</div>');
+            }
+
+        } else if (snippet.type === 'CODE') {
+            // 코드 스니펫인 경우
+            contentDiv.removeClass('image-content');
             if (snippet.language) {
                 contentDiv.append(`<div class="language-badge">${snippet.language}</div>`);
             }
             contentDiv.append(`<pre class="code-block">${snippet.content || 'No Code'}</pre>`);
+
         } else {
+            // 텍스트 스니펫인 경우 (TEXT 타입)
+            contentDiv.removeClass('image-content');
             contentDiv.append(`<div class="text-content">${snippet.content || 'No Content'}</div>`);
         }
     }
-};
+}

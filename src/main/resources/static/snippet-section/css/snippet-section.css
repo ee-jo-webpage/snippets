@@ -313,7 +313,7 @@ body {
 }
 
 .snippet-detail-content {
-    background: #1a202c;
+    /*background: #1a202c;*/
     border-radius: 12px;
     overflow: hidden;
     height: 100%;

@@ -7,6 +7,8 @@
     <link th:href="@{/color/css/user-colors.css}" rel="stylesheet">
     <link th:href="@{/my-snippet-page/css/my-snippet-page.css}" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 </head>
 <body>
 <div th:replace="fragments/header :: header"></div>
@@ -398,19 +400,20 @@
         const name = buttonElement.getAttribute('data-name');
 
         if (confirm(`정말로 "${name}" 색상을 삭제하시겠습니까?`)) {
-            // 동적으로 폼 생성하여 제출
             const form = document.createElement('form');
-            form.method = 'POST';  // DELETE 메서드는 폼에서 직접 지원하지 않음
-            form.action = /*[[@{/color/delete}]]*/ '/color/delete';
+            form.method = 'POST';
+            form.action = '/color/delete';
 
-            // Spring에서 DELETE 메서드를 사용하기 위한 히든 필드
-            const methodInput = document.createElement('input');
-            methodInput.type = 'hidden';
-            methodInput.name = '_method';
-            methodInput.value = 'DELETE';
-            form.appendChild(methodInput);
+            // CSRF 토큰 추가
+            const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
 
-            // colorId 파라미터
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_csrf';
+            csrfInput.value = csrfToken;
+            form.appendChild(csrfInput);
+
             const colorIdInput = document.createElement('input');
             colorIdInput.type = 'hidden';
             colorIdInput.name = 'colorId';

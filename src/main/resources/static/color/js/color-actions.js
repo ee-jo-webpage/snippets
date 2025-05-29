@@ -1,36 +1,36 @@
 // 색상 관련 액션 기능
 
 // 색상 삭제
-function deleteColor(buttonElement) {
-    if (!checkLoginStatus()) return;
-
-    const colorId = buttonElement.getAttribute('data-color-id');
-    const name = buttonElement.getAttribute('data-name');
-
-    if (confirm(`정말로 "${name}" 색상을 삭제하시겠습니까?`)) {
-        // 동적으로 폼 생성하여 제출
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = colorDeleteUrl || '/color/delete';
-
-        // Spring에서 DELETE 메서드를 사용하기 위한 히든 필드
-        const methodInput = document.createElement('input');
-        methodInput.type = 'hidden';
-        methodInput.name = '_method';
-        methodInput.value = 'DELETE';
-        form.appendChild(methodInput);
-
-        // colorId 파라미터
-        const colorIdInput = document.createElement('input');
-        colorIdInput.type = 'hidden';
-        colorIdInput.name = 'colorId';
-        colorIdInput.value = colorId;
-        form.appendChild(colorIdInput);
-
-        document.body.appendChild(form);
-        form.submit();
-    }
-}
+// function deleteColor(buttonElement) {
+//     if (!checkLoginStatus()) return;
+//
+//     const colorId = buttonElement.getAttribute('data-color-id');
+//     const name = buttonElement.getAttribute('data-name');
+//
+//     if (confirm(`정말로 "${name}" 색상을 삭제하시겠습니까?`)) {
+//         // 동적으로 폼 생성하여 제출
+//         const form = document.createElement('form');
+//         form.method = 'POST';
+//         form.action = colorDeleteUrl || '/color/delete';
+//
+//         // Spring에서 DELETE 메서드를 사용하기 위한 히든 필드
+//         // const methodInput = document.createElement('input');
+//         // methodInput.type = 'hidden';
+//         // methodInput.name = '_method';
+//         // methodInput.value = 'DELETE';
+//         // form.appendChild(methodInput);
+//
+//         // colorId 파라미터
+//         const colorIdInput = document.createElement('input');
+//         colorIdInput.type = 'hidden';
+//         colorIdInput.name = 'colorId';
+//         colorIdInput.value = colorId;
+//         form.appendChild(colorIdInput);
+//
+//         document.body.appendChild(form);
+//         form.submit();
+//     }
+// }
 
 // 색상 복사 (클립보드에 hex 코드 복사)
 function copyColorToClipboard(hexCode) {

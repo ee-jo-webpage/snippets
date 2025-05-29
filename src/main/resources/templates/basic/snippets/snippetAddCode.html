@@ -1,199 +1,601 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Code 스니펫 추가</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
-  <style>
-    .snippet-card {
-      max-width: 600px;
-      margin: 40px auto;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-	  max-height: 400px;  /* 원하는 최대 높이 */
-	  overflow-y: auto;   /* 내용이 넘치면 세로 스크롤바 표시 */ 
-    }
-    .snippet-header {
-      padding: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid #e0e0e0;
-      background-color: #ffffff;
-      transition: background-color 0.3s;
-    }
-    .snippet-body { 
-      padding: 16px;
-	  
-    }
-    .form-label { 
-      font-weight: 500; 
-    }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Code 스니펫 추가</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+	<link th:href="@{/my-snippet-page/css/my-snippet-page.css}" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    /* 색상 선택 드롭다운 커스텀 스타일 */
-    .color-select-container {
-      position: relative;
-    }
-    
-    .color-select {
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      background: transparent;
-      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
-      background-repeat: no-repeat;
-      background-position: right 12px center;
-      background-size: 16px;
-      padding-right: 40px;
-    }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
 
-    .color-option {
-      padding: 8px 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+        .main-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-    .color-indicator {
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      border: 1px solid #ccc;
-      display: inline-block;
-    }
+        .snippet-card {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            width: 100%;
+            max-width: 500px;
+            overflow: hidden;
+            position: relative;
+        }
 
-    /* 헤더의 색상 미리보기 */
-    .color-preview {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      border: 2px solid #fff;
-      box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
-    }
-  </style>
+        .snippet-header {
+            padding: 20px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.3);
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .snippet-header h5 {
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .color-preview {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .snippet-body {
+            padding: 25px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #2d3748;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .form-control, .form-select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid rgba(226, 232, 240, 0.8);
+            border-radius: 10px;
+            font-size: 0.9rem;
+            background: rgba(247, 250, 252, 0.8);
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-control:focus, .form-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: white;
+        }
+
+        .form-control::placeholder {
+            color: #a0aec0;
+            font-size: 0.85rem;
+        }
+
+        /* 색상 선택 드롭다운 */
+        .color-select-container {
+            position: relative;
+        }
+
+        .color-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23667eea' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+            padding-right: 40px;
+        }
+
+        /* 언어 선택 */
+        .language-select {
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23667eea' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+        }
+
+        /* 코드 텍스트에리어 */
+        .code-textarea {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            background: #1a202c;
+            color: #e2e8f0;
+            border: 2px solid #2d3748;
+            resize: vertical;
+            min-height: 200px;
+        }
+
+        .code-textarea:focus {
+            border-color: #667eea;
+            background: #1a202c;
+            color: #e2e8f0;
+        }
+
+        .code-textarea::placeholder {
+            color: #718096;
+        }
+
+        /* 가시성 토글 스타일 */
+        .visibility-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .visibility-option {
+            flex: 1;
+            position: relative;
+        }
+
+        .visibility-input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .visibility-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 12px;
+            border: 2px solid rgba(226, 232, 240, 0.8);
+            border-radius: 8px;
+            background: rgba(247, 250, 252, 0.8);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.85rem;
+            font-weight: 500;
+            gap: 6px;
+        }
+
+        .visibility-input:checked + .visibility-label {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        /* 버튼 영역 */
+        .button-area {
+            padding: 20px 25px;
+            background: rgba(247, 250, 252, 0.5);
+            border-top: 1px solid rgba(226, 232, 240, 0.3);
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-cancel {
+            background: rgba(113, 128, 150, 0.1);
+            color: #4a5568;
+            border: 2px solid rgba(113, 128, 150, 0.2);
+        }
+
+        .btn-cancel:hover {
+            background: rgba(113, 128, 150, 0.2);
+            transform: translateY(-1px);
+            text-decoration: none;
+            color: #4a5568;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 애니메이션 */
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .snippet-card {
+            animation: slideInUp 0.6s ease-out;
+        }
+
+        .form-group {
+            animation: slideInUp 0.8s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .form-group:nth-child(1) { animation-delay: 0.1s; }
+        .form-group:nth-child(2) { animation-delay: 0.2s; }
+        .form-group:nth-child(3) { animation-delay: 0.3s; }
+        .form-group:nth-child(4) { animation-delay: 0.4s; }
+        .form-group:nth-child(5) { animation-delay: 0.5s; }
+        .form-group:nth-child(6) { animation-delay: 0.6s; }
+
+        /* 스크롤바 커스텀 */
+        .snippet-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .snippet-body::-webkit-scrollbar-track {
+            background: rgba(247, 250, 252, 0.5);
+            border-radius: 3px;
+        }
+
+        .snippet-body::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.3);
+            border-radius: 3px;
+        }
+
+        .snippet-body::-webkit-scrollbar-thumb:hover {
+            background: rgba(102, 126, 234, 0.5);
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 15px;
+            }
+
+            .snippet-card {
+                max-width: 95%;
+            }
+
+            .snippet-header,
+            .snippet-body,
+            .button-area {
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+
+            .button-area {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .snippet-header h5 {
+                font-size: 1.1rem;
+            }
+
+            .form-control,
+            .form-select {
+                font-size: 0.85rem;
+                padding: 8px 12px;
+            }
+
+            .code-textarea {
+                min-height: 150px;
+            }
+        }
+    </style>
 </head>
+
 <body>
-  <div class="snippet-card bg-white">
-    <div class="snippet-header">
-      <h5 class="m-0">Code 스니펫 추가</h5>
-    </div>
+    <!-- 헤더 포함 -->
+    <div th:replace="fragments/header :: header"></div>
+    <!-- 사이드바 포함 -->
+    <div th:replace="fragments/sidebar :: sidebar('bookmarks')"></div>
 
-    <form th:action="@{/snippets/new}" th:object="${snippet}" method="post" enctype="multipart/form-data">
-      <input type="hidden" name="type" value="CODE"/>
-      
-      <div class="snippet-body">
-        <!-- 색상 선택 드롭다운 -->
-        <div class="mb-3">
-          <label for="colorId" class="form-label">색상 선택</label>
-          <div class="color-select-container">
-            <select id="colorId" class="form-select color-select" th:field="*{colorId}" required>
-              <option value="" disabled selected>-- 색상을 선택하세요 --</option>
-			  <option th:each="color : ${colors}"
-			          th:value="${color.colorId}"
-			          th:text="${color.name}"
-			          th:attr="data-hex-code=${color.hexCode}"
-			          th:style="'background-color:' + ${color.hexCode} + '; color: white;'">
-			  </option>
-            </select>
-          </div>
+    <main class="main-content">
+        <div class="snippet-card">
+            <div class="snippet-header" id="header">
+                <h5>
+                    <i class="fas fa-code"></i>
+                    Code 스니펫 추가
+                </h5>
+                <div class="color-preview" id="colorPreview"></div>
+            </div>
+
+            <form th:action="@{/snippets/new}" th:object="${snippet}" method="post" enctype="multipart/form-data" id="codeForm">
+                <input type="hidden" name="type" value="CODE" />
+
+                <div class="snippet-body">
+                    <!-- 색상 선택 -->
+                    <div class="form-group">
+                        <label for="colorId" class="form-label">
+                            <i class="fas fa-palette"></i> 색상 선택
+                        </label>
+                        <div class="color-select-container">
+                            <select id="colorId" class="form-select color-select" th:field="*{colorId}" required>
+                                <option value="" disabled selected>색상을 선택하세요</option>
+                                <option th:each="color : ${colors}" 
+                                        th:value="${color.colorId}" 
+                                        th:text="${color.name}"
+                                        th:attr="data-hex-code=${color.hexCode}"
+                                        th:style="'background-color:' + ${color.hexCode} + '; color: white;'">
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 언어 선택 -->
+                    <div class="form-group">
+                        <label for="language" class="form-label">
+                            <i class="fas fa-code"></i> 프로그래밍 언어
+                        </label>
+                        <select id="language" class="form-select language-select" th:field="*{language}" required>
+                            <option value="" disabled selected>언어를 선택하세요</option>
+                            <option value="java">Java</option>
+                            <option value="python">Python</option>
+                            <option value="javascript">JavaScript</option>
+                            <option value="typescript">TypeScript</option>
+                            <option value="html">HTML</option>
+                            <option value="css">CSS</option>
+                            <option value="c">C</option>
+                            <option value="cpp">C++</option>
+                            <option value="sql">SQL</option>
+                            <option value="php">PHP</option>
+                            <option value="ruby">Ruby</option>
+                            <option value="go">Go</option>
+                            <option value="kotlin">Kotlin</option>
+                            <option value="swift">Swift</option>
+                        </select>
+                    </div>
+
+                    <!-- 코드 내용 -->
+                    <div class="form-group">
+                        <label for="content" class="form-label">
+                            <i class="fas fa-file-code"></i> 코드 내용
+                        </label>
+                        <textarea id="content" 
+                                  class="form-control code-textarea" 
+                                  rows="8" 
+                                  th:field="*{content}"
+                                  placeholder="여기에 코드를 입력하세요..." 
+                                  required></textarea>
+                    </div>
+
+                    <!-- 메모 -->
+                    <div class="form-group">
+                        <label for="memo" class="form-label">
+                            <i class="fas fa-sticky-note"></i> 메모 (선택사항)
+                        </label>
+                        <textarea id="memo" 
+                                  class="form-control" 
+                                  rows="2" 
+                                  th:field="*{memo}"
+                                  placeholder="스니펫에 대한 간단한 설명을 입력하세요"></textarea>
+                    </div>
+
+                    <!-- 출처 URL -->
+                    <div class="form-group">
+                        <label for="sourceUrl" class="form-label">
+                            <i class="fas fa-link"></i> 출처 URL (선택사항)
+                        </label>
+                        <input id="sourceUrl" 
+                               type="url" 
+                               class="form-control" 
+                               th:field="*{sourceUrl}"
+                               placeholder="https://example.com" />
+                    </div>
+
+                    <!-- 가시성 설정 -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-eye"></i> 공개 설정
+                        </label>
+                        <div class="visibility-group">
+                            <div class="visibility-option">
+                                <input type="radio" 
+                                       id="visible" 
+                                       name="visibility" 
+                                       value="1" 
+                                       class="visibility-input" 
+                                       th:field="*{visibility}" 
+                                       checked>
+                                <label for="visible" class="visibility-label">
+                                    <i class="fas fa-eye"></i>
+                                    공개
+                                </label>
+                            </div>
+                            <div class="visibility-option">
+                                <input type="radio" 
+                                       id="hidden" 
+                                       name="visibility" 
+                                       value="0" 
+                                       class="visibility-input" 
+                                       th:field="*{visibility}">
+                                <label for="hidden" class="visibility-label">
+                                    <i class="fas fa-eye-slash"></i>
+                                    비공개
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-area">
+                    <a href="/snippets" class="btn btn-cancel">
+                        <i class="fas fa-times"></i>
+                        취소
+                    </a>
+                    <button type="submit" class="btn btn-submit" id="submitBtn">
+                        <i class="fas fa-plus"></i>
+                        스니펫 추가
+                    </button>
+                </div>
+            </form>
         </div>
+    </main>
 
-        <div class="mb-3">
-          <label for="sourceUrl" class="form-label">Source URL</label>
-          <input id="sourceUrl" type="text" class="form-control" th:field="*{sourceUrl}" placeholder="출처 URL 입력"/>
-        </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const header = document.getElementById('header');
+            const colorSelect = document.getElementById('colorId');
+            const colorPreview = document.getElementById('colorPreview');
+            const form = document.getElementById('codeForm');
+            const submitBtn = document.getElementById('submitBtn');
 
-        <div class="mb-3">
-          <label for="memo" class="form-label">메모</label>
-          <textarea id="memo" class="form-control" rows="3" th:field="*{memo}" placeholder="간단 메모"></textarea>
-        </div>
+            // 색상 선택시 헤더 배경과 미리보기 변경
+            colorSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
 
-        <div class="mb-3">
-          <label for="visibility" class="form-label">가시성</label>
-          <select id="visibility" class="form-select" th:field="*{visibility}">
-            <option value="1">Visible</option>
-            <option value="0">Hidden</option>
-          </select>
-        </div>
+                if (selectedOption.value) {
+                    const hexCode = selectedOption.getAttribute('data-hex-code');
+                    
+                    // 헤더 배경색 변경 (그라데이션에서 단색으로)
+                    header.style.background = `linear-gradient(135deg, ${hexCode}, ${adjustBrightness(hexCode, -20)})`;
+                    
+                    // 미리보기 색상 변경
+                    colorPreview.style.backgroundColor = hexCode;
+                } else {
+                    // 선택 해제시 기본색으로 복원
+                    header.style.background = 'linear-gradient(135deg, #667eea, #764ba2)';
+                    colorPreview.style.backgroundColor = 'transparent';
+                }
+            });
 
-        <div class="mb-3">
-          <label for="language" class="form-label">언어</label>
-          <select id="language" class="form-select" th:field="*{language}">
-            <option value="" disabled selected>-- 언어를 선택하세요 --</option>
-            <option value="JAVA">JAVA</option>
-            <option value="PYTHON">PYTHON</option>
-            <option value="C">C</option>
-            <option value="JAVASCRIPT">JavaScript</option>
-            <option value="HTML">HTML</option>
-            <option value="CSS">CSS</option>
-            <option value="SQL">SQL</option>
-            <option value="PHP">PHP</option>
-            <option value="RUBY">Ruby</option>
-            <option value="GO">Go</option>
-            <option value="KOTLIN">Kotlin</option>
-            <option value="SWIFT">Swift</option>
-          </select>
-        </div>
+            // 색상 밝기 조절 함수
+            function adjustBrightness(hex, percent) {
+                const num = parseInt(hex.replace("#", ""), 16);
+                const amt = Math.round(2.55 * percent);
+                const R = (num >> 16) + amt;
+                const G = (num >> 8 & 0x00FF) + amt;
+                const B = (num & 0x0000FF) + amt;
+                return "#" + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+                    (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+                    (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
+            }
 
-        <div class="mb-3">
-          <label for="content" class="form-label">코드 내용</label>
-          <textarea id="content" class="form-control" rows="10" th:field="*{content}" 
-                    placeholder="코드를 입력하세요" required 
-                    style="font-family: 'Courier New', 'Monaco', 'Menlo', monospace;"></textarea>
-        </div>
-      </div>
+            // 폼 제출시 유효성 검사
+            form.addEventListener('submit', function(e) {
+                const colorId = document.getElementById('colorId').value;
+                const language = document.getElementById('language').value;
+                const content = document.getElementById('content').value.trim();
 
-      <div class="d-flex justify-content-end gap-2 p-3 border-top">
-        <a href="/snippets" class="btn btn-outline-secondary">취소</a>
-        <button type="submit" class="btn btn-primary">추가</button>
-      </div>
-    </form>
-  </div>
+                if (!colorId) {
+                    e.preventDefault();
+                    alert('색상을 선택해주세요.');
+                    colorSelect.focus();
+                    return false;
+                }
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    const header = document.querySelector('.snippet-header');
-    const colorSelect = document.getElementById('colorId');
-    const colorPreview = document.getElementById('colorPreview');
+                if (!language) {
+                    e.preventDefault();
+                    alert('프로그래밍 언어를 선택해주세요.');
+                    document.getElementById('language').focus();
+                    return false;
+                }
 
-    // 색상 선택시 헤더 배경과 미리보기 변경
-    colorSelect.addEventListener('change', function() {
-      const selectedOption = this.options[this.selectedIndex];
-      
-      if (selectedOption.value) {
-        const hexCode = selectedOption.getAttribute('data-hex-code');
-        
-        // 헤더 배경색 변경
-        header.style.backgroundColor = hexCode;
-        
-        // 미리보기 색상 변경
-        colorPreview.style.backgroundColor = hexCode;
-      } else {
-        // 선택 해제시 기본색으로 복원
-        header.style.backgroundColor = '#ffffff';
-        colorPreview.style.backgroundColor = '#ffffff';
-      }
-    });
+                if (!content) {
+                    e.preventDefault();
+                    alert('코드 내용을 입력해주세요.');
+                    document.getElementById('content').focus();
+                    return false;
+                }
 
-    // 폼 제출시 색상 선택 확인
-    document.querySelector('form').addEventListener('submit', function(e) {
-      if (!colorSelect.value) {
-        e.preventDefault();
-        alert('색상을 선택해주세요.');
-        colorSelect.focus();
-        return false;
-      }
-    });
+                // 제출 버튼 비활성화 (중복 제출 방지)
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 추가 중...';
+            });
 
-    // 언어 선택시 코드 입력창에 포커스
-    document.getElementById('language').addEventListener('change', function() {
-      if (this.value) {
-        document.getElementById('content').focus();
-      }
-    });
-  </script>
+            // 언어 선택시 코드 입력창에 포커스
+            document.getElementById('language').addEventListener('change', function() {
+                if (this.value) {
+                    document.getElementById('content').focus();
+                }
+            });
+
+            // 실시간 유효성 검사 피드백
+            const requiredFields = ['colorId', 'language', 'content'];
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                field.addEventListener('input', updateSubmitButton);
+                field.addEventListener('change', updateSubmitButton);
+            });
+
+            function updateSubmitButton() {
+                const allValid = requiredFields.every(fieldId => {
+                    const field = document.getElementById(fieldId);
+                    return field.value.trim() !== '';
+                });
+
+                if (allValid) {
+                    submitBtn.style.opacity = '1';
+                    submitBtn.style.pointerEvents = 'auto';
+                } else {
+                    submitBtn.style.opacity = '0.6';
+                }
+            }
+
+            // 초기 상태 설정
+            updateSubmitButton();
+        });
+    </script>
 </body>
+
 </html>

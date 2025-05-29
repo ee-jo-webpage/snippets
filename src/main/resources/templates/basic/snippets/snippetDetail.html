@@ -1,268 +1,677 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
-    <title>Snippet 상세 정보</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link th:href="@{/my-snippet-page/css/my-snippet-page.css}" rel="stylesheet">
+    <title th:text="'스니펫 #' + ${snippet.snippetId}">Snippet 상세 정보</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
     <style>
-        /* 모달 스타일 */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
+        /* 메인 컨테이너 */
+        .main-content {
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
         }
-        
-        .modal-content {
-            background-color: #fefefe;
-            margin: 1% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 800px;
-            border-radius: 8px;
-            max-height: 90vh;
-            overflow-y: auto;
+
+        .detail-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
         }
-        
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
+
+        /* 헤더 영역 */
+        .snippet-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        
-        .close:hover,
-        .close:focus {
-            color: black;
-            text-decoration: none;
-        }
-        
-        /* 기본 스타일 */
-        table {
-            width: 100%;
-            border-collapse: collapse;
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
             margin-bottom: 20px;
         }
-        
-        th, td {
-            padding: 10px;
-            text-align: left;
-            border: 1px solid #ddd;
+
+        .snippet-id-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
-        
-        th {
-            background-color: #f2f2f2;
-            width: 150px;
+
+        .snippet-title {
+            font-size: 2.2rem;
+            color: #2d3748;
+            margin: 0 0 15px 0;
+            font-weight: 700;
+            line-height: 1.2;
         }
-        
-        input, textarea, select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+
+        .snippet-meta {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
         }
-        
-        button {
-            padding: 10px 20px;
-            margin: 5px;
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(247, 250, 252, 0.8);
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #4a5568;
+            border: 1px solid rgba(226, 232, 240, 0.5);
+        }
+
+        .type-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .type-code {
+            background: linear-gradient(135deg, #667eea, #5a67d8);
+            color: white;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .type-text {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            box-shadow: 0 2px 8px rgba(72, 187, 120, 0.3);
+        }
+
+        .type-img {
+            background: linear-gradient(135deg, #ed8936, #dd6b20);
+            color: white;
+            box-shadow: 0 2px 8px rgba(237, 137, 54, 0.3);
+        }
+
+        /* 메인 콘텐츠 영역 */
+        .snippet-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(226, 232, 240, 0.3);
+        }
+
+        .content-title {
+            font-size: 1.4rem;
+            color: #2d3748;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .copy-btn {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 25px;
             cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-        
-        button[type="submit"] {
-            background-color: #007bff;
-            color: white;
+
+        .copy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(72, 187, 120, 0.4);
         }
-        
-        button[type="button"] {
-            background-color: #6c757d;
-            color: white;
+
+        /* 코드 스타일 */
+        .code-container {
+            position: relative;
+            background: #1a202c;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border: 1px solid #2d3748;
         }
-        
-        .delete-btn {
-            background-color: #dc3545;
-            color: white;
+
+        .code-header {
+            background: #2d3748;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #4a5568;
         }
-        
-        pre {
-            background-color: #f8f9fa;
-            padding: 10px;
-            border-radius: 4px;
+
+        .language-badge {
+            background: rgba(102, 126, 234, 0.3);
+            color: #e2e8f0;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .code-content {
+            max-height: 600px;
+            overflow: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            background: #1a202c;
+        }
+
+        .code-content pre {
+            margin: 0;
+            padding: 25px;
+            background: transparent;
+            color: #e2e8f0;
+            font-size: 0.95rem;
+            line-height: 1.6;
             white-space: pre-wrap;
+            word-wrap: break-word;
         }
-        
-        img {
-            max-width: 300px;
+
+        .code-content code {
+            background: transparent;
+            color: inherit;
+            font-family: inherit;
+            font-size: inherit;
+        }
+
+        /* 텍스트 스타일 */
+        .text-content {
+            background: rgba(247, 250, 252, 0.8);
+            border: 2px solid rgba(72, 187, 120, 0.2);
+            border-radius: 15px;
+            padding: 30px;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #2d3748;
+            min-height: 200px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .text-content span {
+            display: block;
+            width: 100%;
+        }
+
+        /* 이미지 스타일 */
+        .image-container {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .snippet-image {
+            max-width: 100%;
+            max-height: 600px;
+            width: auto;
             height: auto;
+            border-radius: 15px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .snippet-image:hover {
+            transform: scale(1.02);
+        }
+
+        .image-alt-text {
+            margin-top: 20px;
+            padding: 15px 25px;
+            background: rgba(237, 137, 54, 0.1);
+            border-radius: 15px;
+            color: #744210;
+            font-style: italic;
+            font-size: 1rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* 추가 정보 섹션 */
+        .snippet-info {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .info-item {
+            padding: 20px;
+            background: rgba(247, 250, 252, 0.5);
+            border-radius: 15px;
+            border: 1px solid rgba(226, 232, 240, 0.3);
+        }
+
+        .info-label {
+            font-size: 0.85rem;
+            color: #718096;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .info-value {
+            font-size: 1rem;
+            color: #2d3748;
+            font-weight: 500;
+            word-break: break-all;
+        }
+
+        /* 액션 버튼들 */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 40px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #718096, #4a5568);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f56565, #e53e3e);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            text-decoration: none;
+            color: white;
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* 뒤로가기 링크 */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: white;
+            text-decoration: none;
+            transform: translateX(-5px);
+        }
+
+        /* 토스트 메시지 */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 10000;
+            font-size: 14px;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .detail-container {
+                padding: 20px 15px;
+            }
+
+            .snippet-header,
+            .snippet-content,
+            .snippet-info {
+                padding: 20px;
+            }
+
+            .snippet-title {
+                font-size: 1.8rem;
+            }
+
+            .header-top {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+
+            .snippet-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
         }
     </style>
 </head>
+
 <body>
-    <h1>Snippet 상세 정보</h1>
+    <div th:replace="fragments/sidebar :: sidebar('bookmarks')"></div>
+    <div th:replace="fragments/header :: header"></div>
 
-    <table border="1">
-        <!-- 기본 스니펫 정보 -->
-        <tr><th>Snippet ID</th><td th:text="${snippet.snippetId}"></td></tr>
-        <tr><th>User ID</th><td th:text="${snippet.userId}"></td></tr>
-        <tr><th>Color ID</th><td th:text="${snippet.colorId}"></td></tr>
-        <tr><th>Source URL</th><td th:text="${snippet.sourceUrl}"></td></tr>
-        <tr><th>Type</th><td th:text="${snippet.type.name()}"></td></tr>
-        <tr><th>Memo</th><td th:text="${snippet.memo}"></td></tr>
-        <tr><th>Created At</th><td th:text="${snippet.createdAt}"></td></tr>
-        <tr><th>Updated At</th><td th:text="${snippet.updatedAt}"></td></tr>
-        <tr><th>Like Count</th><td th:text="${snippet.likeCount}"></td></tr>
-        <tr><th>Visibility</th><td th:text="${snippet.visibility}"></td></tr>
+    <main class="main-content">
+        <div class="detail-container">
+            <!-- 뒤로가기 링크 -->
+            <a href="/snippets" class="back-link">
+                <i class="fas fa-arrow-left"></i>
+                스니펫 목록으로 돌아가기
+            </a>
 
-        <tr th:if="${snippet.type.name() == 'CODE'}">
-            <th>Language</th><td th:text="${snippet.language}"></td>
-        </tr>
-        <tr th:if="${snippet.type.name() == 'CODE'}">
-            <th>Code Content</th>
-            <td><pre><code th:text="${snippet.content}"></code></pre></td>
-        </tr>
+            <!-- 헤더 영역 -->
+            <div class="snippet-header">
+                <div class="header-top">
+                    <div>
+                        <h1 class="snippet-title" th:text="${snippet.memo != null and !snippet.memo.isEmpty() ? snippet.memo : '제목 없는 스니펫'}">스니펫 제목</h1>
+                        <div class="snippet-meta">
+                            <span class="type-badge" 
+                                  th:classappend="${snippet.type.name().toLowerCase()} == 'code' ? 'type-code' : (${snippet.type.name().toLowerCase()} == 'text' ? 'type-text' : 'type-img')"
+                                  th:text="${snippet.type.name().toUpperCase()}">TYPE</span>
+                            <span class="meta-item">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span th:text="${#dates.format(snippet.createdAt, 'yyyy년 MM월 dd일')}">생성일</span>
+                            </span>
+                            <span class="meta-item" th:if="${snippet.updatedAt != null}">
+                                <i class="fas fa-edit"></i>
+                                <span th:text="${#dates.format(snippet.updatedAt, 'yyyy년 MM월 dd일')}">수정일</span>
+                            </span>
+                            <span class="meta-item" th:if="${snippet.language != null and !snippet.language.isEmpty()}">
+                                <i class="fas fa-code"></i>
+                                <span th:text="${snippet.language}">언어</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="snippet-id-badge" th:text="'#' + ${snippet.snippetId}">#123</div>
+                </div>
+            </div>
 
-        <tr th:if="${snippet.type.name() == 'TEXT'}">
-            <th>Text Content</th>
-            <td th:text="${snippet.content}"></td>
-        </tr>
+            <!-- 메인 콘텐츠 영역 -->
+            <div class="snippet-content">
+                <!-- CODE 타입 -->
+                <div th:if="${snippet.type.name().toLowerCase() == 'code'}">
+                    <div class="content-header">
+                        <h2 class="content-title">
+                            <i class="fas fa-code"></i>
+                            코드 내용
+                        </h2>
+                        <button class="copy-btn" onclick="copyCode()">
+                            <i class="fas fa-copy"></i>
+                            복사
+                        </button>
+                    </div>
+                    <div class="code-container">
+                        <div class="code-header">
+                            <span class="language-badge" th:text="${snippet.language != null ? snippet.language : 'Code'}">Language</span>
+                        </div>
+                        <div class="code-content">
+                            <pre><code th:text="${snippet.content != null ? snippet.content : '내용이 없습니다.'}" id="codeContent" th:class="'language-' + ${snippet.language != null ? snippet.language.toLowerCase() : 'javascript'}">코드 내용</code></pre>
+                        </div>
+                    </div>
+                </div>
 
-        <!-- 이미지 표시 (이미지 타입일 때) -->
-        <tr th:if="${snippet.type.name() == 'IMG'}">
-            <th>Image</th>
-            <td>
-                <!-- 절대 URL로 S3 이미지를 직접 바인딩 -->
-                <img th:if="${snippet.imageUrl != null}" th:src="${snippet.imageUrl}" alt="Snippet Image"/>
-                <!-- Alt 텍스트 표시 -->
-                <p th:if="${snippet.altText != null}" th:text="${snippet.altText}"></p>
-            </td>
-        </tr>
-    </table>
+                <!-- TEXT 타입 -->
+                <div th:if="${snippet.type.name().toLowerCase() == 'text'}">
+                    <div class="content-header">
+                        <h2 class="content-title">
+                            <i class="fas fa-file-text"></i>
+                            텍스트 내용
+                        </h2>
+                        <button class="copy-btn" onclick="copyText()">
+                            <i class="fas fa-copy"></i>
+                            복사
+                        </button>
+                    </div>
+                    <div class="text-content" id="textContent">
+                        <span th:text="${snippet.content != null ? snippet.content : '내용이 없습니다.'}">텍스트 내용</span>
+                    </div>
+                </div>
 
-    <!-- 수정 버튼 -->
-    <button type="button" id="openEditModalBtn" 
-            th:data-snippet-id="${snippet.snippetId}" 
-            th:data-snippet-type="${snippet.type.name()}">수정</button>
+                <!-- IMG 타입 -->
+                <div th:if="${snippet.type.name().toLowerCase() == 'img'}">
+                    <div class="content-header">
+                        <h2 class="content-title">
+                            <i class="fas fa-image"></i>
+                            이미지
+                        </h2>
+                        <button class="copy-btn" onclick="copyImageUrl()" th:if="${snippet.imageUrl != null}">
+                            <i class="fas fa-link"></i>
+                            URL 복사
+                        </button>
+                    </div>
+                    <div class="image-container">
+                        <img th:if="${snippet.imageUrl != null and !snippet.imageUrl.isEmpty()}" 
+                             th:src="${snippet.imageUrl}" 
+                             th:alt="${snippet.altText != null ? snippet.altText : '스니펫 이미지'}"
+                             class="snippet-image"
+                             id="snippetImage" />
+                        <div th:if="${snippet.imageUrl == null or snippet.imageUrl.isEmpty()}" 
+                             style="padding: 60px; text-align: center; color: #718096; font-size: 1.2rem;">
+                            <i class="fas fa-image" style="font-size: 3rem; margin-bottom: 20px; opacity: 0.3;"></i>
+                            <p>이미지가 없습니다.</p>
+                        </div>
+                        <div th:if="${snippet.altText != null and !snippet.altText.isEmpty()}" 
+                             class="image-alt-text" 
+                             th:text="${snippet.altText}">이미지 설명</div>
+                    </div>
+                </div>
 
-    <!-- 삭제 버튼 -->
-    <form th:action="@{/snippets/delete/{snippetId}(snippetId=${snippet.snippetId})}" method="post" 
-          onsubmit="return confirm('정말 삭제하시겠습니까?');" style="display: inline;">
-        <button type="submit" class="delete-btn">삭제</button>
-    </form>
+                <!-- 모든 타입에 대한 fallback -->
+                <div th:if="${snippet.type == null}">
+                    <div class="content-header">
+                        <h2 class="content-title">
+                            <i class="fas fa-question-circle"></i>
+                            내용
+                        </h2>
+                    </div>
+                    <div style="padding: 40px; text-align: center; color: #718096;">
+                        <p>스니펫 타입을 확인할 수 없습니다.</p>
+                        <p>타입: <span th:text="${snippet.type}">Unknown</span></p>
+                    </div>
+                </div>
+            </div>
 
-    <a href="/snippets">← 목록으로 돌아가기</a>
+            <!-- 추가 정보 -->
+            <div class="snippet-info" th:if="${snippet.sourceUrl != null or snippet.visibility != null}">
+                <div class="info-grid">
+                    <div class="info-item" th:if="${snippet.sourceUrl != null and !snippet.sourceUrl.isEmpty()}">
+                        <div class="info-label">출처 URL</div>
+                        <div class="info-value">
+                            <a th:href="${snippet.sourceUrl}" 
+                               th:text="${snippet.sourceUrl}" 
+                               target="_blank" 
+                               style="color: #667eea; text-decoration: none;">URL</a>
+                        </div>
+                    </div>
+                    <div class="info-item" th:if="${snippet.visibility != null}">
+                        <div class="info-label">공개 설정</div>
+                        <div class="info-value" th:text="${snippet.visibility == 1 ? '공개' : '비공개'}">공개 설정</div>
+                    </div>
+                </div>
+            </div>
 
-    <!-- 편집 모달 -->
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <div id="editModalContent">
-                <!-- 동적으로 편집 폼이 로드됩니다 -->
+            <!-- 액션 버튼들 -->
+            <div class="action-buttons">
+                <form th:action="@{/snippets/edit-form/{type}/{snippetId}(type=${snippet.type}, snippetId=${snippet.snippetId})}" method="get" style="display: inline;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-edit"></i>
+                        수정하기
+                    </button>
+                </form>
+
+                <form th:action="@{/snippets/delete/{snippetId}(snippetId=${snippet.snippetId})}" 
+                      method="post"
+                      onsubmit="return confirm('정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.');" 
+                      style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i>
+                        삭제하기
+                    </button>
+                </form>
             </div>
         </div>
-    </div>
+    </main>
 
     <script>
-        // 모달 관련 변수
-        const modal = document.getElementById('editModal');
-        const openEditBtn = document.getElementById('openEditModalBtn');
-        const closeBtn = document.querySelector('.close');
-        const modalContent = document.getElementById('editModalContent');
-
-        // 편집 모달 열기
-        openEditBtn.addEventListener('click', function() {
-            const snippetId = this.getAttribute('data-snippet-id');
-            const snippetType = this.getAttribute('data-snippet-type');
-            
-            // 타입에 따라 적절한 편집 폼 로드
-            let editUrl = '';
-            switch(snippetType) {
-                case 'CODE':
-                    editUrl = `/snippets/edit-form/code/${snippetId}`;
-                    break;
-                case 'IMG':
-                    editUrl = `/snippets/edit-form/img/${snippetId}`;
-                    break;
-                case 'TEXT':
-                    editUrl = `/snippets/edit-form/text/${snippetId}`;
-                    break;
-                default:
-                    alert('지원하지 않는 타입입니다.');
-                    return;
-            }
-            
-            // AJAX로 편집 폼 로드
-            fetch(editUrl)
-                .then(response => response.text())
-                .then(html => {
-                    modalContent.innerHTML = html;
-                    modal.style.display = 'block';
-                    
-                    // 폼 제출 이벤트를 AJAX로 처리
-                    setupFormSubmission();
-                })
-                .catch(error => {
-                    console.error('Error loading edit form:', error);
-                    alert('편집 폼을 로드하는 중 오류가 발생했습니다.');
-                });
-        });
-
-        // 모달 닫기
-        closeBtn.addEventListener('click', function() {
-            modal.style.display = 'none';
-        });
-
-        // 모달 외부 클릭시 닫기
-        window.addEventListener('click', function(event) {
-            if (event.target === modal) {
-                modal.style.display = 'none';
-            }
-        });
-
-        // 폼 제출을 AJAX로 처리
-        function setupFormSubmission() {
-            const form = modalContent.querySelector('form');
-            if (form) {
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    const formData = new FormData(form);
-                    
-                    fetch(form.action, {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => {
-                        if (response.ok) {
-                            alert('수정이 완료되었습니다.');
-                            modal.style.display = 'none';
-                            // 페이지 새로고침으로 변경사항 반영
-                            location.reload();
-                        } else {
-                            alert('수정 중 오류가 발생했습니다.');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error submitting form:', error);
-                        alert('수정 중 오류가 발생했습니다.');
-                    });
-                });
-                
-                // 취소 버튼 추가
-                const cancelBtn = document.createElement('button');
-                cancelBtn.type = 'button';
-                cancelBtn.textContent = '취소';
-                cancelBtn.onclick = function() {
-                    modal.style.display = 'none';
-                };
-                form.appendChild(cancelBtn);
+        // 복사 기능들
+        async function copyCode() {
+            const codeElement = document.getElementById('codeContent');
+            if (codeElement) {
+                const codeContent = codeElement.textContent || codeElement.innerText;
+                await copyToClipboard(codeContent, '코드가 클립보드에 복사되었습니다!');
+            } else {
+                showToast('복사할 코드가 없습니다.');
             }
         }
+
+        async function copyText() {
+            const textElement = document.getElementById('textContent');
+            if (textElement) {
+                const textContent = textElement.textContent || textElement.innerText;
+                await copyToClipboard(textContent, '텍스트가 클립보드에 복사되었습니다!');
+            } else {
+                showToast('복사할 텍스트가 없습니다.');
+            }
+        }
+
+        async function copyImageUrl() {
+            const imageElement = document.getElementById('snippetImage');
+            if (imageElement && imageElement.src) {
+                await copyToClipboard(imageElement.src, '이미지 URL이 클립보드에 복사되었습니다!');
+            } else {
+                showToast('복사할 이미지 URL이 없습니다.');
+            }
+        }
+
+        // 클립보드 복사 함수
+        async function copyToClipboard(text, message) {
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast(message);
+            } catch (err) {
+                console.error('복사 실패:', err);
+                showToast('복사에 실패했습니다.');
+            }
+        }
+
+        // 토스트 메시지 표시
+        function showToast(message) {
+            // 기존 토스트 제거
+            const existingToast = document.querySelector('.toast');
+            if (existingToast) {
+                existingToast.remove();
+            }
+
+            // 새 토스트 생성
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            // 애니메이션으로 표시
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 100);
+
+            // 3초 후 제거
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // 페이지 로드 시 코드 하이라이팅 적용
+        document.addEventListener('DOMContentLoaded', function() {
+            // Prism.js 자동 하이라이팅
+            if (typeof Prism !== 'undefined') {
+                Prism.highlightAll();
+            }
+        });
     </script>
 </body>
+
 </html>

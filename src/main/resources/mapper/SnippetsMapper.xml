@@ -40,8 +40,39 @@
 	</select>
   
   <!--유저 아이디로 조회-->
+  <!--유저 아이디로 조회 - 타입별 내용 포함-->
   <select id="getUserSnippets" resultMap="SnippetsResultMap">
-  	SELECT * FROM snippets WHERE user_id = #{userId} ORDER BY snippet_id DESC
+    SELECT 
+      s.*,
+      c.name,
+      c.hex_code,
+      <!-- 타입별 content 조회-->
+      CASE 
+        WHEN s.type = 'text' THEN st.content
+        WHEN s.type = 'code' THEN sc.content
+        ELSE NULL
+      END AS content,
+      <!-- CODE 타입일 때만 language-->
+      CASE 
+        WHEN s.type = 'code' THEN sc.language
+        ELSE NULL
+      END AS language,
+      <!-- IMG 타입일 때만 image_url, alt_text-->
+      CASE 
+        WHEN s.type = 'img' THEN si.image_url
+        ELSE NULL
+      END AS image_url,
+      CASE 
+        WHEN s.type = 'img' THEN si.alt_text
+        ELSE NULL
+      END AS alt_text
+    FROM snippets s
+    LEFT JOIN snippet_colors c ON s.color_id = c.color_id
+    LEFT JOIN snippet_texts st ON s.snippet_id = st.snippet_id AND s.type = 'text'
+    LEFT JOIN snippet_codes sc ON s.snippet_id = sc.snippet_id AND s.type = 'code'
+    LEFT JOIN snippet_images si ON s.snippet_id = si.snippet_id AND s.type = 'img'
+    WHERE s.user_id = #{userId} 
+    ORDER BY s.snippet_id DESC
   </select>
 
   <!-- 상세 조회 -->

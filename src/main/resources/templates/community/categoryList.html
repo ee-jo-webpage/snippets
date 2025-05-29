@@ -20,15 +20,15 @@
 
     <style>
         :root {
-            --primary-color: #6357FF; /* GoSnippets 보라색 계열 */
-            --secondary-color: #8075FF; /* 조금 더 밝은 보라색 */
-            --accent-color: #9F97FF; /* 더 밝은 보라색 */
-            --background-gradient: linear-gradient(135deg, #F0F2FF 0%, #E6E9FF 100%); /* 부드러운 배경 그라데이션 */
-            --text-dark: #333344; /* 어두운 텍스트 색상 */
-            --text-muted: #666677; /* 중간 텍스트 색상 */
-            --border-color: #EAEAEA; /* 경계선 색상 */
-            --shadow-small: 0 2px 8px rgba(99, 87, 255, 0.08); /* 작은 그림자 */
-            --shadow-medium: 0 4px 12px rgba(99, 87, 255, 0.12); /* 중간 그림자 */
+            --primary-color: #6357FF;
+            --secondary-color: #8075FF;
+            --accent-color: #9F97FF;
+            --background-gradient: linear-gradient(135deg, #F0F2FF 0%, #E6E9FF 100%);
+            --text-dark: #333344;
+            --text-muted: #666677;
+            --border-color: #EAEAEA;
+            --shadow-small: 0 2px 8px rgba(99, 87, 255, 0.08);
+            --shadow-medium: 0 4px 12px rgba(99, 87, 255, 0.12);
         }
 
         * {
@@ -44,7 +44,7 @@
             min-height: 100vh;
         }
 
-        /* 헤더 스타일 - 흰색 네비바 */
+        /* 헤더 스타일 */
         .community-header {
             background-color: #ffffff;
             color: var(--text-dark);
@@ -108,6 +108,9 @@
             box-shadow: var(--shadow-small);
             overflow: hidden;
             flex-shrink: 0;
+            height: fit-content;
+            position: sticky;
+            top: 90px;
         }
 
         .sidebar-header {
@@ -122,7 +125,6 @@
             margin: 0;
         }
 
-        /* 카테고리 메뉴 */
         .category-menu {
             padding: 0.5rem 0;
             margin: 0;
@@ -142,6 +144,7 @@
             font-size: 0.95rem;
             transition: all 0.2s ease;
             border-radius: 8px;
+            cursor: pointer;
         }
 
         .category-link:hover {
@@ -372,31 +375,69 @@
             color: #ddd;
         }
 
-        /* 검색 모달 */
-        .search-modal .modal-dialog {
-            max-width: 600px;
+        /* 검색 필터 영역 */
+        .search-filters {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            background: #fafafa;
         }
 
         .search-form {
-            padding: 1rem;
+            display: flex;
+            gap: 1rem;
+            align-items: end;
         }
 
-        .search-form .form-control {
+        .search-form .form-group {
+            flex: 1;
+        }
+
+        .search-form .form-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+        }
+
+        .search-form .form-control,
+        .search-form .form-select {
             border-radius: 8px;
-            border: 1px solid #ddd;
-            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 0.75rem;
+            font-size: 0.9rem;
         }
 
-        .search-form .form-control:focus {
+        .search-form .form-control:focus,
+        .search-form .form-select:focus {
             border-color: var(--primary-color);
             box-shadow: 0 0 0 0.2rem rgba(99, 87, 255, 0.25);
         }
 
-        .search-form .btn-primary {
-            background: var(--primary-color);
-            border-color: var(--primary-color);
-            border-radius: 8px;
-            padding: 0.75rem 1.5rem;
+        /* 로딩 상태 */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            border-radius: 12px;
+        }
+
+        .loading-spinner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .loading-spinner i {
+            font-size: 2rem;
+            color: var(--primary-color);
         }
 
         /* 페이지네이션 */
@@ -498,48 +539,15 @@
             .content-actions {
                 flex-direction: column;
             }
-        }
 
-        /* 카테고리 헤더 */
-        .category-header {
-            background: var(--background-gradient);
-            color: var(--text-dark);
-            padding: 2rem 0;
-            margin-bottom: 2rem;
-            border-radius: 12px;
-        }
+            .search-form {
+                flex-direction: column;
+                gap: 1rem;
+            }
 
-        /* 테이블 스타일 */
-        .table {
-            margin-bottom: 0;
-        }
-
-        .table thead th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-            color: var(--text-dark);
-            border-bottom: 2px solid var(--border-color);
-        }
-
-        .table tbody tr:hover {
-            background-color: #f8f9fa;
-        }
-
-        .table a {
-            color: var(--text-dark);
-            text-decoration: none;
-        }
-
-        .table a:hover {
-            color: var(--primary-color);
-        }
-
-        .notice-row {
-            background-color: #f0f2ff !important;
-        }
-
-        .notice-row td:first-child {
-            border-left: 4px solid var(--primary-color);
+            .search-filters {
+                padding: 1rem;
+            }
         }
     </style>
 </head>
@@ -584,43 +592,38 @@
         <nav class="category-menu">
             <!-- 전체 게시글 -->
             <div class="category-item">
-                <a href="/community/posts/all" class="category-link" data-category="all"
-                   th:classappend="${currentCategoryId == 'all'} ? 'active' : ''">
+                <a class="category-link active" data-category="all" data-name="전체 게시글">
                     <i class="fas fa-home category-icon"></i>
                     전체 게시글
-                    <span class="category-count">123</span>
+                    <span class="category-count" id="count-all">0</span>
                 </a>
             </div>
 
-            <!-- 카테고리 목록 (서버에서 동적으로 생성) -->
-            <div class="category-item" th:each="category : ${categories}">
-                <a th:href="@{/community/category/{categoryId}(categoryId=${category.categoryId})}"
-                   class="category-link"
-                   th:data-category="${category.categoryId}"
-                   th:classappend="${currentCategoryId == category.categoryId} ? 'active' : ''">
-                    <i class="fas fa-folder category-icon"></i>
-                    <span th:text="${category.name}">카테고리명</span>
-                    <span class="category-count">42</span>
-                </a>
+            <!-- 카테고리 목록 (동적으로 로드) -->
+            <div id="categoryList">
+                <!-- JavaScript로 동적 생성 -->
             </div>
         </nav>
     </div>
 
     <!-- 메인 콘텐츠 -->
-    <div class="main-content">
+    <div class="main-content" style="position: relative;">
+        <!-- 로딩 오버레이 -->
+        <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>불러오는 중...</span>
+            </div>
+        </div>
+
         <!-- 콘텐츠 헤더 -->
         <div class="content-header">
-            <h2 class="content-title" th:text="${currentCategoryName ?: '자유게시판'}">자유게시판</h2>
-            <p class="content-subtitle" id="categoryDescription">
-                <span th:if="${currentCategoryId == 'all'}">모든 게시판의 글을 한 번에 볼 수 있습니다.</span>
-                <span th:if="${currentCategoryId == 1}">자유롭게 이야기를 나누는 공간입니다.</span>
-                <span th:if="${currentCategoryId == 2}">궁금한 것들을 질문하고 답변받는 공간입니다.</span>
-                <span th:if="${currentCategoryId == 3}">유용한 팁과 노하우를 공유하는 공간입니다.</span>
-                <span th:if="${currentCategoryId == 4}">중요한 공지사항을 확인할 수 있습니다.</span>
-                <span th:unless="${currentCategoryId == 'all' or currentCategoryId == 1 or currentCategoryId == 2 or currentCategoryId == 3 or currentCategoryId == 4}">게시글을 확인하세요.</span>
+            <h2 class="content-title" id="currentCategoryTitle">전체 게시글</h2>
+            <p class="content-subtitle" id="currentCategoryDescription">
+                모든 게시판의 글을 한 번에 볼 수 있습니다.
             </p>
             <div class="content-actions">
-                <button class="btn btn-primary-custom" th:onclick="|location.href='/community/post/new?categoryId=${currentCategoryId}'|">
+                <button class="btn btn-primary-custom" id="writePostBtn">
                     <i class="fas fa-edit me-1"></i>
                     글쓰기
                 </button>
@@ -631,78 +634,50 @@
             </div>
         </div>
 
+        <!-- 검색 필터 (검색 결과일 때만 표시) -->
+        <div class="search-filters" id="searchFilters" style="display: none;">
+            <form class="search-form" id="searchForm">
+                <div class="form-group">
+                    <label class="form-label">검색 유형</label>
+                    <select name="searchType" class="form-select">
+                        <option value="titleContent">제목+내용</option>
+                        <option value="title">제목만</option>
+                        <option value="content">내용만</option>
+                        <option value="writer">작성자</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 2;">
+                    <label class="form-label">검색어</label>
+                    <input type="text" name="keyword" class="form-control" placeholder="검색어를 입력하세요">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">카테고리</label>
+                    <select name="categoryId" class="form-select" id="searchCategorySelect">
+                        <option value="">전체 카테고리</option>
+                    </select>
+                </div>
+                <div>
+                    <button type="submit" class="btn btn-primary-custom">
+                        <i class="fas fa-search me-1"></i>
+                        검색
+                    </button>
+                </div>
+            </form>
+        </div>
+
         <!-- 게시글 목록 -->
         <div class="post-list" id="postList">
-            <!-- 게시글이 있는 경우 -->
-            <div th:if="${not #lists.isEmpty(posts)}">
-                <div class="post-item"
-                     th:each="post : ${posts}"
-                     th:classappend="${post.notice} ? 'notice' : ''"
-                     th:onclick="|location.href='/community/post/${post.postId}'|">
-                    <div class="post-number">
-                        <span th:if="${post.notice}" class="notice-badge">
-                            <i class="fas fa-bullhorn me-1"></i>공지
-                        </span>
-                        <span th:unless="${post.notice}" th:text="${post.postId}">1</span>
-                    </div>
-                    <div class="post-content">
-                        <div class="post-title">
-                            <span th:text="${post.title}">게시글 제목입니다</span>
-                            <span class="new-badge" th:if="${#temporals.createNow().minusDays(1).isBefore(post.createdAt)}">NEW</span>
-                        </div>
-                        <div class="post-meta">
-                            <span><i class="fas fa-user"></i><span th:text="${post.nickname}">작성자</span></span>
-                            <span><i class="fas fa-calendar"></i><span th:text="${#temporals.format(post.createdAt, 'MM-dd HH:mm')}">01-15 14:30</span></span>
-                            <span th:if="${post.categoryName}" class="badge bg-light text-dark" th:text="${post.categoryName}">카테고리</span>
-                        </div>
-                    </div>
-                    <div class="post-stats">
-                        <div class="post-stat">
-                            <i class="fas fa-eye"></i>
-                            <span th:text="${post.viewCount}">42</span>
-                        </div>
-                        <div class="post-stat" th:if="${post.commentCount != null and post.commentCount != '0'}">
-                            <span class="comment-count" th:text="${post.commentCount}">3</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 빈 상태 (게시글이 없을 때) -->
-            <div class="empty-state" th:if="${#lists.isEmpty(posts)}">
-                <i class="fas fa-inbox"></i>
-                <h4>게시글이 없습니다</h4>
-                <p>첫 번째 게시글을 작성해보세요!</p>
-                <button class="btn btn-primary-custom" th:onclick="|location.href='/community/post/new?categoryId=${currentCategoryId}'|">
-                    <i class="fas fa-edit me-1"></i>
-                    글쓰기
-                </button>
+            <div class="empty-state">
+                <i class="fas fa-spinner fa-spin"></i>
+                <h4>게시글을 불러오는 중...</h4>
             </div>
         </div>
 
         <!-- 페이지네이션 -->
-        <div class="pagination-container" th:if="${not #lists.isEmpty(posts)}">
+        <div class="pagination-container" id="paginationContainer" style="display: none;">
             <nav aria-label="Page navigation">
-                <ul class="pagination">
-                    <li class="page-item disabled">
-                        <a class="page-link" href="#" tabindex="-1">
-                            <i class="fas fa-chevron-left"></i>
-                        </a>
-                    </li>
-                    <li class="page-item active">
-                        <a class="page-link" href="#">1</a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="#">2</a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="#">3</a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="#">
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
-                    </li>
+                <ul class="pagination" id="pagination">
+                    <!-- 동적으로 생성 -->
                 </ul>
             </nav>
         </div>
@@ -721,7 +696,7 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form class="search-form" action="/community/search" method="get">
+                <form class="search-form" id="modalSearchForm">
                     <div class="mb-3">
                         <label class="form-label">검색 유형</label>
                         <select name="searchType" class="form-select">
@@ -737,15 +712,12 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">카테고리</label>
-                        <select name="categoryId" class="form-select">
+                        <select name="categoryId" class="form-select" id="modalSearchCategorySelect">
                             <option value="">전체 카테고리</option>
-                            <option th:each="category : ${categories}"
-                                    th:value="${category.categoryId}"
-                                    th:text="${category.name}"></option>
                         </select>
                     </div>
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary-custom">
                             <i class="fas fa-search me-1"></i>
                             검색
                         </button>
@@ -812,17 +784,72 @@
     </div>
 </div>
 
-<script th:inline="javascript">
-    /*<![CDATA[*/
-    const currentCategoryId = /*[[${currentCategoryId}]]*/ 1;
-    const currentCategoryName = /*[[${currentCategoryName}]]*/ '자유게시판';
-    /*]]>*/
+<script>
+    // 전역 변수
+    let currentCategoryId = 'all';
+    let currentPage = 1;
+    let isSearchMode = false;
+    let searchParams = {};
+    let categories = [];
 
     $(document).ready(function() {
-        console.log('현재 카테고리 ID:', currentCategoryId);
-        console.log('현재 카테고리 이름:', currentCategoryName);
+        console.log('커뮤니티 페이지 초기화 시작');
 
-        // 알림 관련 이벤트
+        // 초기 데이터 로드
+        initializePage();
+
+        // 이벤트 바인딩
+        bindEvents();
+
+        // 알림 초기화
+        loadNotificationCount();
+    });
+
+    // 페이지 초기화
+    function initializePage() {
+        // URL에서 초기 카테고리 확인
+        const urlParams = new URLSearchParams(window.location.search);
+        const categoryParam = urlParams.get('categoryId');
+
+        console.log('URL에서 가져온 카테고리 파라미터:', categoryParam);
+
+        if (categoryParam && categoryParam !== 'null') {
+            currentCategoryId = parseInt(categoryParam); // 숫자로 변환
+        } else {
+            currentCategoryId = 'all'; // 기본값
+        }
+
+        console.log('초기 카테고리 ID:', currentCategoryId);
+
+        loadCategories();
+    }
+
+    // 이벤트 바인딩
+    function bindEvents() {
+        // 카테고리 클릭 (이벤트 위임)
+        $(document).on('click', '.category-link', function(e) {
+            e.preventDefault();
+            const categoryId = $(this).data('category');
+            const categoryName = $(this).data('name');
+
+            if (categoryId !== currentCategoryId) {
+                switchCategory(categoryId, categoryName);
+            }
+        });
+
+        // 글쓰기 버튼
+        $('#writePostBtn').click(function() {
+            const categoryParam = currentCategoryId !== 'all' ? `?categoryId=${currentCategoryId}` : '';
+            window.location.href = `/community/post/new${categoryParam}`;
+        });
+
+        // 검색 폼 제출
+        $('#searchForm, #modalSearchForm').on('submit', function(e) {
+            e.preventDefault();
+            performSearch(this);
+        });
+
+        // 알림 관련
         $('#notificationBtn').click(function() {
             loadNotifications();
             $('#notificationModal').modal('show');
@@ -837,11 +864,450 @@
             markAllNotificationsAsRead();
         });
 
-        // 초기 로드
-        loadNotificationCount();
-    });
+        // 게시글 클릭
+        $(document).on('click', '.post-item', function() {
+            const postId = $(this).data('post-id');
+            if (postId) {
+                window.location.href = `/community/post/${postId}`;
+            }
+        });
 
-    // 알림 개수 로드
+        // 페이지네이션
+        $(document).on('click', '.pagination .page-link', function(e) {
+            e.preventDefault();
+            const page = $(this).data('page');
+            if (page && page !== currentPage) {
+                if (isSearchMode) {
+                    performSearch(null, page);
+                } else {
+                    loadPosts(currentCategoryId, page);
+                }
+            }
+        });
+    }
+
+    // 카테고리 목록 로드
+    function loadCategories() {
+        $.ajax({
+            url: '/api/community/categories',
+            type: 'GET',
+            success: function(response) {
+                categories = response.categories || [];
+                console.log('로드된 카테고리들:', categories);
+                renderCategories();
+                updateSearchCategoryOptions();
+
+                // 카테고리 로드 후 게시글 로드
+                loadPosts(currentCategoryId, 1);
+            },
+            error: function(xhr, status, error) {
+                console.error('카테고리 로드 실패:', error);
+                showToast('카테고리를 불러올 수 없습니다.', 'error');
+            }
+        });
+    }
+
+    // 카테고리 렌더링
+    function renderCategories() {
+        let html = '';
+
+        categories.forEach(function(category) {
+            const iconClass = getCategoryIcon(category.categoryId);
+            html += `
+            <div class="category-item">
+                <a class="category-link"
+                   data-category="${category.categoryId}"
+                   data-name="${category.name}">
+                    <i class="${iconClass} category-icon"></i>
+                    ${category.name}
+                    <span class="category-count" id="count-${category.categoryId}">0</span>
+                </a>
+            </div>
+        `;
+        });
+
+        $('#categoryList').html(html);
+
+        console.log('카테고리 렌더링 완료. 생성된 카테고리들:');
+        categories.forEach(cat => console.log(`ID: ${cat.categoryId}, Name: ${cat.name}`));
+
+        // 현재 활성 카테고리 설정
+        updateActiveCategory();
+
+        // 초기 헤더 정보 설정
+        if (currentCategoryId === 'all') {
+            updateContentHeader('all', '전체 게시글');
+        } else {
+            const category = categories.find(cat => cat.categoryId === parseInt(currentCategoryId));
+            if (category) {
+                updateContentHeader(currentCategoryId, category.name);
+            }
+        }
+    }
+
+    // 카테고리 전환
+    function switchCategory(categoryId, categoryName) {
+        if (categoryId === currentCategoryId) return;
+
+        console.log('카테고리 전환 요청:', categoryId, categoryName);
+        console.log('현재 카테고리 ID:', currentCategoryId);
+
+        // 검색 모드 해제
+        isSearchMode = false;
+        $('#searchFilters').hide();
+
+        // 현재 카테고리 ID 업데이트
+        currentCategoryId = categoryId;
+
+        // 헤더 정보 업데이트
+        updateContentHeader(categoryId, categoryName);
+
+        // 게시글 로드
+        currentPage = 1;
+        loadPosts(categoryId, 1);
+
+        // URL 업데이트 (페이지 새로고침 없이)
+        const newUrl = categoryId === 'all' ? '/community' : `/community?categoryId=${categoryId}`;
+        history.pushState({categoryId: categoryId}, '', newUrl);
+    }
+
+    // 활성 카테고리 업데이트
+    function updateActiveCategory() {
+        $('.category-link').removeClass('active');
+        $(`.category-link[data-category="${currentCategoryId}"]`).addClass('active');
+
+        // 디버깅용 로그
+        console.log('현재 활성 카테고리 ID:', currentCategoryId);
+        console.log('선택된 요소:', $(`.category-link[data-category="${currentCategoryId}"]`).length);
+    }
+
+    // 콘텐츠 헤더 업데이트
+    function updateContentHeader(categoryId, categoryName) {
+        $('#currentCategoryTitle').text(categoryName);
+
+        const descriptions = {
+            'all': '모든 게시판의 글을 한 번에 볼 수 있습니다.',
+            '1': '자유롭게 이야기를 나누는 공간입니다.',
+            '2': '궁금한 것들을 질문하고 답변받는 공간입니다.',
+            '3': '유용한 팁과 노하우를 공유하는 공간입니다.',
+            '4': '중요한 공지사항을 확인할 수 있습니다.'
+        };
+
+        $('#currentCategoryDescription').text(descriptions[categoryId] || '게시글을 확인하세요.');
+
+        // 활성 카테고리 표시 업데이트
+        updateActiveCategory();
+    }
+
+    // 게시글 목록 로드
+    function loadPosts(categoryId, page = 1) {
+        showLoading();
+
+        const url = categoryId === 'all'
+            ? `/api/community/posts/all?page=${page}`
+            : `/api/community/posts/category/${categoryId}?page=${page}`;
+
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                hideLoading();
+                renderPosts(response.posts || []);
+                renderPagination(response.pagination);
+                updateCategoryCounts(response.categoryCounts);
+                currentPage = page;
+            },
+            error: function(xhr, status, error) {
+                hideLoading();
+                console.error('게시글 로드 실패:', error);
+                showErrorState('게시글을 불러올 수 없습니다.');
+            }
+        });
+    }
+
+    // 게시글 렌더링
+    function renderPosts(posts) {
+        if (posts.length === 0) {
+            showEmptyState();
+            return;
+        }
+
+        let html = '';
+        posts.forEach(function(post) {
+            html += renderSinglePost(post);
+        });
+
+        $('#postList').html(html);
+    }
+
+    // 단일 게시글 렌더링
+    function renderSinglePost(post) {
+        const isNotice = post.notice || false;
+        const noticeClass = isNotice ? 'notice' : '';
+        const commentCount = post.commentCount || 0;
+        const isNew = isNewPost(post.createdAt);
+
+        return `
+        <div class="post-item ${noticeClass}" data-post-id="${post.postId}">
+            <div class="post-number">
+                ${isNotice ? '<span class="notice-badge"><i class="fas fa-bullhorn me-1"></i>공지</span>' : post.postId}
+            </div>
+            <div class="post-content">
+                <div class="post-title">
+                    ${post.title}
+                    ${isNew ? '<span class="new-badge">NEW</span>' : ''}
+                </div>
+                <div class="post-meta">
+                    <span><i class="fas fa-user"></i>${post.nickname}</span>
+                    <span><i class="fas fa-calendar"></i>${formatDate(post.createdAt)}</span>
+                    ${post.categoryName ? `<span class="badge bg-light text-dark">${post.categoryName}</span>` : ''}
+                </div>
+            </div>
+            <div class="post-stats">
+                <div class="post-stat">
+                    <i class="fas fa-eye"></i>
+                    <span>${post.viewCount || 0}</span>
+                </div>
+                ${commentCount > 0 ? `<div class="post-stat"><span class="comment-count">${commentCount}</span></div>` : ''}
+            </div>
+        </div>
+    `;
+    }
+
+    // 검색 수행
+    function performSearch(form, page = 1) {
+        const formData = form ? new FormData(form) : null;
+
+        if (formData) {
+            searchParams = {
+                searchType: formData.get('searchType') || 'titleContent',
+                keyword: formData.get('keyword') || '',
+                categoryId: formData.get('categoryId') || ''
+            };
+        }
+
+        if (!searchParams.keyword) {
+            showToast('검색어를 입력해주세요.', 'warning');
+            return;
+        }
+
+        showLoading();
+
+        $.ajax({
+            url: '/api/community/search',
+            type: 'GET',
+            data: {
+                ...searchParams,
+                page: page
+            },
+            success: function(response) {
+                hideLoading();
+                isSearchMode = true;
+                currentPage = page;
+
+                // 검색 필터 표시
+                $('#searchFilters').show();
+                updateSearchFilters();
+
+                // 헤더 업데이트
+                $('#currentCategoryTitle').text(`검색 결과: "${searchParams.keyword}"`);
+                $('#currentCategoryDescription').text(`총 ${response.totalCount || 0}개의 게시글을 찾았습니다.`);
+
+                // 결과 렌더링
+                renderPosts(response.posts || []);
+                renderPagination(response.pagination);
+
+                // 모달 닫기
+                $('#searchModal').modal('hide');
+            },
+            error: function(xhr, status, error) {
+                hideLoading();
+                console.error('검색 실패:', error);
+                showErrorState('검색 중 오류가 발생했습니다.');
+            }
+        });
+    }
+
+    // 검색 필터 업데이트
+    function updateSearchFilters() {
+        const form = $('#searchForm')[0];
+        if (form) {
+            form.searchType.value = searchParams.searchType || 'titleContent';
+            form.keyword.value = searchParams.keyword || '';
+            form.categoryId.value = searchParams.categoryId || '';
+        }
+    }
+
+    // 페이지네이션 렌더링
+    function renderPagination(pagination) {
+        if (!pagination || pagination.totalPages <= 1) {
+            $('#paginationContainer').hide();
+            return;
+        }
+
+        $('#paginationContainer').show();
+
+        let html = '';
+        const currentPage = pagination.currentPage;
+        const totalPages = pagination.totalPages;
+
+        // 이전 페이지
+        html += `
+        <li class="page-item ${currentPage <= 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" data-page="${currentPage - 1}" tabindex="-1">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+        </li>
+    `;
+
+        // 페이지 번호들
+        const startPage = Math.max(1, currentPage - 2);
+        const endPage = Math.min(totalPages, currentPage + 2);
+
+        for (let i = startPage; i <= endPage; i++) {
+            html += `
+            <li class="page-item ${i === currentPage ? 'active' : ''}">
+                <a class="page-link" href="#" data-page="${i}">${i}</a>
+            </li>
+        `;
+        }
+
+        // 다음 페이지
+        html += `
+        <li class="page-item ${currentPage >= totalPages ? 'disabled' : ''}">
+            <a class="page-link" href="#" data-page="${currentPage + 1}">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+        </li>
+    `;
+
+        $('#pagination').html(html);
+    }
+
+    // 카테고리 개수 업데이트
+    function updateCategoryCounts(counts) {
+        if (!counts) return;
+
+        Object.keys(counts).forEach(function(categoryId) {
+            $(`#count-${categoryId}`).text(counts[categoryId]);
+        });
+    }
+
+    // 검색 카테고리 옵션 업데이트
+    function updateSearchCategoryOptions() {
+        let options = '<option value="">전체 카테고리</option>';
+
+        categories.forEach(function(category) {
+            options += `<option value="${category.categoryId}">${category.name}</option>`;
+        });
+
+        $('#searchCategorySelect, #modalSearchCategorySelect').html(options);
+    }
+
+    // 로딩 표시/숨김
+    function showLoading() {
+        $('#loadingOverlay').show();
+    }
+
+    function hideLoading() {
+        $('#loadingOverlay').hide();
+    }
+
+    // 빈 상태 표시
+    function showEmptyState() {
+        $('#postList').html(`
+        <div class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <h4>게시글이 없습니다</h4>
+            <p>첫 번째 게시글을 작성해보세요!</p>
+            <button class="btn btn-primary-custom" onclick="$('#writePostBtn').click()">
+                <i class="fas fa-edit me-1"></i>
+                글쓰기
+            </button>
+        </div>
+    `);
+    }
+
+    // 오류 상태 표시
+    function showErrorState(message) {
+        $('#postList').html(`
+        <div class="empty-state">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h4>오류가 발생했습니다</h4>
+            <p>${message}</p>
+            <button class="btn btn-outline-custom" onclick="location.reload()">
+                <i class="fas fa-refresh me-1"></i>
+                새로고침
+            </button>
+        </div>
+    `);
+    }
+
+    // 유틸리티 함수들
+    function getCategoryIcon(categoryId) {
+        const icons = {
+            '1': 'fas fa-comments',
+            '2': 'fas fa-question-circle',
+            '3': 'fas fa-lightbulb',
+            '4': 'fas fa-bullhorn'
+        };
+        return icons[categoryId] || 'fas fa-folder';
+    }
+
+    function isNewPost(createdAt) {
+        const postDate = new Date(createdAt);
+        const now = new Date();
+        const diffHours = (now - postDate) / (1000 * 60 * 60);
+        return diffHours <= 24;
+    }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffTime = now - date;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 0) {
+            return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+        } else if (diffDays < 7) {
+            return `${diffDays}일 전`;
+        } else {
+            return date.toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' });
+        }
+    }
+
+    function showToast(message, type = 'info') {
+        const bgClass = {
+            'success': 'bg-success',
+            'error': 'bg-danger',
+            'warning': 'bg-warning',
+            'info': 'bg-info'
+        }[type] || 'bg-info';
+
+        const toast = $(`
+        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+            <div class="toast show" role="alert">
+                <div class="toast-header ${bgClass} text-white">
+                    <strong class="me-auto">알림</strong>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body">
+                    ${message}
+                </div>
+            </div>
+        </div>
+    `);
+
+        $('body').append(toast);
+
+        setTimeout(function() {
+            toast.fadeOut(300, function() {
+                $(this).remove();
+            });
+        }, 3000);
+    }
+
+    // 알림 관련 함수들
     function loadNotificationCount() {
         $.ajax({
             url: '/api/community/notification/unread-count',
@@ -859,13 +1325,12 @@
         });
     }
 
-    // 알림 목록 로드
     function loadNotifications() {
         $.ajax({
             url: '/api/community/notification/list',
             type: 'GET',
             success: function(response) {
-                renderNotifications(response.notifications);
+                renderNotifications(response.notifications || []);
             },
             error: function() {
                 $('#notificationList').html('<div class="text-center text-danger">알림을 불러올 수 없습니다.</div>');
@@ -873,7 +1338,19 @@
         });
     }
 
-    // 알림 렌더링
+    function loadDrafts() {
+        $.ajax({
+            url: '/api/community/draft/list',
+            type: 'GET',
+            success: function(response) {
+                renderDrafts(response.drafts || []);
+            },
+            error: function() {
+                $('#draftList').html('<div class="text-center text-danger">임시저장 목록을 불러올 수 없습니다.</div>');
+            }
+        });
+    }
+
     function renderNotifications(notifications) {
         let html = '';
 
@@ -886,45 +1363,30 @@
                 const message = getNotificationMessage(notification);
 
                 html += `
-                        <div class="notification-item ${unreadClass} p-3 border-bottom" data-id="${notification.notificationId}">
-                            <div class="d-flex align-items-start">
-                                <div class="me-3">
-                                    <i class="${icon}"></i>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <div class="fw-bold">${notification.senderNickname || '시스템'}</div>
-                                    <div class="text-muted">${message}</div>
-                                    <small class="text-muted">${formatDate(notification.createdAt)}</small>
-                                </div>
-                                <div>
-                                    <button class="btn btn-sm btn-outline-primary mark-read-btn" data-id="${notification.notificationId}">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                </div>
-                            </div>
+                <div class="notification-item ${unreadClass} p-3 border-bottom" data-id="${notification.notificationId}">
+                    <div class="d-flex align-items-start">
+                        <div class="me-3">
+                            <i class="${icon}"></i>
                         </div>
-                    `;
+                        <div class="flex-grow-1">
+                            <div class="fw-bold">${notification.senderNickname || '시스템'}</div>
+                            <div class="text-muted">${message}</div>
+                            <small class="text-muted">${formatNotificationDate(notification.createdAt)}</small>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-outline-primary mark-read-btn" data-id="${notification.notificationId}">
+                                <i class="fas fa-check"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
             });
         }
 
         $('#notificationList').html(html);
     }
 
-    // 임시저장 목록 로드
-    function loadDrafts() {
-        $.ajax({
-            url: '/api/community/draft/list',
-            type: 'GET',
-            success: function(response) {
-                renderDrafts(response.drafts);
-            },
-            error: function() {
-                $('#draftList').html('<div class="text-center text-danger">임시저장 목록을 불러올 수 없습니다.</div>');
-            }
-        });
-    }
-
-    // 임시저장 렌더링
     function renderDrafts(drafts) {
         let html = '';
 
@@ -933,38 +1395,37 @@
         } else {
             drafts.forEach(function(draft) {
                 html += `
-                        <div class="card mb-3">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div class="flex-grow-1">
-                                        <h6 class="card-title">${draft.title || '(제목 없음)'}</h6>
-                                        <p class="card-text text-muted">${truncateText(draft.content, 100)}</p>
-                                        <small class="text-muted">
-                                            <i class="fas fa-clock me-1"></i>
-                                            ${formatDate(draft.updatedAt)}
-                                        </small>
-                                    </div>
-                                    <div class="ms-3">
-                                        <button class="btn btn-sm btn-primary me-2" onclick="editDraft(${draft.draftId})">
-                                            <i class="fas fa-edit me-1"></i>
-                                            수정
-                                        </button>
-                                        <button class="btn btn-sm btn-danger" onclick="deleteDraft(${draft.draftId})">
-                                            <i class="fas fa-trash me-1"></i>
-                                            삭제
-                                        </button>
-                                    </div>
-                                </div>
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="card-title">${draft.title || '(제목 없음)'}</h6>
+                                <p class="card-text text-muted">${truncateText(stripHtml(draft.content), 100)}</p>
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>
+                                    ${formatNotificationDate(draft.updatedAt)}
+                                </small>
+                            </div>
+                            <div class="ms-3">
+                                <button class="btn btn-sm btn-primary me-2" onclick="editDraft(${draft.draftId})">
+                                    <i class="fas fa-edit me-1"></i>
+                                    수정
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteDraft(${draft.draftId})">
+                                    <i class="fas fa-trash me-1"></i>
+                                    삭제
+                                </button>
                             </div>
                         </div>
-                    `;
+                    </div>
+                </div>
+            `;
             });
         }
 
         $('#draftList').html(html);
     }
 
-    // 모든 알림 읽음 처리
     function markAllNotificationsAsRead() {
         $.ajax({
             url: '/api/community/notification/read-all',
@@ -994,12 +1455,11 @@
         });
     });
 
-    // 임시저장 수정
+    // 임시저장 관련
     function editDraft(draftId) {
         window.location.href = `/community/post/new?draftId=${draftId}`;
     }
 
-    // 임시저장 삭제
     function deleteDraft(draftId) {
         if (confirm('정말 삭제하시겠습니까?')) {
             $.ajax({
@@ -1008,13 +1468,13 @@
                 success: function(response) {
                     if (response.success) {
                         loadDrafts();
+                        showToast('임시저장이 삭제되었습니다.', 'success');
                     }
                 }
             });
         }
     }
 
-    // 유틸리티 함수들
     function getNotificationIcon(type) {
         switch(type) {
             case 'new_comment': return 'fas fa-comment text-primary';
@@ -1033,7 +1493,7 @@
         }
     }
 
-    function formatDate(dateString) {
+    function formatNotificationDate(dateString) {
         const date = new Date(dateString);
         const now = new Date();
         const diff = now - date;
@@ -1050,143 +1510,30 @@
         return text.length > length ? text.substring(0, length) + '...' : text;
     }
 
-    // 개별 알림 읽음 처리
-    $(document).on('click', '.mark-read-btn', function () {
-        const notificationId = $(this).data('id');
+    function stripHtml(html) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || '';
+    }
 
-        $.ajax({
-            url: `/api/community/notification/read/${notificationId}`,
-            type: 'POST',
-            success: function (response) {
-                if (response.success) {
-                    loadNotifications();
-                    loadNotificationCount();
+    // 브라우저 뒤로가기/앞으로가기 지원
+    window.addEventListener('popstate', function(event) {
+        if (event.state && event.state.categoryId) {
+            currentCategoryId = event.state.categoryId;
+            loadPosts(currentCategoryId, 1);
+            updateActiveCategory();
+
+            // 카테고리명 찾기
+            let categoryName = '전체 게시글';
+            if (currentCategoryId !== 'all') {
+                const category = categories.find(cat => cat.categoryId.toString() === currentCategoryId.toString());
+                if (category) {
+                    categoryName = category.name;
                 }
             }
-        });
+            updateContentHeader(currentCategoryId, categoryName);
+        }
     });
-
-    // 임시저장 수정
-    function editDraft(draftId) {
-        window.location.href = `/community/post/new?draftId=${draftId}`;
-    }
-
-    // 임시저장 삭제
-    function deleteDraft(draftId) {
-        if (confirm('정말 삭제하시겠습니까?')) {
-            $.ajax({
-                url: `/api/community/draft/${draftId}`,
-                type: 'DELETE',
-                success: function (response) {
-                    if (response.success) {
-                        loadDrafts();
-                    }
-                }
-            });
-        }
-    }    // 임시저장 렌더링
-    function renderDrafts(drafts) {
-        let html = '';
-
-        if (drafts.length === 0) {
-            html = '<div class="text-center py-4 text-muted">임시저장된 글이 없습니다.</div>';
-        } else {
-            drafts.forEach(function (draft) {
-                html += `
-    <div class="card mb-3">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-start">
-                <div class="flex-grow-1">
-                    <h6 class="card-title">${draft.title || '(제목 없음)'}</h6>
-                    <p class="card-text text-muted">${truncateText(draft.content, 100)}</p>
-                    <small class="text-muted">
-                        <i class="fas fa-clock me-1"></i>
-                        ${formatDate(draft.updatedAt)}
-                    </small>
-                </div>
-                <div class="ms-3">
-                    <button class="btn btn-sm btn-primary me-2" onclick="editDraft(${draft.draftId})">
-                        <i class="fas fa-edit me-1"></i>
-                        수정
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteDraft(${draft.draftId})">
-                        <i class="fas fa-trash me-1"></i>
-                        삭제
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    `;
-            });
-        }
-
-        $('#draftList').html(html);
-    }
-
-    // 모든 알림 읽음 처리
-    function markAllNotificationsAsRead() {
-        $.ajax({
-            url: '/api/community/notification/read-all',
-            type: 'POST',
-            success: function (response) {
-                if (response.success) {
-                    loadNotifications();
-                    loadNotificationCount();
-                }
-            }
-        });
-    }    // 알림 렌더링
-    function renderNotifications(notifications) {
-        let html = '';
-
-        if (notifications.length === 0) {
-            html = '<div class="text-center py-4 text-muted">새로운 알림이 없습니다.</div>';
-        } else {
-            notifications.forEach(function (notification) {
-                const unreadClass = !notification.read ? 'bg-light' : '';
-                const icon = getNotificationIcon(notification.type);
-                const message = getNotificationMessage(notification);
-
-                html += `
-    <div class="notification-item ${unreadClass} p-3 border-bottom" data-id="${notification.notificationId}">
-        <div class="d-flex align-items-start">
-            <div class="me-3">
-                <i class="${icon}"></i>
-            </div>
-            <div class="flex-grow-1">
-                <div class="fw-bold">${notification.senderNickname || '시스템'}</div>
-                <div class="text-muted">${message}</div>
-                <small class="text-muted">${formatDate(notification.createdAt)}</small>
-            </div>
-            <div>
-                <button class="btn btn-sm btn-outline-primary mark-read-btn" data-id="${notification.notificationId}">
-                    <i class="fas fa-check"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-    `;
-            });
-        }
-
-        $('#notificationList').html(html);
-    }
-
-    // 임시저장 목록 로드
-    function loadDrafts() {
-        $.ajax({
-            url: '/api/community/draft/list',
-            type: 'GET',
-            success: function (response) {
-                renderDrafts(response.drafts);
-            },
-            error: function () {
-                $('#draftList').html('<div class="text-center text-danger">임시저장 목록을 불러올 수 없습니다.</div>');
-            }
-        });
-    }
-
 </script>
 </body>
 </html>

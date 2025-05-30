@@ -61,7 +61,7 @@
     <!-- 상위 100개 인기 스니펫 조회 제거 (popular_snippets_view로 대체) -->
     <!-- getTop100PopularSnippets는 getPopularSnippetsFromView를 사용 -->
 
-    <!-- 검색 조건에 따른 스니펫 조회 (상위 100개로 제한) -->
+    <!-- 검색 조건에 따른 스니펫 조회 (상위 100개로 제한) - 내용 검색으로 수정 -->
     <select id="searchSnippets" resultMap="SnippetResultMap">
         SELECT DISTINCT s.snippet_id, s.user_id, s.folder_id, s.color_id, s.source_url, s.type, s.memo,
         s.created_at, s.updated_at, s.visibility,
@@ -69,13 +69,27 @@
         FROM snippets s
         LEFT JOIN snippet_tags st ON s.snippet_id = st.snippet_id
         LEFT JOIN tags t ON st.tag_id = t.tag_id
+        <!-- 내용 검색을 위한 LEFT JOIN 추가 -->
+        <if test="keyword != null and keyword != ''">
+            LEFT JOIN snippet_codes sc ON s.snippet_id = sc.snippet_id
+            LEFT JOIN snippet_texts stx ON s.snippet_id = stx.snippet_id
+            LEFT JOIN snippet_images si ON s.snippet_id = si.snippet_id
+        </if>
         WHERE s.visibility = 1
         <if test="type != null and type != ''">
             AND s.type = #{type}
         </if>
         <if test="keyword != null and keyword != ''">
-            AND (s.memo LIKE CONCAT('%', #{keyword}, '%')
-            OR s.type LIKE CONCAT('%', #{keyword}, '%'))
+            AND (
+            <!-- 코드 스니펫 내용 검색 -->
+            (s.type = 'CODE' AND sc.content LIKE CONCAT('%', #{keyword}, '%'))
+            OR
+            <!-- 텍스트 스니펫 내용 검색 -->
+            (s.type = 'TEXT' AND stx.content LIKE CONCAT('%', #{keyword}, '%'))
+            OR
+            <!-- 이미지 스니펫 alt_text 검색 -->
+            (s.type = 'IMG' AND si.alt_text LIKE CONCAT('%', #{keyword}, '%'))
+            )
         </if>
         <if test="tagName != null and tagName != ''">
             AND t.name = #{tagName}

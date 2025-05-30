@@ -1,4 +1,4 @@
-// 통합된 북마크 페이지 스크립트
+// 완전한 북마크 페이지 JavaScript
 $(document).ready(function() {
     console.log('북마크 페이지 초기화');
     console.log('사용자 ID:', userId);
@@ -29,7 +29,31 @@ $(document).ready(function() {
         // 북마크용 모달 열기 (API 호출 포함)
         openBookmarkModal(snippetId);
     });
+
+    // 모달 닫기 이벤트들
+    $(document).on('click', '#snippetDetailModal .modal-close', function() {
+        $('#snippetDetailModal').hide();
+    });
+
+    $(document).on('click', '#snippetDetailModal .btn-secondary', function() {
+        $('#snippetDetailModal').hide();
+    });
+
+    $(document).on('click', '#snippetDetailModal', function(e) {
+        if (e.target === this) {
+            $(this).hide();
+        }
+    });
+
+    // ESC 키로 모달 닫기
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Escape' && $('#snippetDetailModal').is(':visible')) {
+            $('#snippetDetailModal').hide();
+        }
+    });
 });
+
+// ============= 북마크 목록 로드 및 표시 =============
 
 // API를 통해 북마크된 스니펫 목록 로드
 function loadBookmarkedSnippets() {
@@ -206,7 +230,6 @@ function createBookmarkSnippetCard(bookmark, index) {
         const codeContent = bookmark.content || '';
         const preview = codeContent.length > 100 ? codeContent.substring(0, 100) + '...' : codeContent;
         contentPreview.append($('<div>').addClass('code-preview')
-            // .append($('<div>').addClass('language-badge').text(bookmark.language || 'text'))
             .append($('<pre>').append($('<code>').text(preview))));
     } else {
         const textContent = bookmark.content || bookmark.memo || '';
@@ -225,6 +248,8 @@ function createBookmarkSnippetCard(bookmark, index) {
     return card;
 }
 
+// ============= 모달 관련 함수들 =============
+
 // 북마크 모달 열기 (API 호출 포함)
 function openBookmarkModal(snippetId) {
     console.log('북마크 모달 열기:', snippetId);
@@ -235,7 +260,10 @@ function openBookmarkModal(snippetId) {
 
     // 모달 표시
     const modal = $('#snippetDetailModal');
-    modal.find('.modal-header h3').text(basicSnippet.title || '스니펫 상세보기');
+
+    // 스니펫 ID와 데이터를 모달에 저장
+    modal.data('current-snippet-id', snippetId);
+    modal.data('current-snippet-data', basicSnippet);
 
     // 기본 색상 적용 (로딩 중에도 색상 표시)
     if (basicSnippet.hexCode) {
@@ -289,6 +317,9 @@ function openBookmarkModal(snippetId) {
                     isBookmarked: true
                 };
 
+                // 모달 데이터 업데이트
+                modal.data('current-snippet-data', detailedSnippet);
+
                 updateModalWithDetailedInfo(modal, detailedSnippet);
             } else {
                 console.error('API 호출 실패:', data.message);
@@ -310,6 +341,9 @@ function updateModalWithDetailedInfo(modal, snippet) {
 
     // 태그 정보 업데이트 (안전하게 처리)
     updateSnippetTags(snippet.tags);
+
+    // 북마크 상태 로드
+    loadBookmarkStatus(snippet.snippetId || snippet.id);
 }
 
 // 북마크 전용 모달 콘텐츠 업데이트
@@ -359,6 +393,22 @@ function updateBookmarkModalContent(modal, snippet) {
     if (snippet.ownerNickname) {
         metaDiv.append(`<div class="meta-row"><strong>작성자:</strong> ${snippet.ownerNickname}</div>`);
     }
+    // 출처를 작성자 아래에 추가
+    if (snippet.sourceUrl) {
+        metaDiv.append(`
+            <div class="meta-row">
+                <strong>출처:</strong> 
+                <a href="${snippet.sourceUrl}" target="_blank" style="
+                    color: ${snippet.hexCode || '#007bff'}; 
+                    text-decoration: none;
+                    word-break: break-all;
+                " onmouseover="this.style.textDecoration='underline'" 
+                   onmouseout="this.style.textDecoration='none'">
+                    ${snippet.sourceUrl}
+                </a>
+            </div>
+        `);
+    }
     if (snippet.hexCode && snippet.colorName) {
         const colorDiv = $('<div class="meta-row color-meta"><strong>색상:</strong> </div>');
         colorDiv.append(`
@@ -384,6 +434,9 @@ function updateBookmarkModalContent(modal, snippet) {
 
     const contentHtml = renderBookmarkSnippetContent(snippet);
     contentDiv.html(contentHtml);
+
+    // 메모를 태그 섹션 위에 추가
+    addMemoSection(modal, snippet);
 }
 
 // 북마크 스니펫 콘텐츠 렌더링
@@ -393,7 +446,6 @@ function renderBookmarkSnippetContent(snippet) {
     if (snippet.type === 'IMG' || snippet.type === 'IMAGE') {
         const imageUrl = snippetContent.imageUrl || snippet.imageUrl;
         const altText = snippetContent.altText || snippet.altText || snippet.memo || '이미지';
-        const sourceUrl = snippet.sourceUrl;
 
         if (!imageUrl) {
             return `
@@ -423,8 +475,7 @@ function renderBookmarkSnippetContent(snippet) {
                         </button>
                     </div>
                 </div>
-                ${altText ? `<div class="image-info" style="margin-top: 15px;"><strong>설명:</strong> ${escapeHtml(altText)}</div>` : ''}
-                ${sourceUrl ? `<div class="image-source" style="margin-top: 10px;"><strong>출처:</strong> <a href="${sourceUrl}" target="_blank">${sourceUrl}</a></div>` : ''}
+                ${altText && altText !== snippet.memo ? `<div class="image-info" style="margin-top: 15px;"><strong>설명:</strong> ${escapeHtml(altText)}</div>` : ''}
             </div>
         `;
 
@@ -434,13 +485,12 @@ function renderBookmarkSnippetContent(snippet) {
 
         return `
             <div class="bookmark-modal-content code-content">
-                // <div class="language-badge" style="background: #f8f9fa; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-bottom: 10px;">${language}</div>
                 <div class="code-container" style="position: relative;">
                     <button class="code-copy-btn" onclick="copyToClipboard('${escapeHtml(content).replace(/'/g, "\\'")}', this)" 
                             style="position: absolute; top: 10px; right: 10px; padding: 6px 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
                         <i class="fas fa-copy"></i> 복사
                     </button>
-                    <pre class="code-block" style="background: #f8f9fa; padding: 15px; border-radius: 8px; overflow-x: auto; margin: 0;"><code class="language-${language}">${escapeHtml(content)}</code></pre>
+                    <pre class="code-block" style="background-color: #2d3748; color: #e2e8f0; padding: 15px; border-radius: 8px; overflow-x: auto; margin: 0;"><code class="language-${language}">${escapeHtml(content)}</code></pre>
                 </div>
             </div>
         `;
@@ -463,6 +513,69 @@ function renderBookmarkSnippetContent(snippet) {
     }
 }
 
+// 메모 섹션 추가 (태그 위에 배치)
+function addMemoSection(modal, snippet) {
+    const tagsSection = modal.find('.snippet-tags-section');
+
+    // 기존 메모 섹션 제거
+    modal.find('.snippet-memo-section').remove();
+
+    if (snippet.memo && snippet.memo.trim()) {
+        const memoSection = $(`
+            <div class="snippet-memo-section" style="margin-bottom: 20px;">
+                <div class="memo-container" style="
+                    background: #fffbf0;
+                    border: 2px solid ${snippet.hexCode || '#ffd700'};
+                    border-radius: 8px;
+                    padding: 15px;
+                    position: relative;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                ">
+                    <div class="memo-header" style="
+                        display: flex;
+                        align-items: center;
+                        margin-bottom: 10px;
+                        color: ${snippet.hexCode || '#d4a017'};
+                        font-weight: bold;
+                    ">
+                        <i class="fas fa-sticky-note" style="
+                            margin-right: 8px;
+                            font-size: 18px;
+                        "></i>
+                        <span>메모</span>
+                    </div>
+                    <div class="memo-content" style="
+                        color: #444;
+                        line-height: 1.6;
+                        font-size: 14px;
+                        white-space: pre-wrap;
+                        word-wrap: break-word;
+                    ">${escapeHtml(snippet.memo)}</div>
+                    <div class="memo-corner" style="
+                        position: absolute;
+                        top: -2px;
+                        right: -2px;
+                        width: 0;
+                        height: 0;
+                        border-left: 20px solid transparent;
+                        border-top: 20px solid ${snippet.hexCode || '#ffd700'};
+                    "></div>
+                </div>
+            </div>
+        `);
+
+        // 태그 섹션 바로 위에 메모 섹션 추가
+        if (tagsSection.length > 0) {
+            tagsSection.before(memoSection);
+        } else {
+            // 태그 섹션이 없으면 모달 바디 끝에 추가
+            modal.find('.modal-body').append(memoSection);
+        }
+    }
+}
+
+// ============= 태그 관리 함수들 =============
+
 // 태그 정보 업데이트 (안전하게 처리)
 function updateSnippetTags(tags) {
     const tagsDisplay = $('#snippetTagsDisplay');
@@ -473,170 +586,462 @@ function updateSnippetTags(tags) {
     if (tags && tags.length > 0) {
         tags.forEach(function(tag) {
             const tagElement = $(`
-                <div class="tag-badge" data-tag-id="${tag.tagId}">
-                    <span>${tag.name}</span>
+                <div class="tag-badge" data-tag-id="${tag.tagId || tag.id}">
+                    <span>${escapeHtml(tag.tagName || tag.name || tag)}</span>
                     <span class="tag-remove" title="태그 제거">×</span>
                 </div>
             `);
+
+            // 태그 제거 이벤트
+            tagElement.find('.tag-remove').on('click', function() {
+                const snippetId = $('#snippetDetailModal').data('current-snippet-id');
+                removeTagFromSnippet(snippetId, tag.tagId || tag.id, tagElement);
+            });
+
             tagsDisplay.append(tagElement);
         });
     } else {
-        tagsDisplay.append('<span style="color: #6c757d; font-style: italic;">태그가 없습니다</span>');
+        tagsDisplay.append(`
+            <span style="
+                color: #6c757d; 
+                font-style: italic; 
+                padding: 10px;
+                display: block;
+                text-align: center;
+                background: #f8f9fa;
+                border-radius: 8px;
+            ">
+                <i class="fas fa-info-circle" style="margin-right: 6px;"></i>
+                태그가 없습니다
+            </span>
+        `);
     }
 }
 
-// 유틸리티 함수들
-function showImageZoom(imageUrl) {
-    const zoomModal = $(`
-        <div id="imageZoomModal" class="modal" style="
-            display: flex; 
-            position: fixed; 
-            z-index: 10000; 
-            left: 0; 
-            top: 0; 
-            width: 100%; 
-            height: 100%; 
-            background-color: rgba(0,0,0,0.9);
-            align-items: center;
-            justify-content: center;
-        ">
-            <div class="modal-content" style="position: relative; max-width: 90%; max-height: 90%;">
-                <span class="modal-close" style="
-                    position: absolute; 
-                    top: -40px; 
-                    right: 0; 
-                    color: white; 
-                    font-size: 40px; 
-                    font-weight: bold; 
-                    cursor: pointer;
-                ">&times;</span>
-                <img src="${imageUrl}" style="max-width: 100%; max-height: 100%; object-fit: contain;" alt="확대된 이미지">
-            </div>
-        </div>
-    `);
+// 태그 추가 함수 (중복 확인 추가)
+function addTagsToSnippet(snippetId, tagNames) {
+    const tagArray = tagNames.split(',').map(name => name.trim()).filter(name => name);
 
-    $('body').append(zoomModal);
+    tagArray.forEach(tagName => {
+        // 먼저 현재 스니펫에 이미 연결된 태그인지 확인
+        if (isTagAlreadyConnected(tagName)) {
+            console.log(`태그 "${tagName}"는 이미 연결되어 있습니다.`);
+            showTagFeedback(`태그 "${tagName}"는 이미 추가되어 있습니다.`, 'warning');
+            return;
+        }
 
-    zoomModal.on('click', function(e) {
-        if (e.target === this || $(e.target).hasClass('modal-close')) {
-            zoomModal.remove();
+        // 태그 생성 시도
+        $.ajax({
+            url: '/api/tag',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ name: tagName }),
+            success: function(response) {
+                // 새 태그 생성 성공 시 스니펫에 연결
+                connectTagToSnippet(snippetId, response.tag.tagId, tagName, true);
+            },
+            error: function(xhr) {
+                if (xhr.status === 409) {
+                    // 이미 존재하는 태그면 해당 태그 찾아서 연결
+                    findAndConnectExistingTag(snippetId, tagName);
+                } else {
+                    console.error('태그 생성 실패:', xhr.responseText);
+                    showTagFeedback(`태그 "${tagName}" 생성에 실패했습니다.`, 'error');
+                }
+            }
+        });
+    });
+}
+
+// 기존 태그 찾아서 연결
+function findAndConnectExistingTag(snippetId, tagName) {
+    $.ajax({
+        url: '/api/tag/search',
+        method: 'GET',
+        data: { query: tagName },
+        success: function(tags) {
+            const matchingTag = tags.find(tag => tag.name === tagName);
+            if (matchingTag) {
+                connectTagToSnippet(snippetId, matchingTag.tagId, tagName, false);
+            } else {
+                showTagFeedback(`태그 "${tagName}"를 찾을 수 없습니다.`, 'error');
+            }
+        },
+        error: function(xhr) {
+            console.error('태그 검색 실패:', xhr.responseText);
+            showTagFeedback(`태그 "${tagName}" 검색에 실패했습니다.`, 'error');
         }
     });
 }
 
-function downloadImage(imageUrl, filename) {
-    try {
-        const link = document.createElement('a');
-        link.href = imageUrl;
-        link.download = filename || 'image';
-        link.target = '_blank';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        showToast('이미지 다운로드를 시작합니다.');
-    } catch (error) {
-        console.error('이미지 다운로드 실패:', error);
-        showToast('이미지 다운로드에 실패했습니다.');
-    }
+// 태그를 스니펫에 연결
+function connectTagToSnippet(snippetId, tagId, tagName, isNewTag) {
+    $.ajax({
+        url: `/api/tag/snippet/${snippetId}/tag/${tagId}`,
+        method: 'POST',
+        success: function() {
+            console.log(`태그 "${tagName}" 연결 성공`);
+
+            // 태그 목록 새로고침
+            loadSnippetTags(snippetId);
+
+            // 성공 피드백
+            const message = isNewTag ?
+                `새 태그 "${tagName}"가 추가되었습니다.` :
+                `태그 "${tagName}"가 추가되었습니다.`;
+            showTagFeedback(message, 'success');
+
+            // 전역 이벤트 발생
+            $(document).trigger('tagUpdated', {
+                action: 'added',
+                tagId: tagId,
+                snippetId: snippetId,
+                isNewTag: isNewTag,
+                tagName: tagName
+            });
+        },
+        error: function(xhr) {
+            console.error('태그 연결 실패:', xhr.responseText);
+
+            // 409 오류 (이미 연결됨)인 경우 특별 처리
+            if (xhr.status === 409) {
+                showTagFeedback(`태그 "${tagName}"는 이미 연결되어 있습니다.`, 'warning');
+                // 태그 목록을 다시 로드하여 UI 동기화
+                loadSnippetTags(snippetId);
+            } else {
+                showTagFeedback(`태그 "${tagName}" 연결에 실패했습니다.`, 'error');
+            }
+        }
+    });
 }
 
-function copyToClipboard(text, button) {
-    if (navigator.clipboard) {
-        navigator.clipboard.writeText(text).then(() => {
-            showToast('클립보드에 복사되었습니다!');
-            $(button).text('복사됨!');
-            setTimeout(() => {
-                $(button).html('<i class="fas fa-copy"></i> 복사');
-            }, 2000);
-        }).catch(() => {
-            fallbackCopyToClipboard(text, button);
-        });
-    } else {
-        fallbackCopyToClipboard(text, button);
-    }
+// 현재 스니펫에 태그가 이미 연결되어 있는지 확인
+function isTagAlreadyConnected(tagName) {
+    const currentTags = $('#snippetTagsDisplay .tag-badge span').map(function() {
+        return $(this).text().trim();
+    }).get();
+
+    return currentTags.includes(tagName);
 }
 
-function fallbackCopyToClipboard(text, button) {
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    document.body.appendChild(textArea);
-    textArea.select();
-    try {
-        document.execCommand('copy');
-        showToast('클립보드에 복사되었습니다!');
-        $(button).text('복사됨!');
-        setTimeout(() => {
-            $(button).html('<i class="fas fa-copy"></i> 복사');
-        }, 2000);
-    } catch (err) {
-        showToast('복사에 실패했습니다.');
+// 태그 제거 함수
+function removeTagFromSnippet(snippetId, tagId, tagElement) {
+    if (!confirm('이 태그를 제거하시겠습니까?')) {
+        return;
     }
-    document.body.removeChild(textArea);
+
+    // 태그 이름 가져오기 (피드백용)
+    const tagName = tagElement.find('span').first().text().trim();
+
+    $.ajax({
+        url: `/api/tag/snippet/${snippetId}/tag/${tagId}`,
+        method: 'DELETE',
+        success: function() {
+            console.log(`태그 "${tagName}" 제거 성공`);
+
+            tagElement.fadeOut(300, function() {
+                $(this).remove();
+
+                // 태그가 모두 제거되었으면 빈 상태 표시
+                if ($('#snippetTagsDisplay .tag-badge').length === 0) {
+                    $('#snippetTagsDisplay').html(`
+                        <span style="
+                            color: #6c757d; 
+                            font-style: italic; 
+                            padding: 10px;
+                            display: block;
+                            text-align: center;
+                            background: #f8f9fa;
+                            border-radius: 8px;
+                        ">
+                            <i class="fas fa-info-circle" style="margin-right: 6px;"></i>
+                            태그가 없습니다
+                        </span>
+                    `);
+                }
+            });
+
+            // 성공 피드백
+            showTagFeedback(`태그 "${tagName}"가 제거되었습니다.`, 'success');
+
+            // 전역 이벤트 발생
+            $(document).trigger('tagUpdated', {
+                action: 'removed',
+                tagId: tagId,
+                snippetId: snippetId,
+                tagName: tagName
+            });
+        },
+        error: function(xhr) {
+            console.error('태그 제거 실패:', xhr.responseText);
+            showTagFeedback(`태그 "${tagName}" 제거에 실패했습니다.`, 'error');
+        }
+    });
 }
 
-function showToast(message) {
-    const toast = $(`
-        <div class="toast-message" style="
-            position: fixed; 
-            top: 20px; 
-            right: 20px; 
-            background: #333; 
-            color: white; 
-            padding: 12px 20px; 
-            border-radius: 4px; 
-            z-index: 10000;
+// 스니펫 태그 로드 함수
+function loadSnippetTags(snippetId) {
+    console.log('스니펫 태그 로드:', snippetId);
+
+    const tagsDisplay = $('#snippetTagsDisplay');
+    if (tagsDisplay.length === 0) return;
+
+    tagsDisplay.html('<div class="loading-text">태그를 불러오는 중...</div>');
+
+    $.ajax({
+        url: `/api/tag/snippet/${snippetId}`,
+        method: 'GET',
+        success: function(tags) {
+            updateSnippetTags(tags);
+        },
+        error: function(xhr, status, error) {
+            console.error('태그 로드 실패:', error);
+            tagsDisplay.html('<div class="empty-tags">태그를 불러올 수 없습니다.</div>');
+        }
+    });
+}
+
+// 태그 피드백 메시지 표시
+function showTagFeedback(message, type = 'success') {
+    // 기존 피드백 메시지 제거
+    $('#tagFeedback').remove();
+
+    const feedbackClass = {
+        'success': 'tag-feedback-success',
+        'warning': 'tag-feedback-warning',
+        'error': 'tag-feedback-error'
+    }[type] || 'tag-feedback-success';
+
+    const feedbackStyle = {
+        'success': 'background: #d4edda; color: #155724; border: 1px solid #c3e6cb;',
+        'warning': 'background: #fff3cd; color: #856404; border: 1px solid #ffeaa7;',
+        'error': 'background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;'
+    }[type] || 'background: #d4edda; color: #155724; border: 1px solid #c3e6cb;';
+
+    const feedback = $(`
+        <div id="tagFeedback" class="${feedbackClass}" style="
+            ${feedbackStyle}
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-size: 14px;
             opacity: 0;
             transition: opacity 0.3s;
         ">${message}</div>
     `);
 
-    $('body').append(toast);
+    // 태그 입력 영역 아래에 추가
+    const tagsInput = $('.snippet-tags-input');
+    if (tagsInput.length > 0) {
+        tagsInput.after(feedback);
+    } else {
+        $('#snippetTagsDisplay').before(feedback);
+    }
 
-    setTimeout(() => toast.css('opacity', '1'), 10);
+    // 페이드 인 효과
+    setTimeout(() => feedback.css('opacity', '1'), 10);
+
+    // 3초 후 제거
     setTimeout(() => {
-        toast.css('opacity', '0');
-        setTimeout(() => toast.remove(), 300);
+        feedback.fadeOut(300, function() {
+            $(this).remove();
+        });
     }, 3000);
 }
 
-// 기본 콘텐츠 표시 (SnippetModal이 없는 경우 대체)
-function displayBasicContent(modal, snippet) {
-    const contentDiv = modal.find('.snippet-detail-content');
-    const snippetContent = snippet.snippetContent || {};
+// ============= 태그 이벤트 리스너들 =============
 
-    let contentHtml = '';
+// 태그 추가 버튼 클릭 이벤트
+$(document).on('click', '#addTagsBtn', function() {
+    const tagInput = $('#tagInput');
+    const tagNames = tagInput.val().trim();
 
-    if (snippet.type === 'IMG' || snippet.type === 'IMAGE') {
-        const imageUrl = snippetContent.imageUrl || snippet.imageUrl;
-        if (imageUrl) {
-            contentHtml = `
-                <div class="image-content">
-                    <img src="${imageUrl}" alt="${snippet.altText || '이미지'}" style="max-width: 100%; height: auto;">
-                    ${snippet.altText ? `<p><strong>설명:</strong> ${escapeHtml(snippet.altText)}</p>` : ''}
-                </div>
-            `;
-        } else {
-            contentHtml = '<div class="error">이미지 URL이 없습니다.</div>';
-        }
-    } else if (snippet.type === 'CODE') {
-        const content = snippetContent.content || snippet.content || '';
-        const language = snippetContent.language || snippet.language || 'text';
-        contentHtml = `
-            <div class="code-content">
-<!--                <div class="language-badge">${language}</div>-->
-                <pre><code>${escapeHtml(content)}</code></pre>
-            </div>
-        `;
-    } else {
-        const content = snippetContent.content || snippet.content || '';
-        contentHtml = `
-            <div class="text-content">
-                <div>${escapeHtml(content).replace(/\n/g, '<br>')}</div>
-            </div>
-        `;
+    if (!tagNames) {
+        showTagFeedback('태그를 입력해주세요.', 'warning');
+        tagInput.focus();
+        return;
     }
 
-    contentDiv.html(contentHtml);
+    const snippetId = $('#snippetDetailModal').data('current-snippet-id');
+
+    if (!snippetId) {
+        showTagFeedback('스니펫 정보를 찾을 수 없습니다.', 'error');
+        return;
+    }
+
+    // 버튼 비활성화 (중복 클릭 방지)
+    const btn = $(this);
+    const originalText = btn.html();
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 추가 중...');
+
+    // 태그 추가 실행
+    addTagsToSnippet(snippetId, tagNames);
+
+    // 입력창 초기화
+    tagInput.val('');
+
+    // 2초 후 버튼 활성화
+    setTimeout(() => {
+        btn.prop('disabled', false).html(originalText);
+        tagInput.focus();
+    }, 2000);
+});
+
+// 태그 입력창에서 엔터키 이벤트
+$(document).on('keydown', '#tagInput', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        const tagNames = $(this).val().trim();
+
+        if (!tagNames) {
+            showTagFeedback('태그를 입력해주세요.', 'warning');
+            return;
+        }
+
+        // 태그 추가 실행
+        $('#addTagsBtn').trigger('click');
+    }
+});
+
+// 태그 입력창 포커스 이벤트
+$(document).on('focus', '#tagInput', function() {
+    $(this).attr('placeholder', '태그명 입력 후 Enter (쉼표로 여러 개 구분)');
+});
+
+$(document).on('blur', '#tagInput', function() {
+    $(this).attr('placeholder', '태그 추가 (쉼표로 구분)');
+});
+
+// ============= 북마크 관리 함수들 =============
+
+// 북마크 상태 로드
+function loadBookmarkStatus(snippetId) {
+    console.log('북마크 상태 확인:', snippetId);
+
+    $.ajax({
+        url: `/api/bookmarks/check/${snippetId}`,
+        method: 'GET',
+        success: function(response) {
+            if (response.success) {
+                updateBookmarkButton(response.isBookmarked);
+            }
+        },
+        error: function(xhr) {
+            console.warn('북마크 상태 확인 실패:', xhr.responseText);
+            // 로그인하지 않은 경우에도 버튼은 표시 (북마크 안됨 상태로)
+            updateBookmarkButton(false);
+        }
+    });
+}
+
+// 북마크 버튼 상태 업데이트
+function updateBookmarkButton(isBookmarked) {
+    const bookmarkBtn = $('#bookmarkToggleBtn');
+
+    if (!bookmarkBtn.length) {
+        console.warn('북마크 버튼을 찾을 수 없습니다.');
+        return;
+    }
+
+    // 버튼 활성화
+    bookmarkBtn.prop('disabled', false);
+
+    if (isBookmarked) {
+        bookmarkBtn.removeClass('btn-bookmark').addClass('btn-bookmark bookmarked');
+        bookmarkBtn.html('<i class="fas fa-bookmark"></i> <span class="bookmark-text">북마크됨</span>');
+        console.log('북마크 버튼 상태: 북마크됨');
+    } else {
+        bookmarkBtn.removeClass('bookmarked').addClass('btn-bookmark');
+        bookmarkBtn.html('<i class="far fa-bookmark"></i> <span class="bookmark-text">북마크</span>');
+        console.log('북마크 버튼 상태: 북마크 안됨');
+    }
+}
+
+// 북마크 토글 이벤트
+$(document).on('click', '#bookmarkToggleBtn', function() {
+    const modal = $('#snippetDetailModal');
+    const snippetId = modal.data('current-snippet-id');
+
+    if (!snippetId) {
+        alert('스니펫 정보를 찾을 수 없습니다.');
+        return;
+    }
+
+    const bookmarkBtn = $(this);
+    const isCurrentlyBookmarked = bookmarkBtn.hasClass('bookmarked');
+
+    // 버튼 비활성화
+    bookmarkBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 처리 중...');
+
+    console.log('북마크 토글 요청:', snippetId);
+
+    $.ajax({
+        url: '/api/bookmarks/toggle',
+        method: 'POST',
+        data: { snippetId: snippetId },
+        success: function(response) {
+            console.log('북마크 토글 응답:', response);
+
+            if (response.success) {
+                // 북마크 상태 업데이트
+                updateBookmarkButton(response.bookmarked);
+
+                // 성공 메시지 표시
+                showBookmarkFeedback(response.message, 'success');
+
+                console.log('북마크 토글 성공:', response.bookmarked);
+            } else {
+                console.warn('북마크 토글 실패:', response);
+                alert(response.message || '북마크 처리에 실패했습니다.');
+                // 원래 상태로 복원
+                updateBookmarkButton(isCurrentlyBookmarked);
+            }
+        },
+        error: function(xhr) {
+            console.error('북마크 토글 에러:', xhr.status, xhr.responseText);
+
+            let errorMessage = '북마크 처리 중 오류가 발생했습니다.';
+            if (xhr.status === 401) {
+                errorMessage = '로그인이 필요합니다.';
+            } else if (xhr.status === 403) {
+                errorMessage = '권한이 없습니다.';
+            }
+
+            alert(errorMessage);
+            // 원래 상태로 복원
+            updateBookmarkButton(isCurrentlyBookmarked);
+        },
+        complete: function() {
+            // 버튼 활성화 (complete에서 처리하여 success/error 모두에서 실행)
+            bookmarkBtn.prop('disabled', false);
+            console.log('북마크 토글 요청 완료');
+        }
+    });
+});
+
+// 북마크 피드백 메시지 표시
+function showBookmarkFeedback(message, type = 'success') {
+    const feedbackClass = type === 'success' ? 'bookmark-feedback-success' : 'bookmark-feedback-error';
+    const feedback = $(`<div class="bookmark-feedback ${feedbackClass}" style="
+        background: ${type === 'success' ? '#d4edda' : '#f8d7da'};
+        color: ${type === 'success' ? '#155724' : '#721c24'};
+        border: 1px solid ${type === 'success' ? '#c3e6cb' : '#f5c6cb'};
+        padding: 8px 12px;
+        border-radius: 4px;
+        margin: 10px 0;
+        font-size: 14px;
+    ">${message}</div>`);
+
+    // 모달 하단에 피드백 표시
+    const modal = $('#snippetDetailModal');
+    modal.find('.modal-footer').before(feedback);
+
+    // 3초 후 제거
+    setTimeout(() => {
+        feedback.fadeOut(300, function() {
+            $(this).remove();
+        });
+    }, 3000);
 }
 
 // 북마크 제거 (동적)
@@ -676,6 +1081,509 @@ function removeBookmarkDynamic(snippetId, cardElement) {
     });
 }
 
+// ============= 스니펫 수정/삭제 함수들 =============
+
+// 수정 버튼 클릭 이벤트
+$(document).on('click', '#editSnippetBtn', function() {
+    const modal = $('#snippetDetailModal');
+    const snippetId = modal.data('current-snippet-id');
+
+    if (!snippetId) {
+        alert('스니펫 정보를 찾을 수 없습니다.');
+        return;
+    }
+
+    // 현재 스니펫 데이터에서 타입 확인
+    const snippetData = modal.data('current-snippet-data');
+    let snippetType = null;
+
+    if (snippetData) {
+        snippetType = snippetData.type || snippetData.snippetType || snippetData.TYPE;
+        console.log('스니펫 데이터:', snippetData);
+        console.log('추출된 타입:', snippetType);
+    }
+
+    // 타입을 찾지 못한 경우 모달의 메타 정보에서 추출 시도
+    if (!snippetType) {
+        console.log('데이터에서 타입을 찾지 못해 모달 UI에서 추출 시도');
+
+        const metaDiv = modal.find('.snippet-detail-meta');
+        const typeText = metaDiv.find('div:contains("타입:")').text();
+
+        if (typeText) {
+            const match = typeText.match(/타입:\s*(\w+)/);
+            if (match) {
+                snippetType = match[1];
+                console.log('UI에서 추출한 타입:', snippetType);
+            }
+        }
+    }
+
+    // 여전히 타입을 찾지 못한 경우
+    if (!snippetType) {
+        const userChoice = confirm('스니펫 타입을 확인할 수 없습니다.\n코드 스니펫으로 처리하시겠습니까?\n(취소를 누르면 수정을 중단합니다)');
+        if (userChoice) {
+            snippetType = 'CODE';
+        } else {
+            return;
+        }
+    }
+
+    proceedWithEdit(modal, snippetId, snippetType);
+});
+
+// 수정 프로세스 진행 함수
+function proceedWithEdit(modal, snippetId, snippetType) {
+    console.log('스니펫 수정 요청:', snippetId, 'Type:', snippetType);
+
+    // 수정 버튼 비활성화
+    const editBtn = $('#editSnippetBtn');
+    const originalText = editBtn.html();
+    editBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 로딩 중...');
+
+    // 타입에 따라 적절한 수정 폼 로드
+    let editUrl = '';
+    switch(snippetType.toUpperCase()) {
+        case 'CODE':
+            editUrl = `/snippets/edit-form/code/${snippetId}`;
+            break;
+        case 'IMG':
+        case 'IMAGE':
+            editUrl = `/snippets/edit-form/img/${snippetId}`;
+            break;
+        case 'TEXT':
+            editUrl = `/snippets/edit-form/text/${snippetId}`;
+            break;
+        default:
+            alert(`지원하지 않는 스니펫 타입입니다: ${snippetType}`);
+            editBtn.prop('disabled', false).html(originalText);
+            return;
+    }
+
+    // AJAX로 수정 폼 로드
+    $.ajax({
+        url: editUrl,
+        method: 'GET',
+        success: function(html) {
+            // 현재 상세보기 모달 닫기
+            modal.hide();
+
+            // 새로운 수정 모달 생성 및 표시
+            showEditModal(html, snippetId);
+
+            console.log('수정 모달 표시 완료');
+        },
+        error: function(xhr, status, error) {
+            console.error('수정 폼 로드 실패:', error);
+            alert('수정 폼을 불러오는 중 오류가 발생했습니다.');
+            editBtn.prop('disabled', false).html(originalText);
+        }
+    });
+}
+
+// 수정 모달 표시 함수
+function showEditModal(formHtml, snippetId) {
+    // 현재 상세보기 모달 완전히 숨기기
+    $('#snippetDetailModal').hide();
+
+    // 기존 수정 모달이 있다면 제거
+    $('#editSnippetModal').remove();
+
+    // 새로운 수정 모달 HTML 생성
+    const editModalHtml = `
+        <div id="editSnippetModal" class="modal" style="display: block;">
+            <div class="modal-content">
+                <span class="close edit-modal-close">&times;</span>
+                <div id="editModalContent">
+                    ${formHtml}
+                </div>
+            </div>
+        </div>
+    `;
+
+    // 모달을 body에 추가
+    $('body').append(editModalHtml);
+
+    // 수정 모달 이벤트 설정
+    setupEditModalEvents(snippetId);
+}
+
+// 수정 모달 이벤트 설정
+function setupEditModalEvents(snippetId) {
+    const editModal = $('#editSnippetModal');
+    const form = editModal.find('form');
+
+    // 폼이 있으면 제출 이벤트를 AJAX로 처리
+    if (form.length) {
+        form.on('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const submitBtn = form.find('button[type="submit"]');
+            const originalText = submitBtn.html();
+
+            // 버튼 비활성화
+            submitBtn.prop('disabled', true).html('저장 중...');
+
+            // AJAX로 폼 제출
+            $.ajax({
+                url: form.attr('action'),
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    alert('스니펫이 성공적으로 수정되었습니다.');
+
+                    // 수정 모달 닫기
+                    editModal.remove();
+
+                    // 페이지 새로고침으로 변경사항 반영
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 300);
+                },
+                error: function(xhr, status, error) {
+                    console.error('스니펫 수정 실패:', error);
+
+                    let errorMessage = '스니펫 수정에 실패했습니다.';
+                    if (xhr.status === 400) {
+                        errorMessage = '입력값에 오류가 있습니다. 다시 확인해주세요.';
+                    } else if (xhr.status === 403) {
+                        errorMessage = '스니펫을 수정할 권한이 없습니다.';
+                    } else if (xhr.status === 404) {
+                        errorMessage = '해당 스니펫을 찾을 수 없습니다.';
+                    }
+
+                    alert(errorMessage);
+                    submitBtn.prop('disabled', false).html(originalText);
+                }
+            });
+        });
+
+        // 취소 버튼 이벤트
+        const cancelBtn = form.find('button:contains("취소")');
+        if (cancelBtn.length === 0) {
+            const newCancelBtn = $('<button type="button" class="cancel-btn">취소</button>');
+            form.append(newCancelBtn);
+
+            newCancelBtn.on('click', function() {
+                if (confirm('수정을 취소하시겠습니까? 변경사항이 저장되지 않습니다.')) {
+                    editModal.remove();
+                }
+            });
+        }
+    }
+
+    // 모달 닫기 이벤트들
+    editModal.find('.close, .edit-modal-close').on('click', function() {
+        if (confirm('수정을 취소하시겠습니까? 변경사항이 저장되지 않습니다.')) {
+            editModal.remove();
+        }
+    });
+
+    editModal.on('click', function(e) {
+        if (e.target === this) {
+            if (confirm('수정을 취소하시겠습니까? 변경사항이 저장되지 않습니다.')) {
+                editModal.remove();
+            }
+        }
+    });
+
+    // ESC 키로 모달 닫기
+    $(document).one('keydown.editModal', function(e) {
+        if (e.key === 'Escape') {
+            if (confirm('수정을 취소하시겠습니까? 변경사항이 저장되지 않습니다.')) {
+                editModal.remove();
+                $(document).off('keydown.editModal');
+            }
+        }
+    });
+}
+
+// 삭제 버튼 클릭 이벤트
+$(document).on('click', '#deleteSnippetBtn', function() {
+    const modal = $('#snippetDetailModal');
+    const snippetId = modal.data('current-snippet-id');
+
+    if (!snippetId) {
+        alert('스니펫 정보를 찾을 수 없습니다.');
+        return;
+    }
+
+    // 삭제 확인 다이얼로그
+    if (!confirm('정말로 이 스니펫을 삭제하시겠습니까?\n삭제된 스니펫은 복구할 수 없습니다.')) {
+        return;
+    }
+
+    // 삭제 버튼 비활성화
+    const deleteBtn = $('#deleteSnippetBtn');
+    const originalText = deleteBtn.html();
+    deleteBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 삭제 중...');
+
+    console.log('스니펫 삭제 프로세스 시작:', snippetId);
+
+    // 1단계: 스니펫과 연결된 모든 태그 제거
+    removeAllTagsFromSnippet(snippetId)
+        .then(() => {
+            console.log('태그 제거 완료, 스니펫 삭제 진행');
+            // 2단계: 스니펫 삭제
+            return deleteSnippetRequest(snippetId);
+        })
+        .then(() => {
+            // 삭제 성공
+            alert('스니펫이 삭제되었습니다.');
+            modal.hide();
+
+            // 현재 표시된 스니펫 카드를 DOM에서 제거
+            $(`.snippet-card[data-snippet-id="${snippetId}"], .snippet-card[data-id="${snippetId}"]`).fadeOut(300, function() {
+                $(this).remove();
+
+                // 스니펫이 모두 제거되었는지 확인
+                if ($('.snippet-card').length === 0) {
+                    showEmptyBookmarkState();
+                }
+            });
+
+            // 전역 이벤트 발생
+            $(document).trigger('snippetDeleted', {
+                snippetId: snippetId
+            });
+
+            // 페이지 새로고침으로 태그 매니저 업데이트
+            setTimeout(() => {
+                window.location.reload();
+            }, 300);
+        })
+        .catch((error) => {
+            console.error('스니펫 삭제 프로세스 실패:', error);
+
+            let errorMessage = '스니펫 삭제에 실패했습니다.';
+            if (error.step === 'tag-removal') {
+                errorMessage = '태그 제거 중 오류가 발생했습니다. 다시 시도해주세요.';
+            } else if (error.step === 'snippet-deletion') {
+                if (error.status === 404) {
+                    errorMessage = '해당 스니펫을 찾을 수 없습니다.';
+                } else if (error.status === 403) {
+                    errorMessage = '스니펫을 삭제할 권한이 없습니다.';
+                } else if (error.status === 500) {
+                    errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+                }
+            }
+
+            alert(errorMessage);
+        })
+        .finally(() => {
+            // 버튼 상태 복원
+            deleteBtn.prop('disabled', false).html(originalText);
+        });
+});
+
+// 스니펫과 연결된 모든 태그 제거 함수
+function removeAllTagsFromSnippet(snippetId) {
+    return new Promise((resolve, reject) => {
+        // 먼저 스니펫에 연결된 태그 목록 조회
+        $.ajax({
+            url: `/api/tag/snippet/${snippetId}`,
+            method: 'GET',
+            success: function(tags) {
+                if (!tags || tags.length === 0) {
+                    console.log('제거할 태그가 없습니다.');
+                    resolve();
+                }
+
+                console.log(`${tags.length}개의 태그 제거 시작:`, tags.map(t => t.name));
+
+                // 모든 태그 제거 요청을 병렬로 처리
+                const removePromises = tags.map(tag => {
+                    return new Promise((tagResolve, tagReject) => {
+                        $.ajax({
+                            url: `/api/tag/snippet/${snippetId}/tag/${tag.tagId}`,
+                            method: 'DELETE',
+                            success: function() {
+                                console.log(`태그 "${tag.name}" 제거 완료`);
+                                tagResolve();
+                            },
+                            error: function(xhr) {
+                                console.warn(`태그 "${tag.name}" 제거 실패:`, xhr.responseText);
+                                // 개별 태그 제거 실패는 무시하고 계속 진행
+                                tagResolve();
+                            }
+                        });
+                    });
+                });
+
+                // 모든 태그 제거 완료 대기
+                Promise.all(removePromises)
+                    .then(() => {
+                        console.log('모든 태그 제거 완료');
+                        resolve();
+                    })
+                    .catch((error) => {
+                        console.error('태그 제거 중 오류:', error);
+                        // 태그 제거 실패해도 스니펫 삭제는 진행
+                        resolve();
+                    });
+            },
+            error: function(xhr) {
+                console.warn('태그 목록 조회 실패:', xhr.responseText);
+                // 태그 목록 조회 실패해도 스니펫 삭제는 진행
+                resolve();
+            }
+        });
+    });
+}
+
+// 스니펫 삭제 요청 함수
+function deleteSnippetRequest(snippetId) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `/snippets/delete/${snippetId}`,
+            method: 'POST',
+            success: function(response) {
+                console.log('스니펫 삭제 완료');
+                resolve(response);
+            },
+            error: function(xhr, status, error) {
+                console.error('스니펫 삭제 실패:', xhr.responseText || error);
+                reject({
+                    step: 'snippet-deletion',
+                    status: xhr.status,
+                    message: xhr.responseText || error
+                });
+            }
+        });
+    });
+}
+
+// ============= 유틸리티 함수들 =============
+
+// 이미지 확대 모달
+function showImageZoom(imageUrl) {
+    const zoomModal = $(`
+        <div id="imageZoomModal" class="modal" style="
+            display: flex; 
+            position: fixed; 
+            z-index: 10000; 
+            left: 0; 
+            top: 0; 
+            width: 100%; 
+            height: 100%; 
+            background-color: rgba(0,0,0,0.9);
+            align-items: center;
+            justify-content: center;
+        ">
+            <div class="modal-content" style="position: relative; max-width: 90%; max-height: 90%;">
+                <span class="modal-close" style="
+                    position: absolute; 
+                    top: -40px; 
+                    right: 0; 
+                    color: white; 
+                    font-size: 40px; 
+                    font-weight: bold; 
+                    cursor: pointer;
+                ">&times;</span>
+                <img src="${imageUrl}" style="max-width: 100%; max-height: 100%; object-fit: contain;" alt="확대된 이미지">
+            </div>
+        </div>
+    `);
+
+    $('body').append(zoomModal);
+
+    zoomModal.on('click', function(e) {
+        if (e.target === this || $(e.target).hasClass('modal-close')) {
+            zoomModal.remove();
+        }
+    });
+}
+
+// 이미지 다운로드
+function downloadImage(imageUrl, filename) {
+    try {
+        const link = document.createElement('a');
+        link.href = imageUrl;
+        link.download = filename || 'image';
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast('이미지 다운로드를 시작합니다.');
+    } catch (error) {
+        console.error('이미지 다운로드 실패:', error);
+        showToast('이미지 다운로드에 실패했습니다.');
+    }
+}
+
+// 클립보드 복사
+function copyToClipboard(text, button) {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('클립보드에 복사되었습니다!');
+            $(button).text('복사됨!');
+            setTimeout(() => {
+                $(button).html('<i class="fas fa-copy"></i> 복사');
+            }, 2000);
+        }).catch(() => {
+            fallbackCopyToClipboard(text, button);
+        });
+    } else {
+        fallbackCopyToClipboard(text, button);
+    }
+}
+
+// 클립보드 복사 대체 방법
+function fallbackCopyToClipboard(text, button) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+        document.execCommand('copy');
+        showToast('클립보드에 복사되었습니다!');
+        $(button).text('복사됨!');
+        setTimeout(() => {
+            $(button).html('<i class="fas fa-copy"></i> 복사');
+        }, 2000);
+    } catch (err) {
+        showToast('복사에 실패했습니다.');
+    }
+    document.body.removeChild(textArea);
+}
+
+// 토스트 메시지 표시
+function showToast(message) {
+    const toast = $(`
+        <div class="toast-message" style="
+            position: fixed; 
+            top: 20px; 
+            right: 20px; 
+            background: #333; 
+            color: white; 
+            padding: 12px 20px; 
+            border-radius: 4px; 
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        ">${message}</div>
+    `);
+
+    $('body').append(toast);
+
+    setTimeout(() => toast.css('opacity', '1'), 10);
+    setTimeout(() => {
+        toast.css('opacity', '0');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// HTML 이스케이프 함수
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 // 빈 북마크 상태 표시
 function showEmptyBookmarkState() {
     const emptyHtml = `
@@ -691,10 +1599,37 @@ function showEmptyBookmarkState() {
     $('#snippetSectionContainer').html(emptyHtml);
 }
 
-// HTML 이스케이프 함수
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+// ============= Utils 객체 (없는 경우 기본 구현) =============
+
+// Utils 객체가 없는 경우 기본 구현
+if (typeof Utils === 'undefined') {
+    window.Utils = {
+        showAlert: function(message, type) {
+            const alert = $('<div>')
+                .addClass(`alert alert-${type}`)
+                .text(message)
+                .css({
+                    'position': 'fixed',
+                    'top': '20px',
+                    'right': '20px',
+                    'padding': '12px 20px',
+                    'border-radius': '4px',
+                    'z-index': '10000',
+                    'background': type === 'success' ? '#28a745' : '#dc3545',
+                    'color': 'white',
+                    'opacity': '0',
+                    'transition': 'opacity 0.3s'
+                });
+
+            $('body').append(alert);
+
+            setTimeout(() => alert.css('opacity', '1'), 10);
+
+            setTimeout(() => {
+                alert.fadeOut(300, function() {
+                    $(this).remove();
+                });
+            }, 3000);
+        }
+    };
 }

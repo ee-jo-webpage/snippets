@@ -106,122 +106,122 @@
 
 <!-- 분리된 JavaScript 파일들 (순서 중요!) -->
 <script th:src="@{/snippet-section/js/snippet-modal-main.js}"></script>
-<script th:src="@{/snippet-section/js/snippet-tags.js}"></script>
+<!--<script th:src="@{/snippet-section/js/snippet-tags.js}"></script>-->
 <script th:src="@{/snippet-section/js/snippet-actions.js}"></script>
 <script th:src="@{/bookmark/js/bookmark-list.js}"></script>
 <script th:src="@{/bookmark/js/bookmark-dynamic-loader.js}"></script>
 <style>
-/*스타일 조정 */
-.snippet-card {
-position: relative;
-cursor: pointer;
-transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
+    /*스타일 조정 */
+    .snippet-card {
+        position: relative;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
 
-.snippet-card:hover {
-transform: translateY(-2px);
-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
+    .snippet-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
 
-.snippet-card.has-color {
-background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.95) 100%);
-padding-left: 50px; /* 북마크 제거 버튼 공간 확보 */
-}
+    .snippet-card.has-color {
+        background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.95) 100%);
+        padding-left: 50px; /* 북마크 제거 버튼 공간 확보 */
+    }
 
-.color-indicator {
-/* snippet-section.css에서 이미 정의됨 - 중복 제거 */
-}
+    .color-indicator {
+        /* snippet-section.css에서 이미 정의됨 - 중복 제거 */
+    }
 
-.more-indicator {
-text-align: center;
-color: #666;
-font-size: 0.9em;
-margin-top: 10px;
-opacity: 0.7;
-}
+    .more-indicator {
+        text-align: center;
+        color: #666;
+        font-size: 0.9em;
+        margin-top: 10px;
+        opacity: 0.7;
+    }
 
-/* 이미지 미리보기 스타일 */
-.image-container {
-text-align: center;
-margin-bottom: 8px;
-}
+    /* 이미지 미리보기 스타일 */
+    .image-container {
+        text-align: center;
+        margin-bottom: 8px;
+    }
 
-.preview-image {
-max-width: 100%;
-max-height: 150px;
-border-radius: 4px;
-object-fit: cover;
-}
+    .preview-image {
+        max-width: 100%;
+        max-height: 150px;
+        border-radius: 4px;
+        object-fit: cover;
+    }
 
-.image-error {
-padding: 20px;
-text-align: center;
-background: #f5f5f5;
-border-radius: 4px;
-color: #666;
-}
+    .image-error {
+        padding: 20px;
+        text-align: center;
+        background: #f5f5f5;
+        border-radius: 4px;
+        color: #666;
+    }
 
-/* 메인 컨텐츠 조정 */
-.main-content .container {
-max-width: none;
-padding: 20px;
-}
+    /* 메인 컨텐츠 조정 */
+    .main-content .container {
+        max-width: none;
+        padding: 20px;
+    }
 
-/* 검색 필터링 관련 스타일 */
-.search-section {
-margin-bottom: 20px;
-}
+    /* 검색 필터링 관련 스타일 */
+    .search-section {
+        margin-bottom: 20px;
+    }
 
-.search-bar {
-display: flex;
-gap: 10px;
-align-items: center;
-}
+    .search-bar {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
 
-.search-input {
-flex: 1;
-padding: 10px;
-border: 1px solid #ddd;
-border-radius: 4px;
-}
+    .search-input {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
 
-.filter-select {
-padding: 10px;
-border: 1px solid #ddd;
-border-radius: 4px;
-background: white;
-}
-/* 북마크 제거 버튼 스타일 - 좌상단으로 이동 */
-.bookmark-remove-btn {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    background: #dc3545;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    opacity: 0.8;
-    transition: all 0.2s;
-    z-index: 1000;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-}
+    .filter-select {
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: white;
+    }
+    /* 북마크 제거 버튼 스타일 - 좌상단으로 이동 */
+    .bookmark-remove-btn {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        opacity: 0.8;
+        transition: all 0.2s;
+        z-index: 1000;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
 
-.bookmark-remove-btn:hover {
-    opacity: 1;
-    background: #c82333;
-    transform: scale(1.1);
-}
+    .bookmark-remove-btn:hover {
+        opacity: 1;
+        background: #c82333;
+        transform: scale(1.1);
+    }
 
-/* 색상 인디케이터가 있는 경우 북마크 제거 버튼 위치 조정 */
-.snippet-card.has-color .bookmark-remove-btn {
-    top: 45px; /* 색상 인디케이터 아래로 이동 */
-}
+    /* 색상 인디케이터가 있는 경우 북마크 제거 버튼 위치 조정 */
+    .snippet-card.has-color .bookmark-remove-btn {
+        top: 45px; /* 색상 인디케이터 아래로 이동 */
+    }
 </style>
 
 </body>

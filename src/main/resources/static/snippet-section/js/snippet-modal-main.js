@@ -80,8 +80,8 @@ const SnippetModal = {
     },
 
     loadSnippetDetail: function(snippetId, basicSnippet) {
-        // 북마크된 스니펫 상세 정보 API 호출
-        fetch(`/api/bookmarks/snippet/${snippetId}/detail`)
+        // 일반 스니펫 상세 정보 API 호출
+        fetch(`/api/tag/snippet/${snippetId}/detail`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -107,11 +107,10 @@ const SnippetModal = {
                         SnippetTags.updateTags(data.data.tags);
                     }
 
-                    // 북마크 상태 업데이트
-                    if (typeof SnippetBookmark !== 'undefined') {
-                        SnippetBookmark.updateStatus(snippetId, true);
-                    }
-
+                    // // 북마크 상태 업데이트
+                    // if (typeof SnippetBookmark !== 'undefined') {
+                    //     SnippetBookmark.updateStatus(snippetId, data.data.isBookmarked);
+                    // }
                 } else {
                     // API 호출 실패 시 기본 데이터로 표시
                     console.warn('북마크 상세 정보 로드 실패:', data.message);
@@ -222,10 +221,6 @@ const SnippetModal = {
                 <div class="bookmark-modal-content code-content">
                     <div class="language-badge">${language}</div>
                     <div class="code-container">
-                        <button class="code-copy-btn" onclick="SnippetModal.copyToClipboard(this)" 
-                                data-content="${this.escapeHtml(content)}">
-                            <i class="fas fa-copy"></i> 복사
-                        </button>
                         <pre class="code-block"><code class="language-${language}">${this.escapeHtml(content)}</code></pre>
                     </div>
                 </div>

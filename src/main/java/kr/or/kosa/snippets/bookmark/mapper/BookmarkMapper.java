@@ -1,6 +1,7 @@
 package kr.or.kosa.snippets.bookmark.mapper;
 
 import kr.or.kosa.snippets.basic.model.Snippets;
+import kr.or.kosa.snippets.bookmark.model.Bookmark;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
@@ -46,4 +47,28 @@ public interface BookmarkMapper {
     @Select("SELECT * FROM snippets WHERE user_id = #{userId} ORDER BY created_at DESC")
     @Deprecated
     List<Snippets> selectSnippetsByUserId(@Param("userId") Long userId);
+
+    /**
+     * 특정 사용자의 특정 스니펫 북마크 개수 조회 (존재 여부 확인용)
+     */
+    @Select("SELECT COUNT(*) FROM bookmarks WHERE user_id = #{userId} AND snippet_id = #{snippetId}")
+    Integer countBookmark(@Param("userId") Long userId, @Param("snippetId") Long snippetId);
+
+    /**
+     * 북마크 추가 (INSERT IGNORE 사용으로 중복 방지)
+     */
+    @Insert("INSERT IGNORE INTO bookmarks (user_id, snippet_id) VALUES (#{userId}, #{snippetId})")
+    int insertBookmarkSafe(@Param("userId") Long userId, @Param("snippetId") Long snippetId);
+
+    /**
+     * 북마크 제거
+     */
+    @Delete("DELETE FROM bookmarks WHERE user_id = #{userId} AND snippet_id = #{snippetId}")
+    int deleteBookmarkk(@Param("userId") Long userId, @Param("snippetId") Long snippetId);
+
+    /**
+     * 특정 사용자의 모든 북마크 조회
+     */
+    @Select("SELECT * FROM bookmarks WHERE user_id = #{userId}")
+    List<Bookmark> findByUserId(@Param("userId") Long userId);
 }

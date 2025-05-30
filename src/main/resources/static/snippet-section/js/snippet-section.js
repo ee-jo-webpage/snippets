@@ -59,9 +59,9 @@ $(document).ready(function() {
         contentDiv.empty();
 
         if (snippet.type === 'CODE') {
-            if (snippet.language) {
-                contentDiv.append(`<div class="language-badge">${snippet.language}</div>`);
-            }
+            // if (snippet.language) {
+            //     contentDiv.append(`<div class="language-badge">${snippet.language}</div>`);
+            // }
             contentDiv.append(`<pre class="code-block">${snippet.content || 'No Code'}</pre>`);
         } else {
             contentDiv.append(`<div class="text-content">${snippet.content || 'No Content'}</div>`);

@@ -568,7 +568,7 @@ body {
 }
 
 .snippet-modal-body {
-    max-height: 55vh; /* 더 짧게 */
+    /*max-height: 55vh; !* 더 짧게 *!*/
     overflow-y: auto;
     display: flex; /* 플렉스 레이아웃으로 가로 배치 */
     gap: 20px;

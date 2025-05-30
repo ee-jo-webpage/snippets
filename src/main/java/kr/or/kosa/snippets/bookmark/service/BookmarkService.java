@@ -5,7 +5,10 @@ import kr.or.kosa.snippets.basic.model.SnippetTypeBasic;
 import kr.or.kosa.snippets.basic.service.SnippetService;
 import kr.or.kosa.snippets.bookmark.mapper.BookmarkMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.annotations.Insert;
+import org.apache.ibatis.annotations.Select;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -57,31 +60,81 @@ public class BookmarkService {
 
     //북마크 여부 확인
     public boolean isBookmarked(Long userId, Long snippetId) {
-        return bookmarkMapper.isBookmarked(userId, snippetId) > 0;
+        try {
+            Integer count = bookmarkMapper.countBookmark(userId, snippetId);
+            return count != null && count > 0;
+        } catch (Exception e) {
+            log.error("북마크 상태 확인 중 오류 발생 - 사용자 ID: {}, 스니펫 ID: {}, 오류: {}",
+                    userId, snippetId, e.getMessage(), e);
+            return false; // 오류 발생 시 북마크되지 않은 것으로 처리
+        }
     }
+
+
 
     //북마크 추가
     public void addBookmark(Long userId, Long snippetId) {
-        log.info("북마크 추가 시도: userId={}, snippetId={}", userId, snippetId);
-        bookmarkMapper.insertBookmark(userId, snippetId);
+        try {
+            // 중복 확인을 한 번 더 수행 (동시성 문제 대비)
+            if (isBookmarked(userId, snippetId)) {
+                log.warn("이미 북마크된 스니펫입니다 - 사용자 ID: {}, 스니펫 ID: {}", userId, snippetId);
+                return; // 이미 북마크되어 있으면 그냥 리턴 (예외 발생하지 않음)
+            }
+
+            bookmarkMapper.insertBookmark(userId, snippetId);
+            log.info("북마크 추가 성공 - 사용자 ID: {}, 스니펫 ID: {}", userId, snippetId);
+        } catch (DuplicateKeyException e) {
+            // Primary Key 중복 오류가 발생해도 이미 북마크되어 있다는 의미이므로 정상 처리
+            log.warn("북마크 중복 추가 시도 (이미 존재함) - 사용자 ID: {}, 스니펫 ID: {}", userId, snippetId);
+            // 예외를 던지지 않고 정상 처리
+        } catch (Exception e) {
+            log.error("북마크 추가 중 오류 발생 - 사용자 ID: {}, 스니펫 ID: {}, 오류: {}",
+                    userId, snippetId, e.getMessage(), e);
+            throw new RuntimeException("북마크 추가 중 오류가 발생했습니다.", e);
+        }
     }
 
     //북마크 삭제
     public void removeBookmark(Long userId, Long snippetId) {
-        log.info("북마크 삭제 시도: userId={}, snippetId={}", userId, snippetId);
-        bookmarkMapper.deleteBookmark(userId, snippetId);
+        try {
+            int deletedRows = bookmarkMapper.deleteBookmarkk(userId, snippetId);
+            if (deletedRows == 0) {
+                log.warn("삭제할 북마크가 없습니다 - 사용자 ID: {}, 스니펫 ID: {}", userId, snippetId);
+            } else {
+                log.info("북마크 제거 성공 - 사용자 ID: {}, 스니펫 ID: {}", userId, snippetId);
+            }
+        } catch (Exception e) {
+            log.error("북마크 제거 중 오류 발생 - 사용자 ID: {}, 스니펫 ID: {}, 오류: {}",
+                    userId, snippetId, e.getMessage(), e);
+            throw new RuntimeException("북마크 제거 중 오류가 발생했습니다.", e);
+        }
     }
+
 
     //북마크 토글 (추가/삭제)
     public boolean toggleBookmark(Long userId, Long snippetId) {
-        if (isBookmarked(userId, snippetId)) {
-            removeBookmark(userId, snippetId);
-            return false; // 삭제됨
-        } else {
-            addBookmark(userId, snippetId);
-            return true; // 추가됨
+        try {
+            // 현재 북마크 상태 확인
+            boolean isCurrentlyBookmarked = isBookmarked(userId, snippetId);
+
+            if (isCurrentlyBookmarked) {
+                // 이미 북마크되어 있으면 제거
+                removeBookmark(userId, snippetId);
+                log.info("북마크 제거 완료 - 사용자 ID: {}, 스니펫 ID: {}", userId, snippetId);
+                return false; // 북마크 제거됨
+            } else {
+                // 북마크되어 있지 않으면 추가
+                addBookmark(userId, snippetId);
+                log.info("북마크 추가 완료 - 사용자 ID: {}, 스니펫 ID: {}", userId, snippetId);
+                return true; // 북마크 추가됨
+            }
+        } catch (Exception e) {
+            log.error("북마크 토글 중 오류 발생 - 사용자 ID: {}, 스니펫 ID: {}, 오류: {}",
+                    userId, snippetId, e.getMessage(), e);
+            throw new RuntimeException("북마크 처리 중 오류가 발생했습니다.", e);
         }
     }
+
 
     //특정 스니펫 조회 - 스니펫 서비스 로직 활용
     public Snippets getSnippetById(Long snippetId) {

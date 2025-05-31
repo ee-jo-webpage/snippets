@@ -82,24 +82,32 @@ public class BoardService {
         }
     }*/
 
-    //업로드 디버그용
     public void updatePost(Post post, MultipartFile[] files) throws IOException {
         System.out.println("=== BoardService.updatePost 시작 ===");
         System.out.println("업데이트할 Post: " + post.toString());
 
         try {
+            // 기본값 설정
+            if (post.getStatus() == null || post.getStatus().isEmpty()) {
+                post.setStatus("published");
+            }
+
+            // 업데이트 시간 설정 (필요한 경우)
+            post.setUpdatedAt(LocalDateTime.now());
+
             // 실제 업데이트 실행
             int updateCount = postMapper.updatePost(post);
             System.out.println("업데이트된 행 개수: " + updateCount);
 
             if (updateCount == 0) {
                 System.out.println("❌ 업데이트된 행이 없습니다!");
+                throw new RuntimeException("게시글 업데이트에 실패했습니다.");
             } else {
-                System.out.println("✅ 업데이트 성공!");
+                System.out.println("✅ 게시글 업데이트 성공!");
             }
 
         } catch (Exception e) {
-            System.out.println("❌ 업데이트 오류: " + e.getMessage());
+            System.out.println("❌ 게시글 업데이트 오류: " + e.getMessage());
             e.printStackTrace();
             throw e;
         }
@@ -109,17 +117,19 @@ public class BoardService {
             System.out.println("파일 처리 시작...");
             for (MultipartFile file : files) {
                 if (!file.isEmpty()) {
-                    saveAttachment(post.getPostId(), file);
+                    try {
+                        saveAttachment(post.getPostId(), file);
+                        System.out.println("파일 저장 성공: " + file.getOriginalFilename());
+                    } catch (IOException e) {
+                        System.out.println("파일 저장 실패: " + file.getOriginalFilename() + " - " + e.getMessage());
+                        throw e;
+                    }
                 }
             }
             System.out.println("파일 처리 완료");
         }
 
         System.out.println("=== BoardService.updatePost 완료 ===");
-    }
-
-    public void deletePost(Integer postId) {
-        postMapper.deletePost(postId);
     }
 
     //첨부파일 저장
@@ -285,6 +295,52 @@ public class BoardService {
         postMapper.deleteDraft(draftId);
     }
 
+    public void deletePost(Integer postId) {
+        System.out.println("=== BoardService.deletePost 시작 ===");
+        System.out.println("삭제할 게시글 ID: " + postId);
+
+        try {
+            // 1. 먼저 첨부파일들을 조회하여 실제 파일 삭제
+            List<PostAttachment> attachments = attachmentMapper.getAttachmentsByPostId(postId);
+
+            if (attachments != null && !attachments.isEmpty()) {
+                System.out.println("첨부파일 " + attachments.size() + "개 삭제 시작");
+
+                for (PostAttachment attachment : attachments) {
+                    try {
+                        // 실제 파일 삭제
+                        Path filePath = Paths.get(attachment.getFilePath());
+                        if (Files.exists(filePath)) {
+                            Files.delete(filePath);
+                            System.out.println("파일 삭제 성공: " + attachment.getFileName());
+                        }
+
+                        // DB에서 첨부파일 정보 삭제
+                        attachmentMapper.deleteAttachment(attachment.getAttachmentId());
+
+                    } catch (IOException e) {
+                        System.out.println("파일 삭제 실패: " + attachment.getFileName() + " - " + e.getMessage());
+                        // 파일 삭제 실패해도 계속 진행 (DB 정보는 삭제)
+                    }
+                }
+            }
+
+            // 2. 댓글들도 삭제 (CASCADE 설정이 안되어 있다면)
+            // 실제로는 데이터베이스에서 CASCADE DELETE로 처리하는 것이 좋습니다
+            // 여기서는 우선 게시글만 삭제
+
+            // 3. 게시글 삭제
+            postMapper.deletePost(postId);
+            System.out.println("✅ 게시글 삭제 완료");
+
+        } catch (Exception e) {
+            System.out.println("❌ 게시글 삭제 실패: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("게시글 삭제 중 오류가 발생했습니다.", e);
+        }
+
+        System.out.println("=== BoardService.deletePost 완료 ===");
+    }
 
 
 

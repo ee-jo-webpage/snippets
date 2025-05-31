@@ -510,9 +510,9 @@
                 </a>
             </div>
 
-            <!-- 카테고리 목록 (서버에서 동적으로 생성) -->
+            <!-- 카테고리 목록 (서버에서 동적으로 생성) - URL 수정 -->
             <div class="category-item" th:each="category : ${categories}">
-                <a th:href="@{/community/category/{categoryId}(categoryId=${category.categoryId})}"
+                <a th:href="@{/community(categoryId=${category.categoryId})}"
                    class="category-link">
                     <i class="fas fa-folder category-icon"></i>
                     <span th:text="${category.name}">카테고리명</span>

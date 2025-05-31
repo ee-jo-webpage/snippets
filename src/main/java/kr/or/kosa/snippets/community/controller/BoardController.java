@@ -25,10 +25,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.Objects;
 
 @Controller
 @RequestMapping("/community")
@@ -175,6 +173,7 @@ public class BoardController {
         }
     }
 
+    /*
     // 게시글 상세
     @GetMapping("/post/{postId}")
     public String postDetail(@PathVariable Integer postId,
@@ -202,6 +201,90 @@ public class BoardController {
             return "redirect:/community";
         }
     }
+*/
+
+
+    @GetMapping("/post/{postId}")
+    public String postDetail(@PathVariable Integer postId,
+                             @AuthenticationPrincipal CustomUserDetails userDetails,
+                             Model model) {
+        System.out.println("=== 게시글 상세 조회 시작 ===");
+        System.out.println("요청된 postId: " + postId);
+
+        try {
+            // 1. 게시글 조회
+            Post post = boardService.getPostById(postId);
+            if (post == null) {
+                System.out.println("게시글을 찾을 수 없음");
+                return "redirect:/community";
+            }
+            System.out.println("게시글 조회 성공: " + post.getTitle());
+
+            // 2. 사용자 ID 추출 (안전하게)
+            Long currentUserId = getCurrentUserId(userDetails);
+            System.out.println("현재 사용자 ID: " + currentUserId);
+            System.out.println("게시글 작성자 ID: " + post.getUserId());
+
+            // 3. 첨부파일 조회
+            List<PostAttachment> attachments = null;
+            try {
+                attachments = boardService.getAttachmentsByPostId(postId);
+                System.out.println("첨부파일 개수: " + (attachments != null ? attachments.size() : 0));
+            } catch (Exception e) {
+                System.out.println("첨부파일 조회 오류: " + e.getMessage());
+                attachments = new ArrayList<>();
+            }
+
+            // 4. 권한 체크 (수정된 버전)
+            boolean canEdit = false;
+            boolean canDelete = false;
+
+            if (currentUserId != null && post.getUserId() != null) {
+                System.out.println("\n=== 권한 체크 시작 ===");
+
+                // Long과 Long을 직접 비교 (Objects.equals 사용)
+                boolean isAuthor = Objects.equals(currentUserId, post.getUserId());
+
+                // 관리자 확인
+                boolean isAdmin = isAdmin(userDetails);
+
+                canEdit = isAuthor || isAdmin;
+                canDelete = isAuthor || isAdmin;
+
+                System.out.println("권한 체크 결과:");
+                System.out.println("- 현재 사용자 ID: " + currentUserId + " (타입: " + currentUserId.getClass().getSimpleName() + ")");
+                System.out.println("- 게시글 작성자 ID: " + post.getUserId() + " (타입: " + post.getUserId().getClass().getSimpleName() + ")");
+                System.out.println("- Objects.equals() 결과: " + isAuthor);
+                System.out.println("- 관리자 여부: " + isAdmin);
+                System.out.println("- 수정 권한: " + canEdit);
+                System.out.println("- 삭제 권한: " + canDelete);
+                System.out.println("=== 권한 체크 완료 ===\n");
+            } else {
+                System.out.println("❌ 사용자 ID 또는 게시글 작성자 ID가 null");
+            }
+
+            // 5. 모델에 데이터 추가
+            model.addAttribute("post", post);
+            model.addAttribute("attachments", attachments != null ? attachments : new ArrayList<>());
+            model.addAttribute("currentUserId", currentUserId);
+            model.addAttribute("isLoggedIn", userDetails != null);
+            model.addAttribute("currentUserNickname", userDetails != null ? userDetails.getNickname() : null);
+            model.addAttribute("canEdit", canEdit);
+            model.addAttribute("canDelete", canDelete);
+
+            System.out.println("=== 게시글 상세 조회 성공 ===");
+            return "community/postDetail";
+
+        } catch (Exception e) {
+            System.out.println("=== 게시글 상세 조회 실패 ===");
+            System.out.println("오류 메시지: " + e.getMessage());
+            e.printStackTrace();
+
+            model.addAttribute("error", "게시글을 불러올 수 없습니다: " + e.getMessage());
+            return "redirect:/community?error=post_load_failed";
+        }
+    }
+
 
     // BoardController.java - addPost 메서드 수정
     @PostMapping("/post/new")
@@ -295,6 +378,7 @@ public class BoardController {
         }
     }
 
+    /*
 
     // 게시글 수정 폼
     @GetMapping("/post/{postId}/edit")
@@ -389,6 +473,191 @@ public class BoardController {
 
         } catch (Exception e) {
             return "redirect:/community";
+        }
+    }
+*/
+
+    // 게시글 수정 처리 - 디버깅 개선
+    @PostMapping("/post/{postId}/edit")
+    public String updatePost(@PathVariable Integer postId,
+                             @ModelAttribute Post post,
+                             @RequestParam(value = "files", required = false) MultipartFile[] files,
+                             @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        System.out.println("=== 게시글 수정 처리 시작 ===");
+        System.out.println("게시글 ID: " + postId);
+
+        // 로그인 체크
+        if (userDetails == null) {
+            System.out.println("로그인되지 않은 사용자");
+            return "redirect:/login?message=loginRequired";
+        }
+
+        try {
+            // 기존 게시글 조회
+            Post existingPost = boardService.getPostById(postId);
+            if (existingPost == null) {
+                System.out.println("기존 게시글을 찾을 수 없음");
+                return "redirect:/community?error=post_not_found";
+            }
+
+            Long currentUserId = getCurrentUserId(userDetails);
+            System.out.println("현재 사용자 ID: " + currentUserId);
+            System.out.println("기존 게시글 작성자 ID: " + existingPost.getUserId());
+
+            // 권한 체크 - Objects.equals 사용
+            boolean isAuthor = Objects.equals(currentUserId, existingPost.getUserId());
+            boolean isAdmin = isAdmin(userDetails);
+
+            if (!isAuthor && !isAdmin) {
+                System.out.println("수정 권한 없음");
+                return "redirect:/community/post/" + postId + "?error=permission";
+            }
+
+            // 수정할 데이터 설정
+            post.setPostId(postId);
+            post.setUserId(existingPost.getUserId()); // 원래 작성자 유지
+
+            // 입력값 검증
+            if (post.getTitle() == null || post.getTitle().trim().isEmpty()) {
+                System.out.println("제목이 비어있음");
+                return "redirect:/community/post/" + postId + "/edit?error=title";
+            }
+
+            if (post.getContent() == null || post.getContent().trim().isEmpty()) {
+                System.out.println("내용이 비어있음");
+                return "redirect:/community/post/" + postId + "/edit?error=content";
+            }
+
+            System.out.println("수정할 내용:");
+            System.out.println("- 제목: " + post.getTitle());
+            System.out.println("- 카테고리 ID: " + post.getCategoryId());
+            System.out.println("- 공지사항 여부: " + post.isNotice());
+
+            // 게시글 수정
+            boardService.updatePost(post, files);
+
+            System.out.println("=== 게시글 수정 성공 ===");
+            return "redirect:/community/post/" + postId + "?success=updated";
+
+        } catch (IOException e) {
+            System.out.println("파일 처리 오류: " + e.getMessage());
+            e.printStackTrace();
+            return "redirect:/community/post/" + postId + "/edit?error=file";
+        } catch (Exception e) {
+            System.out.println("게시글 수정 오류: " + e.getMessage());
+            e.printStackTrace();
+            return "redirect:/community/post/" + postId + "/edit?error=save";
+        }
+    }
+
+    @GetMapping("/post/{postId}/edit")
+    public String editPostForm(@PathVariable Integer postId,
+                               @AuthenticationPrincipal CustomUserDetails userDetails,
+                               Model model) {
+        System.out.println("=== 게시글 수정 폼 요청 ===");
+        System.out.println("게시글 ID: " + postId);
+
+        // 로그인 체크
+        if (userDetails == null) {
+            System.out.println("로그인되지 않은 사용자");
+            return "redirect:/login?message=loginRequired";
+        }
+
+        try {
+            // 게시글 조회
+            Post post = boardService.getPostById(postId);
+            if (post == null) {
+                System.out.println("게시글을 찾을 수 없음");
+                return "redirect:/community?error=post_not_found";
+            }
+
+            Long currentUserId = getCurrentUserId(userDetails);
+            System.out.println("현재 사용자 ID: " + currentUserId);
+            System.out.println("게시글 작성자 ID: " + post.getUserId());
+
+            // 권한 체크 - Objects.equals 사용으로 수정
+            boolean isAuthor = Objects.equals(currentUserId, post.getUserId());
+            boolean isAdmin = isAdmin(userDetails);
+
+            System.out.println("권한 체크:");
+            System.out.println("- 작성자 여부: " + isAuthor);
+            System.out.println("- 관리자 여부: " + isAdmin);
+
+            if (!isAuthor && !isAdmin) {
+                System.out.println("수정 권한 없음");
+                return "redirect:/community/post/" + postId + "?error=permission";
+            }
+
+            // 카테고리 목록과 첨부파일 목록 조회
+            List<BoardCategory> categories = boardService.getAllCategories();
+            List<PostAttachment> attachments = boardService.getAttachmentsByPostId(postId);
+
+            model.addAttribute("post", post);
+            model.addAttribute("categories", categories);
+            model.addAttribute("attachments", attachments != null ? attachments : new ArrayList<>());
+
+            System.out.println("=== 게시글 수정 폼 로드 성공 ===");
+            return "community/postEdit"; // 또는 "community/postEditDetail"
+
+        } catch (Exception e) {
+            System.out.println("게시글 수정 폼 로드 오류: " + e.getMessage());
+            e.printStackTrace();
+            return "redirect:/community/post/" + postId + "?error=load_failed";
+        }
+    }
+
+    // 게시글 삭제
+    @PostMapping("/post/{postId}/delete")
+    public String deletePost(@PathVariable Integer postId,
+                             @AuthenticationPrincipal CustomUserDetails userDetails) {
+        System.out.println("=== 게시글 삭제 요청 ===");
+        System.out.println("게시글 ID: " + postId);
+
+        // 로그인 체크
+        if (userDetails == null) {
+            System.out.println("로그인되지 않은 사용자");
+            return "redirect:/login?message=loginRequired";
+        }
+
+        try {
+            // 게시글 조회
+            Post post = boardService.getPostById(postId);
+            if (post == null) {
+                System.out.println("게시글을 찾을 수 없음");
+                return "redirect:/community?error=post_not_found";
+            }
+
+            Long currentUserId = getCurrentUserId(userDetails);
+            System.out.println("현재 사용자 ID: " + currentUserId);
+            System.out.println("게시글 작성자 ID: " + post.getUserId());
+
+            // 권한 체크 - Objects.equals 사용으로 수정
+            boolean isAuthor = Objects.equals(currentUserId, post.getUserId());
+            boolean isAdmin = isAdmin(userDetails);
+
+            System.out.println("권한 체크:");
+            System.out.println("- 작성자 여부: " + isAuthor);
+            System.out.println("- 관리자 여부: " + isAdmin);
+
+            if (!isAuthor && !isAdmin) {
+                System.out.println("삭제 권한 없음");
+                return "redirect:/community/post/" + postId + "?error=permission";
+            }
+
+            // 카테고리 ID 저장 (삭제 후 해당 카테고리로 돌아가기 위해)
+            Integer categoryId = post.getCategoryId();
+
+            // 게시글 삭제 (첨부파일도 함께 삭제됨)
+            boardService.deletePost(postId);
+
+            System.out.println("=== 게시글 삭제 성공 ===");
+            return "redirect:/community?categoryId=" + categoryId + "&success=deleted";
+
+        } catch (Exception e) {
+            System.out.println("게시글 삭제 오류: " + e.getMessage());
+            e.printStackTrace();
+            return "redirect:/community/post/" + postId + "?error=delete_failed";
         }
     }
 
@@ -505,14 +774,52 @@ public class BoardController {
         return result;
     }
 
+
+    /*
+    //CustomUserDetails에서 사용자 ID 추출 (안전한 버전)
+    private Long getCurrentUserId(CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            System.out.println("userDetails가 null입니다.");
+            return null;
+        }
+
+        try {
+            Long userId = userDetails.getUserId();
+            System.out.println("추출된 사용자 ID: " + userId);
+            return userId;
+        } catch (Exception e) {
+            System.out.println("사용자 ID 추출 중 오류: " + e.getMessage());
+            return null;
+        }
+    }
+
+
+     //관리자 권한 체크
+
+    private boolean isAdmin(CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            return false;
+        }
+        return userDetails.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+    }
+    */
+
     /**
-     * CustomUserDetails에서 사용자 ID 추출
+     * CustomUserDetails에서 사용자 ID 추출 (안전한 버전)
      */
     private Long getCurrentUserId(CustomUserDetails userDetails) {
         if (userDetails == null) {
             return null;
         }
-        return userDetails.getUserId();
+
+        try {
+            Long userId = userDetails.getUserId();
+            return userId;
+        } catch (Exception e) {
+            System.out.println("사용자 ID 추출 중 오류: " + e.getMessage());
+            return null;
+        }
     }
 
     /**
@@ -522,7 +829,12 @@ public class BoardController {
         if (userDetails == null) {
             return false;
         }
-        return userDetails.getAuthorities().stream()
-                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+        try {
+            return userDetails.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+        } catch (Exception e) {
+            System.out.println("관리자 권한 체크 오류: " + e.getMessage());
+            return false;
+        }
     }
 }

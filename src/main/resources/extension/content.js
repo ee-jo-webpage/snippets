@@ -100,6 +100,7 @@ function init() {
             });
             console.log("서버 색상 정보 로드 완료");
             restoreHighlights();
+            detectCodeBlocks();
 
         })
         .catch((err) => {
@@ -107,6 +108,7 @@ function init() {
             setDefaultColors();
             console.log("기본 색상 정보로 대체 완료");
             restoreHighlights();
+            detectCodeBlocks();
 
         });
 }

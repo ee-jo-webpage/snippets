@@ -142,7 +142,7 @@ const SnippetDisplay = {
             const colorIndicator = $('<div>')
                 .addClass('color-indicator')
                 .css('background-color', snippet.hexCode)
-                .append($('<span>').addClass('color-name').text(snippet.colorName || 'Color'));
+                .append($('<span>').addClass('color-name').text(snippet.name || 'Color'));
             card.append(colorIndicator);
         }
 
@@ -152,6 +152,7 @@ const SnippetDisplay = {
         if (snippet.type) {
             const typeClass = snippet.type === 'CODE' ? 'type-code' :
                 snippet.type === 'TEXT' ? 'type-text' : 'type-img';
+
             metaContainer.append(
                 $('<span>')
                     .addClass('meta-item ' + typeClass)
@@ -226,7 +227,12 @@ const SnippetDisplay = {
                 console.warn('이미지 URL이 없는 이미지 스니펫:', snippet);
             }
 
-        } else {
+        }if (snippet.type === 'CODE' || snippet.type === 'CODE') {
+            const codeContent = snippet.content || '';
+            const preview = codeContent.length > 100 ? codeContent.substring(0, 100) + '...' : codeContent;
+            contentPreview.append($('<div>').addClass('code-preview')
+                .append($('<pre>').append($('<code>').text(preview))));
+        }else {
             // 텍스트/코드 스니펫인 경우
             if (snippet.content) {
                 const previewText = snippet.content.length > 100

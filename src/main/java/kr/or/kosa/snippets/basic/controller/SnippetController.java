@@ -43,7 +43,7 @@ public class SnippetController {
             S3Service s3Service, ColorService colorService) {
         this.snippetService = snippetService;
         this.s3Service     = s3Service;
-		this.colorService = colorService;
+        this.colorService = colorService;
     }
 
     @InitBinder
@@ -79,34 +79,34 @@ public class SnippetController {
 
         // ★ 수정: 타입별 실제 내용으로 contentPreviewMap 생성
         Map<Long, String> previewMap = list.stream()
-            .collect(Collectors.toMap(
-                Snippets::getSnippetId,
-                snippet -> {
-                    String preview = "";
-                    switch (snippet.getType()) {
-                        case CODE:
-                        case TEXT:
-                            String content = snippet.getContent();
-                            if (content != null && !content.trim().isEmpty()) {
-                                preview = content.length() > 100 ? content.substring(0, 100) + "…" : content;
-                            } else {
-                                preview = "내용 없음";
+                .collect(Collectors.toMap(
+                        Snippets::getSnippetId,
+                        snippet -> {
+                            String preview = "";
+                            switch (snippet.getType()) {
+                                case CODE:
+                                case TEXT:
+                                    String content = snippet.getContent();
+                                    if (content != null && !content.trim().isEmpty()) {
+                                        preview = content.length() > 100 ? content.substring(0, 100) + "…" : content;
+                                    } else {
+                                        preview = "내용 없음";
+                                    }
+                                    break;
+                                case IMG:
+                                    String altText = snippet.getAltText();
+                                    if (altText != null && !altText.trim().isEmpty()) {
+                                        preview = "[이미지] " + altText;
+                                    } else {
+                                        preview = "[이미지] 설명 없음";
+                                    }
+                                    break;
+                                default:
+                                    preview = "내용 없음";
                             }
-                            break;
-                        case IMG:
-                            String altText = snippet.getAltText();
-                            if (altText != null && !altText.trim().isEmpty()) {
-                                preview = "[이미지] " + altText;
-                            } else {
-                                preview = "[이미지] 설명 없음";
-                            }
-                            break;
-                        default:
-                            preview = "내용 없음";
-                    }
-                    return preview;
-                }
-            ));
+                            return preview;
+                        }
+                ));
         model.addAttribute("contentPreviewMap", previewMap);
 
         // 4) 페이지 정보 생성
@@ -125,8 +125,8 @@ public class SnippetController {
         model.addAttribute("pageGroupSize", pageGroupSize);
         model.addAttribute("startPage", startPage);
         model.addAttribute("endPage", endPage);
-        
-        // ★ 사이드바 활성화를 위한 activeMenu 설정
+
+        // ★ 수정: 사이드바의 실제 data-menu 값과 일치시킴
         model.addAttribute("activeMenu", "snippets");
 
         return "basic/snippets/snippetsList";
@@ -143,10 +143,10 @@ public class SnippetController {
             return "error/404";
         }
         model.addAttribute("snippet", snippet);
-        
-        // ★ 추가: 스니펫 상세보기도 snippets 메뉴로 간주
+
+        // ★ 수정: 스니펫 상세보기도 snippets 메뉴로 활성화
         model.addAttribute("activeMenu", "snippets");
-        
+
         return "basic/snippets/snippetDetail";
     }
 
@@ -157,10 +157,10 @@ public class SnippetController {
             @AuthenticationPrincipal CustomUserDetails details) {
 
         model.addAttribute("snippet", new Snippets());
-        
-        // ★ 추가: 스니펫 추가 폼도 snippets 메뉴로 간주
+
+        // ★ 수정: 스니펫 추가 폼도 snippets 메뉴로 활성화
         model.addAttribute("activeMenu", "snippets");
-        
+
         // type 파라미터가 있으면 (CODE/TEXT/IMG 선택 후)
         if (type != null) {
             // ① 사용자 기본+커스텀 컬러 조회
@@ -186,22 +186,22 @@ public class SnippetController {
             @RequestParam("type") String type,
             @RequestParam(value = "imageFile", required = false) MultipartFile imageFile
     ) throws IOException {
-        
+
         // ② 로그인 체크 (만약 비로그인 허용 안 하면 생략 가능)
         if (details == null || details.getUserId() == null) {
             return "redirect:/login";
         }
-        
+
         // ③ 스니펫에 userId 세팅
         snippet.setUserId(details.getUserId());
         snippet.setType(SnippetTypeBasic.valueOf(type));
-        
+
         // ④ 이미지 파일 처리
         if (imageFile != null && !imageFile.isEmpty()) {
             String s3Url = s3Service.uploadFile(imageFile);
             snippet.setImageUrl(s3Url);
         }
-        
+
         // ⑤ 삽입 호출 (이제 mapper에 #{userId}가 전달됩니다)
         snippetService.insertSnippets(snippet);
         return "redirect:/snippets";
@@ -210,10 +210,10 @@ public class SnippetController {
 
     @GetMapping("/edit-form/{type}/{snippetId}")
     public String getEditForm(
-        @PathVariable(value="type") String type,
-        @PathVariable(value="snippetId") Long snippetId,
-        Model model,
-        @AuthenticationPrincipal CustomUserDetails details) {
+            @PathVariable(value="type") String type,
+            @PathVariable(value="snippetId") Long snippetId,
+            Model model,
+            @AuthenticationPrincipal CustomUserDetails details) {
 
         SnippetTypeBasic snippetType;
         try {
@@ -226,6 +226,9 @@ public class SnippetController {
         if (snippet == null) return "error/404";
 
         model.addAttribute("snippet", snippet);
+
+        // ★ 추가: 수정 폼도 snippets 메뉴로 활성화
+        model.addAttribute("activeMenu", "snippets");
 
         Long userId = details.getUserId();
         List<Color> colors = colorService.getAllAvailableColorsByUserId(userId);
@@ -281,9 +284,9 @@ public class SnippetController {
         } else if (SnippetTypeBasic.IMG.equals(type)) {
             snippetService.updateSnippetImage(existingSnippet);
         }
-        
+
         System.out.println("폼에서 넘어온 colorId = " + snippet.getColorId());
-        
+
         return "redirect:/snippets/" + snippetId;
     }
 

@@ -146,6 +146,13 @@ const SnippetModal = {
     },
 
     updateContent: function (modal, snippet) {
+        // 스니펫 색상이 있으면 모달에 적용
+        if (snippet.hexCode) {
+            this.applySnippetColor(modal, snippet.hexCode);
+        } else {
+            this.removeSnippetColor(modal);
+        }
+
         // 메타 정보 업데이트
         const metaDiv = modal.find('.snippet-detail-meta');
         metaDiv.empty();
@@ -174,6 +181,46 @@ const SnippetModal = {
         const contentHtml = this.renderSnippetContent(snippet);
         contentDiv.append(contentHtml);
     },
+    // 새로 추가할 함수: 스니펫 색상 적용
+    applySnippetColor: function(modal, hexCode) {
+        // RGB 변환 함수
+        const hexToRgb = (hex) => {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        };
+
+        const rgb = hexToRgb(hexCode);
+
+        if (rgb) {
+            // 모달 콘텐츠에 border-left 적용
+            modal.find('.modal-content').css('border-left', `5px solid ${hexCode}`);
+
+            // 모달 헤더에 스타일 적용
+            modal.find('.modal-header').css({
+                'border-bottom': `2px solid ${hexCode}`,
+                'background': `linear-gradient(90deg, rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.082) 0%, transparent 100%)`
+            });
+
+            console.log(`스니펫 색상 적용: ${hexCode}, RGB: ${rgb.r}, ${rgb.g}, ${rgb.b}`);
+        }
+    },
+
+    // 새로 추가할 함수: 스니펫 색상 제거
+    removeSnippetColor: function(modal) {
+        // 기본 스타일로 복원
+        modal.find('.modal-content').css('border-left', '');
+        modal.find('.modal-header').css({
+            'border-bottom': '',
+            'background': ''
+        });
+
+        console.log('스니펫 색상 제거됨');
+    },
+
 
     renderSnippetContent: function(snippet) {
         const snippetContent = snippet.snippetContent || {};

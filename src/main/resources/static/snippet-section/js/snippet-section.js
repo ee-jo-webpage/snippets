@@ -22,6 +22,7 @@ $(document).ready(function() {
         // 모달 제목 업데이트
         modal.find('.modal-header h3').text(snippet.title || '스니펫 상세보기');
 
+
         // 기존 메타 정보 및 콘텐츠 업데이트 (기존 코드)
         updateModalMetaAndContent(modal, snippet);
 

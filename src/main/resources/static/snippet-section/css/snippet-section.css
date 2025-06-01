@@ -313,7 +313,7 @@ body {
 }
 
 .snippet-detail-content {
-    background: #1a202c;
+    /*background: #1a202c;*/
     border-radius: 12px;
     overflow: hidden;
     height: 100%;
@@ -331,7 +331,7 @@ body {
 }
 
 .code-block {
-    background: transparent;
+    background: black;
     color: #e2e8f0;
     padding: 20px;
     margin: 0;

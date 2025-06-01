@@ -44,143 +44,10 @@
             min-height: 100vh;
         }
 
-        /* 헤더 및 레이아웃은 동일 */
-        .community-header {
-            background-color: #ffffff;
-            color: var(--text-dark);
-            padding: 1rem 0;
-            box-shadow: var(--shadow-small);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .community-header h1 {
-            margin: 0;
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--primary-color);
-        }
-
-        .header-controls {
-            display: flex;
-            gap: 0.8rem;
-            align-items: center;
-            justify-content: flex-end;
-        }
-
-        .header-controls .btn {
-            padding: 0.5rem 1rem;
-            border-radius: 24px;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-        }
-
-        .header-btn-outline {
-            color: var(--primary-color);
-            border: 1px solid var(--primary-color);
-            background-color: transparent;
-        }
-
-        .header-btn-outline:hover {
-            background-color: var(--primary-color);
-            color: white;
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-small);
-        }
-
-        .main-container {
-            display: flex;
-            min-height: calc(100vh - 70px);
-            max-width: 1200px;
-            margin: 1.5rem auto;
-            gap: 1.5rem;
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
             padding: 0 1rem;
-        }
-
-        .sidebar {
-            width: 250px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: var(--shadow-small);
-            overflow: hidden;
-            flex-shrink: 0;
-            height: fit-content;
-            position: sticky;
-            top: 90px;
-        }
-
-        .sidebar-header {
-            padding: 1.2rem 1rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .sidebar-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--text-dark);
-            margin: 0;
-        }
-
-        .category-menu {
-            padding: 0.5rem 0;
-            margin: 0;
-            background: white;
-        }
-
-        .category-item {
-            padding: 0.2rem 0.8rem;
-        }
-
-        .category-link {
-            display: flex;
-            align-items: center;
-            padding: 0.8rem 1rem;
-            color: var(--text-dark);
-            text-decoration: none;
-            font-size: 0.95rem;
-            transition: all 0.2s ease;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        .category-link:hover {
-            background: #f8f9fa;
-            color: var(--primary-color);
-        }
-
-        .category-link.active {
-            background: #f0f2ff;
-            color: var(--primary-color);
-            font-weight: 500;
-        }
-
-        .category-icon {
-            margin-right: 0.75rem;
-            width: 16px;
-            text-align: center;
-            color: var(--primary-color);
-        }
-
-        .category-count {
-            margin-left: auto;
-            background: #f0f2ff;
-            color: var(--primary-color);
-            font-size: 0.8rem;
-            padding: 0.2rem 0.5rem;
-            border-radius: 12px;
-            min-width: 24px;
-            text-align: center;
-        }
-
-        .category-link.active .category-count {
-            background: var(--primary-color);
-            color: white;
-        }
-
-        .main-content {
-            flex: 1;
         }
 
         .card {
@@ -382,22 +249,6 @@
             transform: scale(1.1);
         }
 
-        .file-item.removing {
-            opacity: 0.5;
-            transform: scale(0.95);
-            transition: all 0.3s ease;
-        }
-
-        .file-item {
-            transition: all 0.3s ease;
-        }
-
-        .file-item:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-
-
         /* 반응형 조정 */
         @media (max-width: 768px) {
             .home-btn {
@@ -428,33 +279,10 @@
             margin: 0;
             flex-grow: 1;
         }
-
         /* 반응형 */
         @media (max-width: 768px) {
-            .main-container {
-                flex-direction: column;
-                gap: 1rem;
+            .container {
                 padding: 1rem;
-            }
-
-            .sidebar {
-                width: 100%;
-                position: static;
-            }
-
-            .category-menu {
-                display: flex;
-                overflow-x: auto;
-                padding: 0.5rem;
-            }
-
-            .category-item {
-                flex-shrink: 0;
-            }
-
-            .category-link {
-                padding: 0.75rem 1rem;
-                white-space: nowrap;
             }
 
             .card-header,
@@ -468,211 +296,155 @@
 </head>
 <body>
 
-<div class="community-header">
-    <div class="container-fluid">
-        <div class="row align-items-center">
-            <div class="col-md-6">
-                <!-- 커뮤니티 로고 -->
-                <h1 class="mb-0">
-                    <a href="/community" class="community-logo-link">
-                        <i class="fas fa-comments me-2"></i>
-                        커뮤니티
-                    </a>
-                </h1>
-            </div>
-            <div class="col-md-6 text-md-end">
-                <div class="header-controls">
-                    <!-- 메인 홈 버튼 -->
-                    <a href="/app" class="home-btn" title="메인 홈으로">
-                        <i class="fas fa-home"></i>
-                    </a>
+<div class="container">
+    <!-- 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            <i class="fas fa-edit me-2" style="color: var(--primary-color);"></i>
+            게시글 수정
+        </h1>
+        <a th:href="@{/community/post/{postId}(postId=${post.postId})}" class="btn btn-outline-custom">
+            <i class="fas fa-arrow-left me-1"></i>
+            돌아가기
+        </a>
+    </div>
 
-                    <!-- 알림 버튼 -->
-                    <button class="btn header-btn-outline position-relative" id="notificationBtn">
-                        <i class="fas fa-bell"></i>
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                              id="notificationCount" style="display: none;">0</span>
-                    </button>
+    <!-- 메인 폼 -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="mb-0">게시글 정보 수정</h2>
+        </div>
+        <div class="card-body">
+            <form id="postEditForm" th:action="@{/community/post/{postId}/edit(postId=${post.postId})}" method="post" enctype="multipart/form-data">
 
-                    <!-- 임시저장 버튼 -->
-                    <button class="btn header-btn-outline" id="draftBtn">
-                        <i class="fas fa-save me-1"></i>
-                        임시저장
-                    </button>
+                <!-- 카테고리 -->
+                <div class="mb-3">
+                    <label for="categoryId" class="form-label">
+                        <i class="fas fa-folder me-1"></i>
+                        카테고리 <span class="required">*</span>
+                    </label>
+                    <select class="form-select" id="categoryId" name="categoryId" required>
+                        <option value="">카테고리를 선택하세요</option>
+                        <option th:each="category : ${categories}"
+                                th:value="${category.categoryId}"
+                                th:text="${category.name}"
+                                th:selected="${category.categoryId == post.categoryId}">
+                        </option>
+                    </select>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- 메인 컨테이너 -->
-<div class="main-container">
-    <!-- 사이드바 -->
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <h3 class="sidebar-title">게시판</h3>
-        </div>
-        <nav class="category-menu">
-            <div class="category-item">
-                <a href="/community" class="category-link">
-                    <i class="fas fa-home category-icon"></i>
-                    전체 게시글
-                    <span class="category-count">123</span>
-                </a>
-            </div>
-            <div class="category-item" th:each="category : ${categories}">
-                <a th:href="@{/community/category/{categoryId}(categoryId=${category.categoryId})}"
-                   class="category-link"
-                   th:classappend="${post.categoryId == category.categoryId} ? 'active' : ''">
-                    <i class="fas fa-folder category-icon"></i>
-                    <span th:text="${category.name}">카테고리명</span>
-                    <span class="category-count">42</span>
-                </a>
-            </div>
-        </nav>
-    </div>
+                <!-- 제목 -->
+                <div class="mb-3">
+                    <label for="title" class="form-label">
+                        <i class="fas fa-heading me-1"></i>
+                        제목 <span class="required">*</span>
+                    </label>
+                    <input type="text"
+                           class="form-control"
+                           id="title"
+                           name="title"
+                           th:value="${post.title}"
+                           placeholder="게시글 제목을 입력하세요"
+                           maxlength="255"
+                           required>
+                </div>
 
-    <!-- 메인 콘텐츠 -->
-    <div class="main-content">
-        <div class="card">
-            <div class="card-header">
-                <h2 class="mb-0">
-                    <i class="fas fa-edit me-2"></i>
-                    게시글 수정
-                </h2>
-            </div>
-            <div class="card-body">
-                <form id="postEditForm" th:action="@{/community/post/{postId}/edit(postId=${post.postId})}" method="post" enctype="multipart/form-data">
+                <!-- 내용 (Summernote 적용) -->
+                <div class="mb-4">
+                    <label for="summernote" class="form-label">
+                        <i class="fas fa-align-left me-1"></i>
+                        내용 <span class="required">*</span>
+                    </label>
+                    <textarea id="summernote" name="content" th:text="${post.content}"></textarea>
+                </div>
 
-                    <!-- 카테고리 -->
-                    <div class="mb-3">
-                        <label for="categoryId" class="form-label">
-                            <i class="fas fa-folder me-1"></i>
-                            카테고리 <span class="required">*</span>
-                        </label>
-                        <select class="form-select" id="categoryId" name="categoryId" required>
-                            <option value="">카테고리를 선택하세요</option>
-                            <option th:each="category : ${categories}"
-                                    th:value="${category.categoryId}"
-                                    th:text="${category.name}"
-                                    th:selected="${category.categoryId == post.categoryId}">
-                            </option>
-                        </select>
+                <!-- 파일 첨부 -->
+                <div class="mb-3">
+                    <label for="files" class="form-label">
+                        <i class="fas fa-paperclip me-1"></i>
+                        첨부파일 추가
+                    </label>
+                    <div class="file-upload-area" id="fileUploadArea">
+                        <i class="fas fa-cloud-upload-alt fa-2x mb-2 text-muted"></i>
+                        <p class="mb-2">파일을 드래그하여 업로드하거나 클릭하여 선택하세요</p>
+                        <input type="file" id="files" name="files" multiple class="form-control d-none"
+                               accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.hwp,.txt">
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="$('#files').click()">
+                            <i class="fas fa-plus me-1"></i>파일 선택
+                        </button>
+                        <small class="text-muted d-block mt-2">최대 10MB, 여러 파일 선택 가능</small>
                     </div>
+                    <div id="fileList" class="mt-2"></div>
+                </div>
 
-                    <!-- 제목 -->
-                    <div class="mb-3">
-                        <label for="title" class="form-label">
-                            <i class="fas fa-heading me-1"></i>
-                            제목 <span class="required">*</span>
-                        </label>
-                        <input type="text"
-                               class="form-control"
-                               id="title"
-                               name="title"
-                               th:value="${post.title}"
-                               placeholder="게시글 제목을 입력하세요"
-                               maxlength="255"
-                               required>
-                    </div>
-
-                    <!-- 내용 (Summernote 적용) -->
-                    <div class="mb-4">
-                        <label for="summernote" class="form-label">
-                            <i class="fas fa-align-left me-1"></i>
-                            내용 <span class="required">*</span>
-                        </label>
-                        <textarea id="summernote" name="content" th:text="${post.content}"></textarea>
-                    </div>
-
-                    <!-- 파일 첨부 -->
-                    <div class="mb-3">
-                        <label for="files" class="form-label">
-                            <i class="fas fa-paperclip me-1"></i>
-                            첨부파일 추가
-                        </label>
-                        <div class="file-upload-area" id="fileUploadArea">
-                            <i class="fas fa-cloud-upload-alt fa-2x mb-2 text-muted"></i>
-                            <p class="mb-2">파일을 드래그하여 업로드하거나 클릭하여 선택하세요</p>
-                            <input type="file" id="files" name="files" multiple class="form-control d-none"
-                                   accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.hwp,.txt">
-                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="$('#files').click()">
-                                <i class="fas fa-plus me-1"></i>파일 선택
-                            </button>
-                            <small class="text-muted d-block mt-2">최대 10MB, 여러 파일 선택 가능</small>
-                        </div>
-                        <div id="fileList" class="mt-2"></div>
-                    </div>
-
-                    <!-- 기존 첨부파일 표시 -->
-                    <div class="mb-3" th:if="${not #lists.isEmpty(attachments)}">
-                        <label class="form-label">
-                            <i class="fas fa-paperclip me-1"></i>
-                            기존 첨부파일
-                        </label>
-                        <div class="existing-files">
-                            <div th:each="attachment : ${attachments}" class="file-item">
-                                <span>
-                                    <i class="fas fa-file me-1"></i>
-                                    <span th:text="${attachment.fileName}"></span>
-                                    <small class="text-muted ms-2"
-                                           th:text="'(' + ${#numbers.formatDecimal(attachment.fileSize / 1024, 0, 'COMMA', 2, 'POINT')} + ' KB)'"></small>
-                                </span>
-                                <button type="button" class="btn btn-sm btn-outline-danger"
-                                        onclick="removeAttachment(/*[[${attachment.attachmentId}]]*/)">
-                                    <i class="fas fa-times"></i> 삭제
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 공지사항 설정 -->
-                    <div class="mb-3 form-check">
-                        <input class="form-check-input"
-                               type="checkbox"
-                               id="isNotice"
-                               name="isNotice"
-                               value="true"
-                               th:checked="${post.notice}">
-                        <label class="form-check-label" for="isNotice">
-                            <i class="fas fa-exclamation-triangle me-1"></i>
-                            공지사항으로 설정
-                        </label>
-                    </div>
-
-                    <!-- 수정 정보 -->
-                    <div class="alert alert-info mb-4">
-                        <small>
-                            <strong>작성일:</strong>
-                            <span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}"></span>
-                        </small>
-                        <br>
-                        <small th:if="${post.updatedAt}">
-                            <strong>최종 수정일:</strong>
-                            <span th:text="${#temporals.format(post.updatedAt, 'yyyy-MM-dd HH:mm')}"></span>
-                        </small>
-                    </div>
-
-                    <!-- 버튼 -->
-                    <div class="d-flex justify-content-between">
-                        <a th:href="@{/community/post/{postId}(postId=${post.postId})}"
-                           class="btn btn-outline-custom">
-                            <i class="fas fa-arrow-left me-1"></i>
-                            돌아가기
-                        </a>
-                        <div>
-                            <button type="button" id="previewBtn" class="btn btn-outline-custom me-2">
-                                <i class="fas fa-eye me-1"></i>
-                                미리보기
-                            </button>
-                            <button type="submit" class="btn btn-primary-custom">
-                                <i class="fas fa-save me-1"></i>
-                                수정 완료
+                <!-- 기존 첨부파일 표시 -->
+                <div class="mb-3" th:if="${not #lists.isEmpty(attachments)}">
+                    <label class="form-label">
+                        <i class="fas fa-paperclip me-1"></i>
+                        기존 첨부파일
+                    </label>
+                    <div class="existing-files">
+                        <div th:each="attachment : ${attachments}" class="file-item">
+                            <span>
+                                <i class="fas fa-file me-1"></i>
+                                <span th:text="${attachment.fileName}"></span>
+                                <small class="text-muted ms-2"
+                                       th:text="'(' + ${#numbers.formatDecimal(attachment.fileSize / 1024, 0, 'COMMA', 2, 'POINT')} + ' KB)'"></small>
+                            </span>
+                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                    onclick="removeAttachment(/*[[${attachment.attachmentId}]]*/)">
+                                <i class="fas fa-times"></i> 삭제
                             </button>
                         </div>
                     </div>
-                </form>
-            </div>
+                </div>
+
+                <!-- 공지사항 설정 -->
+                <div class="mb-3 form-check">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           id="isNotice"
+                           name="isNotice"
+                           value="true"
+                           th:checked="${post.notice}">
+                    <label class="form-check-label" for="isNotice">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        공지사항으로 설정
+                    </label>
+                </div>
+
+                <!-- 수정 정보 -->
+                <div class="alert alert-info mb-4">
+                    <small>
+                        <strong>작성일:</strong>
+                        <span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}"></span>
+                    </small>
+                    <br>
+                    <small th:if="${post.updatedAt}">
+                        <strong>최종 수정일:</strong>
+                        <span th:text="${#temporals.format(post.updatedAt, 'yyyy-MM-dd HH:mm')}"></span>
+                    </small>
+                </div>
+
+                <!-- 버튼 -->
+                <div class="d-flex justify-content-between">
+                    <a th:href="@{/community/post/{postId}(postId=${post.postId})}"
+                       class="btn btn-outline-custom">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        취소
+                    </a>
+                    <div>
+                        <button type="button" id="previewBtn" class="btn btn-outline-custom me-2">
+                            <i class="fas fa-eye me-1"></i>
+                            미리보기
+                        </button>
+                        <button type="submit" class="btn btn-primary-custom">
+                            <i class="fas fa-save me-1"></i>
+                            수정 완료
+                        </button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -700,14 +472,39 @@
     </div>
 </div>
 
-<script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const postId = /*[[${post.postId}]]*/ null;
+    /*]]>*/
+
     $(document).ready(function() {
+        console.log('게시글 수정 페이지 로드됨. 게시글 ID:', postId);
+
+        // URL 파라미터에서 에러 메시지 확인
+        const urlParams = new URLSearchParams(window.location.search);
+        const errorMsg = urlParams.get('error');
+
+        if (errorMsg === 'title') {
+            showToast('제목을 입력해주세요.', 'warning');
+            $('#title').focus();
+        } else if (errorMsg === 'content') {
+            showToast('내용을 입력해주세요.', 'warning');
+        } else if (errorMsg === 'file') {
+            showToast('파일 업로드 중 오류가 발생했습니다.', 'error');
+        } else if (errorMsg === 'save') {
+            showToast('게시글 저장 중 오류가 발생했습니다.', 'error');
+        } else if (errorMsg === 'permission') {
+            showToast('권한이 없습니다.', 'error');
+        } else if (errorMsg === 'load_failed') {
+            showToast('게시글 정보를 불러올 수 없습니다.', 'error');
+        }
+
         // Summernote 초기화
         $('#summernote').summernote({
             height: 400,
             minHeight: null,
             maxHeight: null,
-            focus: true,
+            focus: false,
             lang: 'ko-KR',
             placeholder: '내용을 입력하세요',
 
@@ -768,6 +565,8 @@
                 e.preventDefault();
                 return;
             }
+
+            console.log('폼 제출 시작');
         });
     });
 
@@ -845,8 +644,7 @@
         });
     }
 
-
-    // 기존 첨부파일 삭제 (서버의 파일)
+    // 기존 첨부파일 삭제
     function removeAttachment(attachmentId) {
         if (confirm('이 파일을 삭제하시겠습니까?\n삭제된 파일은 복구할 수 없습니다.')) {
 
@@ -891,6 +689,7 @@
         }
     }
 
+
     // 미리보기 표시
     function showPreview() {
         const title = $('#title').val().trim();
@@ -929,6 +728,47 @@
         $('#previewContent').html(previewHtml);
         $('#previewModal').modal('show');
     }
+
+    // 토스트 메시지 표시
+    function showToast(message, type = 'info') {
+        const bgClass = {
+            'success': 'bg-success',
+            'error': 'bg-danger',
+            'warning': 'bg-warning',
+            'info': 'bg-info'
+        }[type] || 'bg-info';
+
+        const iconClass = {
+            'success': 'fas fa-check-circle',
+            'error': 'fas fa-exclamation-circle',
+            'warning': 'fas fa-exclamation-triangle',
+            'info': 'fas fa-info-circle'
+        }[type] || 'fas fa-info-circle';
+
+        const toast = $(`
+            <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+                <div class="toast show" role="alert">
+                    <div class="toast-header ${bgClass} text-white">
+                        <i class="${iconClass} me-2"></i>
+                        <strong class="me-auto">알림</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                    </div>
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                </div>
+            </div>
+        `);
+
+        $('body').append(toast);
+
+        setTimeout(function() {
+            toast.fadeOut(300, function() {
+                $(this).remove();
+            });
+        }, 3000);
+    }
+    /*]]>*/
 </script>
 
 </body>

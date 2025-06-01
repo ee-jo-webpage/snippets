@@ -481,6 +481,112 @@
             color: white;
         }
 
+        /* 커뮤니티 로고 링크 스타일 */
+        .community-logo-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .community-logo-link:hover {
+            color: var(--secondary-color);
+            text-decoration: none;
+            transform: translateY(-1px);
+        }
+
+        .community-logo-link:focus {
+            color: var(--primary-color);
+            text-decoration: none;
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+
+        /* 로고 호버 효과 */
+        .community-logo-link i {
+            transition: transform 0.3s ease;
+        }
+
+        .community-logo-link:hover i {
+            transform: scale(1.1);
+        }
+
+        /* 홈 버튼 스타일 */
+        .home-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            background: white;
+            border: 2px solid var(--primary-color);
+            border-radius: 50%;
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+            box-shadow: var(--shadow-small);
+        }
+
+        .home-btn:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+            text-decoration: none;
+        }
+
+        .home-btn:focus {
+            outline: 3px solid rgba(99, 87, 255, 0.3);
+            outline-offset: 2px;
+            text-decoration: none;
+        }
+
+        .home-btn:active {
+            transform: translateY(0);
+        }
+
+        /* 홈 버튼 아이콘 애니메이션 */
+        .home-btn i {
+            transition: transform 0.3s ease;
+        }
+
+        .home-btn:hover i {
+            transform: scale(1.1);
+        }
+
+        /* 반응형 조정 */
+        @media (max-width: 768px) {
+            .home-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+                margin-right: 0.5rem !important;
+            }
+
+            .community-header h1 {
+                font-size: 1.3rem;
+            }
+        }
+
+        /* postEditDetail.html용 특별 스타일 */
+        .page-header-with-home {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .page-header-with-home .home-btn {
+            flex-shrink: 0;
+        }
+
+        .page-header-with-home h1 {
+            margin: 0;
+            flex-grow: 1;
+        }
+
         /* 반응형 디자인 */
         @media (max-width: 768px) {
             .main-container {
@@ -548,6 +654,7 @@
             .search-filters {
                 padding: 1rem;
             }
+
         }
     </style>
 </head>
@@ -557,13 +664,21 @@
     <div class="container-fluid">
         <div class="row align-items-center">
             <div class="col-md-6">
-                <h1>
-                    <i class="fas fa-comments me-2"></i>
-                    커뮤니티
+                <!-- 커뮤니티 로고 -->
+                <h1 class="mb-0">
+                    <a href="/community" class="community-logo-link">
+                        <i class="fas fa-comments me-2"></i>
+                        커뮤니티
+                    </a>
                 </h1>
             </div>
             <div class="col-md-6 text-md-end">
                 <div class="header-controls">
+                    <!-- 메인 홈 버튼 -->
+                    <a href="/app" class="home-btn" title="메인 홈으로">
+                        <i class="fas fa-home"></i>
+                    </a>
+
                     <!-- 알림 버튼 -->
                     <button class="btn header-btn-outline position-relative" id="notificationBtn">
                         <i class="fas fa-bell"></i>

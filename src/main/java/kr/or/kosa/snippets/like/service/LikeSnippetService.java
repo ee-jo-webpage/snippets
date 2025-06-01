@@ -23,7 +23,7 @@ public class LikeSnippetService {
     private TagMapper tagMapper;
 
     @Autowired
-    private SnippetContentMapper snippetContentMapper;  // 추가
+    private SnippetContentMapper snippetContentMapper;
 
     // ===== 기존 메서드들 =====
 
@@ -128,7 +128,7 @@ public class LikeSnippetService {
     }
 
     /**
-     * TOP 100 스니펫 내에서 필터링 (인메모리 방식)
+     * TOP 100 스니펫 내에서 필터링 (인메모리 방식) - 내용 검색으로 수정
      */
     public List<Snippet> filterSnippetsFromTop100(String type, String keyword, Integer minLikes, String tagName) {
         // 먼저 TOP 100 스니펫을 가져옴 (popular_snippets_view 사용)
@@ -142,13 +142,18 @@ public class LikeSnippetService {
             return allPopularSnippets;
         }
 
-        // 유형, 키워드, 좋아요 수로 필터링
+        // 유형, 좋아요 수로 먼저 필터링
         List<Snippet> filteredSnippets = allPopularSnippets.stream()
                 .filter(s -> type == null || type.isEmpty() || s.getType().equals(type))
-                .filter(s -> keyword == null || keyword.isEmpty() ||
-                        (s.getMemo() != null && s.getMemo().toLowerCase().contains(keyword.toLowerCase())))
                 .filter(s -> minLikes == null || s.getLikeCount() >= minLikes)
                 .collect(Collectors.toList());
+
+        // 키워드 필터링 (내용 검색)
+        if (keyword != null && !keyword.isEmpty()) {
+            filteredSnippets = filteredSnippets.stream()
+                    .filter(s -> matchesContentKeyword(s, keyword))
+                    .collect(Collectors.toList());
+        }
 
         // 태그 필터링 (필요한 경우)
         if (tagName != null && !tagName.isEmpty()) {
@@ -162,6 +167,42 @@ public class LikeSnippetService {
         }
 
         return filteredSnippets;
+    }
+
+    /**
+     * 스니펫 내용에서 키워드가 포함되어 있는지 검사하는 메서드
+     */
+    private boolean matchesContentKeyword(Snippet snippet, String keyword) {
+        try {
+            String lowerKeyword = keyword.toLowerCase();
+
+            switch (snippet.getType().toUpperCase()) {
+                case "CODE":
+                    SnippetCode snippetCode = snippetContentMapper.getSnippetCodeById(snippet.getSnippetId());
+                    if (snippetCode != null && snippetCode.getContent() != null) {
+                        return snippetCode.getContent().toLowerCase().contains(lowerKeyword);
+                    }
+                    break;
+
+                case "TEXT":
+                    SnippetText snippetText = snippetContentMapper.getSnippetTextById(snippet.getSnippetId());
+                    if (snippetText != null && snippetText.getContent() != null) {
+                        return snippetText.getContent().toLowerCase().contains(lowerKeyword);
+                    }
+                    break;
+
+                case "IMG":
+                    SnippetImage snippetImage = snippetContentMapper.getSnippetImageById(snippet.getSnippetId());
+                    if (snippetImage != null && snippetImage.getAltText() != null) {
+                        return snippetImage.getAltText().toLowerCase().contains(lowerKeyword);
+                    }
+                    break;
+            }
+        } catch (Exception e) {
+            System.err.println("키워드 매칭 실패 - snippetId: " + snippet.getSnippetId() + ", 오류: " + e.getMessage());
+        }
+
+        return false;
     }
 
     /**

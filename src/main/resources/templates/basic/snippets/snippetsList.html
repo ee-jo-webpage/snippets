@@ -1,491 +1,489 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>내 스니펫 목록</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link th:href="@{/bookmark/css/bookmark-list.css}" rel="stylesheet">
-    <link th:href="@{/my-snippet-page/css/my-snippet-page.css}" rel="stylesheet">
-    <style>
-        /* 메인 컨테이너 스타일 */
-        .main-content {
-            padding: 20px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-        }
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>내 스니펫 목록</title>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+	<link th:href="@{/bookmark/css/bookmark-list.css}" rel="stylesheet">
+	<link th:href="@{/my-snippet-page/css/my-snippet-page.css}" rel="stylesheet">
+	<style>
+		/* 메인 컨테이너 스타일 */
+		.main-content {
+			padding: 20px;
+			background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+			min-height: 100vh;
+		}
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+		.container {
+			max-width: 1200px;
+			margin: 0 auto;
+		}
 
-        /* 헤더 영역 */
-        .page-header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-        }
+		/* 헤더 영역 */
+		.page-header {
+			text-align: center;
+			margin-bottom: 30px;
+			padding: 20px;
+			background: white;
+			border-radius: 15px;
+			box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+			backdrop-filter: blur(10px);
+		}
 
-        .page-title {
-            font-size: 2.5rem;
-            color: #2c3e50;
-            margin-bottom: 10px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+		.page-title {
+			font-size: 2.5rem;
+			color: #2c3e50;
+			margin-bottom: 10px;
+			font-weight: 700;
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+			background-clip: text;
+		}
 
-        .page-subtitle {
-            color: #7f8c8d;
-            font-size: 1.1rem;
-            margin-bottom: 20px;
-        }
+		.page-subtitle {
+			color: #7f8c8d;
+			font-size: 1.1rem;
+			margin-bottom: 20px;
+		}
 
-        /* 스니펫 추가 버튼 */
-        .add-snippet-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 24px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            font-size: 1rem;
-            font-weight: 600;
-            text-decoration: none;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
+		/* 스니펫 추가 버튼 */
+		.add-snippet-btn {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			padding: 12px 24px;
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			color: white;
+			border: none;
+			border-radius: 50px;
+			font-size: 1rem;
+			font-weight: 600;
+			text-decoration: none;
+			cursor: pointer;
+			transition: all 0.3s ease;
+			box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+		}
 
-        .add-snippet-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-            text-decoration: none;
-            color: white;
-        }
+		.add-snippet-btn:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+			text-decoration: none;
+			color: white;
+		}
 
-        .add-snippet-btn:active {
-            transform: translateY(0);
-        }
+		.add-snippet-btn:active {
+			transform: translateY(0);
+		}
 
-        /* 그리드 레이아웃 */
-        .bookmarks-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 25px;
-            margin-top: 30px;
-        }
+		/* 그리드 레이아웃 */
+		.bookmarks-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+			gap: 25px;
+			margin-top: 30px;
+		}
 
-        /* 스니펫 카드 */
-        .snippet-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
+		/* 스니펫 카드 */
+		.snippet-card {
+			background: rgba(255, 255, 255, 0.95);
+			border-radius: 20px;
+			padding: 25px;
+			box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+			backdrop-filter: blur(10px);
+			border: 1px solid rgba(255, 255, 255, 0.2);
+			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+			cursor: pointer;
+			position: relative;
+			overflow: hidden;
+		}
 
-        .snippet-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
+		.snippet-card::before {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			height: 4px;
+			background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c);
+			opacity: 0;
+			transition: opacity 0.3s ease;
+		}
 
-        .snippet-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-        }
+		.snippet-card:hover {
+			transform: translateY(-8px);
+			border-top: 4px solid var(--snippet-color);
 
-        .snippet-card:hover::before {
-            opacity: 1;
-        }
 
-        /* 스니펫 ID 배지 */
-        .snippet-id {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-        }
+			.snippet-card:hover::before {
+				opacity: 1;
+			}
 
-        /* 헤더 영역 */
-        .bookmark-header {
-            margin-bottom: 20px;
-            padding-top: 10px;
-        }
+			/* 스니펫 ID 배지 */
+			.snippet-id {
+				position: absolute;
+				top: 15px;
+				right: 15px;
+				background: linear-gradient(135deg, #667eea, #764ba2);
+				color: white;
+				padding: 6px 12px;
+				border-radius: 15px;
+				font-size: 0.8rem;
+				font-weight: 600;
+				box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+			}
 
-        .snippet-meta {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
+			/* 헤더 영역 */
+			.bookmark-header {
+				margin-bottom: 20px;
+				padding-top: 10px;
+			}
 
-        .meta-item {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
+			.snippet-meta {
+				display: flex;
+				gap: 12px;
+				align-items: center;
+				flex-wrap: wrap;
+			}
 
-        /* 타입별 색상 */
-        .type-code {
-            background: linear-gradient(135deg, #667eea, #5a67d8);
-            color: white;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-        }
+			.meta-item {
+				padding: 6px 12px;
+				border-radius: 20px;
+				font-size: 0.85rem;
+				font-weight: 600;
+				transition: all 0.3s ease;
+			}
 
-        .type-text {
-            background: linear-gradient(135deg, #48bb78, #38a169);
-            color: white;
-            box-shadow: 0 2px 8px rgba(72, 187, 120, 0.3);
-        }
+			/* 타입별 색상 */
+			.type-code {
+				background: linear-gradient(135deg, #667eea, #5a67d8);
+				color: white;
+				box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+			}
 
-        .type-img {
-            background: linear-gradient(135deg, #ed8936, #dd6b20);
-            color: white;
-            box-shadow: 0 2px 8px rgba(237, 137, 54, 0.3);
-        }
+			.type-text {
+				background: linear-gradient(135deg, #48bb78, #38a169);
+				color: white;
+				box-shadow: 0 2px 8px rgba(72, 187, 120, 0.3);
+			}
 
-        .meta-item:not([class*="type-"]) {
-            background: rgba(113, 128, 150, 0.1);
-            color: #4a5568;
-            border: 1px solid rgba(113, 128, 150, 0.2);
-        }
+			.type-img {
+				background: linear-gradient(135deg, var(--snippet-color), var(--snippet-color));
+				color: white;
+				box-shadow: 0 2px 8px rgba(237, 137, 54, 0.3);
+			}
 
-        /* 미리보기 영역 */
-        .snippet-content-preview {
-            background: rgba(247, 250, 252, 0.8);
-            border: 2px solid rgba(226, 232, 240, 0.5);
-            border-radius: 12px;
-            padding: 20px;
-            margin: 20px 0;
-            font-size: 0.95rem;
-            line-height: 1.6;
-            color: #2d3748;
-            min-height: 80px;
-            max-height: 120px;
-            overflow: hidden;
-            position: relative;
-            transition: all 0.3s ease;
-        }
+			.meta-item:not([class*="type-"]) {
+				background: rgba(113, 128, 150, 0.1);
+				color: #4a5568;
+				border: 1px solid rgba(113, 128, 150, 0.2);
+			}
 
-        .snippet-content-preview:hover {
-            background: rgba(247, 250, 252, 1);
-            border-color: rgba(102, 126, 234, 0.3);
-        }
+			/* 미리보기 영역 */
+			.snippet-content-preview {
+				background: rgba(247, 250, 252, 0.8);
+				border: 2px solid rgba(226, 232, 240, 0.5);
+				border-radius: 12px;
+				padding: 20px;
+				margin: 20px 0;
+				font-size: 0.95rem;
+				line-height: 1.6;
+				color: #2d3748;
+				min-height: 80px;
+				max-height: 120px;
+				overflow: hidden;
+				position: relative;
+				transition: all 0.3s ease;
+			}
 
-        /* 미리보기 타입별 스타일 */
-        .snippet-card:has(.type-code) .snippet-content-preview {
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            /*background: rgba(45, 55, 72, 0.05);*/
-          background: black;
-            border-color: rgba(102, 126, 234, 0.2);
-        }
+			.snippet-content-preview:hover {
+				background: rgba(247, 250, 252, 1);
+				border-color: rgba(102, 126, 234, 0.3);
+			}
 
-        .snippet-card:has(.type-text) .snippet-content-preview {
-            background: rgba(72, 187, 120, 0.05);
-            border-color: rgba(72, 187, 120, 0.2);
-        }
+			/* 미리보기 타입별 스타일 */
+			.snippet-card:has(.type-code) .snippet-content-preview {
+				font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+				background: rgba(45, 55, 72, 0.05);
+				border-color: rgba(102, 126, 234, 0.2);
+			}
 
-        .snippet-card:has(.type-img) .snippet-content-preview {
-            background: rgba(237, 137, 54, 0.05);
-            border-color: rgba(237, 137, 54, 0.2);
-            font-style: italic;
-        }
+			.snippet-card:has(.type-text) .snippet-content-preview {
+				background: rgba(72, 187, 120, 0.05);
+				border-color: rgba(72, 187, 120, 0.2);
+			}
 
-        /* 페이지네이션 */
-        .pagination-container {
-            display: flex;
-            justify-content: center;
-            margin: 40px 0;
-        }
+			.snippet-card:has(.type-img) .snippet-content-preview {
+				background: rgba(237, 137, 54, 0.05);
+				border-color: rgba(237, 137, 54, 0.2);
+				font-style: italic;
+			}
 
-        .pagination {
-            display: flex;
-            gap: 8px;
-            background: white;
-            padding: 10px;
-            border-radius: 50px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
+			/* 페이지네이션 */
+			.pagination-container {
+				display: flex;
+				justify-content: center;
+				margin: 40px 0;
+			}
 
-        .page-item {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            text-decoration: none;
-            color: #4a5568;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
+			.pagination {
+				display: flex;
+				gap: 8px;
+				background: white;
+				padding: 10px;
+				border-radius: 50px;
+				box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+			}
 
-        .page-item:hover {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            text-decoration: none;
-            transform: scale(1.1);
-        }
+			.page-item {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				min-width: 40px;
+				height: 40px;
+				border-radius: 50%;
+				text-decoration: none;
+				color: #4a5568;
+				font-weight: 600;
+				transition: all 0.3s ease;
+				border: 2px solid transparent;
+			}
 
-        .page-item.active {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            transform: scale(1.1);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
+			.page-item:hover {
+				background: linear-gradient(135deg, #667eea, #764ba2);
+				color: white;
+				text-decoration: none;
+				transform: scale(1.1);
+			}
 
-        .page-item.prev, .page-item.next {
-            padding: 0 15px;
-            border-radius: 25px;
-            min-width: auto;
-        }
+			.page-item.active {
+				background: linear-gradient(135deg, #667eea, #764ba2);
+				color: white;
+				transform: scale(1.1);
+				box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+			}
 
-        /* 빈 상태 */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-            margin-top: 30px;
-        }
+			.page-item.prev,
+			.page-item.next {
+				padding: 0 15px;
+				border-radius: 25px;
+				min-width: auto;
+			}
 
-        .empty-emoji {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            display: block;
-        }
+			/* 빈 상태 */
+			.empty-state {
+				text-align: center;
+				padding: 60px 20px;
+				background: white;
+				border-radius: 20px;
+				box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+				margin-top: 30px;
+			}
 
-        .empty-title {
-            font-size: 1.5rem;
-            color: #2d3748;
-            margin-bottom: 10px;
-        }
+			.empty-emoji {
+				font-size: 4rem;
+				margin-bottom: 20px;
+				display: block;
+			}
 
-        .empty-subtitle {
-            color: #718096;
-            margin-bottom: 30px;
-        }
+			.empty-title {
+				font-size: 1.5rem;
+				color: #2d3748;
+				margin-bottom: 10px;
+			}
 
-        /* 애니메이션 */
-        @keyframes slideInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+			.empty-subtitle {
+				color: #718096;
+				margin-bottom: 30px;
+			}
 
-        .snippet-card {
-            animation: slideInUp 0.6s ease-out;
-            animation-fill-mode: both;
-        }
+			/* 애니메이션 */
+			@keyframes slideInUp {
+				from {
+					opacity: 0;
+					transform: translateY(30px);
+				}
 
-        /* 반응형 디자인 */
-        @media (max-width: 768px) {
-            .bookmarks-grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-            
-            .page-title {
-                font-size: 2rem;
-            }
-            
-            .snippet-card {
-                padding: 20px;
-            }
-            
-            .snippet-meta {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
-            }
-        }
+				to {
+					opacity: 1;
+					transform: translateY(0);
+				}
+			}
 
-        /* 호버 효과 개선 */
-        .snippet-card:hover .snippet-content-preview {
-            transform: translateY(-2px);
-        }
+			.snippet-card {
+				animation: slideInUp 0.6s ease-out;
+				animation-fill-mode: both;
+			}
 
-        .snippet-card:hover .meta-item {
-            transform: scale(1.05);
-        }
-    </style>
+			/* 반응형 디자인 */
+			@media (max-width: 768px) {
+				.bookmarks-grid {
+					grid-template-columns: 1fr;
+					gap: 20px;
+				}
+
+				.page-title {
+					font-size: 2rem;
+				}
+
+				.snippet-card {
+					padding: 20px;
+				}
+
+				.snippet-meta {
+					flex-direction: column;
+					align-items: flex-start;
+					gap: 8px;
+				}
+			}
+
+			/* 호버 효과 개선 */
+			.snippet-card:hover .snippet-content-preview {
+				transform: translateY(-2px);
+			}
+
+			.snippet-card:hover .meta-item {
+				transform: scale(1.05);
+			}
+  </style>
 </head>
+
 <body>
 
-<div th:replace="fragments/header :: header"></div>
-<div th:replace="fragments/sidebar :: sidebar(activeMenu)"></div>
+	<div th:replace="fragments/header :: header"></div>
+	<div th:replace="fragments/sidebar :: sidebar(activeMenu)"></div>
 
-<main class="main-content">
-  <div class="container">
-    
-    <!-- 페이지 헤더 -->
-    <div class="page-header">
-      <h1 class="page-title">📝 내 스니펫 모음</h1>
-      <p class="page-subtitle">나만의 코드와 아이디어를 한 곳에서 관리하세요</p>
-      
-      <form th:action="@{/snippets/new}" method="get" style="display: inline;">
-        <button type="submit" class="add-snippet-btn">
-          <i class="fas fa-plus"></i>
-          새 스니펫 추가
-        </button>
-      </form>
-    </div>
+	<main class="main-content">
+		<div class="container">
 
-    <!-- 빈 상태 -->
-    <div th:if="${#lists.isEmpty(snippets)}" class="empty-state">
-      <span class="empty-emoji">📝</span>
-      <h3 class="empty-title">아직 스니펫이 없습니다</h3>
-      <p class="empty-subtitle">첫 번째 스니펫을 만들어 보세요!</p>
-      <form th:action="@{/snippets/new}" method="get" style="display: inline;">
-        <button type="submit" class="add-snippet-btn">
-          <i class="fas fa-rocket"></i>
-          첫 스니펫 만들기
-        </button>
-      </form>
-    </div>
+			<!-- 페이지 헤더 -->
+			<div class="page-header">
+				<h1 class="page-title">📝 내 스니펫 모음</h1>
+				<p class="page-subtitle">나만의 코드와 아이디어를 한 곳에서 관리하세요</p>
 
-    <!-- 스니펫 카드 목록 -->
-    <div th:if="${!#lists.isEmpty(snippets)}" class="bookmarks-grid" id="snippetsContainer">
-      <div th:each="snippet, stat : ${snippets}"
-           class="bookmark-card snippet-card"
-           th:style="'animation-delay: ' + ${stat.index * 0.1} + 's; --snippet-color: ' + (${snippet.hexCode} != null ? ${snippet.hexCode} : '#667eea') + ';'"
-           th:onclick="|window.location.href='/snippets/${snippet.snippetId}'|">
+				<form th:action="@{/snippets/new}" method="get" style="display: inline;">
+					<button type="submit" class="add-snippet-btn">
+						<i class="fas fa-plus"></i>
+						새 스니펫 추가
+					</button>
+				</form>
+			</div>
 
-        <div class="snippet-id" th:text="'#' + ${snippet.snippetId}">#ID</div>
+			<!-- 빈 상태 -->
+			<div th:if="${#lists.isEmpty(snippets)}" class="empty-state">
+				<span class="empty-emoji">📝</span>
+				<h3 class="empty-title">아직 스니펫이 없습니다</h3>
+				<p class="empty-subtitle">첫 번째 스니펫을 만들어 보세요!</p>
+				<form th:action="@{/snippets/new}" method="get" style="display: inline;">
+					<button type="submit" class="add-snippet-btn">
+						<i class="fas fa-rocket"></i>
+						첫 스니펫 만들기
+					</button>
+				</form>
+			</div>
 
-        <div class="bookmark-header">
-          <div class="snippet-meta">
-            <span class="meta-item"
-                  th:classappend="${snippet.type.name()} == 'code' ? 'type-code'
+			<!-- 스니펫 카드 목록 -->
+			<div th:if="${!#lists.isEmpty(snippets)}" class="bookmarks-grid" id="snippetsContainer">
+				<div th:each="snippet, stat : ${snippets}" class="bookmark-card snippet-card"
+					th:style="'animation-delay: ' + ${stat.index * 0.1} + 's; --snippet-color: ' + (${snippet.hexCode} != null ? ${snippet.hexCode} : '#667eea') + ';'"
+					th:onclick="|window.location.href='/snippets/${snippet.snippetId}'|">
+
+					<div class="snippet-id" th:text="'#' + ${snippet.snippetId}">#ID</div>
+
+					<div class="bookmark-header">
+						<div class="snippet-meta">
+							<span class="meta-item" th:classappend="${snippet.type.name()} == 'code' ? 'type-code'
                                   : (${snippet.type.name()} == 'text' ? 'type-text' : 'type-img')"
-                  th:text="${snippet.type.name().toUpperCase()}">타입</span>
-            <span class="meta-item">
-              <i class="fas fa-calendar-alt"></i>
-              <span th:text="${#dates.format(snippet.createdAt, 'MM/dd')}">생성일</span>
-            </span>
-            <span class="meta-item" th:if="${snippet.memo != null and !snippet.memo.isEmpty()}">
-              <i class="fas fa-sticky-note"></i>
-              <span th:text="${snippet.memo}">메모</span>
-            </span>
-          </div>
-        </div>
+								th:text="${snippet.type.name().toUpperCase()}">타입</span>
+							<span class="meta-item">
+								<i class="fas fa-calendar-alt"></i>
+								<span th:text="${#dates.format(snippet.createdAt, 'MM/dd')}">생성일</span>
+							</span>
+							<span class="meta-item" th:if="${snippet.memo != null and !snippet.memo.isEmpty()}">
+								<i class="fas fa-sticky-note"></i>
+								<span th:text="${snippet.memo}">메모</span>
+							</span>
+						</div>
+					</div>
 
-        <!-- 스니펫 내용 미리보기 -->
-        <div class="snippet-content-preview" th:text="${contentPreviewMap.get(snippet.snippetId)}">
-          스니펫 내용 미리보기
-        </div>
+					<!-- 스니펫 내용 미리보기 -->
+					<div class="snippet-content-preview" th:text="${contentPreviewMap.get(snippet.snippetId)}">
+						스니펫 내용 미리보기
+					</div>
 
-      </div>
-    </div>
+				</div>
+			</div>
 
-    <!-- 페이징 -->
-    <div class="pagination-container" th:if="${pageInfo.pages > 1}">
-      <div class="pagination" th:with="currentPage=${pageInfo.pageNum}, totalPages=${pageInfo.pages}">
-        <a th:if="${pageInfo.hasPreviousPage}"
-           th:href="@{/snippets(page=${pageInfo.pageNum - 1})}"
-           class="page-item prev">
-          <i class="fas fa-chevron-left"></i> 이전
-        </a>
+			<!-- 페이징 -->
+			<div class="pagination-container" th:if="${pageInfo.pages > 1}">
+				<div class="pagination" th:with="currentPage=${pageInfo.pageNum}, totalPages=${pageInfo.pages}">
+					<a th:if="${pageInfo.hasPreviousPage}" th:href="@{/snippets(page=${pageInfo.pageNum - 1})}"
+						class="page-item prev">
+						<i class="fas fa-chevron-left"></i> 이전
+					</a>
 
-        <th:block th:each="pg : ${#numbers.sequence(startPage, endPage)}">
-          <a th:if="${pg == pageInfo.pageNum}" class="page-item active" th:text="${pg}">1</a>
-          <a th:unless="${pg == pageInfo.pageNum}"
-             th:href="@{/snippets(page=${pg})}"
-             class="page-item" th:text="${pg}">1</a>
-        </th:block>
+					<th:block th:each="pg : ${#numbers.sequence(startPage, endPage)}">
+						<a th:if="${pg == pageInfo.pageNum}" class="page-item active" th:text="${pg}">1</a>
+						<a th:unless="${pg == pageInfo.pageNum}" th:href="@{/snippets(page=${pg})}" class="page-item"
+							th:text="${pg}">1</a>
+					</th:block>
 
-        <a th:if="${pageInfo.hasNextPage}"
-           th:href="@{/snippets(page=${pageInfo.pageNum + 1})}"
-           class="page-item next">
-          다음 <i class="fas fa-chevron-right"></i>
-        </a>
-      </div>
-    </div>
+					<a th:if="${pageInfo.hasNextPage}" th:href="@{/snippets(page=${pageInfo.pageNum + 1})}"
+						class="page-item next">
+						다음 <i class="fas fa-chevron-right"></i>
+					</a>
+				</div>
+			</div>
+		</div>
+	</main>
 
-  </div>
-</main>
+	<script th:inline="javascript">
+		// 카드 호버 효과
+		$('.snippet-card').hover(
+			function () {
+				$(this).find('.meta-item').addClass('scale-105');
+			},
+			function () {
+				$(this).find('.meta-item').removeClass('scale-105');
+			}
+		);
 
-<script th:inline="javascript">
-  // 카드 호버 효과
-  $('.snippet-card').hover(
-    function() {
-      $(this).find('.meta-item').addClass('scale-105');
-    },
-    function() {
-      $(this).find('.meta-item').removeClass('scale-105');
-    }
-  );
+		// 좋아요 버튼 (주석 처리된 기능)
+		$('.like-btn').on('click', function (event) {
+			event.stopPropagation();
+			const btn = $(this);
+			const id = btn.data('snippet-id');
+			const liked = btn.data('is-liked');
+			const countSpan = btn.siblings('.like-count');
+			btn.prop('disabled', true);
+			const url = liked ? '/api/likes/remove' : '/api/likes/add';
+			$.post(url, {snippetId: id})
+				.done(response => {
+					if (response.success) {
+						btn.toggleClass('liked');
+						btn.data('is-liked', !liked);
+						countSpan.text(response.likeCount);
+					} else {
+						alert(response.message);
+					}
+				})
+				.fail(xhr => {
+					if (xhr.status === 401) window.location.href = '/login';
+					else alert('오류');
+				})
+				.always(() => btn.prop('disabled', false));
+		});
 
-  // 좋아요 버튼 (주석 처리된 기능)
-  $('.like-btn').on('click', function(event) {
-    event.stopPropagation();
-    const btn = $(this);
-    const id = btn.data('snippet-id');
-    const liked = btn.data('is-liked');
-    const countSpan = btn.siblings('.like-count');
-    btn.prop('disabled', true);
-    const url = liked ? '/api/likes/remove' : '/api/likes/add';
-    $.post(url, { snippetId: id })
-      .done(response => {
-        if (response.success) {
-          btn.toggleClass('liked');
-          btn.data('is-liked', !liked);
-          countSpan.text(response.likeCount);
-        } else {
-          alert(response.message);
-        }
-      })
-      .fail(xhr => {
-        if (xhr.status === 401) window.location.href = '/login';
-        else alert('오류');
-      })
-      .always(() => btn.prop('disabled', false));
-  });
-
-  // 페이지 로드 애니메이션
-  $(document).ready(function() {
-    $('.snippet-card').each(function(index) {
-      $(this).css('animation-delay', (index * 0.1) + 's');
-    });
-  });
-</script>
+		// 페이지 로드 애니메이션
+		$(document).ready(function () {
+			$('.snippet-card').each(function (index) {
+				$(this).css('animation-delay', (index * 0.1) + 's');
+			});
+		});
+	</script>
 </body>
+
 </html>

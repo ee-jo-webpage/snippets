@@ -716,6 +716,87 @@ public class BoardController {
         }
     }
 
+    //첨부파일 삭제 (AJAX)
+    @DeleteMapping("/attachment/{attachmentId}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> deleteAttachment(
+            @PathVariable Integer attachmentId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            System.out.println("=== 첨부파일 삭제 요청 ===");
+            System.out.println("첨부파일 ID: " + attachmentId);
+
+            // 로그인 체크
+            if (userDetails == null) {
+                response.put("success", false);
+                response.put("message", "로그인이 필요합니다.");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+
+            // 첨부파일 정보 조회
+            PostAttachment attachment = boardService.getAttachmentById(attachmentId);
+            if (attachment == null) {
+                response.put("success", false);
+                response.put("message", "첨부파일을 찾을 수 없습니다.");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
+            // 게시글 정보 조회 (권한 체크용)
+            Post post = boardService.getPostById(attachment.getPostId());
+            if (post == null) {
+                response.put("success", false);
+                response.put("message", "게시글을 찾을 수 없습니다.");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
+            Long currentUserId = getCurrentUserId(userDetails);
+
+            // 권한 체크 - 게시글 작성자 또는 관리자만 삭제 가능
+            boolean isAuthor = Objects.equals(currentUserId, post.getUserId());
+            boolean isAdmin = isAdmin(userDetails);
+
+            if (!isAuthor && !isAdmin) {
+                response.put("success", false);
+                response.put("message", "첨부파일을 삭제할 권한이 없습니다.");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+
+            // 실제 파일 삭제
+            try {
+                Path filePath = Paths.get(attachment.getFilePath());
+                if (Files.exists(filePath)) {
+                    Files.delete(filePath);
+                    System.out.println("실제 파일 삭제 성공: " + attachment.getFileName());
+                } else {
+                    System.out.println("파일이 존재하지 않음: " + attachment.getFilePath());
+                }
+            } catch (IOException e) {
+                System.out.println("파일 삭제 실패: " + e.getMessage());
+                // 파일 삭제 실패해도 DB 정보는 삭제 진행
+            }
+
+            // DB에서 첨부파일 정보 삭제
+            boardService.deleteAttachment(attachmentId);
+
+            response.put("success", true);
+            response.put("message", "첨부파일이 삭제되었습니다.");
+
+            System.out.println("=== 첨부파일 삭제 완료 ===");
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            System.out.println("❌ 첨부파일 삭제 오류: " + e.getMessage());
+            e.printStackTrace();
+
+            response.put("success", false);
+            response.put("message", "첨부파일 삭제 중 오류가 발생했습니다.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
     // 이미지 업로드 (Summernote용)
     @PostMapping("/upload-image")
     @ResponseBody

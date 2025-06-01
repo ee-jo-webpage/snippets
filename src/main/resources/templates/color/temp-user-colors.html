@@ -58,7 +58,7 @@
                             <div class="color-hex" th:text="${color.hexCode}">#FFFFFF</div>
 
                             <!-- 수정/삭제 버튼 (내 색상일 때만 표시) -->
-                            <div th:if="${color.userId == currentUserId or (isMyColors and color.userId != null)}" class="color-actions">
+                            <div th:if="${color.userId > 0 and color.userId == currentUserId}" class="color-actions">
                                 <button class="btn btn-edit"
                                         onclick="openEditModal(this)"
                                         th:data-color-id="${color.colorId}"

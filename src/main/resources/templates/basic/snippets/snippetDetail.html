@@ -1,80 +1,18 @@
-async function toggleBookmark() {
-		      try {
-		        console.log('북마크 토글 시도 - 스니펫 ID:', snippetId);
-		        
-		        // 1차 시도: BookmarkRestController 엔드포인트
-		        await toggleBookmarkViaAPI();
-		        
-		      } catch (error) {
-		        console.error('API 방식 북마크 토글 실패:', error);
-		        
-		        try {
-		          // 2차 시도: 폼 방식
-		          await toggleBookmarkViaForm();
-		          
-		        } catch (error2) {
-		          console.error('폼 방식 북마크 토글도 실패:', error2);
-		          showToast('북마크 기능을 사용할 수 없습니다.');
-		        }
-		      }
-		    }
-
-		    async function toggleBookmarkViaAPI() {
-		      const response = await fetch('/api/bookmarks/toggle', {
-		        method: 'POST',
-		        credentials: 'same-origin',
-		        headers: {
-		          'Content-Type': 'application/x-www-form-urlencoded',
-		          [csrfHeader]: csrfToken
-		        },
-		        body: new URLSearchParams({ snippetId: snippetId.toString() })
-		      });
-
-		      console.log('북마크 토글 응답 상태 (API):', response.status);
-
-		      if (!response.ok) {
-		        if (response.status === 401) {
-		          showToast('로그인이 필요합니다.');
-		          return;
-		        }
-		        const errorText = await response.text();
-		        console.error('북마크 토글 응답 오류:', response.status, errorText);
-		        throw new Error(`북마크 처리 실패 (${response.status})`);
-		      }
-
-		      const result = await response.json();
-		      console.log('북마크 토글 결과 (API):', result);
-		      
-		      // BookmarkRestController의 응답 형태: { "success": true, "bookmarked": boolean, "message": string }
-		      if (result.success) {
-		        isBookmarked = result.bookmarked;
-		        updateBookmarkButton();
-		        showToast(result.message || (isBookmarked ? '북마크에 추가했습니다.' : '북마크에서 제거했습니다.'));
-		      } else {
-		        throw new Error(result.message || '북마크 처리 실패');
-		      }
-		    }
-
-		    async function toggleBookmarkViaForm() {
-		      const formData = new FormData();
-		      formData.append('snippetId', snippetId);
-		      formData.append('_csrf', csrfToken);
-
-		      const response = await fetch('/bookmarks/toggle', {<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta name="_csrf"       th:content="${_csrf.token}"/>
+	<meta name="_csrf" th:content="${_csrf.token}"/>
 	<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 	<link th:href="@{/my-snippet-page/css/my-snippet-page.css}" rel="stylesheet">
 	<title th:text="'스니펫 #' + ${snippet.snippetId}">Snippet 상세 정보</title>
 	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 	<link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
-	<script
-		src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+
 	<style>
 		/* 메인 컨테이너 */
 		.main-content {
@@ -89,7 +27,7 @@ async function toggleBookmark() {
 			padding: 40px 20px;
 		}
 
-		/* 헤더 영역 */
+		/* 헤더 영역 - 공개설정이 제목 위치로 이동 */
 		.snippet-header {
 			background: rgba(255, 255, 255, 0.95);
 			backdrop-filter: blur(20px);
@@ -117,12 +55,59 @@ async function toggleBookmark() {
 			box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 		}
 
-		.snippet-title {
+		.snippet-visibility-section {
+			display: flex;
+			align-items: center;
+			gap: 20px;
 			font-size: 2.2rem;
 			color: #2d3748;
 			margin: 0 0 15px 0;
 			font-weight: 700;
 			line-height: 1.2;
+		}
+
+		.visibility-badge {
+			padding: 8px 16px;
+			border-radius: 20px;
+			font-size: 1.1rem;
+			font-weight: 600;
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+		}
+
+		.visibility-public {
+			background: linear-gradient(135deg, #48bb78, #38a169);
+			color: white;
+			box-shadow: 0 2px 8px rgba(72, 187, 120, 0.3);
+		}
+
+		.visibility-private {
+			background: linear-gradient(135deg, #ed8936, #dd6b20);
+			color: white;
+			box-shadow: 0 2px 8px rgba(237, 137, 54, 0.3);
+		}
+
+		.source-url-section {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			font-size: 0.95rem;
+			color: #667eea;
+		}
+
+		.source-url-section a {
+			color: #667eea;
+			text-decoration: none;
+			font-weight: 500;
+			max-width: 300px;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+
+		.source-url-section a:hover {
+			text-decoration: underline;
 		}
 
 		.snippet-meta {
@@ -325,8 +310,8 @@ async function toggleBookmark() {
 			margin-right: auto;
 		}
 
-		/* 추가 정보 섹션 */
-		.snippet-info {
+		/* 메모 섹션 - 콘텐츠 아래로 이동 */
+		.snippet-memo {
 			background: rgba(255, 255, 255, 0.95);
 			backdrop-filter: blur(20px);
 			border-radius: 20px;
@@ -336,36 +321,36 @@ async function toggleBookmark() {
 			border: 1px solid rgba(255, 255, 255, 0.2);
 		}
 
-		.info-grid {
-			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-			gap: 20px;
-		}
-
-		.info-item {
-			padding: 20px;
-			background: rgba(247, 250, 252, 0.5);
-			border-radius: 15px;
-			border: 1px solid rgba(226, 232, 240, 0.3);
-		}
-
-		.info-label {
-			font-size: 0.85rem;
-			color: #718096;
-			font-weight: 600;
-			text-transform: uppercase;
-			letter-spacing: 0.5px;
-			margin-bottom: 8px;
-		}
-
-		.info-value {
-			font-size: 1rem;
+		.memo-title {
+			font-size: 1.4rem;
 			color: #2d3748;
-			font-weight: 500;
-			word-break: break-all;
+			margin-bottom: 20px;
+			font-weight: 600;
+			display: flex;
+			align-items: center;
+			gap: 10px;
 		}
 
-		/* 태그 섹션 스타일 */
+		.memo-content {
+			background: rgba(247, 250, 252, 0.8);
+			border: 2px solid rgba(72, 187, 120, 0.2);
+			border-radius: 15px;
+			padding: 25px;
+			font-size: 1.1rem;
+			line-height: 1.8;
+			color: #2d3748;
+			min-height: 100px;
+			white-space: pre-wrap;
+			word-wrap: break-word;
+		}
+
+		.empty-memo {
+			color: #a0aec0;
+			font-style: italic;
+			text-align: center;
+		}
+
+		/* 태그 섹션 스타일 - 편집 가능 */
 		.snippet-tags-section {
 			background: rgba(255, 255, 255, 0.95);
 			backdrop-filter: blur(20px);
@@ -376,37 +361,40 @@ async function toggleBookmark() {
 			border: 1px solid rgba(255, 255, 255, 0.2);
 		}
 
-		.snippet-tags-section h4 {
-			font-size: 1.2rem;
+		.tags-title {
+			font-size: 1.4rem;
 			color: #2d3748;
-			margin-bottom: 20px;
+			margin-bottom: 25px;
 			font-weight: 600;
+			display: flex;
+			align-items: center;
+			gap: 10px;
 		}
 
-		.snippet-tags-display {
+		.tags-display {
 			display: flex;
 			flex-wrap: wrap;
 			gap: 10px;
-			margin-bottom: 20px;
 			min-height: 40px;
 			align-items: flex-start;
+			margin-bottom: 20px;
 		}
 
-		.tag-badge {
+		.tag-item {
 			background: linear-gradient(135deg, #667eea, #764ba2);
 			color: white;
-			padding: 6px 12px;
+			padding: 8px 16px;
 			border-radius: 20px;
-			font-size: 0.85rem;
+			font-size: 0.9rem;
 			font-weight: 500;
-			display: inline-flex;
-			align-items: center;
-			gap: 6px;
 			box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 			transition: all 0.3s ease;
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
 		}
 
-		.tag-badge:hover {
+		.tag-item:hover {
 			transform: translateY(-1px);
 			box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 		}
@@ -430,7 +418,7 @@ async function toggleBookmark() {
 			background: rgba(255, 255, 255, 0.3);
 		}
 
-		.snippet-tags-input {
+		.tags-input {
 			display: flex;
 			gap: 10px;
 			align-items: center;
@@ -467,18 +455,36 @@ async function toggleBookmark() {
 			background: rgba(247, 250, 252, 0.5);
 			border-radius: 15px;
 			border: 2px dashed rgba(160, 174, 192, 0.3);
+			width: 100%;
 		}
 
 		/* 북마크 버튼 스타일 */
+		.bookmark-section {
+			background: rgba(255, 255, 255, 0.95);
+			backdrop-filter: blur(20px);
+			border-radius: 20px;
+			padding: 30px;
+			margin-bottom: 30px;
+			box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+			border: 1px solid rgba(255, 255, 255, 0.2);
+			text-align: center;
+		}
+
 		.btn-bookmark {
 			background: linear-gradient(135deg, #f6ad55, #ed8936);
 			color: white;
-			margin-bottom: 20px;
-			display: flex;
+			padding: 15px 30px;
+			border: none;
+			border-radius: 25px;
+			font-size: 1.1rem;
+			font-weight: 600;
+			cursor: pointer;
+			display: inline-flex;
 			align-items: center;
 			justify-content: center;
-			gap: 8px;
+			gap: 10px;
 			transition: all 0.3s ease;
+			box-shadow: 0 4px 15px rgba(246, 173, 85, 0.3);
 		}
 
 		.btn-bookmark:hover {
@@ -489,6 +495,7 @@ async function toggleBookmark() {
 
 		.btn-bookmark.bookmarked {
 			background: linear-gradient(135deg, #48bb78, #38a169);
+			box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
 		}
 
 		.btn-bookmark.bookmarked:hover {
@@ -497,7 +504,7 @@ async function toggleBookmark() {
 		}
 
 		.btn-bookmark i {
-			font-size: 1.1rem;
+			font-size: 1.2rem;
 		}
 
 		/* 액션 버튼들 */
@@ -591,6 +598,10 @@ async function toggleBookmark() {
 			transform: translateX(0);
 		}
 
+		.toast.error {
+			background: #ef4444;
+		}
+
 		/* 반응형 디자인 */
 		@media (max-width: 768px) {
 			.detail-container {
@@ -599,13 +610,17 @@ async function toggleBookmark() {
 
 			.snippet-header,
 			.snippet-content,
-			.snippet-info,
-			.snippet-tags-section {
+			.snippet-memo,
+			.snippet-tags-section,
+			.bookmark-section {
 				padding: 20px;
 			}
 
-			.snippet-title {
+			.snippet-visibility-section {
 				font-size: 1.8rem;
+				flex-direction: column;
+				align-items: flex-start;
+				gap: 10px;
 			}
 
 			.header-top {
@@ -629,7 +644,15 @@ async function toggleBookmark() {
 				justify-content: center;
 			}
 
-			.snippet-tags-input {
+			.source-url-section {
+				max-width: 100%;
+			}
+
+			.source-url-section a {
+				max-width: 200px;
+			}
+
+			.tags-input {
 				flex-direction: column;
 			}
 
@@ -639,6 +662,15 @@ async function toggleBookmark() {
 			}
 		}
 	</style>
+	<script th:inline="javascript">
+		/*<![CDATA[*/
+		window.currentUserId = /*[[${#authentication.principal.userId}]]*/ 0;
+		window.snippetId     = /*[[${snippet.snippetId}]]*/ 0;
+		window.csrfToken     = /*[[${_csrf.token}]]*/ '';
+		window.csrfHeader    = /*[[${_csrf.headerName}]]*/ '';
+		/*]]>*/
+	</script>
+
 </head>
 
 <body>
@@ -653,29 +685,39 @@ async function toggleBookmark() {
 				스니펫 목록으로 돌아가기
 			</a>
 
-			<!-- 헤더 영역 -->
+			<!-- 헤더 영역 - 공개설정이 제목 위치로 이동, 출처 URL 추가 -->
 			<div class="snippet-header">
 				<div class="header-top">
 					<div>
-						<h1 class="snippet-title"
-							th:text="${snippet.memo != null and !snippet.memo.isEmpty() ? snippet.memo : '제목 없는 스니펫'}">
-							스니펫 제목</h1>
+						<div class="snippet-visibility-section">
+                     <span class="visibility-badge"
+						   th:classappend="${snippet.visibility == 1} ? 'visibility-public' : 'visibility-private'">
+                        <i th:class="${snippet.visibility == 1} ? 'fas fa-globe' : 'fas fa-lock'"
+						   th:attr="title=${snippet.visibility == 1} ? '공개 스니펫' : '비공개 스니펫'"></i>
+                        <span th:text="${snippet.visibility == 1} ? '공개' : '비공개'">공개설정</span>
+                     </span>
+							<!-- 출처 URL을 공개설정 오른쪽에 배치 -->
+							<div class="source-url-section" th:if="${snippet.sourceUrl != null and !snippet.sourceUrl.isEmpty()}">
+								<i class="fas fa-external-link-alt"></i>
+								<a th:href="${snippet.sourceUrl}" th:text="${snippet.sourceUrl}" target="_blank" th:title="${snippet.sourceUrl}">출처 URL</a>
+							</div>
+						</div>
 						<div class="snippet-meta">
-							<span class="type-badge"
-								th:classappend="${snippet.type.name().toLowerCase()} == 'code' ? 'type-code' : (${snippet.type.name().toLowerCase()} == 'text' ? 'type-text' : 'type-img')"
-								th:text="${snippet.type.name().toUpperCase()}">TYPE</span>
+                     <span class="type-badge"
+						   th:classappend="${snippet.type.name().toLowerCase()} == 'code' ? 'type-code' : (${snippet.type.name().toLowerCase()} == 'text' ? 'type-text' : 'type-img')"
+						   th:text="${snippet.type.name().toUpperCase()}">TYPE</span>
 							<span class="meta-item">
-								<i class="fas fa-calendar-alt"></i>
-								<span th:text="${#dates.format(snippet.createdAt, 'yyyy년 MM월 dd일')}">생성일</span>
-							</span>
+                        <i class="fas fa-calendar-alt"></i>
+                        <span th:text="${#dates.format(snippet.createdAt, 'yyyy년 MM월 dd일')}">생성일</span>
+                     </span>
 							<span class="meta-item" th:if="${snippet.updatedAt != null}">
-								<i class="fas fa-edit"></i>
-								<span th:text="${#dates.format(snippet.updatedAt, 'yyyy년 MM월 dd일')}">수정일</span>
-							</span>
+                        <i class="fas fa-edit"></i>
+                        <span th:text="${#dates.format(snippet.updatedAt, 'yyyy년 MM월 dd일')}">수정일</span>
+                     </span>
 							<span class="meta-item" th:if="${snippet.language != null and !snippet.language.isEmpty()}">
-								<i class="fas fa-code"></i>
-								<span th:text="${snippet.language}">언어</span>
-							</span>
+                        <i class="fas fa-code"></i>
+                        <span th:text="${snippet.language}">언어</span>
+                     </span>
 						</div>
 					</div>
 					<div class="snippet-id-badge" th:text="'#' + ${snippet.snippetId}">#123</div>
@@ -698,8 +740,8 @@ async function toggleBookmark() {
 					</div>
 					<div class="code-container">
 						<div class="code-header">
-							<span class="language-badge"
-								th:text="${snippet.language != null ? snippet.language : 'Code'}">Language</span>
+                     <span class="language-badge"
+						   th:text="${snippet.language != null ? snippet.language : 'Code'}">Language</span>
 						</div>
 						<div class="code-content">
 							<pre><code th:text="${snippet.content != null ? snippet.content : '내용이 없습니다.'}" id="codeContent" th:class="'language-' + ${snippet.language != null ? snippet.language.toLowerCase() : 'javascript'}">코드 내용</code></pre>
@@ -738,16 +780,16 @@ async function toggleBookmark() {
 					</div>
 					<div class="image-container">
 						<img th:if="${snippet.imageUrl != null and !snippet.imageUrl.isEmpty()}"
-							th:src="${snippet.imageUrl}"
-							th:alt="${snippet.altText != null ? snippet.altText : '스니펫 이미지'}" class="snippet-image"
-							id="snippetImage" />
+							 th:src="${snippet.imageUrl}"
+							 th:alt="${snippet.altText != null ? snippet.altText : '스니펫 이미지'}" class="snippet-image"
+							 id="snippetImage" />
 						<div th:if="${snippet.imageUrl == null or snippet.imageUrl.isEmpty()}"
-							style="padding: 60px; text-align: center; color: #718096; font-size: 1.2rem;">
+							 style="padding: 60px; text-align: center; color: #718096; font-size: 1.2rem;">
 							<i class="fas fa-image" style="font-size: 3rem; margin-bottom: 20px; opacity: 0.3;"></i>
 							<p>이미지가 없습니다.</p>
 						</div>
 						<div th:if="${snippet.altText != null and !snippet.altText.isEmpty()}" class="image-alt-text"
-							th:text="${snippet.altText}">이미지 설명</div>
+							 th:text="${snippet.altText}">이미지 설명</div>
 					</div>
 				</div>
 
@@ -766,42 +808,43 @@ async function toggleBookmark() {
 				</div>
 			</div>
 
-			<!-- 추가 정보 -->
-			<div class="snippet-info" th:if="${snippet.sourceUrl != null or snippet.visibility != null}">
-				<div class="info-grid">
-					<div class="info-item" th:if="${snippet.sourceUrl != null and !snippet.sourceUrl.isEmpty()}">
-						<div class="info-label">출처 URL</div>
-						<div class="info-value">
-							<a th:href="${snippet.sourceUrl}" th:text="${snippet.sourceUrl}" target="_blank"
-								style="color: #667eea; text-decoration: none;">URL</a>
-						</div>
-					</div>
-					<div class="info-item" th:if="${snippet.visibility != null}">
-						<div class="info-label">공개 설정</div>
-						<div class="info-value" th:text="${snippet.visibility == 1 ? '공개' : '비공개'}">공개 설정</div>
+			<!-- 메모 섹션 - 콘텐츠 아래로 이동 -->
+			<div class="snippet-memo">
+				<h3 class="memo-title">
+					<i class="fas fa-sticky-note"></i>
+					메모
+				</h3>
+				<div class="memo-content">
+					<div th:if="${snippet.memo != null and !snippet.memo.isEmpty()}"
+						 th:text="${snippet.memo}">메모 내용</div>
+					<div th:unless="${snippet.memo != null and !snippet.memo.isEmpty()}" class="empty-memo">
+						메모가 없습니다.
 					</div>
 				</div>
 			</div>
 
-			<!-- 태그 섹션 -->
+			<!-- 태그 섹션 - 편집 가능 -->
 			<div class="snippet-tags-section">
-				<h4>🏷️ 태그</h4>
-				<div class="snippet-tags-display" id="snippetTagsDisplay">
-					<div class="empty-tags" id="emptyTagsMessage">
-						아직 태그가 없습니다. 아래에서 태그를 추가해보세요!
-					</div>
+				<h3 class="tags-title">
+					<i class="fas fa-tags"></i>
+					태그
+				</h3>
+				<div class="tags-display" id="tagsDisplay">
+					<div class="empty-tags">태그를 불러오는 중...</div>
 				</div>
-				<div class="snippet-tags-input">
+				<div class="tags-input">
 					<input type="text" id="tagInput" placeholder="태그 추가 (쉼표로 구분)" class="tag-input">
 					<button id="addTagsBtn" class="btn btn-primary">태그 추가</button>
 				</div>
 			</div>
 
-			<!-- 북마크 버튼 -->
-			<button id="bookmarkToggleBtn" class="btn btn-bookmark">
-				<i class="fas fa-bookmark"></i> 
-				<span class="bookmark-text">북마크 추가</span>
-			</button>
+			<!-- 북마크 섹션 -->
+			<div class="bookmark-section">
+				<button id="bookmarkToggleBtn" class="btn-bookmark">
+					<i class="far fa-bookmark"></i>
+					<span class="bookmark-text">북마크 추가</span>
+				</button>
+			</div>
 
 			<!-- 액션 버튼들 -->
 			<div class="action-buttons">
@@ -815,7 +858,7 @@ async function toggleBookmark() {
 				</form>
 
 				<form th:action="@{/snippets/delete/{snippetId}(snippetId=${snippet.snippetId})}" method="post"
-					onsubmit="return confirm('정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.');" style="display: inline;">
+					  onsubmit="return confirm('정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.');" style="display: inline;">
 					<button type="submit" class="btn btn-danger">
 						<i class="fas fa-trash"></i>
 						삭제하기
@@ -830,573 +873,473 @@ async function toggleBookmark() {
 		let currentTags = [];
 		let isBookmarked = false;
 		const snippetId = /*[[${snippet.snippetId}]]*/ 1;
-		const csrfToken  = /*[[${_csrf.token}]]*/ '';
+		const csrfToken = /*[[${_csrf.token}]]*/ '';
 		const csrfHeader = /*[[${_csrf.headerName}]]*/ '';
-		
 
 		// 페이지 로드 시 초기화
 		document.addEventListener('DOMContentLoaded', () => {
-		      loadTags();
-		      loadBookmarkStatus();
-		      document.getElementById('addTagsBtn').addEventListener('click', addTags);
-		      document.getElementById('tagInput').addEventListener('keypress', e => {
-		        if (e.key === 'Enter') addTags();
-		      });
-		      document.getElementById('bookmarkToggleBtn').addEventListener('click', toggleBookmark);
-		    });
+			loadSnippetTags();
+			loadBookmarkStatus();
 
-		    // 태그 관리 함수들 - 실제 사용 가능한 API 엔드포인트 확인 후 수정
-		    function loadTags() {
-		      // 1차 시도: 기본 태그 API
-		      fetch(`/api/tags/snippet/${snippetId}`, {
-		        method: 'GET',
-		        credentials: 'same-origin'
-		      })
-		      .then(res => {
-		        console.log('태그 API 응답 상태 (1차):', res.status);
-		        if (res.ok) {
-		          return res.json();
-		        }
-		        // 1차 실패 시 2차 시도
-		        throw new Error(`First attempt failed: ${res.status}`);
-		      })
-		      .then(data => {
-		        console.log('태그 API 응답 데이터 (1차):', data);
-		        processTags(data);
-		      })
-		      .catch(err => {
-		        console.log('1차 태그 API 실패, 2차 시도:', err.message);
-		        
-		        // 2차 시도: 다른 엔드포인트
-		        fetch(`/snippets/${snippetId}/tags`, {
-		          method: 'GET',
-		          credentials: 'same-origin'
-		        })
-		        .then(res => {
-		          console.log('태그 API 응답 상태 (2차):', res.status);
-		          if (res.ok) {
-		            return res.json();
-		          }
-		          throw new Error(`Second attempt failed: ${res.status}`);
-		        })
-		        .then(data => {
-		          console.log('태그 API 응답 데이터 (2차):', data);
-		          processTags(data);
-		        })
-		        .catch(err2 => {
-		          console.log('2차 태그 API도 실패, 3차 시도:', err2.message);
-		          
-		          // 3차 시도: 기존 태그 표시 스킵, 빈 배열로 초기화
-		          console.error('모든 태그 API 시도 실패:', err2);
-		          currentTags = [];
-		          displayTags();
-		          showToast('태그 기능을 사용할 수 없습니다.');
-		        });
-		      });
-		    }
+			// 태그 입력 이벤트 리스너
+			document.getElementById('addTagsBtn').addEventListener('click', addTags);
+			document.getElementById('tagInput').addEventListener('keypress', e => {
+				if (e.key === 'Enter') addTags();
+			});
 
-		    function processTags(data) {
-		      // 응답 형태에 따라 처리
-		      if (Array.isArray(data)) {
-		        currentTags = data;
-		      } else if (data && Array.isArray(data.tags)) {
-		        currentTags = data.tags;
-		      } else if (data && data.success && Array.isArray(data.data)) {
-		        currentTags = data.data;
-		      } else {
-		        console.warn('예상하지 못한 태그 API 응답 형태:', data);
-		        currentTags = [];
-		      }
-		      displayTags();
-		    }
+			// 북마크 버튼 이벤트 리스너
+			document.getElementById('bookmarkToggleBtn').addEventListener('click', toggleBookmark);
+		});
 
-		    function displayTags() {
-		      const container = document.getElementById('snippetTagsDisplay');
-		      const emptyMessage = document.getElementById('emptyTagsMessage');
-		      
-		      // currentTags가 배열인지 확인
-		      if (!Array.isArray(currentTags)) {
-		        console.warn('currentTags가 배열이 아닙니다:', currentTags);
-		        currentTags = [];
-		      }
-		      
-		      if (currentTags.length === 0) {
-		        if (emptyMessage) {
-		          emptyMessage.style.display = 'block';
-		        } else {
-		          container.innerHTML = '<div class="empty-tags">아직 태그가 없습니다. 아래에서 태그를 추가해보세요!</div>';
-		        }
-		        return;
-		      }
+		// === 태그 관리 함수들 ===
 
-		      if (emptyMessage) {
-		        emptyMessage.style.display = 'none';
-		      }
+		// 현재 스니펫의 태그 로드
+		async function loadSnippetTags() {
+			try {
+				console.log('스니펫 태그 로드 시도:', snippetId);
 
-		      const tagsHtml = currentTags.map(tag => {
-		        // tag 객체 구조 확인
-		        const tagId = tag.tagId || tag.id;
-		        const tagName = tag.name || tag.tagName || String(tag);
-		        
-		        return `
-		          <span class="tag-badge" data-tag-id="${tagId}">
-		            ${escapeHtml(tagName)}
-		            <button class="tag-remove" onclick="removeTag(${tagId})" title="태그 제거">×</button>
-		          </span>
-		        `;
-		      }).join('');
-		      
-		      container.innerHTML = tagsHtml;
-		    }
+				// 1차 시도: 기본 태그 API
+				let response = await fetch(`/api/tag/snippet/${snippetId}`, {
+					method: 'GET',
+					credentials: 'same-origin'
+				});
 
-		    async function addTags() {
-		      const input = document.getElementById('tagInput');
-		      const inputValue = input.value.trim();
-		      
-		      if (!inputValue) {
-		        showToast('태그를 입력해주세요.');
-		        return;
-		      }
+				if (!response.ok) {
+					// 2차 시도: 다른 엔드포인트
+					console.log('1차 태그 API 실패, 2차 시도');
+					response = await fetch(`/snippets/${snippetId}/tags`, {
+						method: 'GET',
+						credentials: 'same-origin'
+					});
+				}
 
-		      const tagNames = inputValue.split(',')
-		        .map(name => name.trim())
-		        .filter(name => name && !currentTags.some(tag => {
-		          const tagName = tag.name || tag.tagName || String(tag);
-		          return tagName === name;
-		        }));
-		      
-		      if (tagNames.length === 0) {
-		        showToast('새로운 태그를 입력해주세요.');
-		        return;
-		      }
+				if (!response.ok) {
+					throw new Error(`태그 로드 실패: ${response.status}`);
+				}
 
-		      try {
-		        // 1차 시도: REST API 방식
-		        await addTagsViaAPI(tagNames);
-		        
-		      } catch (error) {
-		        console.error('API 방식 태그 추가 실패:', error);
-		        
-		        try {
-		          // 2차 시도: 폼 방식으로 태그 추가
-		          await addTagsViaForm(tagNames);
-		          
-		        } catch (error2) {
-		          console.error('폼 방식 태그 추가도 실패:', error2);
-		          showToast('태그 추가 기능을 사용할 수 없습니다.');
-		        }
-		      }
-		    }
+				const data = await response.json();
+				console.log('스니펫 태그 로드 성공:', data);
 
-		    async function addTagsViaAPI(tagNames) {
-		      for (const tagName of tagNames) {
-		        console.log('API 방식 태그 추가 시도:', tagName);
-		        
-		        // 1) 태그 생성 시도
-		        const createResponse = await fetch('/api/tags', {
-		          method: 'POST',
-		          credentials: 'same-origin',
-		          headers: {
-		            'Content-Type': 'application/json',
-		            [csrfHeader]: csrfToken
-		          },
-		          body: JSON.stringify({ name: tagName })
-		        });
+				// 응답 형태에 따라 처리
+				if (Array.isArray(data)) {
+					currentTags = data;
+				} else if (data && Array.isArray(data.tags)) {
+					currentTags = data.tags;
+				} else if (data && data.success && Array.isArray(data.data)) {
+					currentTags = data.data;
+				} else {
+					console.warn('예상하지 못한 태그 API 응답 형태:', data);
+					currentTags = [];
+				}
 
-		        let tag;
-		        if (createResponse.ok) {
-		          const createResult = await createResponse.json();
-		          tag = createResult.tag || createResult;
-		        } else {
-		          // 태그 생성 실패 시 기존 태그 검색 시도
-		          const searchResponse = await fetch(`/api/tags?name=${encodeURIComponent(tagName)}`, {
-		            method: 'GET',
-		            credentials: 'same-origin'
-		          });
-		          
-		          if (searchResponse.ok) {
-		            const searchResult = await searchResponse.json();
-		            tag = Array.isArray(searchResult) ? searchResult[0] : searchResult;
-		          } else {
-		            throw new Error(`태그 생성/조회 실패: ${tagName}`);
-		          }
-		        }
+				displayTags();
 
-		        const tagId = tag.tagId || tag.id;
-		        if (!tagId) {
-		          throw new Error(`태그 ID를 찾을 수 없습니다: ${tagName}`);
-		        }
+			} catch (error) {
+				console.error('스니펫 태그 로드 실패:', error);
+				currentTags = [];
+				displayTags();
+			}
+		}
 
-		        // 2) 스니펫-태그 매핑 시도
-		        const linkResponse = await fetch(`/api/tags/snippet/${snippetId}/tag/${tagId}`, {
-		          method: 'POST',
-		          credentials: 'same-origin',
-		          headers: {
-		            [csrfHeader]: csrfToken
-		          }
-		        });
+		// 태그 표시
+		function displayTags() {
+			const container = document.getElementById('tagsDisplay');
 
-		        if (!linkResponse.ok) {
-		          // 다른 매핑 엔드포인트 시도
-		          const link2Response = await fetch(`/snippets/${snippetId}/addTag`, {
-		            method: 'POST',
-		            credentials: 'same-origin',
-		            headers: {
-		              'Content-Type': 'application/x-www-form-urlencoded',
-		              [csrfHeader]: csrfToken
-		            },
-		            body: new URLSearchParams({ tagId: tagId })
-		          });
-		          
-		          if (!link2Response.ok) {
-		            throw new Error(`태그 매핑 실패: ${tagName}`);
-		          }
-		        }
-		        
-		        console.log('API 방식 태그 매핑 성공:', tagName);
-		      }
+			// currentTags가 배열인지 확인
+			if (!Array.isArray(currentTags)) {
+				console.warn('currentTags가 배열이 아닙니다:', currentTags);
+				currentTags = [];
+			}
 
-		      // 성공 시 처리
-		      document.getElementById('tagInput').value = '';
-		      await loadTags();
-		      showToast(`${tagNames.length}개 태그가 추가되었습니다.`);
-		    }
+			if (!currentTags || currentTags.length === 0) {
+				container.innerHTML = '<div class="empty-tags">아직 태그가 없습니다. 아래에서 태그를 추가해보세요!</div>';
+				return;
+			}
 
-		    async function addTagsViaForm(tagNames) {
-		      // 폼 기반 태그 추가 (서버 사이드 처리)
-		      for (const tagName of tagNames) {
-		        console.log('폼 방식 태그 추가 시도:', tagName);
-		        
-		        const formData = new FormData();
-		        formData.append('snippetId', snippetId);
-		        formData.append('tagName', tagName);
-		        formData.append('_csrf', csrfToken);
+			const tagsHtml = currentTags.map(tag => {
+				// tag 객체 구조 확인
+				const tagId = tag.tagId || tag.id;
+				const tagName = tag.name || tag.tagName || String(tag);
 
-		        const response = await fetch('/snippets/addTag', {
-		          method: 'POST',
-		          credentials: 'same-origin',
-		          body: formData
-		        });
+				return `
+               <span class="tag-item" data-tag-id="${tagId}">
+                  ${escapeHtml(tagName)}
+                  <button class="tag-remove" onclick="removeTag(${tagId})" title="태그 제거">×</button>
+               </span>
+            `;
+			}).join('');
 
-		        if (!response.ok) {
-		          throw new Error(`폼 방식 태그 추가 실패: ${tagName} (${response.status})`);
-		        }
-		        
-		        console.log('폼 방식 태그 추가 성공:', tagName);
-		      }
+			container.innerHTML = tagsHtml;
+		}
 
-		      // 성공 시 처리
-		      document.getElementById('tagInput').value = '';
-		      await loadTags();
-		      showToast(`${tagNames.length}개 태그가 추가되었습니다.`);
-		    }
+		// 태그 추가
+		async function addTags() {
+			const input = document.getElementById('tagInput');
+			const inputValue = input.value.trim();
 
-		    async function removeTag(tagId) {
-		      if (!tagId) {
-		        showToast('태그 ID가 올바르지 않습니다.');
-		        return;
-		      }
-		      
-		      if (!confirm('이 태그를 제거하시겠습니까?')) {
-		        return;
-		      }
+			if (!inputValue) {
+				showToast('태그를 입력해주세요.', 'error');
+				return;
+			}
 
-		      try {
-		        console.log('태그 제거 시도:', tagId);
-		        
-		        // 1차 시도: REST API 방식
-		        await removeTagViaAPI(tagId);
-		        
-		      } catch (error) {
-		        console.error('API 방식 태그 제거 실패:', error);
-		        
-		        try {
-		          // 2차 시도: 폼 방식
-		          await removeTagViaForm(tagId);
-		          
-		        } catch (error2) {
-		          console.error('폼 방식 태그 제거도 실패:', error2);
-		          showToast('태그 제거 기능을 사용할 수 없습니다.');
-		        }
-		      }
-		    }
+			const tagNames = inputValue.split(',')
+				.map(name => name.trim())
+				.filter(name => name && !currentTags.some(tag => {
+					const tagName = tag.name || tag.tagName || String(tag);
+					return tagName === name;
+				}));
 
-		    async function removeTagViaAPI(tagId) {
-		      // 1차 시도: DELETE 방식
-		      let response = await fetch(`/api/tags/snippet/${snippetId}/tag/${tagId}`, {
-		        method: 'DELETE',
-		        credentials: 'same-origin',
-		        headers: {
-		          [csrfHeader]: csrfToken
-		        }
-		      });
+			if (tagNames.length === 0) {
+				showToast('새로운 태그를 입력해주세요.', 'error');
+				return;
+			}
 
-		      if (!response.ok) {
-		        // 2차 시도: 다른 엔드포인트
-		        response = await fetch(`/snippets/${snippetId}/removeTag`, {
-		          method: 'POST',
-		          credentials: 'same-origin',
-		          headers: {
-		            'Content-Type': 'application/x-www-form-urlencoded',
-		            [csrfHeader]: csrfToken
-		          },
-		          body: new URLSearchParams({ tagId: tagId })
-		        });
-		      }
+			try {
+				// 1차 시도: REST API 방식
+				await addTagsViaAPI(tagNames);
 
-		      if (!response.ok) {
-		        throw new Error(`태그 제거 실패 (${response.status})`);
-		      }
+			} catch (error) {
+				console.error('API 방식 태그 추가 실패:', error);
 
-		      const result = await response.json().catch(() => ({}));
-		      console.log('API 방식 태그 제거 결과:', result);
-		      
-		      // 성공 처리
-		      currentTags = currentTags.filter(tag => {
-		        const currentTagId = tag.tagId || tag.id;
-		        return currentTagId != tagId;
-		      });
-		      displayTags();
-		      showToast('태그가 제거되었습니다.');
-		    }
+				try {
+					// 2차 시도: 폼 방식으로 태그 추가
+					await addTagsViaForm(tagNames);
 
-		    async function removeTagViaForm(tagId) {
-		      const formData = new FormData();
-		      formData.append('snippetId', snippetId);
-		      formData.append('tagId', tagId);
-		      formData.append('_csrf', csrfToken);
+				} catch (error2) {
+					console.error('폼 방식 태그 추가도 실패:', error2);
+					showToast('태그 추가 기능을 사용할 수 없습니다.', 'error');
+				}
+			}
+		}
 
-		      const response = await fetch('/snippets/removeTag', {
-		        method: 'POST',
-		        credentials: 'same-origin',
-		        body: formData
-		      });
+		// API 방식 태그 추가
+		async function addTagsViaAPI(tagNames) {
+			for (const tagName of tagNames) {
+				console.log('API 방식 태그 추가 시도:', tagName);
 
-		      if (!response.ok) {
-		        throw new Error(`폼 방식 태그 제거 실패 (${response.status})`);
-		      }
-		      
-		      console.log('폼 방식 태그 제거 성공');
-		      
-		      // 성공 처리
-		      currentTags = currentTags.filter(tag => {
-		        const currentTagId = tag.tagId || tag.id;
-		        return currentTagId != tagId;
-		      });
-		      displayTags();
-		      showToast('태그가 제거되었습니다.');
-		    }
+				// 1) 태그 생성 시도
+				const createResponse = await fetch('/api/tag', {
+					method: 'POST',
+					credentials: 'same-origin',
+					headers: {
+						'Content-Type': 'application/json',
+						[csrfHeader]: csrfToken
+					},
+					body: JSON.stringify({ name: tagName })
+				});
 
-		    // 북마크 관리 함수들 - 여러 엔드포인트 시도로 호환성 확보
-		    function loadBookmarkStatus() {
-		      // 1차 시도: BookmarkRestController 엔드포인트
-		      fetch(`/api/bookmarks/check/${snippetId}`, {
-		        method: 'GET',
-		        credentials: 'same-origin'
-		      })
-		      .then(response => {
-		        console.log('북마크 API 응답 상태 (1차):', response.status);
-		        if (response.ok) {
-		          return response.json();
-		        }
-		        throw new Error(`First bookmark attempt failed: ${response.status}`);
-		      })
-		      .then(data => {
-		        console.log('북마크 API 응답 데이터 (1차):', data);
-		        processBookmarkStatus(data);
-		      })
-		      .catch(error => {
-		        console.log('1차 북마크 API 실패, 2차 시도:', error.message);
-		        
-		        // 2차 시도: 다른 엔드포인트
-		        fetch(`/bookmarks/check?snippetId=${snippetId}`, {
-		          method: 'GET',
-		          credentials: 'same-origin'
-		        })
-		        .then(response => {
-		          console.log('북마크 API 응답 상태 (2차):', response.status);
-		          if (response.ok) {
-		            return response.json();
-		          }
-		          throw new Error(`Second bookmark attempt failed: ${response.status}`);
-		        })
-		        .then(data => {
-		          console.log('북마크 API 응답 데이터 (2차):', data);
-		          processBookmarkStatus(data);
-		        })
-		        .catch(error2 => {
-		          console.log('2차 북마크 API도 실패, 3차 시도:', error2.message);
-		          
-		          // 3차 시도: 세션 기반 확인
-		          fetch(`/snippets/${snippetId}/bookmarkStatus`, {
-		            method: 'GET',
-		            credentials: 'same-origin'
-		          })
-		          .then(response => {
-		            console.log('북마크 API 응답 상태 (3차):', response.status);
-		            if (response.ok) {
-		              return response.json();
-		            }
-		            throw new Error(`Third bookmark attempt failed: ${response.status}`);
-		          })
-		          .then(data => {
-		            console.log('북마크 API 응답 데이터 (3차):', data);
-		            processBookmarkStatus(data);
-		          })
-		          .catch(error3 => {
-		            console.error('모든 북마크 API 시도 실패:', error3);
-		            isBookmarked = false;
-		            updateBookmarkButton();
-		            showToast('북마크 기능을 사용할 수 없습니다.');
-		          });
-		        });
-		      });
-		    }
+				let tag;
+				if (createResponse.ok) {
+					const createResult = await createResponse.json();
+					tag = createResult.tag || createResult;
+				} else {
+					// 태그 생성 실패 시 기존 태그 검색 시도
+					const searchResponse = await fetch(`/api/tag?name=${encodeURIComponent(tagName)}`, {
+						method: 'GET',
+						credentials: 'same-origin'
+					});
 
-		    function processBookmarkStatus(data) {
-		      // BookmarkRestController의 응답 형태: { "success": true, "isBookmarked": boolean }
-		      if (data && data.success && typeof data.isBookmarked === 'boolean') {
-		        isBookmarked = data.isBookmarked;
-		      } else if (typeof data === 'boolean') {
-		        isBookmarked = data;
-		      } else if (data && typeof data.bookmarked === 'boolean') {
-		        isBookmarked = data.bookmarked;
-		      } else {
-		        console.warn('예상하지 못한 북마크 API 응답 형태:', data);
-		        isBookmarked = false;
-		      }
-		      updateBookmarkButton();
-		    }
+					if (searchResponse.ok) {
+						const searchResult = await searchResponse.json();
+						tag = Array.isArray(searchResult) ? searchResult[0] : searchResult;
+					} else {
+						throw new Error(`태그 생성/조회 실패: ${tagName}`);
+					}
+				}
 
-		    async function toggleBookmark() {
-		      try {
-		        console.log('북마크 토글 시도 - 스니펫 ID:', snippetId);
-		        
-		        const response = await fetch('/api/bookmarks/toggle', {
-		          method: 'POST',
-		          credentials: 'same-origin',
-		          headers: {
-		            'Content-Type': 'application/x-www-form-urlencoded',
-		            [csrfHeader]: csrfToken
-		          },
-		          body: new URLSearchParams({ snippetId: snippetId.toString() })
-		        });
+				const tagId = tag.tagId || tag.id;
+				if (!tagId) {
+					throw new Error(`태그 ID를 찾을 수 없습니다: ${tagName}`);
+				}
 
-		        console.log('북마크 토글 응답 상태:', response.status);
+				// 2) 스니펫-태그 매핑 시도
+				const linkResponse = await fetch(`/api/tag/snippet/${snippetId}/tag/${tagId}`, {
+					method: 'POST',
+					credentials: 'same-origin',
+					headers: {
+						[csrfHeader]: csrfToken
+					}
+				});
 
-		        if (!response.ok) {
-		          if (response.status === 401) {
-		            showToast('로그인이 필요합니다.');
-		            return;
-		          }
-		          const errorText = await response.text();
-		          console.error('북마크 토글 응답 오류:', response.status, errorText);
-		          throw new Error(`북마크 처리 실패 (${response.status})`);
-		        }
+				if (!linkResponse.ok) {
+					// 다른 매핑 엔드포인트 시도
+					const link2Response = await fetch(`/snippets/${snippetId}/addTag`, {
+						method: 'POST',
+						credentials: 'same-origin',
+						headers: {
+							'Content-Type': 'application/x-www-form-urlencoded',
+							[csrfHeader]: csrfToken
+						},
+						body: new URLSearchParams({ tagId: tagId })
+					});
 
-		        const result = await response.json();
-		        console.log('북마크 토글 결과:', result);
-		        
-		        // BookmarkRestController의 응답 형태: { "success": true, "bookmarked": boolean, "message": string }
-		        if (result.success) {
-		          isBookmarked = result.bookmarked;
-		          updateBookmarkButton();
-		          showToast(result.message || (isBookmarked ? '북마크에 추가했습니다.' : '북마크에서 제거했습니다.'));
-		        } else {
-		          throw new Error(result.message || '북마크 처리 실패');
-		        }
-		        
-		      } catch (error) {
-		        console.error('북마크 토글 실패:', error);
-		        showToast(`북마크 처리 실패: ${error.message}`);
-		      }
-		    }
+					if (!link2Response.ok) {
+						throw new Error(`태그 매핑 실패: ${tagName}`);
+					}
+				}
 
-		    function updateBookmarkButton() {
-		      const btn = document.getElementById('bookmarkToggleBtn');
-		      const text = btn.querySelector('.bookmark-text');
-		      const icon = btn.querySelector('i');
-		      
-		      if (isBookmarked) {
-		        btn.classList.add('bookmarked');
-		        text.textContent = '북마크 제거';
-		        icon.className = 'fas fa-bookmark'; // 채워진 북마크 아이콘
-		      } else {
-		        btn.classList.remove('bookmarked');
-		        text.textContent = '북마크 추가';
-		        icon.className = 'far fa-bookmark'; // 빈 북마크 아이콘
-		      }
-		    }
+				console.log('API 방식 태그 매핑 성공:', tagName);
+			}
 
-		    // 북마크 상태 변경 감지를 위한 추가 유틸리티 함수들
-		    function addBookmark() {
-		      if (isBookmarked) {
-		        showToast('이미 북마크된 스니펫입니다.');
-		        return;
-		      }
-		      
-		      fetch('/api/bookmarks', {
-		        method: 'POST',
-		        credentials: 'same-origin',
-		        headers: {
-		          'Content-Type': 'application/json',
-		          [csrfHeader]: csrfToken
-		        },
-		        body: JSON.stringify({ snippetId: snippetId })
-		      })
-		      .then(response => response.json())
-		      .then(result => {
-		        if (result.success) {
-		          isBookmarked = true;
-		          updateBookmarkButton();
-		          showToast(result.message);
-		        } else {
-		          showToast(result.message);
-		        }
-		      })
-		      .catch(error => {
-		        console.error('북마크 추가 실패:', error);
-		        showToast('북마크 추가 중 오류가 발생했습니다.');
-		      });
-		    }
+			// 성공 시 처리
+			document.getElementById('tagInput').value = '';
+			await loadSnippetTags();
+			showToast(`${tagNames.length}개 태그가 추가되었습니다.`);
+		}
 
-		    function removeBookmark() {
-		      if (!isBookmarked) {
-		        showToast('북마크되지 않은 스니펫입니다.');
-		        return;
-		      }
-		      
-		      fetch(`/api/bookmarks/${snippetId}`, {
-		        method: 'DELETE',
-		        credentials: 'same-origin',
-		        headers: {
-		          [csrfHeader]: csrfToken
-		        }
-		      })
-		      .then(response => response.json())
-		      .then(result => {
-		        if (result.success) {
-		          isBookmarked = false;
-		          updateBookmarkButton();
-		          showToast(result.message);
-		        } else {
-		          showToast(result.message);
-		        }
-		      })
-		      .catch(error => {
-		        console.error('북마크 제거 실패:', error);
-		        showToast('북마크 제거 중 오류가 발생했습니다.');
-		      });
-		    }
+		// 폼 방식 태그 추가
+		async function addTagsViaForm(tagNames) {
+			for (const tagName of tagNames) {
+				console.log('폼 방식 태그 추가 시도:', tagName);
 
-		// 복사 기능들 (bookmark-dynamic-loader.js의 copyToClipboard 함수와 호환)
+				const formData = new FormData();
+				formData.append('snippetId', snippetId);
+				formData.append('tagName', tagName);
+				formData.append('_csrf', csrfToken);
+
+				const response = await fetch('/snippets/addTag', {
+					method: 'POST',
+					credentials: 'same-origin',
+					body: formData
+				});
+
+				if (!response.ok) {
+					throw new Error(`폼 방식 태그 추가 실패: ${tagName} (${response.status})`);
+				}
+
+				console.log('폼 방식 태그 추가 성공:', tagName);
+			}
+
+			// 성공 시 처리
+			document.getElementById('tagInput').value = '';
+			await loadSnippetTags();
+			showToast(`${tagNames.length}개 태그가 추가되었습니다.`);
+		}
+
+		// 태그 제거
+		async function removeTag(tagId) {
+			if (!tagId) {
+				showToast('태그 ID가 올바르지 않습니다.', 'error');
+				return;
+			}
+
+			if (!confirm('이 태그를 제거하시겠습니까?')) {
+				return;
+			}
+
+			try {
+				console.log('태그 제거 시도:', tagId);
+
+				// 1차 시도: REST API 방식
+				await removeTagViaAPI(tagId);
+
+			} catch (error) {
+				console.error('API 방식 태그 제거 실패:', error);
+
+				try {
+					// 2차 시도: 폼 방식
+					await removeTagViaForm(tagId);
+
+				} catch (error2) {
+					console.error('폼 방식 태그 제거도 실패:', error2);
+					showToast('태그 제거 기능을 사용할 수 없습니다.', 'error');
+				}
+			}
+		}
+
+		// API 방식 태그 제거
+		async function removeTagViaAPI(tagId) {
+			// 1차 시도: DELETE 방식
+			let response = await fetch(`/api/tag/snippet/${snippetId}/tag/${tagId}`, {
+				method: 'DELETE',
+				credentials: 'same-origin',
+				headers: {
+					[csrfHeader]: csrfToken
+				}
+			});
+
+			if (!response.ok) {
+				// 2차 시도: 다른 엔드포인트
+				response = await fetch(`/snippets/${snippetId}/removeTag`, {
+					method: 'POST',
+					credentials: 'same-origin',
+					headers: {
+						'Content-Type': 'application/x-www-form-urlencoded',
+						[csrfHeader]: csrfToken
+					},
+					body: new URLSearchParams({ tagId: tagId })
+				});
+			}
+
+			if (!response.ok) {
+				throw new Error(`태그 제거 실패 (${response.status})`);
+			}
+
+			const result = await response.json().catch(() => ({}));
+			console.log('API 방식 태그 제거 결과:', result);
+
+			// 성공 처리
+			currentTags = currentTags.filter(tag => {
+				const currentTagId = tag.tagId || tag.id;
+				return currentTagId != tagId;
+			});
+			displayTags();
+			showToast('태그가 제거되었습니다.');
+		}
+
+		// 폼 방식 태그 제거
+		async function removeTagViaForm(tagId) {
+			const formData = new FormData();
+			formData.append('snippetId', snippetId);
+			formData.append('tagId', tagId);
+			formData.append('_csrf', csrfToken);
+
+			const response = await fetch('/snippets/removeTag', {
+				method: 'POST',
+				credentials: 'same-origin',
+				body: formData
+			});
+
+			if (!response.ok) {
+				throw new Error(`폼 방식 태그 제거 실패 (${response.status})`);
+			}
+
+			console.log('폼 방식 태그 제거 성공');
+
+			// 성공 처리
+			currentTags = currentTags.filter(tag => {
+				const currentTagId = tag.tagId || tag.id;
+				return currentTagId != tagId;
+			});
+			displayTags();
+			showToast('태그가 제거되었습니다.');
+		}
+
+		// === 북마크 관리 함수들 ===
+
+		// 북마크 상태 로드
+		async function loadBookmarkStatus() {
+			try {
+				console.log('북마크 상태 확인 시도:', snippetId);
+
+				// 1차 시도: BookmarkRestController 엔드포인트
+				let response = await fetch(`/api/bookmarks/check/${snippetId}`, {
+					method: 'GET',
+					credentials: 'same-origin'
+				});
+
+				if (!response.ok) {
+					// 2차 시도: 다른 엔드포인트
+					console.log('1차 북마크 API 실패, 2차 시도');
+					response = await fetch(`/bookmarks/check?snippetId=${snippetId}`, {
+						method: 'GET',
+						credentials: 'same-origin'
+					});
+				}
+
+				if (!response.ok) {
+					// 3차 시도: 세션 기반 확인
+					console.log('2차 북마크 API도 실패, 3차 시도');
+					response = await fetch(`/snippets/${snippetId}/bookmarkStatus`, {
+						method: 'GET',
+						credentials: 'same-origin'
+					});
+				}
+
+				if (!response.ok) {
+					throw new Error(`북마크 상태 확인 실패: ${response.status}`);
+				}
+
+				const data = await response.json();
+				console.log('북마크 상태 확인 성공:', data);
+
+				// BookmarkRestController의 응답 형태: { "success": true, "isBookmarked": boolean }
+				if (data && data.success && typeof data.isBookmarked === 'boolean') {
+					isBookmarked = data.isBookmarked;
+				} else if (typeof data === 'boolean') {
+					isBookmarked = data;
+				} else if (data && typeof data.bookmarked === 'boolean') {
+					isBookmarked = data.bookmarked;
+				} else {
+					console.warn('예상하지 못한 북마크 API 응답 형태:', data);
+					isBookmarked = false;
+				}
+
+				updateBookmarkButton();
+
+			} catch (error) {
+				console.error('북마크 상태 확인 실패:', error);
+				isBookmarked = false;
+				updateBookmarkButton();
+			}
+		}
+
+		// 북마크 토글
+		async function toggleBookmark() {
+			try {
+				console.log('북마크 토글 시도:', snippetId);
+
+				const response = await fetch('/api/bookmarks/toggle', {
+					method: 'POST',
+					credentials: 'same-origin',
+					headers: {
+						'Content-Type': 'application/x-www-form-urlencoded',
+						[csrfHeader]: csrfToken
+					},
+					body: new URLSearchParams({ snippetId: snippetId.toString() })
+				});
+
+				if (!response.ok) {
+					if (response.status === 401) {
+						showToast('로그인이 필요합니다.', 'error');
+						return;
+					}
+					throw new Error(`북마크 처리 실패: ${response.status}`);
+				}
+
+				const result = await response.json();
+				console.log('북마크 토글 성공:', result);
+
+				if (result.success) {
+					isBookmarked = result.bookmarked;
+					updateBookmarkButton();
+					showToast(result.message);
+				} else {
+					throw new Error(result.message || '북마크 처리 실패');
+				}
+
+			} catch (error) {
+				console.error('북마크 토글 실패:', error);
+				showToast(`북마크 처리 실패: ${error.message}`, 'error');
+			}
+		}
+
+		// 북마크 버튼 업데이트
+		function updateBookmarkButton() {
+			const btn = document.getElementById('bookmarkToggleBtn');
+			const text = btn.querySelector('.bookmark-text');
+			const icon = btn.querySelector('i');
+
+			if (isBookmarked) {
+				btn.classList.add('bookmarked');
+				text.textContent = '북마크 제거';
+				icon.className = 'fas fa-bookmark';
+			} else {
+				btn.classList.remove('bookmarked');
+				text.textContent = '북마크 추가';
+				icon.className = 'far fa-bookmark';
+			}
+		}
+
+		// === 복사 기능들 ===
+
 		async function copyCode() {
 			const codeElement = document.getElementById('codeContent');
 			if (codeElement) {
 				const codeContent = codeElement.textContent || codeElement.innerText;
 				await copyToClipboard(codeContent, '코드가 클립보드에 복사되었습니다!');
 			} else {
-				showToast('복사할 코드가 없습니다.');
+				showToast('복사할 코드가 없습니다.', 'error');
 			}
 		}
 
@@ -1406,7 +1349,7 @@ async function toggleBookmark() {
 				const textContent = textElement.textContent || textElement.innerText;
 				await copyToClipboard(textContent, '텍스트가 클립보드에 복사되었습니다!');
 			} else {
-				showToast('복사할 텍스트가 없습니다.');
+				showToast('복사할 텍스트가 없습니다.', 'error');
 			}
 		}
 
@@ -1415,11 +1358,11 @@ async function toggleBookmark() {
 			if (imageElement && imageElement.src) {
 				await copyToClipboard(imageElement.src, '이미지 URL이 클립보드에 복사되었습니다!');
 			} else {
-				showToast('복사할 이미지 URL이 없습니다.');
+				showToast('복사할 이미지 URL이 없습니다.', 'error');
 			}
 		}
 
-		// 클립보드 복사 함수 (bookmark-dynamic-loader.js와 동일한 구현)
+		// 클립보드 복사 함수
 		async function copyToClipboard(text, successMessage) {
 			if (navigator.clipboard) {
 				try {
@@ -1443,20 +1386,22 @@ async function toggleBookmark() {
 			document.body.appendChild(textArea);
 			textArea.focus();
 			textArea.select();
-			
+
 			try {
 				document.execCommand('copy');
 				showToast(successMessage || '클립보드에 복사되었습니다!');
 			} catch (err) {
 				console.error('폴백 복사 실패:', err);
-				showToast('복사에 실패했습니다.');
+				showToast('복사에 실패했습니다.', 'error');
 			}
-			
+
 			document.body.removeChild(textArea);
 		}
 
-		// 토스트 메시지 표시 (bookmark-dynamic-loader.js와 동일한 구현)
-		function showToast(message) {
+		// === 유틸리티 함수들 ===
+
+		// 토스트 메시지 표시
+		function showToast(message, type = 'success') {
 			// 기존 토스트 제거
 			const existingToast = document.querySelector('.toast');
 			if (existingToast) {
@@ -1465,7 +1410,7 @@ async function toggleBookmark() {
 
 			// 새 토스트 생성
 			const toast = document.createElement('div');
-			toast.className = 'toast';
+			toast.className = `toast ${type === 'error' ? 'error' : ''}`;
 			toast.textContent = message;
 			document.body.appendChild(toast);
 
@@ -1485,7 +1430,7 @@ async function toggleBookmark() {
 			}, 3000);
 		}
 
-		// HTML 이스케이프 함수 (bookmark-dynamic-loader.js와 동일)
+		// HTML 이스케이프 함수
 		function escapeHtml(text) {
 			if (!text) return '';
 			const div = document.createElement('div');
@@ -1493,35 +1438,16 @@ async function toggleBookmark() {
 			return div.innerHTML;
 		}
 
-		// 유틸리티 함수들 (BookmarkRestController와 호환)
+		// 전역 유틸리티 객체
 		window.snippetDetailUtils = {
 			showToast: showToast,
 			copyToClipboard: copyToClipboard,
 			escapeHtml: escapeHtml,
-			// 북마크 상태 확인
+			loadSnippetTags: loadSnippetTags,
+			loadBookmarkStatus: loadBookmarkStatus,
 			isBookmarked: () => isBookmarked,
-			// 북마크 상태 새로고침
-			refreshBookmarkStatus: loadBookmarkStatus,
-			// 태그 새로고침
-			refreshTags: loadTags,
-			// 북마크 직접 조작 (고급 사용자용)
-			addBookmark: addBookmark,
-			removeBookmark: removeBookmark,
 			toggleBookmark: toggleBookmark
 		};
-
-		// 페이지 가시성 변경 시 북마크 상태 새로고침 (선택사항)
-		document.addEventListener('visibilitychange', () => {
-		  if (!document.hidden) {
-		    // 페이지가 다시 활성화되면 북마크 상태 새로고침
-		    setTimeout(loadBookmarkStatus, 500);
-		  }
-		});
-
-		// 브라우저 포커스 시 북마크 상태 새로고침 (선택사항)
-		window.addEventListener('focus', () => {
-		  setTimeout(loadBookmarkStatus, 500);
-		});
 	</script>
 </body>
 

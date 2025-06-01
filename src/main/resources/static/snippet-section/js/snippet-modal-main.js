@@ -102,15 +102,11 @@ const SnippetModal = {
                     // 메타 정보 및 콘텐츠 업데이트
                     this.updateContent(modal, detailedSnippet);
 
-                    // 태그 정보 업데이트 (API에서 가져온 태그 사용)
-                    if (typeof SnippetTags !== 'undefined') {
-                        SnippetTags.updateTags(data.data.tags);
-                    }
+                    // 태그 정보 업데이트 - 수정된 부분
+                    this.updateTags(data.data.tags || [], snippetId);
 
-                    // // 북마크 상태 업데이트
-                    // if (typeof SnippetBookmark !== 'undefined') {
-                    //     SnippetBookmark.updateStatus(snippetId, data.data.isBookmarked);
-                    // }
+                    // 북마크 상태 업데이트
+                    this.updateButton(data.data.isBookmarked || false);
                 } else {
                     // API 호출 실패 시 기본 데이터로 표시
                     console.warn('북마크 상세 정보 로드 실패:', data.message);
@@ -141,9 +137,105 @@ const SnippetModal = {
             });
     },
 
+    // 기본 태그 로드 함수 추가
+    loadBasicTags: function(snippetId) {
+        console.log('기본 태그 로드:', snippetId);
+
+        $.ajax({
+            url: `/api/tag/snippet/${snippetId}`,
+            method: 'GET',
+            success: (tags) => {
+                console.log('기본 태그 로드 성공:', tags);
+                this.updateTags(tags || [], snippetId);
+            },
+            error: (xhr) => {
+                console.error('기본 태그 로드 실패:', xhr.responseText);
+                this.updateTags([], snippetId);
+            }
+        });
+    },
+
+    updateTags: function(tags, snippetId) {
+        console.log('태그 업데이트:', tags, snippetId);
+
+        const tagsDisplay = $('#snippetTagsDisplay');
+        if (!tagsDisplay.length) {
+            console.warn('태그 표시 요소를 찾을 수 없습니다.');
+            return;
+        }
+
+        tagsDisplay.empty();
+
+        if (!tags || tags.length === 0) {
+            tagsDisplay.html('<div class="empty-tags">태그가 없습니다.</div>');
+            return;
+        }
+
+        tags.forEach(tag => {
+            // 태그 데이터 구조 정규화
+            const tagData = {
+                tagId: tag.tagId || tag.id,
+                name: tag.name
+            };
+
+            const tagBadge = this.createTagBadge(tagData, snippetId);
+            tagsDisplay.append(tagBadge);
+        });
+    },
+
+    // 태그 배지 생성 함수 추가
+    createTagBadge: function(tag, snippetId) {
+        const tagBadge = $(`
+            <div class="tag-badge" data-tag-id="${tag.tagId}">
+                <span>${tag.name}</span>
+                <span class="tag-remove" title="태그 제거">×</span>
+            </div>
+        `);
+
+        // 태그 제거 이벤트
+        tagBadge.find('.tag-remove').on('click', () => {
+            this.removeTag(snippetId, tag.tagId, tagBadge);
+        });
+
+        return tagBadge;
+    },
+
+    // 태그 제거 함수 추가
+    removeTag: function(snippetId, tagId, tagElement) {
+        if (!confirm('이 태그를 제거하시겠습니까?')) {
+            return;
+        }
+
+        $.ajax({
+            url: `/api/tag/snippet/${snippetId}/tag/${tagId}`,
+            method: 'DELETE',
+            success: () => {
+                tagElement.fadeOut(300, function() {
+                    $(this).remove();
+                    if ($('#snippetTagsDisplay .tag-badge').length === 0) {
+                        $('#snippetTagsDisplay').html('<div class="empty-tags">태그가 없습니다.</div>');
+                    }
+                });
+
+                // 전역 이벤트 발생
+                $(document).trigger('tagUpdated', {
+                    action: 'removed',
+                    tagId: tagId,
+                    snippetId: snippetId
+                });
+            },
+            error: (xhr) => {
+                console.error('태그 제거 실패:', xhr.responseText);
+                alert('태그 제거에 실패했습니다.');
+            }
+        });
+    },
+
+
     hide: function () {
         $('#snippetDetailModal').hide();
     },
+
 
     updateContent: function (modal, snippet) {
         // 스니펫 색상이 있으면 모달에 적용
@@ -280,10 +372,7 @@ const SnippetModal = {
             return `
                 <div class="bookmark-modal-content text-content">
                     <div class="text-container">
-                        <button class="text-copy-btn" onclick="SnippetModal.copyToClipboard(this)" 
-                                data-content="${this.escapeHtml(content)}">
-                            <i class="fas fa-copy"></i> 복사
-                        </button>
+                       
                         <div class="text-content-body">${this.escapeHtml(content).replace(/\n/g, '<br>')}</div>
                     </div>
                 </div>
@@ -385,4 +474,102 @@ const SnippetModal = {
         div.textContent = text;
         return div.innerHTML;
     }
+};
+
+
+// 태그 추가 이벤트 리스너
+$(document).on('click', '#addTagsBtn', function() {
+    const tagInput = $('#tagInput');
+    const tagNames = tagInput.val().trim();
+
+    if (!tagNames) {
+        alert('태그를 입력해주세요.');
+        tagInput.focus();
+        return;
+    }
+
+    const snippetId = $('#snippetDetailModal').data('current-snippet-id');
+    if (!snippetId) {
+        alert('스니펫 정보를 찾을 수 없습니다.');
+        return;
+    }
+
+    SnippetModal.addTags(snippetId, tagNames);
+    tagInput.val('');
+    tagInput.focus();
+});
+
+// 태그 입력창에서 엔터키 이벤트
+$(document).on('keydown', '#tagInput', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        $('#addTagsBtn').trigger('click');
+    }
+});
+
+// 태그 추가 함수를 SnippetModal에 추가
+SnippetModal.addTags = function(snippetId, tagNames) {
+    const tagArray = tagNames.split(',').map(name => name.trim()).filter(name => name);
+
+    tagArray.forEach(tagName => {
+        // 먼저 태그 생성 시도
+        $.ajax({
+            url: '/api/tag',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ name: tagName }),
+            success: (response) => {
+                // 새 태그 생성 성공시 스니펫에 연결
+                this.connectTagToSnippet(snippetId, response.tag.tagId);
+            },
+            error: (xhr) => {
+                if (xhr.status === 409) {
+                    // 이미 존재하는 태그면 찾아서 연결
+                    this.findAndConnectTag(snippetId, tagName);
+                } else {
+                    console.error('태그 생성 실패:', xhr.responseText);
+                    alert(`태그 "${tagName}" 생성에 실패했습니다.`);
+                }
+            }
+        });
+    });
+};
+
+// 기존 태그 찾아서 연결
+SnippetModal.findAndConnectTag = function(snippetId, tagName) {
+    $.ajax({
+        url: '/api/tag/search',
+        method: 'GET',
+        data: { query: tagName },
+        success: (tags) => {
+            const matchingTag = tags.find(tag => tag.name === tagName);
+            if (matchingTag) {
+                this.connectTagToSnippet(snippetId, matchingTag.tagId);
+            }
+        }
+    });
+};
+
+// 태그를 스니펫에 연결
+SnippetModal.connectTagToSnippet = function(snippetId, tagId) {
+    $.ajax({
+        url: `/api/tag/snippet/${snippetId}/tag/${tagId}`,
+        method: 'POST',
+        success: () => {
+            // 태그 목록 새로고침
+            this.loadBasicTags(snippetId);
+
+            // 전역 이벤트 발생
+            $(document).trigger('tagUpdated', {
+                action: 'added',
+                tagId: tagId,
+                snippetId: snippetId
+            });
+        },
+        error: (xhr) => {
+            if (xhr.status !== 409) {
+                console.error('태그 연결 실패:', xhr.responseText);
+            }
+        }
+    });
 };

@@ -12,12 +12,12 @@ public class WebConfig implements WebMvcConfigurer {
     @Value("${file.upload-dir}")
     private String uploadDir;
 
-    private static final String CHROME_EXTENSION_ID = "chrome-extension://igpcgihogdhcefmbfhcejhdaohpnfaee";
+    // private static final String CHROME_EXTENSION_ID = "chrome-extension://igpcgihogdhcefmbfhcejhdaohpnfaee";
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
-            .allowedOrigins("http://localhost:8090", CHROME_EXTENSION_ID)
+            .allowedOriginPatterns("chrome-extension://*", "http://localhost:8090")
             .allowedMethods("*")
             .allowedHeaders("*")
             .allowCredentials(true);
@@ -26,6 +26,6 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:" + uploadDir + "/");
+            .addResourceLocations("file:" + uploadDir + "/");
     }
 }

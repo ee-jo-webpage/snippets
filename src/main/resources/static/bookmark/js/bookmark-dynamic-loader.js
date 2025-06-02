@@ -497,10 +497,6 @@ function renderBookmarkSnippetContent(snippet) {
         return `
             <div class="bookmark-modal-content text-content">
                 <div class="text-container" style="position: relative;">
-                    <button class="text-copy-btn" onclick="copyToClipboard('${escapeHtml(content).replace(/'/g, "\\'")}', this)" 
-                            style="position: absolute; top: 10px; right: 10px; padding: 6px 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
-                        <i class="fas fa-copy"></i> 복사
-                    </button>
                     <div class="text-content-body" style="background: #f8f9fa; padding: 15px; border-radius: 8px; line-height: 1.6;">${escapeHtml(content).replace(/\n/g, '<br>')}</div>
                 </div>
             </div>

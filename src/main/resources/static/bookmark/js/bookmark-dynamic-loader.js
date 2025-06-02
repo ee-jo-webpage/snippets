@@ -486,11 +486,6 @@ function renderBookmarkSnippetContent(snippet) {
         return `
             <div class="bookmark-modal-content code-content">
                 <div class="code-container" style="position: relative;">
-                    <button class="code-copy-btn" onclick="copyToClipboard('${escapeHtml(content).replace(/'/g, "\\'")}', this)" 
-                            style="position: absolute; top: 10px; right: 10px; padding: 6px 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
-                        <i class="fas fa-copy"></i> 복사
-                    </button>
-                    <pre class="code-block" style="background-color: #2d3748; color: #e2e8f0; padding: 15px; border-radius: 8px; overflow-x: auto; margin: 0;"><code class="language-${language}">${escapeHtml(content)}</code></pre>
                 </div>
             </div>
         `;
@@ -502,10 +497,6 @@ function renderBookmarkSnippetContent(snippet) {
         return `
             <div class="bookmark-modal-content text-content">
                 <div class="text-container" style="position: relative;">
-                    <button class="text-copy-btn" onclick="copyToClipboard('${escapeHtml(content).replace(/'/g, "\\'")}', this)" 
-                            style="position: absolute; top: 10px; right: 10px; padding: 6px 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
-                        <i class="fas fa-copy"></i> 복사
-                    </button>
                     <div class="text-content-body" style="background: #f8f9fa; padding: 15px; border-radius: 8px; line-height: 1.6;">${escapeHtml(content).replace(/\n/g, '<br>')}</div>
                 </div>
             </div>
